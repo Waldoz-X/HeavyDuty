@@ -1,0 +1,39 @@
+package com.example.heavyduty.feature.history.navigation
+
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavType
+import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
+import com.example.heavyduty.feature.history.presentation.list.HistoryListScreen
+import com.example.heavyduty.feature.history.presentation.progress.ProgressScreen
+
+/**
+ * Registers the history list composable in the NavHost.
+ */
+fun NavGraphBuilder.historyScreen(
+    onSessionClick: (Long) -> Unit,
+    onExerciseProgressClick: (Long) -> Unit,
+) {
+    composable(route = "history_graph") {
+        HistoryListScreen(
+            onSessionClick = onSessionClick,
+            onExerciseProgressClick = onExerciseProgressClick,
+        )
+    }
+}
+
+/**
+ * Registers the exercise progress composable in the NavHost.
+ */
+fun NavGraphBuilder.progressScreen(
+    onNavigateBack: () -> Unit,
+) {
+    composable(
+        route = "progress/{exerciseId}",
+        arguments = listOf(
+            navArgument("exerciseId") { type = NavType.LongType },
+        ),
+    ) {
+        ProgressScreen(onNavigateBack = onNavigateBack)
+    }
+}

@@ -1,0 +1,10 @@
+gradle.rootProject {
+    allprojects {
+        extensions.whenObjectAdded { ext ->
+            if (ext.class.name.contains("KotlinProjectExtension")) {
+                println(">>> Kotlin extension added to ${project.name} by:")
+                new Exception().printStackTrace(System.out)
+            }
+        }
+    }
+}

@@ -1,0 +1,92 @@
+package com.example.heavyduty.navigation
+
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import com.example.heavyduty.feature.calendar.navigation.calendarScreen
+import com.example.heavyduty.feature.dashboard.navigation.dashboardScreen
+import com.example.heavyduty.feature.exercises.navigation.exerciseDetailScreen
+import com.example.heavyduty.feature.exercises.navigation.exerciseListScreen
+import com.example.heavyduty.feature.history.navigation.historyScreen
+import com.example.heavyduty.feature.history.navigation.progressScreen
+import com.example.heavyduty.feature.routines.navigation.routineEditorScreen
+import com.example.heavyduty.feature.routines.navigation.routineListScreen
+import com.example.heavyduty.feature.timer.navigation.timerScreen
+import com.example.heavyduty.feature.workout.navigation.activeWorkoutScreen
+
+@Composable
+fun HeavyDutyNavHost(
+    navController: NavHostController,
+    modifier: Modifier = Modifier,
+) {
+    NavHost(
+        navController = navController,
+        startDestination = TopLevelDestination.DASHBOARD.route,
+        modifier = modifier,
+    ) {
+        // Dashboard
+        dashboardScreen(
+            onNavigateToActiveWorkout = {
+                navController.navigate(TopLevelDestination.WORKOUT.route)
+            },
+            onNavigateToRoutines = {
+                navController.navigate("routines_graph")
+            }
+        )
+
+        // Workout
+        activeWorkoutScreen(
+            onNavigateToRoutines = {
+                navController.navigate("routines_graph")
+            },
+        )
+
+        // Exercises
+        exerciseListScreen(
+            onExerciseClick = { exerciseId ->
+                navController.navigate("exercise_detail/$exerciseId")
+            },
+        )
+        exerciseDetailScreen(
+            onNavigateBack = { navController.popBackStack() },
+        )
+
+        // Routines
+        routineListScreen(
+            onRoutineClick = { routineId ->
+                navController.navigate("routine_editor/$routineId")
+            },
+            onCreateRoutine = {
+                navController.navigate("routine_editor")
+            },
+        )
+        routineEditorScreen(
+            onNavigateBack = { navController.popBackStack() },
+            onNavigateToExercises = {
+                navController.navigate(TopLevelDestination.EXERCISES.route)
+            },
+        )
+
+        // Timer
+        timerScreen()
+
+        // History
+        historyScreen(
+            onSessionClick = { /* future detail */ },
+            onExerciseProgressClick = { exerciseId ->
+                navController.navigate("progress/$exerciseId")
+            },
+        )
+        progressScreen(
+            onNavigateBack = { navController.popBackStack() },
+        )
+
+        // Calendar
+        calendarScreen(
+            onRoutineClick = { routineId ->
+                navController.navigate("routine_editor/$routineId")
+            },
+        )
+    }
+}

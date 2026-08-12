@@ -1,0 +1,44 @@
+package com.example.heavyduty.feature.workout.presentation
+
+import com.example.heavyduty.core.domain.model.RoutineExercise
+import com.example.heavyduty.core.domain.model.WorkoutSet
+
+/**
+ * Immutable UI state for the active workout screen.
+ */
+data class ActiveWorkoutUiState(
+    val sessionId: Long? = null,
+    val sessionName: String = "",
+    val routineExercises: List<RoutineExercise> = emptyList(),
+    val completedSets: List<WorkoutSet> = emptyList(),
+    val currentExerciseIndex: Int = 0,
+    val currentSetNumber: Int = 1,
+    val repsInput: String = "",
+    val weightInput: String = "",
+    val elapsedSeconds: Int = 0,
+    val isLoading: Boolean = true,
+    val isActive: Boolean = false,
+    val error: String? = null,
+)
+
+/**
+ * User-initiated events from the active workout screen.
+ */
+sealed interface ActiveWorkoutUiEvent {
+    data class OnRepsChange(val reps: String) : ActiveWorkoutUiEvent
+    data class OnWeightChange(val weight: String) : ActiveWorkoutUiEvent
+    data object OnLogSet : ActiveWorkoutUiEvent
+    data class OnSelectExercise(val index: Int) : ActiveWorkoutUiEvent
+    data object OnCompleteWorkout : ActiveWorkoutUiEvent
+    data object OnStartFreeWorkout : ActiveWorkoutUiEvent
+    data object OnNavigateToRoutines : ActiveWorkoutUiEvent
+}
+
+/**
+ * One-shot effects for the active workout screen.
+ */
+sealed interface ActiveWorkoutUiEffect {
+    data object NavigateToRoutines : ActiveWorkoutUiEffect
+    data class ShowMessage(val message: String) : ActiveWorkoutUiEffect
+    data object WorkoutCompleted : ActiveWorkoutUiEffect
+}
