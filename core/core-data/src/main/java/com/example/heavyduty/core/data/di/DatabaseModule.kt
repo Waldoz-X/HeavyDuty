@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.example.heavyduty.core.common.dispatchers.ApplicationScope
 import com.example.heavyduty.core.data.database.HeavyDutyDatabase
 import com.example.heavyduty.core.data.database.SeedData
 import com.example.heavyduty.core.data.database.dao.CalendarDao
@@ -16,7 +17,6 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import javax.inject.Provider
 import javax.inject.Singleton
@@ -30,6 +30,7 @@ object DatabaseModule {
     fun provideDatabase(
         @ApplicationContext context: Context,
         exerciseDaoProvider: Provider<ExerciseDao>,
+        @ApplicationScope applicationScope: CoroutineScope,
     ): HeavyDutyDatabase {
         return Room.databaseBuilder(
             context,
@@ -39,7 +40,7 @@ object DatabaseModule {
             .addCallback(object : RoomDatabase.Callback() {
                 override fun onCreate(db: SupportSQLiteDatabase) {
                     super.onCreate(db)
-                    CoroutineScope(Dispatchers.IO).launch {
+                    applicationScope.launch {
                         SeedData.populateExercises(context, exerciseDaoProvider.get())
                     }
                 }

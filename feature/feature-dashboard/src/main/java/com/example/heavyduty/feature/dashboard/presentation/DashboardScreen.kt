@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.MonitorWeight
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.DirectionsRun
@@ -37,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.heavyduty.core.common.extensions.formatCompact
 import com.example.heavyduty.core.ui.components.HdButton
 import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdTonalButton
@@ -85,7 +87,7 @@ private fun DashboardContent(
         
         // Header
         Text(
-            text = "Welcome back, Athlete!",
+            text = "¡Bienvenido de nuevo, Atleta!",
             style = MaterialTheme.typography.headlineLarge.copy(
                 fontWeight = FontWeight.ExtraBold,
                 letterSpacing = (-0.5).sp
@@ -94,7 +96,7 @@ private fun DashboardContent(
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "Let's crush your goals today.",
+            text = "Vamos a lograr tus metas hoy.",
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -108,9 +110,9 @@ private fun DashboardContent(
         ) {
             // Workouts this week
             StatCard(
-                title = "This Week",
+                title = "Esta Semana",
                 value = "${uiState.weeklyWorkoutsCount}",
-                subtitle = "Workouts",
+                subtitle = "Entrenamientos",
                 icon = Icons.Default.FitnessCenter,
                 modifier = Modifier.weight(1f)
             )
@@ -118,19 +120,30 @@ private fun DashboardContent(
             // Time trained this week
             val minutes = uiState.totalTimeSeconds / 60
             StatCard(
-                title = "Total Time",
+                title = "Tiempo Total",
                 value = "$minutes",
-                subtitle = "Minutes",
+                subtitle = "Minutos",
                 icon = Icons.Default.Timer,
                 modifier = Modifier.weight(1f)
             )
         }
 
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Weekly volume
+        StatCard(
+            title = "Volumen Semanal",
+            value = "${uiState.weeklyVolumeKg.formatCompact()} kg",
+            subtitle = "Kg Levantados",
+            icon = Icons.Default.MonitorWeight,
+            modifier = Modifier.fillMaxWidth()
+        )
+
         Spacer(modifier = Modifier.height(32.dp))
 
         // Quick Actions
         Text(
-            text = "Quick Actions",
+            text = "Acciones Rápidas",
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
             color = MaterialTheme.colorScheme.onBackground
         )
@@ -166,7 +179,7 @@ private fun DashboardContent(
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = "Start Free Workout",
+                        text = "Iniciar Entrenamiento Libre",
                         style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                         color = Color.White
                     )
@@ -177,7 +190,7 @@ private fun DashboardContent(
         Spacer(modifier = Modifier.height(16.dp))
         
         HdTonalButton(
-            text = "Choose a Routine",
+            text = "Elegir Rutina",
             onClick = { onEvent(DashboardUiEvent.OnChooseRoutine) },
             modifier = Modifier.fillMaxWidth().height(64.dp),
             icon = Icons.Default.DirectionsRun
@@ -188,7 +201,7 @@ private fun DashboardContent(
         // Recent Activity
         if (uiState.recentWorkoutName != null) {
             Text(
-                text = "Recent Activity",
+                text = "Actividad Reciente",
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.onBackground
             )
@@ -220,7 +233,7 @@ private fun DashboardContent(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = uiState.recentWorkoutTime ?: "Recently",
+                            text = uiState.recentWorkoutTime ?: "Recientemente",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

@@ -47,9 +47,9 @@ class RoutineListViewModel @Inject constructor(
                 viewModelScope.launch {
                     try {
                         deleteRoutineUseCase(event.routine)
-                        _uiEffect.emit(RoutineListUiEffect.ShowMessage("Routine deleted"))
+                        _uiEffect.emit(RoutineListUiEffect.ShowMessage("Rutina eliminada"))
                     } catch (e: Exception) {
-                        _uiEffect.emit(RoutineListUiEffect.ShowMessage("Failed to delete routine"))
+                        _uiEffect.emit(RoutineListUiEffect.ShowMessage("Error al eliminar la rutina"))
                     }
                 }
             }
@@ -61,7 +61,7 @@ class RoutineListViewModel @Inject constructor(
             getRoutinesUseCase()
                 .catch { e ->
                     _uiState.update {
-                        it.copy(isLoading = false, error = e.message ?: "Unknown error")
+                        it.copy(isLoading = false, error = e.message ?: "Error desconocido")
                     }
                 }
                 .collect { routines ->

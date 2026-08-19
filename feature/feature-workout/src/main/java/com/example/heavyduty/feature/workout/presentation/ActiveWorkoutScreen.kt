@@ -11,10 +11,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.MaterialTheme
@@ -28,15 +32,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.heavyduty.core.domain.model.Exercise
 import com.example.heavyduty.core.ui.components.HdButton
 import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdEmptyState
 import com.example.heavyduty.core.ui.components.HdGradientCard
 import com.example.heavyduty.core.ui.components.HdLoadingIndicator
+import com.example.heavyduty.core.ui.components.HdSearchBar
+import com.example.heavyduty.core.ui.components.HdTextButton
 import com.example.heavyduty.core.ui.components.HdTonalButton
 import com.example.heavyduty.core.ui.theme.GradientCyanEnd
 import com.example.heavyduty.core.ui.theme.GradientCyanStart
@@ -63,7 +71,7 @@ fun ActiveWorkoutScreen(
         uiState.isLoading -> {
             HdLoadingIndicator(
                 modifier = modifier,
-                message = "Loading workout...",
+                message = "Cargando entrenamiento...",
             )
         }
         uiState.isActive -> {
@@ -95,27 +103,27 @@ private fun WorkoutStartScreen(
         verticalArrangement = Arrangement.Center,
     ) {
         Text(
-            text = "Ready to train?",
+            text = "¿Listo para entrenar?",
             style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.onSurface,
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "Start a workout from a routine or go free-style",
+            text = "Empieza un entrenamiento desde una rutina o hazlo libre",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
         Spacer(modifier = Modifier.height(32.dp))
         HdButton(
-            text = "Choose a Routine",
+            text = "Elegir Rutina",
             onClick = { onEvent(ActiveWorkoutUiEvent.OnNavigateToRoutines) },
             icon = Icons.Default.PlayArrow,
             modifier = Modifier.fillMaxWidth(),
         )
         Spacer(modifier = Modifier.height(12.dp))
         HdTonalButton(
-            text = "Free Workout",
+            text = "Entrenamiento Libre",
             onClick = { onEvent(ActiveWorkoutUiEvent.OnStartFreeWorkout) },
             modifier = Modifier.fillMaxWidth(),
         )
@@ -141,7 +149,7 @@ private fun ActiveWorkoutContent(
                 gradientColors = listOf(GradientCyanStart, GradientCyanEnd),
             ) {
                 Text(
-                    text = uiState.sessionName.ifBlank { "Workout" },
+                    text = uiState.sessionName.ifBlank { "Entrenamiento" },
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
@@ -157,11 +165,11 @@ private fun ActiveWorkoutContent(
             }
         }
 
-        // Exercise list from routine
+        // Exercise list (from routine, or added ad-hoc during a free workout)
         if (uiState.routineExercises.isNotEmpty()) {
             item {
                 Text(
-                    text = "Exercises",
+                    text = "Ejercicios",
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
@@ -175,10 +183,14 @@ private fun ActiveWorkoutContent(
                     } else {
                         MaterialTheme.colorScheme.surfaceContainerHigh
                     },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            onEvent(ActiveWorkoutUiEvent.OnSelectExercise(index))
+                        },
                 ) {
                     Text(
-                        text = routineExercise.exercise?.name ?: "Exercise #${routineExercise.exerciseId}",
+                        text = routineExercise.exercise?.name ?: "Ejercicio #${routineExercise.exerciseId}",
                         style = MaterialTheme.typography.bodyLarge,
                         color = if (isSelected) {
                             MaterialTheme.colorScheme.onPrimaryContainer
@@ -194,11 +206,21 @@ private fun ActiveWorkoutContent(
                 }
             }
 
+            if (uiState.allowAddingExercises) {
+                item {
+                    HdTextButton(
+                        text = "Agregar otro ejercicio",
+                        onClick = { onEvent(ActiveWorkoutUiEvent.OnToggleExercisePicker) },
+                        icon = Icons.Default.Add,
+                    )
+                }
+            }
+
             // Log set input
             item {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Log Set #${uiState.currentSetNumber}",
+                    text = "Registrar Serie #${uiState.currentSetNumber}",
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.primary,
                 )
@@ -210,7 +232,7 @@ private fun ActiveWorkoutContent(
                     OutlinedTextField(
                         value = uiState.repsInput,
                         onValueChange = { onEvent(ActiveWorkoutUiEvent.OnRepsChange(it)) },
-                        label = { Text("Reps") },
+                        label = { Text("Repeticiones") },
                         modifier = Modifier.weight(1f),
                         singleLine = true,
                         shape = RoundedCornerShape(12.dp),
@@ -221,7 +243,7 @@ private fun ActiveWorkoutContent(
                     OutlinedTextField(
                         value = uiState.weightInput,
                         onValueChange = { onEvent(ActiveWorkoutUiEvent.OnWeightChange(it)) },
-                        label = { Text("Weight (kg)") },
+                        label = { Text("Peso (kg)") },
                         modifier = Modifier.weight(1f),
                         singleLine = true,
                         shape = RoundedCornerShape(12.dp),
@@ -232,10 +254,37 @@ private fun ActiveWorkoutContent(
                 }
                 Spacer(modifier = Modifier.height(12.dp))
                 HdButton(
-                    text = "Log Set",
+                    text = "Registrar Serie",
                     onClick = { onEvent(ActiveWorkoutUiEvent.OnLogSet) },
                     icon = Icons.Default.CheckCircle,
                     modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        } else if (uiState.allowAddingExercises) {
+            item {
+                HdEmptyState(
+                    icon = Icons.Default.FitnessCenter,
+                    title = "Aún no hay ejercicios",
+                    description = "Agrega un ejercicio para empezar a registrar series",
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                HdButton(
+                    text = "Agregar Ejercicio",
+                    onClick = { onEvent(ActiveWorkoutUiEvent.OnToggleExercisePicker) },
+                    icon = Icons.Default.Add,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        }
+
+        if (uiState.isPickingExercise) {
+            item {
+                Spacer(modifier = Modifier.height(8.dp))
+                ExercisePicker(
+                    query = uiState.exercisePickerQuery,
+                    results = uiState.exercisePickerResults,
+                    onQueryChange = { onEvent(ActiveWorkoutUiEvent.OnExercisePickerQueryChange(it)) },
+                    onExercisePick = { onEvent(ActiveWorkoutUiEvent.OnAddExercise(it)) },
                 )
             }
         }
@@ -244,11 +293,55 @@ private fun ActiveWorkoutContent(
         item {
             Spacer(modifier = Modifier.height(16.dp))
             HdButton(
-                text = "Complete Workout",
+                text = "Finalizar Entrenamiento",
                 onClick = { onEvent(ActiveWorkoutUiEvent.OnCompleteWorkout) },
                 icon = Icons.Default.Stop,
                 modifier = Modifier.fillMaxWidth(),
             )
+        }
+    }
+}
+
+@Composable
+private fun ExercisePicker(
+    query: String,
+    results: List<Exercise>,
+    onQueryChange: (String) -> Unit,
+    onExercisePick: (Exercise) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    HdCard(modifier = modifier.fillMaxWidth()) {
+        Text(
+            text = "Agregar Ejercicio",
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary,
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        HdSearchBar(
+            query = query,
+            onQueryChange = onQueryChange,
+            placeholder = "Buscar ejercicios...",
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(220.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            items(items = results, key = { it.id }) { exercise ->
+                Text(
+                    text = exercise.name,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onExercisePick(exercise) }
+                        .padding(vertical = 10.dp),
+                )
+            }
         }
     }
 }

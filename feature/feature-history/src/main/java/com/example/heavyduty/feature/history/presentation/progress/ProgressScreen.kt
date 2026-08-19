@@ -1,14 +1,18 @@
 package com.example.heavyduty.feature.history.presentation.progress
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ShowChart
+import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -20,13 +24,26 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.heavyduty.core.common.extensions.formatDecimal
 import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdEmptyState
 import com.example.heavyduty.core.ui.components.HdLoadingIndicator
+import com.example.heavyduty.feature.history.domain.model.ExercisePersonalRecords
+import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
+import com.patrykandpatrick.vico.compose.cartesian.axis.HorizontalAxis
+import com.patrykandpatrick.vico.compose.cartesian.axis.VerticalAxis
+import com.patrykandpatrick.vico.compose.cartesian.data.CartesianChartModelProducer
+import com.patrykandpatrick.vico.compose.cartesian.data.lineModel
+import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
+import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
+import com.patrykandpatrick.vico.compose.common.ProvideVicoTheme
+import com.patrykandpatrick.vico.compose.m3.common.rememberM3VicoTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,7 +67,7 @@ fun ProgressScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Exercise Progress",
+                        text = "Progreso del Ejercicio",
                         style = MaterialTheme.typography.titleLarge,
                     )
                 },
@@ -58,7 +75,7 @@ fun ProgressScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = "Atrás",
                         )
                     }
                 },
@@ -73,14 +90,14 @@ fun ProgressScreen(
             uiState.isLoading -> {
                 HdLoadingIndicator(
                     modifier = Modifier.padding(innerPadding),
-                    message = "Loading progress...",
+                    message = "Cargando progreso...",
                 )
             }
             uiState.sets.isEmpty() -> {
                 HdEmptyState(
                     icon = Icons.AutoMirrored.Filled.ShowChart,
-                    title = "No data yet",
-                    description = "Complete sets for this exercise to see progress",
+                    title = "Aún no hay datos",
+                    description = "Completa series de este ejercicio para ver tu progreso",
                     modifier = Modifier.padding(innerPadding),
                 )
             }
@@ -91,10 +108,38 @@ fun ProgressScreen(
                         .padding(innerPadding)
                         .padding(16.dp),
                 ) {
+                    if (uiState.personalRecords.hasRecords) {
+                        PersonalRecordsCard(records = uiState.personalRecords)
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+
+                    val chronologicalWeights = uiState.sets
+                        .filter { (it.weight ?: 0f) > 0f }
+                        .sortedBy { it.completedAt ?: 0L }
+                        .map { it.weight!! }
+
+                    if (chronologicalWeights.size >= 2) {
+                        HdCard {
+                            Text(
+                                text = "Peso a lo Largo del Tiempo",
+                                style = MaterialTheme.typography.titleSmall,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            WeightProgressChart(
+                                weights = chronologicalWeights,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(180.dp),
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+
                     // Weight progress summary
                     HdCard {
                         Text(
-                            text = "Weight Progress",
+                            text = "Progreso de Peso",
                             style = MaterialTheme.typography.titleSmall,
                             color = MaterialTheme.colorScheme.primary,
                         )
@@ -105,18 +150,18 @@ fun ProgressScreen(
                             val maxWeight = weightSets.maxOf { it.weight ?: 0f }
                             val latestWeight = weightSets.first().weight ?: 0f
                             Text(
-                                text = "Max: ${maxWeight}kg · Latest: ${latestWeight}kg",
+                                text = "Máx: ${maxWeight}kg · Último: ${latestWeight}kg",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurface,
                             )
                             Text(
-                                text = "${weightSets.size} sets recorded",
+                                text = "${weightSets.size} series registradas",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         } else {
                             Text(
-                                text = "No weight data available",
+                                text = "No hay datos de peso disponibles",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -128,7 +173,7 @@ fun ProgressScreen(
                     // Volume progress summary
                     HdCard {
                         Text(
-                            text = "Volume Progress",
+                            text = "Progreso de Volumen",
                             style = MaterialTheme.typography.titleSmall,
                             color = MaterialTheme.colorScheme.secondary,
                         )
@@ -139,13 +184,13 @@ fun ProgressScreen(
                             val totalReps = repSets.sumOf { it.reps ?: 0 }
                             val totalVolume = repSets.sumOf { ((it.reps ?: 0) * (it.weight ?: 0f)).toInt() }
                             Text(
-                                text = "Total Reps: $totalReps · Volume: ${totalVolume}kg",
+                                text = "Repeticiones Totales: $totalReps · Volumen: ${totalVolume}kg",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurface,
                             )
                         } else {
                             Text(
-                                text = "No rep data available",
+                                text = "No hay datos de repeticiones disponibles",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -154,5 +199,102 @@ fun ProgressScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun PersonalRecordsCard(
+    records: ExercisePersonalRecords,
+    modifier: Modifier = Modifier,
+) {
+    HdCard(modifier = modifier.fillMaxWidth()) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = Icons.Default.EmojiEvents,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.tertiary,
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Récords Personales",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.tertiary,
+            )
+        }
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            PersonalRecordItem(
+                label = "Peso Máximo",
+                value = records.maxWeight?.let { "${it.formatDecimal()}kg" } ?: "—",
+                detail = records.maxWeightReps?.let { "× $it reps" },
+            )
+            PersonalRecordItem(
+                label = "Más Repeticiones",
+                value = records.maxReps?.toString() ?: "—",
+                detail = records.maxRepsWeight?.let { "@ ${it.formatDecimal()}kg" },
+            )
+            PersonalRecordItem(
+                label = "1RM Estimado",
+                value = records.estimatedOneRepMax?.let { "${it.formatDecimal()}kg" } ?: "—",
+                detail = null,
+            )
+        }
+    }
+}
+
+@Composable
+private fun PersonalRecordItem(
+    label: String,
+    value: String,
+    detail: String?,
+) {
+    Column {
+        Text(
+            text = value,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        if (detail != null) {
+            Text(
+                text = detail,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+@Composable
+private fun WeightProgressChart(
+    weights: List<Float>,
+    modifier: Modifier = Modifier,
+) {
+    val modelProducer = remember { CartesianChartModelProducer() }
+
+    LaunchedEffect(weights) {
+        modelProducer.runTransaction {
+            lineModel { series(y = weights) }
+        }
+    }
+
+    ProvideVicoTheme(rememberM3VicoTheme()) {
+        CartesianChartHost(
+            chart = rememberCartesianChart(
+                rememberLineCartesianLayer(),
+                startAxis = VerticalAxis.rememberStart(),
+                bottomAxis = HorizontalAxis.rememberBottom(),
+            ),
+            modelProducer = modelProducer,
+            modifier = modifier,
+        )
     }
 }

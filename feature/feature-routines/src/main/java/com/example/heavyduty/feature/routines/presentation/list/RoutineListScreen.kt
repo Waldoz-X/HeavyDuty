@@ -70,7 +70,7 @@ fun RoutineListScreen(
             ) {
                 Icon(
                     imageVector = Icons.Default.Add,
-                    contentDescription = "Create routine",
+                    contentDescription = "Crear rutina",
                 )
             }
         },
@@ -85,7 +85,7 @@ fun RoutineListScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "Routines",
+                text = "Rutinas",
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.onSurface,
             )
@@ -94,13 +94,13 @@ fun RoutineListScreen(
 
             when {
                 uiState.isLoading -> {
-                    HdLoadingIndicator(message = "Loading routines...")
+                    HdLoadingIndicator(message = "Cargando rutinas...")
                 }
                 uiState.routines.isEmpty() -> {
                     HdEmptyState(
                         icon = Icons.AutoMirrored.Filled.ListAlt,
-                        title = "No routines yet",
-                        description = "Tap + to create your first routine",
+                        title = "Aún no hay rutinas",
+                        description = "Toca + para crear tu primera rutina",
                     )
                 }
                 else -> {
@@ -176,7 +176,7 @@ private fun RoutineListItem(
             IconButton(onClick = onDelete) {
                 Icon(
                     imageVector = Icons.Default.Delete,
-                    contentDescription = "Delete",
+                    contentDescription = "Eliminar",
                     tint = MaterialTheme.colorScheme.error,
                 )
             }

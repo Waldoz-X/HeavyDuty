@@ -57,9 +57,11 @@ dependencies {
     // Image Loading
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
+    implementation(libs.coil.gif)
 
     // Testing
     testImplementation(libs.junit)
+    testImplementation(project(":core:core-testing"))
 }
 
 kotlin {

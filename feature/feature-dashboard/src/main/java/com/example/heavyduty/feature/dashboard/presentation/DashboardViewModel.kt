@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.Calendar
@@ -47,13 +48,16 @@ class DashboardViewModel @Inject constructor(
 
     private fun loadDashboardData() {
         viewModelScope.launch {
-            workoutRepository.getAllSessions()
+            combine(
+                workoutRepository.getAllSessions(),
+                workoutRepository.getAllCompletedSets(),
+            ) { sessions, sets -> sessions to sets }
                 .catch { e ->
                     _uiState.update { it.copy(isLoading = false, error = e.message) }
                 }
-                .collect { sessions ->
+                .collect { (sessions, sets) ->
                     val completedSessions = sessions.filter { it.endTime != null }.sortedByDescending { it.endTime }
-                    
+
                     // Calculate weekly stats
                     val now = Calendar.getInstance()
                     now.set(Calendar.DAY_OF_WEEK, now.firstDayOfWeek)
@@ -62,29 +66,34 @@ class DashboardViewModel @Inject constructor(
                     now.set(Calendar.SECOND, 0)
                     now.set(Calendar.MILLISECOND, 0)
                     val startOfWeek = now.timeInMillis
-                    
+
                     val weeklyWorkouts = completedSessions.filter { it.startTime >= startOfWeek }
                     val weeklyCount = weeklyWorkouts.size
-                    val totalTime = weeklyWorkouts.sumOf { 
-                        if (it.endTime != null) ((it.endTime!! - it.startTime) / 1000).toInt() else 0 
+                    val totalTime = weeklyWorkouts.sumOf {
+                        if (it.endTime != null) ((it.endTime!! - it.startTime) / 1000).toInt() else 0
                     }
-                    
+                    val weeklyVolume = sets
+                        .filter { (it.completedAt ?: 0L) >= startOfWeek }
+                        .sumOf { ((it.reps ?: 0) * (it.weight ?: 0f)).toDouble() }
+                        .toFloat()
+
                     val recentWorkout = completedSessions.firstOrNull()
-                    
+
                     _uiState.update {
                         it.copy(
                             isLoading = false,
                             weeklyWorkoutsCount = weeklyCount,
                             totalTimeSeconds = totalTime,
-                            recentWorkoutName = recentWorkout?.sessionName?.takeIf { it.isNotBlank() } ?: "Workout",
+                            weeklyVolumeKg = weeklyVolume,
+                            recentWorkoutName = recentWorkout?.sessionName?.takeIf { it.isNotBlank() } ?: "Entrenamiento",
                             recentWorkoutTime = recentWorkout?.endTime?.let { time ->
                                 // Simple relative time formatting or date
                                 val diff = System.currentTimeMillis() - time
                                 val days = diff / (1000 * 60 * 60 * 24)
                                 when {
-                                    days == 0L -> "Today"
-                                    days == 1L -> "Yesterday"
-                                    else -> "$days days ago"
+                                    days == 0L -> "Hoy"
+                                    days == 1L -> "Ayer"
+                                    else -> "Hace $days días"
                                 }
                             }
                         )

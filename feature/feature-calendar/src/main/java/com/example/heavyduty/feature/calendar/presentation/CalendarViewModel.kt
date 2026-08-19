@@ -40,20 +40,24 @@ class CalendarViewModel @Inject constructor(
         when (event) {
             is CalendarUiEvent.OnDaySelect -> {
                 val newDay = if (_uiState.value.selectedDay == event.dayOfWeek) null else event.dayOfWeek
-                _uiState.update { it.copy(selectedDay = newDay) }
+                _uiState.update { it.copy(selectedDay = newDay, isPickingRoutine = false) }
             }
             is CalendarUiEvent.OnRoutineClick -> {
                 viewModelScope.launch {
                     _uiEffect.emit(CalendarUiEffect.NavigateToRoutine(event.routineId))
                 }
             }
+            CalendarUiEvent.OnToggleRoutinePicker -> {
+                _uiState.update { it.copy(isPickingRoutine = !it.isPickingRoutine) }
+            }
             is CalendarUiEvent.OnAssignRoutine -> {
                 viewModelScope.launch {
                     try {
                         assignRoutineToDayUseCase(event.routineId, event.dayOfWeek)
-                        _uiEffect.emit(CalendarUiEffect.ShowMessage("Routine assigned"))
+                        _uiState.update { it.copy(isPickingRoutine = false) }
+                        _uiEffect.emit(CalendarUiEffect.ShowMessage("Rutina asignada"))
                     } catch (e: Exception) {
-                        _uiEffect.emit(CalendarUiEffect.ShowMessage("Failed to assign routine"))
+                        _uiEffect.emit(CalendarUiEffect.ShowMessage("Error al asignar la rutina"))
                     }
                 }
             }
@@ -62,7 +66,7 @@ class CalendarViewModel @Inject constructor(
                     try {
                         calendarRepository.deleteEntry(event.entry)
                     } catch (e: Exception) {
-                        _uiEffect.emit(CalendarUiEffect.ShowMessage("Failed to remove"))
+                        _uiEffect.emit(CalendarUiEffect.ShowMessage("Error al quitar"))
                     }
                 }
             }

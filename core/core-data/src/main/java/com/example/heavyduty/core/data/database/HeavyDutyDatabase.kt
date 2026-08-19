@@ -22,7 +22,7 @@ import com.example.heavyduty.core.data.database.entity.WorkoutSetEntity
         WorkoutSetEntity::class,
         CalendarEntryEntity::class,
     ],
-    version = 4,
+    version = 5,
     exportSchema = true,
 )
 abstract class HeavyDutyDatabase : RoomDatabase() {

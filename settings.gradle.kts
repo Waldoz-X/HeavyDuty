@@ -32,6 +32,7 @@ include(":core:core-common")
 include(":core:core-domain")
 include(":core:core-ui")
 include(":core:core-data")
+include(":core:core-testing")
 
 // Feature modules
 include(":feature:feature-exercises")
@@ -41,3 +42,4 @@ include(":feature:feature-history")
 include(":feature:feature-timer")
 include(":feature:feature-calendar")
 include(":feature:feature-dashboard")
+include(":feature:feature-profile")

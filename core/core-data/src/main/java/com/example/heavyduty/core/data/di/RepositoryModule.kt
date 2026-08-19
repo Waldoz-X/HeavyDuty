@@ -3,10 +3,12 @@ package com.example.heavyduty.core.data.di
 import com.example.heavyduty.core.data.repository.CalendarRepositoryImpl
 import com.example.heavyduty.core.data.repository.ExerciseRepositoryImpl
 import com.example.heavyduty.core.data.repository.RoutineRepositoryImpl
+import com.example.heavyduty.core.data.repository.UserPreferencesRepositoryImpl
 import com.example.heavyduty.core.data.repository.WorkoutRepositoryImpl
 import com.example.heavyduty.core.domain.repository.CalendarRepository
 import com.example.heavyduty.core.domain.repository.ExerciseRepository
 import com.example.heavyduty.core.domain.repository.RoutineRepository
+import com.example.heavyduty.core.domain.repository.UserPreferencesRepository
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
 import dagger.Binds
 import dagger.Module
@@ -33,4 +35,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindCalendarRepository(impl: CalendarRepositoryImpl): CalendarRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindUserPreferencesRepository(impl: UserPreferencesRepositoryImpl): UserPreferencesRepository
 }

@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.workout.presentation
 
+import com.example.heavyduty.core.domain.model.Exercise
 import com.example.heavyduty.core.domain.model.RoutineExercise
 import com.example.heavyduty.core.domain.model.WorkoutSet
 
@@ -18,6 +19,11 @@ data class ActiveWorkoutUiState(
     val elapsedSeconds: Int = 0,
     val isLoading: Boolean = true,
     val isActive: Boolean = false,
+    /** True for free workouts, where exercises aren't fixed by a routine and can be added on the fly. */
+    val allowAddingExercises: Boolean = false,
+    val isPickingExercise: Boolean = false,
+    val exercisePickerQuery: String = "",
+    val exercisePickerResults: List<Exercise> = emptyList(),
     val error: String? = null,
 )
 
@@ -32,6 +38,9 @@ sealed interface ActiveWorkoutUiEvent {
     data object OnCompleteWorkout : ActiveWorkoutUiEvent
     data object OnStartFreeWorkout : ActiveWorkoutUiEvent
     data object OnNavigateToRoutines : ActiveWorkoutUiEvent
+    data object OnToggleExercisePicker : ActiveWorkoutUiEvent
+    data class OnExercisePickerQueryChange(val query: String) : ActiveWorkoutUiEvent
+    data class OnAddExercise(val exercise: Exercise) : ActiveWorkoutUiEvent
 }
 
 /**

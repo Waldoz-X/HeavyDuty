@@ -28,7 +28,6 @@ fun NavGraphBuilder.routineListScreen(
  */
 fun NavGraphBuilder.routineEditorScreen(
     onNavigateBack: () -> Unit,
-    onNavigateToExercises: () -> Unit,
 ) {
     composable(
         route = "routine_editor/{routineId}",
@@ -39,15 +38,9 @@ fun NavGraphBuilder.routineEditorScreen(
             },
         ),
     ) {
-        RoutineEditorScreen(
-            onNavigateBack = onNavigateBack,
-            onNavigateToExercises = onNavigateToExercises,
-        )
+        RoutineEditorScreen(onNavigateBack = onNavigateBack)
     }
     composable(route = "routine_editor") {
-        RoutineEditorScreen(
-            onNavigateBack = onNavigateBack,
-            onNavigateToExercises = onNavigateToExercises,
-        )
+        RoutineEditorScreen(onNavigateBack = onNavigateBack)
     }
 }

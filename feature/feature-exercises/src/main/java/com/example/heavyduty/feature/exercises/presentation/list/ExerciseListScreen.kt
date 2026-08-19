@@ -3,7 +3,13 @@ package com.example.heavyduty.feature.exercises.presentation.list
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import coil3.compose.AsyncImage
@@ -16,12 +22,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,11 +42,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.heavyduty.core.domain.model.Exercise
 import com.example.heavyduty.core.domain.model.MuscleGroup
-import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdChip
 import com.example.heavyduty.core.ui.components.HdEmptyState
 import com.example.heavyduty.core.ui.components.HdLoadingIndicator
 import com.example.heavyduty.core.ui.components.HdSearchBar
+import com.example.heavyduty.feature.exercises.presentation.accentColor
 
 @Composable
 fun ExerciseListScreen(
@@ -77,7 +86,7 @@ private fun ExerciseListContent(
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "Exercises",
+            text = "Ejercicios",
             style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.onSurface,
         )
@@ -87,7 +96,7 @@ private fun ExerciseListContent(
         HdSearchBar(
             query = uiState.searchQuery,
             onQueryChange = { onEvent(ExerciseListUiEvent.OnSearchQueryChange(it)) },
-            placeholder = "Search exercises...",
+            placeholder = "Buscar ejercicios...",
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -111,18 +120,18 @@ private fun ExerciseListContent(
         when {
             uiState.isLoading -> {
                 HdLoadingIndicator(
-                    message = "Loading exercises...",
+                    message = "Cargando ejercicios...",
                     modifier = Modifier.weight(1f)
                 )
             }
             uiState.exercises.isEmpty() -> {
                 HdEmptyState(
                     icon = Icons.Default.FitnessCenter,
-                    title = "No exercises found",
+                    title = "No se encontraron ejercicios",
                     description = if (uiState.searchQuery.isNotBlank()) {
-                        "Try a different search term"
+                        "Prueba con otro término de búsqueda"
                     } else {
-                        "Exercises will appear here"
+                        "Los ejercicios aparecerán aquí"
                     },
                     modifier = Modifier.weight(1f)
                 )
@@ -161,61 +170,100 @@ private fun ExerciseListItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    HdCard(
+    val accent = exercise.muscleGroup.accentColor()
+
+    Box(
         modifier = modifier
+            .fillMaxWidth()
+            .shadow(
+                elevation = 6.dp,
+                shape = MaterialTheme.shapes.large,
+                ambientColor = accent.copy(alpha = 0.35f),
+                spotColor = accent.copy(alpha = 0.35f),
+            )
+            .clip(MaterialTheme.shapes.large)
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             .clickable(onClick = onClick)
-            .fillMaxWidth(),
+            .padding(12.dp),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
         ) {
-            if (exercise.imageUrl.isNotBlank()) {
-                androidx.compose.material3.Surface(
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant,
-                    modifier = Modifier
-                        .width(80.dp)
-                        .height(80.dp)
-                ) {
+            Box(
+                modifier = Modifier
+                    .size(88.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(
+                        Brush.linearGradient(
+                            listOf(accent.copy(alpha = 0.25f), accent.copy(alpha = 0.08f)),
+                        ),
+                    ),
+            ) {
+                if (exercise.imageUrl.isNotBlank()) {
                     AsyncImage(
                         model = exercise.imageUrl,
                         contentDescription = exercise.name,
                         contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.FitnessCenter,
+                        contentDescription = null,
+                        tint = accent,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(24.dp),
                     )
                 }
-                Spacer(modifier = Modifier.width(16.dp))
             }
 
+            Spacer(modifier = Modifier.width(16.dp))
+
             Column(
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             ) {
                 Text(
                     text = exercise.name,
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(8.dp))
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
                     HdChip(
                         text = exercise.muscleGroup.displayName,
                         isSelected = true,
-                        onClick = {}
+                        onClick = {},
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = exercise.equipment,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                    HdChip(
+                        text = exercise.exerciseType.displayName,
+                        isSelected = false,
+                        onClick = {},
                     )
+                }
+                if (exercise.equipment.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Build,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(14.dp),
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = exercise.equipment,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
                 }
             }
         }

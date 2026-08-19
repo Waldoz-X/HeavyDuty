@@ -55,6 +55,7 @@ dependencies {
     implementation(project(":feature:feature-timer"))
     implementation(project(":feature:feature-calendar"))
     implementation(project(":feature:feature-dashboard"))
+    implementation(project(":feature:feature-profile"))
 
     // AndroidX Core
     implementation(libs.androidx.core.ktx)

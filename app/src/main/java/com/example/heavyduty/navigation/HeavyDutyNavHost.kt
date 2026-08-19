@@ -10,6 +10,7 @@ import com.example.heavyduty.feature.exercises.navigation.exerciseDetailScreen
 import com.example.heavyduty.feature.exercises.navigation.exerciseListScreen
 import com.example.heavyduty.feature.history.navigation.historyScreen
 import com.example.heavyduty.feature.history.navigation.progressScreen
+import com.example.heavyduty.feature.profile.navigation.profileScreen
 import com.example.heavyduty.feature.routines.navigation.routineEditorScreen
 import com.example.heavyduty.feature.routines.navigation.routineListScreen
 import com.example.heavyduty.feature.timer.navigation.timerScreen
@@ -50,6 +51,9 @@ fun HeavyDutyNavHost(
         )
         exerciseDetailScreen(
             onNavigateBack = { navController.popBackStack() },
+            onViewProgress = { exerciseId ->
+                navController.navigate("progress/$exerciseId")
+            },
         )
 
         // Routines
@@ -63,9 +67,6 @@ fun HeavyDutyNavHost(
         )
         routineEditorScreen(
             onNavigateBack = { navController.popBackStack() },
-            onNavigateToExercises = {
-                navController.navigate(TopLevelDestination.EXERCISES.route)
-            },
         )
 
         // Timer
@@ -88,5 +89,8 @@ fun HeavyDutyNavHost(
                 navController.navigate("routine_editor/$routineId")
             },
         )
+
+        // Profile
+        profileScreen()
     }
 }

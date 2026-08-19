@@ -4,9 +4,9 @@ package com.example.heavyduty.core.domain.model
  * Type of exercise that determines logging behavior.
  */
 enum class ExerciseType(val displayName: String) {
-    STRENGTH("Strength"),
+    STRENGTH("Fuerza"),
     CARDIO("Cardio"),
-    FUNCTIONAL("Functional"),
+    FUNCTIONAL("Funcional"),
 }
 
 /**
@@ -22,10 +22,10 @@ enum class WorkoutStatus {
  * Type of workout session.
  */
 enum class WorkoutType(val displayName: String) {
-    GYM("Gym"),
+    GYM("Gimnasio"),
     CROSSFIT("CrossFit"),
     CARDIO("Cardio"),
-    MIXED("Mixed"),
+    MIXED("Mixto"),
 }
 
 /**

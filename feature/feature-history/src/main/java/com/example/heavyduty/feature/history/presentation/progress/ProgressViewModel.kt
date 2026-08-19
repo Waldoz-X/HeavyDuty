@@ -3,6 +3,7 @@ package com.example.heavyduty.feature.history.presentation.progress
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.heavyduty.feature.history.domain.usecase.GetExercisePersonalRecordsUseCase
 import com.example.heavyduty.feature.history.domain.usecase.GetExerciseProgressUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -11,6 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -18,6 +20,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ProgressViewModel @Inject constructor(
     private val getExerciseProgressUseCase: GetExerciseProgressUseCase,
+    private val getExercisePersonalRecordsUseCase: GetExercisePersonalRecordsUseCase,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -43,12 +46,17 @@ class ProgressViewModel @Inject constructor(
 
     private fun loadProgress() {
         viewModelScope.launch {
-            getExerciseProgressUseCase(exerciseId)
+            combine(
+                getExerciseProgressUseCase(exerciseId),
+                getExercisePersonalRecordsUseCase(exerciseId),
+            ) { sets, records -> sets to records }
                 .catch { e ->
                     _uiState.update { it.copy(isLoading = false, error = e.message) }
                 }
-                .collect { sets ->
-                    _uiState.update { it.copy(sets = sets, isLoading = false) }
+                .collect { (sets, records) ->
+                    _uiState.update {
+                        it.copy(sets = sets, personalRecords = records, isLoading = false)
+                    }
                 }
         }
     }

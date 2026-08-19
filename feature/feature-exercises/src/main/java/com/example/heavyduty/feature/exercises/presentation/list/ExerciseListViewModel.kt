@@ -68,7 +68,7 @@ class ExerciseListViewModel @Inject constructor(
             }
                 .catch { e ->
                     _uiState.update {
-                        it.copy(isLoading = false, error = e.message ?: "Unknown error")
+                        it.copy(isLoading = false, error = e.message ?: "Error desconocido")
                     }
                 }
                 .collect { exercises ->

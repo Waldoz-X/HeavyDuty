@@ -14,6 +14,8 @@ import java.io.InputStreamReader
  */
 object SeedData {
 
+    private const val RAW_BASE_URL = "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/"
+
     data class ExerciseDto(
         val id: String?,
         val name: String?,
@@ -40,50 +42,86 @@ object SeedData {
             val exercisesDto: List<ExerciseDto> = Gson().fromJson(reader, listType)
 
             val exerciseEntities = exercisesDto.map { dto ->
-                // Map the JSON category/body_part to ExerciseType
+                // The dataset's `category` field mirrors `body_part` for strength exercises and
+                // only diverges for cardio, so it's the only reliable signal for ExerciseType.
                 val type = when (dto.category?.lowercase()) {
-                    "strength", "powerlifting", "strongman", "olympic weightlifting" -> "STRENGTH"
                     "cardio" -> "CARDIO"
                     "stretching", "plyometrics" -> "FUNCTIONAL"
-                    else -> "STRENGTH" // Default
+                    else -> "STRENGTH"
                 }
 
-                // Map muscle group to MuscleGroup
-                val primaryMuscle = dto.body_part?.lowercase() ?: ""
-                val muscleGroup = when (primaryMuscle) {
-                    "chest" -> "CHEST"
-                    "back", "middle back", "lower back", "lats" -> "BACK"
-                    "shoulders", "delts" -> "SHOULDERS"
-                    "upper arms", "biceps" -> "BICEPS"
+                // `target` is far more granular than `body_part` (e.g. "upper arms" covers both
+                // biceps and triceps), so prefer it and fall back to body_part when absent.
+                val target = dto.target?.lowercase() ?: ""
+                val bodyPart = dto.body_part?.lowercase() ?: ""
+                val muscleGroup = when (target) {
+                    "abs" -> "ABS"
+                    "pectorals", "serratus anterior" -> "CHEST"
+                    "biceps" -> "BICEPS"
                     "triceps" -> "TRICEPS"
-                    "lower arms", "forearms" -> "FOREARMS"
-                    "upper legs", "quadriceps", "thighs" -> "QUADRICEPS"
+                    "delts" -> "SHOULDERS"
+                    "upper back", "spine" -> "BACK"
+                    "lats" -> "LATS"
+                    "calves" -> "CALVES"
+                    "quads", "adductors", "abductors" -> "QUADRICEPS"
                     "hamstrings" -> "HAMSTRINGS"
-                    "glutes", "buttocks" -> "GLUTES"
-                    "lower legs", "calves" -> "CALVES"
-                    "waist", "abdominals" -> "ABS"
-                    "neck", "traps" -> "TRAPS"
-                    else -> "FULL_BODY"
+                    "glutes" -> "GLUTES"
+                    "forearms" -> "FOREARMS"
+                    "traps", "levator scapulae" -> "TRAPS"
+                    "cardiovascular system" -> "CARDIO"
+                    else -> when (bodyPart) {
+                        "chest" -> "CHEST"
+                        "back" -> "BACK"
+                        "shoulders" -> "SHOULDERS"
+                        "upper legs" -> "QUADRICEPS"
+                        "lower legs" -> "CALVES"
+                        "upper arms" -> "BICEPS"
+                        "lower arms" -> "FOREARMS"
+                        "waist" -> "ABS"
+                        "cardio" -> "CARDIO"
+                        "neck" -> "TRAPS"
+                        else -> "FULL_BODY"
+                    }
                 }
 
                 val imageUrl = if (!dto.image.isNullOrBlank()) {
-                    "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/exercises/${dto.image}"
-                } else if (!dto.gif_url.isNullOrBlank()) {
-                    "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/exercises/${dto.gif_url}"
+                    "$RAW_BASE_URL${dto.image}"
+                } else {
+                    ""
+                }
+                val gifUrl = if (!dto.gif_url.isNullOrBlank()) {
+                    "$RAW_BASE_URL${dto.gif_url}"
                 } else {
                     ""
                 }
 
-                val instructionsEn = dto.instructions?.get("en") ?: ""
+                // Prefer the step-by-step breakdown (one step per line) over the flat paragraph
+                // so the detail screen can render a numbered list.
+                val instructionSteps = dto.instruction_steps?.get("en")
+                val instructionsEn = if (!instructionSteps.isNullOrEmpty()) {
+                    instructionSteps.joinToString("\n")
+                } else {
+                    dto.instructions?.get("en") ?: ""
+                }
+
+                val equipmentLabel = dto.equipment
+                    ?.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+                    ?: "None"
+                val targetLabel = dto.target
+                    ?.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+                    ?: "Full Body"
+
+                val article = if (equipmentLabel.firstOrNull()?.lowercaseChar() in listOf('a', 'e', 'i', 'o', 'u')) "An" else "A"
 
                 ExerciseEntity(
                     name = dto.name ?: "Unknown Exercise",
                     muscleGroup = muscleGroup,
                     exerciseType = type,
-                    equipment = dto.equipment?.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() } ?: "None",
-                    description = "${dto.target?.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() } ?: "Full Body"} exercise",
+                    equipment = equipmentLabel,
+                    description = "$article $equipmentLabel exercise targeting the $targetLabel.",
                     instructions = instructionsEn,
                     imageUrl = imageUrl,
+                    gifUrl = gifUrl,
                     isCustom = false,
                 )
             }

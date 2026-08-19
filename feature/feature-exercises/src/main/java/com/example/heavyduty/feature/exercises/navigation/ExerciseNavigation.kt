@@ -23,6 +23,7 @@ fun NavGraphBuilder.exerciseListScreen(
  */
 fun NavGraphBuilder.exerciseDetailScreen(
     onNavigateBack: () -> Unit,
+    onViewProgress: (Long) -> Unit,
 ) {
     composable(
         route = "exercise_detail/{exerciseId}",
@@ -30,6 +31,6 @@ fun NavGraphBuilder.exerciseDetailScreen(
             navArgument("exerciseId") { type = NavType.LongType },
         ),
     ) {
-        ExerciseDetailScreen(onNavigateBack = onNavigateBack)
+        ExerciseDetailScreen(onNavigateBack = onNavigateBack, onViewProgress = onViewProgress)
     }
 }

@@ -60,7 +60,7 @@ fun HistoryListScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "History",
+            text = "Historial",
             style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.onSurface,
         )
@@ -73,7 +73,7 @@ fun HistoryListScreen(
                 gradientColors = listOf(GradientLimeStart, GradientLimeEnd),
             ) {
                 Text(
-                    text = "Your Stats",
+                    text = "Tus Estadísticas",
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.tertiary,
                 )
@@ -82,9 +82,9 @@ fun HistoryListScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
-                    StatItem(label = "Sessions", value = "${uiState.stats.completedSessions}")
-                    StatItem(label = "Total Time", value = "${uiState.stats.totalDurationMinutes}min")
-                    StatItem(label = "Avg Duration", value = "${uiState.stats.averageDurationMinutes}min")
+                    StatItem(label = "Sesiones", value = "${uiState.stats.completedSessions}")
+                    StatItem(label = "Tiempo Total", value = "${uiState.stats.totalDurationMinutes}min")
+                    StatItem(label = "Duración Prom.", value = "${uiState.stats.averageDurationMinutes}min")
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
@@ -92,13 +92,13 @@ fun HistoryListScreen(
 
         when {
             uiState.isLoading -> {
-                HdLoadingIndicator(message = "Loading history...")
+                HdLoadingIndicator(message = "Cargando historial...")
             }
             uiState.sessions.isEmpty() -> {
                 HdEmptyState(
                     icon = Icons.Default.History,
-                    title = "No workouts yet",
-                    description = "Complete a workout to see your history",
+                    title = "Aún no hay entrenamientos",
+                    description = "Completa un entrenamiento para ver tu historial",
                 )
             }
             else -> {
@@ -130,7 +130,7 @@ private fun HistorySessionItem(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = session.sessionName.ifBlank { "Workout" },
+                    text = session.sessionName.ifBlank { "Entrenamiento" },
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
@@ -144,9 +144,9 @@ private fun HistorySessionItem(
             Column(horizontalAlignment = androidx.compose.ui.Alignment.End) {
                 HdChip(
                     text = when (session.status) {
-                        WorkoutStatus.COMPLETED -> "Completed"
-                        WorkoutStatus.IN_PROGRESS -> "In Progress"
-                        WorkoutStatus.CANCELLED -> "Cancelled"
+                        WorkoutStatus.COMPLETED -> "Completado"
+                        WorkoutStatus.IN_PROGRESS -> "En Progreso"
+                        WorkoutStatus.CANCELLED -> "Cancelado"
                     },
                     isSelected = session.status == WorkoutStatus.COMPLETED,
                     onClick = { },
@@ -185,6 +185,6 @@ private fun StatItem(
 }
 
 private fun formatDate(timestamp: Long): String {
-    val sdf = SimpleDateFormat("MMM dd, yyyy · HH:mm", Locale.getDefault())
+    val sdf = SimpleDateFormat("dd MMM yyyy · HH:mm", Locale("es", "ES"))
     return sdf.format(Date(timestamp))
 }

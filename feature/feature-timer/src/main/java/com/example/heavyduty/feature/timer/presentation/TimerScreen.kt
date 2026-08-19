@@ -1,5 +1,10 @@
 package com.example.heavyduty.feature.timer.presentation
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,23 +29,32 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.heavyduty.core.ui.components.HdChip
 import com.example.heavyduty.feature.timer.domain.model.TimerMode
+import kotlinx.coroutines.launch
 
 @Composable
 fun TimerScreen(
@@ -48,17 +62,47 @@ fun TimerScreen(
     viewModel: TimerViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
 
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = {},
+    )
+
+    LaunchedEffect(Unit) {
+        viewModel.uiEffect.collect { effect ->
+            when (effect) {
+                TimerUiEffect.TimerFinished -> {
+                    coroutineScope.launch {
+                        snackbarHostState.showSnackbar("¡Temporizador terminado!")
+                    }
+                }
+                is TimerUiEffect.ShowMessage -> {
+                    coroutineScope.launch {
+                        snackbarHostState.showSnackbar(effect.message)
+                    }
+                }
+            }
+        }
+    }
+
+    Scaffold(
+        modifier = modifier,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+    ) { innerPadding ->
     Column(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
+            .padding(innerPadding)
             .padding(horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "Timer",
+            text = "Temporizador",
             style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.fillMaxWidth(),
@@ -157,7 +201,7 @@ fun TimerScreen(
                 )
                 if (uiState.rounds > 1) {
                     Text(
-                        text = "Round ${uiState.currentRound}/${uiState.rounds}",
+                        text = "Ronda ${uiState.currentRound}/${uiState.rounds}",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.primary,
                     )
@@ -202,7 +246,7 @@ fun TimerScreen(
             ) {
                 Icon(
                     imageVector = Icons.Default.RestartAlt,
-                    contentDescription = "Reset",
+                    contentDescription = "Reiniciar",
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(28.dp),
                 )
@@ -212,20 +256,32 @@ fun TimerScreen(
 
             // Play/Pause FAB
             FloatingActionButton(
-                onClick = { viewModel.onEvent(TimerUiEvent.OnStartPause) },
+                onClick = {
+                    if (!uiState.isRunning &&
+                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                        ContextCompat.checkSelfPermission(
+                            context,
+                            Manifest.permission.POST_NOTIFICATIONS,
+                        ) != PackageManager.PERMISSION_GRANTED
+                    ) {
+                        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    }
+                    viewModel.onEvent(TimerUiEvent.OnStartPause)
+                },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier.size(72.dp),
             ) {
                 Icon(
                     imageVector = if (uiState.isRunning) Icons.Default.Pause else Icons.Default.PlayArrow,
-                    contentDescription = if (uiState.isRunning) "Pause" else "Start",
+                    contentDescription = if (uiState.isRunning) "Pausar" else "Iniciar",
                     modifier = Modifier.size(36.dp),
                 )
             }
 
             Spacer(modifier = Modifier.width(80.dp))
         }
+    }
     }
 }
 

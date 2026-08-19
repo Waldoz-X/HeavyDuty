@@ -20,6 +20,11 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
 
+    testOptions {
+        unitTests {
+            isReturnDefaultValues = true
+        }
+    }
 
     buildFeatures {
         compose = true
@@ -30,6 +35,9 @@ dependencies {
     implementation(project(":core:core-common"))
     implementation(project(":core:core-domain"))
     implementation(project(":core:core-ui"))
+
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.activity.compose)
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
@@ -49,6 +57,7 @@ dependencies {
 
     implementation(libs.kotlinx.coroutines.core)
     testImplementation(libs.junit)
+    testImplementation(project(":core:core-testing"))
 }
 
 kotlin {

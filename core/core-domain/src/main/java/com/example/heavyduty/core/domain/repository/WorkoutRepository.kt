@@ -13,6 +13,7 @@ interface WorkoutRepository {
     fun getSessionWithSets(id: Long): Flow<WorkoutSession?>
     fun getSessionsByDateRange(startTime: Long, endTime: Long): Flow<List<WorkoutSession>>
     fun getSetsByExerciseId(exerciseId: Long): Flow<List<WorkoutSet>>
+    fun getAllCompletedSets(): Flow<List<WorkoutSet>>
     fun getActiveSession(): Flow<WorkoutSession?>
     suspend fun insertSession(session: WorkoutSession): Long
     suspend fun updateSession(session: WorkoutSession)

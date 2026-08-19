@@ -17,3 +17,11 @@ annotation class MainDispatcher
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
 annotation class DefaultDispatcher
+
+/**
+ * A [kotlinx.coroutines.CoroutineScope] that outlives any single screen/ViewModel, for work that
+ * must complete even if the component that triggered it is destroyed (e.g. one-shot DB seeding).
+ */
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class ApplicationScope

@@ -1,5 +1,7 @@
 package com.example.heavyduty.feature.exercises.presentation.detail
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -7,34 +9,52 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ShowChart
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.compose.AsyncImage
+import com.example.heavyduty.core.domain.model.Exercise
 import com.example.heavyduty.core.ui.components.HdCard
-import com.example.heavyduty.core.ui.components.HdChip
 import com.example.heavyduty.core.ui.components.HdLoadingIndicator
+import com.example.heavyduty.core.ui.components.HdTonalButton
+import com.example.heavyduty.feature.exercises.presentation.accentColor
+
+private val HeaderHeight = 320.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExerciseDetailScreen(
     onNavigateBack: () -> Unit,
+    onViewProgress: (Long) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: ExerciseDetailViewModel = hiltViewModel(),
 ) {
@@ -48,117 +68,21 @@ fun ExerciseDetailScreen(
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = uiState.exercise?.name ?: "Exercise Detail",
-                        style = MaterialTheme.typography.titleLarge,
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                ),
-            )
-        },
-        modifier = modifier,
-    ) { innerPadding ->
+    Scaffold(modifier = modifier) { innerPadding ->
         when {
             uiState.isLoading -> {
                 HdLoadingIndicator(
                     modifier = Modifier.padding(innerPadding),
-                    message = "Loading exercise...",
+                    message = "Cargando ejercicio...",
                 )
             }
             uiState.exercise != null -> {
-                val exercise = uiState.exercise!!
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding)
-                        .padding(horizontal = 16.dp)
-                        .verticalScroll(rememberScrollState()),
-                ) {
-                    if (exercise.imageUrl.isNotBlank()) {
-                        androidx.compose.material3.Surface(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(250.dp)
-                                .padding(bottom = 16.dp),
-                            shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
-                            shadowElevation = 8.dp
-                        ) {
-                            coil3.compose.AsyncImage(
-                                model = exercise.imageUrl,
-                                contentDescription = exercise.name,
-                                contentScale = androidx.compose.ui.layout.ContentScale.Crop,
-                                modifier = Modifier.fillMaxSize()
-                            )
-                        }
-                    } else {
-                        Spacer(modifier = Modifier.height(8.dp))
-                    }
-
-                    // Tags row
-                    Row {
-                        HdChip(
-                            text = exercise.muscleGroup.displayName,
-                            isSelected = true,
-                            onClick = { },
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        HdChip(
-                            text = exercise.exerciseType.displayName,
-                            isSelected = false,
-                            onClick = { },
-                        )
-                        if (exercise.equipment.isNotBlank()) {
-                            Spacer(modifier = Modifier.width(8.dp))
-                            HdChip(
-                                text = exercise.equipment,
-                                isSelected = false,
-                                onClick = { },
-                            )
-                        }
-                    }
-
-                    if (exercise.description.isNotBlank()) {
-                        Spacer(modifier = Modifier.height(20.dp))
-                        SectionHeader(title = "Description")
-                        Spacer(modifier = Modifier.height(8.dp))
-                        HdCard {
-                            Text(
-                                text = exercise.description,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface,
-                            )
-                        }
-                    }
-
-                    if (exercise.instructions.isNotBlank()) {
-                        Spacer(modifier = Modifier.height(20.dp))
-                        SectionHeader(title = "Instructions")
-                        Spacer(modifier = Modifier.height(8.dp))
-                        HdCard {
-                            Text(
-                                text = exercise.instructions,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface,
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(32.dp))
-                }
+                ExerciseDetailContent(
+                    exercise = uiState.exercise!!,
+                    onNavigateBack = onNavigateBack,
+                    onViewProgress = onViewProgress,
+                    modifier = Modifier.padding(top = innerPadding.calculateTopPadding()),
+                )
             }
             uiState.error != null -> {
                 Column(
@@ -168,7 +92,7 @@ fun ExerciseDetailScreen(
                         .padding(16.dp),
                 ) {
                     Text(
-                        text = uiState.error ?: "Unknown error",
+                        text = uiState.error ?: "Error desconocido",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.error,
                     )
@@ -179,14 +103,267 @@ fun ExerciseDetailScreen(
 }
 
 @Composable
-private fun SectionHeader(
-    title: String,
+private fun ExerciseDetailContent(
+    exercise: Exercise,
+    onNavigateBack: () -> Unit,
+    onViewProgress: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.titleSmall,
-        color = MaterialTheme.colorScheme.primary,
+    val accent = exercise.muscleGroup.accentColor()
+    val scrollState = rememberScrollState()
+    val heroImage = exercise.gifUrl.ifBlank { exercise.imageUrl }
+
+    Box(modifier = modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState),
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(HeaderHeight)
+                    .clipToBounds(),
+            ) {
+                if (heroImage.isNotBlank()) {
+                    // The source media is a small 180x180 thumbnail — stretching it edge-to-edge
+                    // across a full-width, 320dp-tall header would upscale it ~2-3x and look
+                    // visibly pixelated. Instead: a heavily blurred copy fills the backdrop (blur
+                    // hides the low resolution) while a sharp copy sits centered at a size close
+                    // to its native resolution, framed like an album cover.
+                    AsyncImage(
+                        model = heroImage,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .graphicsLayer {
+                                translationY = scrollState.value * 0.5f
+                                val scale = 1f + (scrollState.value / HeaderHeight.toPx()).coerceIn(0f, 1f) * 0.3f
+                                scaleX = scale * 1.15f
+                                scaleY = scale * 1.15f
+                            }
+                            .blur(36.dp),
+                    )
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .padding(top = 12.dp)
+                            .size(208.dp)
+                            .graphicsLayer {
+                                translationY = scrollState.value * 0.5f
+                            }
+                            .shadow(elevation = 12.dp, shape = RoundedCornerShape(20.dp))
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                    ) {
+                        AsyncImage(
+                            model = heroImage,
+                            contentDescription = exercise.name,
+                            contentScale = ContentScale.Fit,
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    }
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                Brush.linearGradient(
+                                    listOf(accent.copy(alpha = 0.4f), accent.copy(alpha = 0.1f)),
+                                ),
+                            ),
+                    )
+                }
+
+                // Scrim so the title stays legible over any image
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    Color.Black.copy(alpha = 0.15f),
+                                    Color.Transparent,
+                                    Color.Black.copy(alpha = 0.75f),
+                                ),
+                            ),
+                        ),
+                )
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                ) {
+                    IconButton(
+                        onClick = onNavigateBack,
+                        colors = IconButtonDefaults.iconButtonColors(
+                            containerColor = Color.Black.copy(alpha = 0.35f),
+                            contentColor = Color.White,
+                        ),
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Atrás",
+                        )
+                    }
+                }
+
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(horizontal = 20.dp, vertical = 16.dp),
+                ) {
+                    Text(
+                        text = exercise.name,
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = Color.White,
+                    )
+                    if (exercise.equipment.isNotBlank()) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = exercise.equipment,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.White.copy(alpha = 0.85f),
+                        )
+                    }
+                }
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
+            ) {
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row {
+                    AccentChip(text = exercise.muscleGroup.displayName, color = accent)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    AccentChip(
+                        text = exercise.exerciseType.displayName,
+                        color = MaterialTheme.colorScheme.secondary,
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                HdTonalButton(
+                    text = "Ver Progreso y Récords",
+                    onClick = { onViewProgress(exercise.id) },
+                    icon = Icons.Default.ShowChart,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+
+                if (exercise.description.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(24.dp))
+                    SectionHeader(title = "Resumen", accent = accent)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    HdCard {
+                        Text(
+                            text = exercise.description,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
+                }
+
+                val steps = exercise.instructions
+                    .split("\n")
+                    .map { it.trim() }
+                    .filter { it.isNotEmpty() }
+
+                if (steps.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(24.dp))
+                    SectionHeader(title = "Instrucciones", accent = accent)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    HdCard {
+                        steps.forEachIndexed { index, step ->
+                            if (index > 0) Spacer(modifier = Modifier.height(14.dp))
+                            InstructionStep(number = index + 1, text = step, accent = accent)
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun AccentChip(
+    text: String,
+    color: Color,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .clip(MaterialTheme.shapes.small)
+            .background(color.copy(alpha = 0.16f))
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelMedium,
+            color = color,
+        )
+    }
+}
+
+@Composable
+private fun InstructionStep(
+    number: Int,
+    text: String,
+    accent: Color,
+    modifier: Modifier = Modifier,
+) {
+    Row(modifier = modifier.fillMaxWidth()) {
+        Box(
+            modifier = Modifier
+                .size(26.dp)
+                .clip(CircleShape)
+                .background(accent.copy(alpha = 0.18f)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = number.toString(),
+                style = MaterialTheme.typography.labelMedium,
+                color = accent,
+            )
+        }
+        Spacer(modifier = Modifier.width(12.dp))
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+@Composable
+private fun SectionHeader(
+    title: String,
+    accent: Color,
+    modifier: Modifier = Modifier,
+) {
+    Row(
         modifier = modifier,
-    )
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(width = 4.dp, height = 16.dp)
+                .clip(RoundedCornerShape(2.dp))
+                .background(accent),
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+    }
 }

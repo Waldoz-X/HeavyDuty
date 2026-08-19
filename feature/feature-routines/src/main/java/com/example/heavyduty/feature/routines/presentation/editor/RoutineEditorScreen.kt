@@ -1,6 +1,9 @@
 package com.example.heavyduty.feature.routines.presentation.editor
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -9,13 +12,19 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.RemoveCircleOutline
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -32,22 +41,26 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.compose.AsyncImage
+import com.example.heavyduty.core.domain.model.Exercise
 import com.example.heavyduty.core.domain.model.RoutineExercise
 import com.example.heavyduty.core.domain.model.WorkoutType
 import com.example.heavyduty.core.ui.components.HdButton
 import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdChip
 import com.example.heavyduty.core.ui.components.HdLoadingIndicator
+import com.example.heavyduty.core.ui.components.HdSearchBar
 import com.example.heavyduty.core.ui.components.HdTonalButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RoutineEditorScreen(
     onNavigateBack: () -> Unit,
-    onNavigateToExercises: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: RoutineEditorViewModel = hiltViewModel(),
 ) {
@@ -57,7 +70,6 @@ fun RoutineEditorScreen(
         viewModel.uiEffect.collect { effect ->
             when (effect) {
                 RoutineEditorUiEffect.NavigateBack -> onNavigateBack()
-                RoutineEditorUiEffect.NavigateToExercises -> onNavigateToExercises()
                 is RoutineEditorUiEffect.ShowMessage -> { /* Could show snackbar */ }
             }
         }
@@ -68,7 +80,7 @@ fun RoutineEditorScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = if (uiState.isEditMode) "Edit Routine" else "New Routine",
+                        text = if (uiState.isEditMode) "Editar Rutina" else "Nueva Rutina",
                         style = MaterialTheme.typography.titleLarge,
                     )
                 },
@@ -76,7 +88,7 @@ fun RoutineEditorScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = "Atrás",
                         )
                     }
                 },
@@ -90,7 +102,7 @@ fun RoutineEditorScreen(
         if (uiState.isLoading) {
             HdLoadingIndicator(
                 modifier = Modifier.padding(innerPadding),
-                message = "Loading routine...",
+                message = "Cargando rutina...",
             )
         } else {
             LazyColumn(
@@ -107,7 +119,7 @@ fun RoutineEditorScreen(
                     OutlinedTextField(
                         value = uiState.name,
                         onValueChange = { viewModel.onEvent(RoutineEditorUiEvent.OnNameChange(it)) },
-                        label = { Text("Routine Name") },
+                        label = { Text("Nombre de la Rutina") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         shape = RoundedCornerShape(12.dp),
@@ -123,7 +135,7 @@ fun RoutineEditorScreen(
                     OutlinedTextField(
                         value = uiState.description,
                         onValueChange = { viewModel.onEvent(RoutineEditorUiEvent.OnDescriptionChange(it)) },
-                        label = { Text("Description (optional)") },
+                        label = { Text("Descripción (opcional)") },
                         modifier = Modifier.fillMaxWidth(),
                         maxLines = 3,
                         shape = RoundedCornerShape(12.dp),
@@ -137,7 +149,7 @@ fun RoutineEditorScreen(
                 // Workout type selector
                 item {
                     Text(
-                        text = "Type",
+                        text = "Tipo",
                         style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.onSurface,
                     )
@@ -164,25 +176,40 @@ fun RoutineEditorScreen(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            text = "Exercises (${uiState.exercises.size})",
+                            text = "Ejercicios (${uiState.exercises.size})",
                             style = MaterialTheme.typography.titleSmall,
                             color = MaterialTheme.colorScheme.onSurface,
                         )
                         HdTonalButton(
-                            text = "Add",
-                            onClick = { viewModel.onEvent(RoutineEditorUiEvent.OnNavigateToExercises) },
+                            text = "Agregar",
+                            onClick = { viewModel.onEvent(RoutineEditorUiEvent.OnToggleExercisePicker) },
                             icon = Icons.Default.Add,
                         )
                     }
                 }
 
+                if (uiState.isPickingExercise) {
+                    item {
+                        ExercisePicker(
+                            query = uiState.exercisePickerQuery,
+                            results = uiState.exercisePickerResults,
+                            onQueryChange = { viewModel.onEvent(RoutineEditorUiEvent.OnExercisePickerQueryChange(it)) },
+                            onExercisePick = { viewModel.onEvent(RoutineEditorUiEvent.OnAddExercise(it)) },
+                        )
+                    }
+                }
+
                 // Exercise items
-                items(
-                    items = uiState.exercises,
-                    key = { it.id },
-                ) { routineExercise ->
+                itemsIndexed(uiState.exercises) { index, routineExercise ->
                     RoutineExerciseItem(
                         routineExercise = routineExercise,
+                        canMoveUp = index > 0,
+                        canMoveDown = index < uiState.exercises.lastIndex,
+                        onUpdate = { updated ->
+                            viewModel.onEvent(RoutineEditorUiEvent.OnUpdateExercise(index, updated))
+                        },
+                        onMoveUp = { viewModel.onEvent(RoutineEditorUiEvent.OnMoveExercise(index, -1)) },
+                        onMoveDown = { viewModel.onEvent(RoutineEditorUiEvent.OnMoveExercise(index, 1)) },
                         onRemove = { viewModel.onEvent(RoutineEditorUiEvent.OnRemoveExercise(routineExercise)) },
                     )
                 }
@@ -191,7 +218,7 @@ fun RoutineEditorScreen(
                 item {
                     Spacer(modifier = Modifier.height(16.dp))
                     HdButton(
-                        text = if (uiState.isEditMode) "Update Routine" else "Create Routine",
+                        text = if (uiState.isEditMode) "Actualizar Rutina" else "Crear Rutina",
                         onClick = { viewModel.onEvent(RoutineEditorUiEvent.OnSave) },
                         modifier = Modifier.fillMaxWidth(),
                         isLoading = uiState.isSaving,
@@ -203,38 +230,206 @@ fun RoutineEditorScreen(
 }
 
 @Composable
+private fun ExercisePicker(
+    query: String,
+    results: List<Exercise>,
+    onQueryChange: (String) -> Unit,
+    onExercisePick: (Exercise) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    HdCard(modifier = modifier.fillMaxWidth()) {
+        Text(
+            text = "Buscar Ejercicio",
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary,
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        HdSearchBar(
+            query = query,
+            onQueryChange = onQueryChange,
+            placeholder = "Buscar ejercicios...",
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(220.dp)
+                .background(MaterialTheme.colorScheme.surfaceContainerHighest, RoundedCornerShape(12.dp)),
+        ) {
+            items(items = results, key = { it.id }) { exercise ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onExercisePick(exercise) }
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .background(
+                                MaterialTheme.colorScheme.surfaceContainerHigh,
+                                RoundedCornerShape(8.dp),
+                            ),
+                    ) {
+                        if (exercise.imageUrl.isNotBlank()) {
+                            AsyncImage(
+                                model = exercise.imageUrl,
+                                contentDescription = exercise.name,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize(),
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.FitnessCenter,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(8.dp),
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = exercise.name,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun RoutineExerciseItem(
     routineExercise: RoutineExercise,
+    canMoveUp: Boolean,
+    canMoveDown: Boolean,
+    onUpdate: (RoutineExercise) -> Unit,
+    onMoveUp: () -> Unit,
+    onMoveDown: () -> Unit,
     onRemove: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     HdCard(modifier = modifier) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = routineExercise.exercise?.name ?: "Exercise #${routineExercise.exerciseId}",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "${routineExercise.targetSets} sets × ${routineExercise.targetReps} reps" +
-                        if (routineExercise.targetWeight > 0) " @ ${routineExercise.targetWeight}kg" else "",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .background(
+                        MaterialTheme.colorScheme.surfaceContainerHigh,
+                        RoundedCornerShape(10.dp),
+                    ),
+            ) {
+                val imageUrl = routineExercise.exercise?.imageUrl.orEmpty()
+                if (imageUrl.isNotBlank()) {
+                    AsyncImage(
+                        model = imageUrl,
+                        contentDescription = routineExercise.exercise?.name,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.FitnessCenter,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(14.dp),
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = routineExercise.exercise?.name ?: "Ejercicio #${routineExercise.exerciseId}",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f),
+            )
+            Column {
+                IconButton(onClick = onMoveUp, enabled = canMoveUp) {
+                    Icon(
+                        imageVector = Icons.Default.KeyboardArrowUp,
+                        contentDescription = "Subir",
+                        tint = if (canMoveUp) {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+                        },
+                    )
+                }
+                IconButton(onClick = onMoveDown, enabled = canMoveDown) {
+                    Icon(
+                        imageVector = Icons.Default.KeyboardArrowDown,
+                        contentDescription = "Bajar",
+                        tint = if (canMoveDown) {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+                        },
+                    )
+                }
             }
             IconButton(onClick = onRemove) {
                 Icon(
                     imageVector = Icons.Default.RemoveCircleOutline,
-                    contentDescription = "Remove",
+                    contentDescription = "Quitar",
                     tint = MaterialTheme.colorScheme.error,
                 )
             }
         }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            CompactNumberField(
+                label = "Series",
+                value = routineExercise.targetSets,
+                onValueChange = { onUpdate(routineExercise.copy(targetSets = it)) },
+                modifier = Modifier.weight(1f),
+            )
+            CompactNumberField(
+                label = "Reps",
+                value = routineExercise.targetReps,
+                onValueChange = { onUpdate(routineExercise.copy(targetReps = it)) },
+                modifier = Modifier.weight(1f),
+            )
+            CompactNumberField(
+                label = "Peso (kg)",
+                value = routineExercise.targetWeight.toInt(),
+                onValueChange = { onUpdate(routineExercise.copy(targetWeight = it.toFloat())) },
+                modifier = Modifier.weight(1f),
+            )
+        }
     }
+}
+
+@Composable
+private fun CompactNumberField(
+    label: String,
+    value: Int,
+    onValueChange: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    OutlinedTextField(
+        value = if (value > 0) value.toString() else "",
+        onValueChange = { text ->
+            val parsed = text.filter { it.isDigit() }.toIntOrNull() ?: 0
+            onValueChange(parsed.coerceAtMost(999))
+        },
+        label = { Text(label, style = MaterialTheme.typography.labelSmall) },
+        singleLine = true,
+        shape = RoundedCornerShape(10.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = MaterialTheme.colorScheme.primary,
+            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+        ),
+        modifier = modifier,
+    )
 }

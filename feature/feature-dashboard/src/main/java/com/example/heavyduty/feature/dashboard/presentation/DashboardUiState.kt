@@ -7,6 +7,7 @@ data class DashboardUiState(
     val isLoading: Boolean = true,
     val weeklyWorkoutsCount: Int = 0,
     val totalTimeSeconds: Int = 0,
+    val weeklyVolumeKg: Float = 0f,
     val recentWorkoutName: String? = null,
     val recentWorkoutTime: String? = null,
     val error: String? = null

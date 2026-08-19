@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.MaterialTheme
@@ -28,15 +29,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.heavyduty.core.domain.model.CalendarEntry
+import com.example.heavyduty.core.domain.model.Routine
 import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdEmptyState
 import com.example.heavyduty.core.ui.components.HdLoadingIndicator
+import com.example.heavyduty.core.ui.components.HdTonalButton
 
-private val dayNames = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+private val dayNames = listOf("Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom")
 
 @Composable
 fun CalendarScreen(
@@ -63,7 +67,7 @@ fun CalendarScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "Calendar",
+            text = "Calendario",
             style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.onSurface,
         )
@@ -72,7 +76,7 @@ fun CalendarScreen(
 
         when {
             uiState.isLoading -> {
-                HdLoadingIndicator(message = "Loading schedule...")
+                HdLoadingIndicator(message = "Cargando horario...")
             }
             else -> {
                 // Week day selector
@@ -134,23 +138,40 @@ fun CalendarScreen(
                 if (selectedDay != null) {
                     val entries = uiState.weekSchedule[selectedDay] ?: emptyList()
 
-                    Text(
-                        text = "${dayNames[selectedDay - 1]} Schedule",
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = "Horario del ${dayNames[selectedDay - 1]}",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                        HdTonalButton(
+                            text = "Asignar Rutina",
+                            onClick = { viewModel.onEvent(CalendarUiEvent.OnToggleRoutinePicker) },
+                            icon = Icons.Default.Add,
+                        )
+                    }
                     Spacer(modifier = Modifier.height(12.dp))
 
+                    if (uiState.isPickingRoutine) {
+                        RoutinePicker(
+                            routines = uiState.routines,
+                            onRoutinePick = {
+                                viewModel.onEvent(CalendarUiEvent.OnAssignRoutine(it.id, selectedDay))
+                            },
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                    }
+
                     if (entries.isEmpty()) {
-                        HdCard {
-                            Text(
-                                text = "No routines scheduled",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth(),
-                            )
-                        }
+                        HdEmptyState(
+                            icon = Icons.Default.CalendarMonth,
+                            title = "Día de descanso",
+                            description = "Asigna una rutina para planear este día",
+                        )
                     } else {
                         LazyColumn(
                             verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -159,7 +180,7 @@ fun CalendarScreen(
                             items(entries, key = { it.id }) { entry ->
                                 CalendarEntryItem(
                                     entry = entry,
-                                    routineName = uiState.routines.find { it.id == entry.routineId }?.name ?: "Routine #${entry.routineId}",
+                                    routineName = uiState.routines.find { it.id == entry.routineId }?.name ?: "Rutina #${entry.routineId}",
                                     onClick = { viewModel.onEvent(CalendarUiEvent.OnRoutineClick(entry.routineId)) },
                                     onRemove = { viewModel.onEvent(CalendarUiEvent.OnRemoveEntry(entry)) },
                                 )
@@ -187,7 +208,7 @@ fun CalendarScreen(
                                         fontWeight = FontWeight.Bold,
                                     )
                                     Text(
-                                        text = if (entries.isEmpty()) "Rest day" else "${entries.size} routine(s)",
+                                        text = if (entries.isEmpty()) "Día de descanso" else "${entries.size} rutina(s)",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = if (entries.isEmpty()) {
                                             MaterialTheme.colorScheme.onSurfaceVariant
@@ -199,7 +220,7 @@ fun CalendarScreen(
                                 entries.forEach { entry ->
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
-                                        text = "• ${uiState.routines.find { it.id == entry.routineId }?.name ?: "Routine"}",
+                                        text = "• ${uiState.routines.find { it.id == entry.routineId }?.name ?: "Rutina"}",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
@@ -236,9 +257,60 @@ private fun CalendarEntryItem(
             androidx.compose.material3.IconButton(onClick = onRemove) {
                 androidx.compose.material3.Icon(
                     imageVector = Icons.Default.Close,
-                    contentDescription = "Remove",
+                    contentDescription = "Quitar",
                     tint = MaterialTheme.colorScheme.error,
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun RoutinePicker(
+    routines: List<Routine>,
+    onRoutinePick: (Routine) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    HdCard(modifier = modifier.fillMaxWidth()) {
+        Text(
+            text = "Elige una Rutina",
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary,
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        if (routines.isEmpty()) {
+            Text(
+                text = "Aún no tienes rutinas creadas",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        } else {
+            Column {
+                routines.forEachIndexed { index, routine ->
+                    if (index > 0) Spacer(modifier = Modifier.height(4.dp))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(MaterialTheme.shapes.small)
+                            .clickable { onRoutinePick(routine) }
+                            .padding(vertical = 10.dp, horizontal = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = routine.name,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f),
+                        )
+                        Text(
+                            text = routine.type.displayName,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
             }
         }
     }

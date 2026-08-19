@@ -3,6 +3,9 @@ package com.example.heavyduty.feature.workout.presentation
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.heavyduty.core.domain.model.Exercise
+import com.example.heavyduty.core.domain.model.RoutineExercise
+import com.example.heavyduty.core.domain.repository.ExerciseRepository
 import com.example.heavyduty.core.domain.repository.RoutineRepository
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
 import com.example.heavyduty.feature.workout.domain.usecase.CompleteWorkoutUseCase
@@ -28,8 +31,11 @@ class ActiveWorkoutViewModel @Inject constructor(
     private val completeWorkoutUseCase: CompleteWorkoutUseCase,
     private val routineRepository: RoutineRepository,
     private val workoutRepository: WorkoutRepository,
+    private val exerciseRepository: ExerciseRepository,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
+
+    private var cachedExercises: List<Exercise>? = null
 
     private val routineId: Long? = savedStateHandle.get<Long>("routineId")?.takeIf { it > 0 }
 
@@ -60,6 +66,9 @@ class ActiveWorkoutViewModel @Inject constructor(
             ActiveWorkoutUiEvent.OnNavigateToRoutines -> {
                 viewModelScope.launch { _uiEffect.emit(ActiveWorkoutUiEffect.NavigateToRoutines) }
             }
+            ActiveWorkoutUiEvent.OnToggleExercisePicker -> toggleExercisePicker()
+            is ActiveWorkoutUiEvent.OnExercisePickerQueryChange -> onExercisePickerQueryChange(event.query)
+            is ActiveWorkoutUiEvent.OnAddExercise -> addExerciseToSession(event.exercise)
         }
     }
 
@@ -76,6 +85,7 @@ class ActiveWorkoutViewModel @Inject constructor(
                         completedSets = sessionWithSets?.sets ?: emptyList(),
                         isActive = true,
                         isLoading = false,
+                        allowAddingExercises = activeSession.routineId == null,
                     )
                 }
                 activeSession.routineId?.let {
@@ -110,20 +120,21 @@ class ActiveWorkoutViewModel @Inject constructor(
                 }
                 startTimer()
             } else {
-                _uiState.update { it.copy(isLoading = false, error = "Routine not found") }
+                _uiState.update { it.copy(isLoading = false, error = "Rutina no encontrada") }
             }
         }
     }
 
     private fun startFreeWorkout() {
         viewModelScope.launch {
-            val sessionId = startWorkoutUseCase(sessionName = "Free Workout")
+            val sessionId = startWorkoutUseCase(sessionName = "Entrenamiento Libre")
             _uiState.update {
                 it.copy(
                     sessionId = sessionId,
-                    sessionName = "Free Workout",
+                    sessionName = "Entrenamiento Libre",
                     isActive = true,
                     isLoading = false,
+                    allowAddingExercises = true,
                 )
             }
             startTimer()
@@ -164,10 +175,54 @@ class ActiveWorkoutViewModel @Inject constructor(
                         weightInput = "",
                     )
                 }
-                _uiEffect.emit(ActiveWorkoutUiEffect.ShowMessage("Set logged!"))
+                _uiEffect.emit(ActiveWorkoutUiEffect.ShowMessage("¡Serie registrada!"))
             } catch (_: Exception) {
-                _uiEffect.emit(ActiveWorkoutUiEffect.ShowMessage("Failed to log set"))
+                _uiEffect.emit(ActiveWorkoutUiEffect.ShowMessage("Error al registrar la serie"))
             }
+        }
+    }
+
+    private fun toggleExercisePicker() {
+        val opening = !_uiState.value.isPickingExercise
+        _uiState.update { it.copy(isPickingExercise = opening) }
+        if (opening && cachedExercises == null) {
+            viewModelScope.launch {
+                cachedExercises = exerciseRepository.getAllExercises().firstOrNull().orEmpty()
+                filterExercisePicker(_uiState.value.exercisePickerQuery)
+            }
+        }
+    }
+
+    private fun onExercisePickerQueryChange(query: String) {
+        _uiState.update { it.copy(exercisePickerQuery = query) }
+        filterExercisePicker(query)
+    }
+
+    private fun filterExercisePicker(query: String) {
+        val source = cachedExercises.orEmpty()
+        val filtered = if (query.isBlank()) {
+            source
+        } else {
+            source.filter { it.name.contains(query, ignoreCase = true) }
+        }
+        _uiState.update { it.copy(exercisePickerResults = filtered.take(30)) }
+    }
+
+    private fun addExerciseToSession(exercise: Exercise) {
+        _uiState.update { state ->
+            val newEntry = RoutineExercise(
+                exerciseId = exercise.id,
+                exercise = exercise,
+                orderIndex = state.routineExercises.size,
+            )
+            state.copy(
+                routineExercises = state.routineExercises + newEntry,
+                currentExerciseIndex = state.routineExercises.size,
+                currentSetNumber = 1,
+                isPickingExercise = false,
+                exercisePickerQuery = "",
+                exercisePickerResults = emptyList(),
+            )
         }
     }
 
@@ -179,7 +234,7 @@ class ActiveWorkoutViewModel @Inject constructor(
                 _uiState.update { it.copy(isActive = false) }
                 _uiEffect.emit(ActiveWorkoutUiEffect.WorkoutCompleted)
             } catch (_: Exception) {
-                _uiEffect.emit(ActiveWorkoutUiEffect.ShowMessage("Failed to complete workout"))
+                _uiEffect.emit(ActiveWorkoutUiEffect.ShowMessage("Error al finalizar el entrenamiento"))
             }
         }
     }

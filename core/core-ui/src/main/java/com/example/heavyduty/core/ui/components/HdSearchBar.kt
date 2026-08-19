@@ -23,7 +23,7 @@ fun HdSearchBar(
     query: String,
     onQueryChange: (String) -> Unit,
     modifier: Modifier = Modifier,
-    placeholder: String = "Search...",
+    placeholder: String = "Buscar...",
 ) {
     OutlinedTextField(
         value = query,
@@ -38,7 +38,7 @@ fun HdSearchBar(
         leadingIcon = {
             Icon(
                 imageVector = Icons.Default.Search,
-                contentDescription = "Search",
+                contentDescription = "Buscar",
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         },
@@ -47,7 +47,7 @@ fun HdSearchBar(
                 IconButton(onClick = { onQueryChange("") }) {
                     Icon(
                         imageVector = Icons.Default.Close,
-                        contentDescription = "Clear",
+                        contentDescription = "Limpiar",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }

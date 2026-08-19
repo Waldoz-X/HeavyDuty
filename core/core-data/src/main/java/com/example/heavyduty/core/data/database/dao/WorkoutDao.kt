@@ -48,6 +48,9 @@ interface WorkoutDao {
     @Query("SELECT * FROM workout_sets WHERE exerciseId = :exerciseId ORDER BY completedAt DESC")
     fun getSetsByExerciseId(exerciseId: Long): Flow<List<WorkoutSetEntity>>
 
+    @Query("SELECT * FROM workout_sets WHERE isCompleted = 1")
+    fun getAllCompletedSets(): Flow<List<WorkoutSetEntity>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSet(set: WorkoutSetEntity): Long
 

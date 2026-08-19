@@ -11,6 +11,7 @@ data class ExerciseEntity(
     val description: String = "",
     val instructions: String = "",
     val imageUrl: String = "",
+    val gifUrl: String = "",
     val muscleGroup: String,
     val exerciseType: String,
     val equipment: String = "",
