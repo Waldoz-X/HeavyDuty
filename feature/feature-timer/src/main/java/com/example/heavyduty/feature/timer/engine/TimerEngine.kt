@@ -172,6 +172,7 @@ class TimerEngine @Inject constructor(
         context.stopService(Intent(context, TimerService::class.java))
     }
 
+    @android.annotation.SuppressLint("MissingPermission")
     private fun vibrate() {
         val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val manager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager

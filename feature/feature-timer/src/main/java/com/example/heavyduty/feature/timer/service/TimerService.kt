@@ -60,6 +60,7 @@ class TimerService : Service() {
         return START_NOT_STICKY
     }
 
+    @android.annotation.SuppressLint("MissingPermission")
     private fun observeState() {
         if (serviceScope != null) return
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -129,12 +130,21 @@ class TimerService : Service() {
 
     private fun servicePendingIntent(action: String): PendingIntent {
         val intent = Intent(this, TimerService::class.java).setAction(action)
-        return PendingIntent.getForegroundService(
-            this,
-            action.hashCode(),
-            intent,
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
-        )
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            PendingIntent.getForegroundService(
+                this,
+                action.hashCode(),
+                intent,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+            )
+        } else {
+            PendingIntent.getService(
+                this,
+                action.hashCode(),
+                intent,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+            )
+        }
     }
 
     private fun reopenAppPendingIntent(): PendingIntent? {
