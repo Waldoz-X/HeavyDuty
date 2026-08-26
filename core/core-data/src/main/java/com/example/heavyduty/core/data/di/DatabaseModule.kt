@@ -21,6 +21,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Provider
 import javax.inject.Singleton
 
+@Suppress("unused")
 @Module
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
@@ -45,7 +46,7 @@ object DatabaseModule {
                     }
                 }
             })
-            .fallbackToDestructiveMigration()
+            .fallbackToDestructiveMigration(dropAllTables = true)
             .build()
     }
 

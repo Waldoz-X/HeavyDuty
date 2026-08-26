@@ -5,7 +5,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.heavyduty.core.domain.model.Program
 import com.example.heavyduty.core.domain.model.ProgramWeek
-import com.example.heavyduty.core.domain.model.Routine
 import com.example.heavyduty.core.domain.repository.ProgramRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

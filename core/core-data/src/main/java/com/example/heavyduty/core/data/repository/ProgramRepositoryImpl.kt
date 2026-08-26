@@ -20,7 +20,7 @@ import javax.inject.Singleton
 class ProgramRepositoryImpl @Inject constructor(
     private val programDao: ProgramDao,
     private val routineDao: RoutineDao,
-    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ProgramRepository {
 
     override fun getAllPrograms(): Flow<List<Program>> =

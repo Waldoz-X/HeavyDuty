@@ -40,6 +40,13 @@ captures/
 !.idea/dictionaries/
 !.idea/inspectionProfiles/
 !.idea/runConfigurations/
+.idea/deploymentTargetSelector.xml
+.idea/deviceManager.xml
+.idea/workspace.xml
+.idea/shelf/
+.idea/caches/
+.idea/libraries/
+.idea/modules.xml
 
 # OS-specific files
 .DS_Store
@@ -54,3 +61,9 @@ Thumbs.db
 obj/
 .cxx/
 .externalNativeBuild/
+
+# Kotlin
+.kotlin/
+
+# Heap dumps
+*.hprof

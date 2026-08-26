@@ -133,7 +133,7 @@ fun com.example.heavyduty.core.domain.model.Program.toEntity() = com.example.hea
     updatedAt = updatedAt,
 )
 
-fun com.example.heavyduty.core.data.database.entity.ProgramWeekEntity.toDomain(days: List<com.example.heavyduty.core.domain.model.Routine> = emptyList()) = com.example.heavyduty.core.domain.model.ProgramWeek(
+fun com.example.heavyduty.core.data.database.entity.ProgramWeekEntity.toDomain(days: List<Routine> = emptyList()) = com.example.heavyduty.core.domain.model.ProgramWeek(
     id = id,
     programId = programId,
     weekNumber = weekNumber,

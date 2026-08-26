@@ -68,7 +68,7 @@ class ProfileViewModel @Inject constructor(
                 val sortedSessions = sessions.sortedByDescending { it.startTime }
                 val feedItems = sortedSessions.map { session ->
                     val sessionSets = sets.filter { it.sessionId == session.id }
-                    val volume = sessionSets.sumOf { (it.weight ?: 0f) * (it.reps ?: 0) }.toFloat()
+                    val volume = sessionSets.map { (it.weight ?: 0f) * (it.reps ?: 0) }.sum()
                     val prs = sessionSets.count { it.id in personalRecordSetIds }
 
                     // Group sets by exercise to create the string "3 series Dominada"
@@ -93,9 +93,9 @@ class ProfileViewModel @Inject constructor(
                 // Process Chart Data (Last 4 weeks hours)
                 val chartData = mutableListOf<Pair<String, Float>>()
                 val cal = Calendar.getInstance()
-                val format = SimpleDateFormat("dd MMM", Locale("es", "ES"))
-                
-                for (i in 3 downTo 0) {
+                val format = SimpleDateFormat("dd MMM", Locale.Builder().setLanguage("es").setRegion("ES").build())
+
+                repeat(4) { _ ->
                     val end = cal.timeInMillis
                     cal.add(Calendar.DAY_OF_YEAR, -7)
                     val start = cal.timeInMillis

@@ -42,9 +42,6 @@ interface WorkoutDao {
     suspend fun deleteSession(session: WorkoutSessionEntity)
 
     // Set operations
-    @Query("SELECT * FROM workout_sets WHERE sessionId = :sessionId ORDER BY setNumber ASC")
-    fun getSetsBySession(sessionId: Long): Flow<List<WorkoutSetEntity>>
-
     @Query("SELECT * FROM workout_sets WHERE exerciseId = :exerciseId ORDER BY completedAt DESC")
     fun getSetsByExerciseId(exerciseId: Long): Flow<List<WorkoutSetEntity>>
 

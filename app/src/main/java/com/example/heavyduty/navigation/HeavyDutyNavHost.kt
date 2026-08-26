@@ -61,9 +61,6 @@ fun HeavyDutyNavHost(
             onRoutineClick = { routineId ->
                 navController.navigate("routine_editor/$routineId")
             },
-            onCreateRoutine = {
-                navController.navigate("routine_editor")
-            },
             onProgramClick = { programId ->
                 navController.navigate("program_detail/$programId")
             },

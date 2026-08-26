@@ -40,9 +40,6 @@ interface RoutineDao {
     suspend fun deleteRoutine(routine: RoutineEntity)
 
     // Routine Exercise operations
-    @Query("SELECT * FROM routine_exercises WHERE routineId = :routineId ORDER BY orderIndex ASC")
-    fun getRoutineExercises(routineId: Long): Flow<List<RoutineExerciseEntity>>
-
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertRoutineExercise(routineExercise: RoutineExerciseEntity): Long
 

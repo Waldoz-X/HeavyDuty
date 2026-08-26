@@ -17,12 +17,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.DirectionsRun
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.MonitorWeight
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Timer
-import androidx.compose.material.icons.filled.DirectionsRun
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -41,7 +41,6 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.heavyduty.core.common.extensions.formatCompact
-import com.example.heavyduty.core.ui.components.HdButton
 import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdTonalButton
 import com.example.heavyduty.core.ui.theme.GradientCyanEnd
@@ -194,7 +193,7 @@ private fun DashboardContent(
                         )
                     }
                     Icon(
-                        imageVector = Icons.Default.DirectionsRun,
+                        imageVector = Icons.AutoMirrored.Filled.DirectionsRun,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(32.dp)
@@ -256,7 +255,7 @@ private fun DashboardContent(
             text = "Elegir Rutina",
             onClick = { onEvent(DashboardUiEvent.OnChooseRoutine) },
             modifier = Modifier.fillMaxWidth().height(64.dp),
-            icon = Icons.Default.DirectionsRun
+            icon = Icons.AutoMirrored.Filled.DirectionsRun
         )
 
         Spacer(modifier = Modifier.height(32.dp))

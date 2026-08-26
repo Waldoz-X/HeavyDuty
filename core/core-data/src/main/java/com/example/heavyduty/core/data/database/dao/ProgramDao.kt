@@ -48,7 +48,4 @@ interface ProgramDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertProgramWeek(week: ProgramWeekEntity): Long
-
-    @Query("DELETE FROM program_weeks WHERE id = :weekId")
-    suspend fun deleteProgramWeek(weekId: Long)
 }

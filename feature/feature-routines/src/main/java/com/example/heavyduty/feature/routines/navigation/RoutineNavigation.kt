@@ -5,7 +5,6 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.heavyduty.feature.routines.presentation.editor.RoutineEditorScreen
-import com.example.heavyduty.feature.routines.presentation.list.RoutineListScreen
 
 import com.example.heavyduty.feature.routines.presentation.programs.ProgramListScreen
 import com.example.heavyduty.feature.routines.presentation.programs.ProgramDetailScreen
@@ -15,7 +14,6 @@ import com.example.heavyduty.feature.routines.presentation.programs.ProgramDetai
  */
 fun NavGraphBuilder.routineListScreen(
     onRoutineClick: (Long) -> Unit,
-    onCreateRoutine: () -> Unit,
     onProgramClick: (Long) -> Unit,
     onNavigateBack: () -> Unit,
 ) {
