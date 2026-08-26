@@ -1,6 +1,10 @@
 package com.example.heavyduty.feature.profile.presentation
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import com.example.heavyduty.core.ui.components.HdBarChart
+import com.example.heavyduty.core.ui.components.WorkoutFeedCard
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,6 +22,7 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Layers
+import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.MonitorWeight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -69,70 +74,88 @@ private fun ProfileContent(
     onEvent: (ProfileUiEvent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(
+    LazyColumn(
         modifier = modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Spacer(modifier = Modifier.height(16.dp))
+        item { Spacer(modifier = Modifier.height(16.dp)) }
 
-        Text(
-            text = "Perfil",
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        ProfileHeader(uiState = uiState, onEvent = onEvent)
-
-        Spacer(modifier = Modifier.height(28.dp))
-
-        Text(
-            text = "Estadísticas de Entrenamiento",
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.primary,
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            StatCard(
-                icon = Icons.Default.FitnessCenter,
-                label = "Entrenamientos",
-                value = uiState.stats.totalWorkouts.toString(),
-                modifier = Modifier.weight(1f),
-            )
-            StatCard(
-                icon = Icons.Default.Layers,
-                label = "Series Registradas",
-                value = uiState.stats.totalSets.toString(),
-                modifier = Modifier.weight(1f),
+        item {
+            Text(
+                text = "Perfil",
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onSurface,
             )
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        item {
+            ProfileHeader(uiState = uiState, onEvent = onEvent)
+        }
 
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            StatCard(
-                icon = Icons.Default.MonitorWeight,
-                label = "Volumen Levantado",
-                value = "${uiState.stats.totalVolumeKg.formatCompact()} kg",
-                modifier = Modifier.weight(1f),
+        if (uiState.weeklyHoursChartData.isNotEmpty()) {
+            item {
+                HdCard(modifier = Modifier.fillMaxWidth()) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = "Horas entrenadas",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        HdBarChart(
+                            data = uiState.weeklyHoursChartData,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+            }
+        }
+
+        item {
+            Text(
+                text = "Estadísticas Globales",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary,
             )
-            StatCard(
-                icon = Icons.Default.CalendarMonth,
-                label = "Miembro Desde",
-                value = formatMemberSince(uiState.stats.memberSinceMillis),
-                modifier = Modifier.weight(1f),
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                StatCard(
+                    icon = Icons.Default.FitnessCenter,
+                    label = "Entrenamientos",
+                    value = uiState.stats.totalWorkouts.toString(),
+                    modifier = Modifier.weight(1f),
+                )
+                StatCard(
+                    icon = Icons.Default.MonitorWeight,
+                    label = "Volumen",
+                    value = "${uiState.stats.totalVolumeKg.formatCompact()} kg",
+                    modifier = Modifier.weight(1f),
+                )
+                StatCard(
+                    icon = Icons.Default.LocalFireDepartment,
+                    label = "Racha actual",
+                    value = "${uiState.currentStreakDays}d",
+                    modifier = Modifier.weight(1f),
+                )
+            }
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Entrenamientos",
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onSurface,
             )
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
+        items(uiState.feedItems) { feedItem ->
+            WorkoutFeedCard(item = feedItem)
+        }
+
+        item { Spacer(modifier = Modifier.height(32.dp)) }
     }
 }
 

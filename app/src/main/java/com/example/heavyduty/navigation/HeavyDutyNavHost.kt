@@ -56,7 +56,7 @@ fun HeavyDutyNavHost(
             },
         )
 
-        // Routines
+        // Routines / Programs
         routineListScreen(
             onRoutineClick = { routineId ->
                 navController.navigate("routine_editor/$routineId")
@@ -64,6 +64,10 @@ fun HeavyDutyNavHost(
             onCreateRoutine = {
                 navController.navigate("routine_editor")
             },
+            onProgramClick = { programId ->
+                navController.navigate("program_detail/$programId")
+            },
+            onNavigateBack = { navController.popBackStack() },
         )
         routineEditorScreen(
             onNavigateBack = { navController.popBackStack() },

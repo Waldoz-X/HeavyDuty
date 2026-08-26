@@ -64,4 +64,8 @@ object DatabaseModule {
     @Provides
     fun provideCalendarDao(database: HeavyDutyDatabase): CalendarDao =
         database.calendarDao()
+
+    @Provides
+    fun provideProgramDao(database: HeavyDutyDatabase): com.example.heavyduty.core.data.database.dao.ProgramDao =
+        database.programDao()
 }

@@ -8,6 +8,8 @@ data class Routine(
     val name: String,
     val description: String = "",
     val type: WorkoutType = WorkoutType.GYM,
+    val programWeekId: Long? = null,
+    val dayOfWeek: Int? = null,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
     val exercises: List<RoutineExercise> = emptyList(),

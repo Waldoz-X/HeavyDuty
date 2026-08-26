@@ -16,9 +16,14 @@ import kotlinx.coroutines.launch
 import java.util.Calendar
 import javax.inject.Inject
 
+import com.example.heavyduty.core.domain.repository.ProgramRepository
+import com.example.heavyduty.feature.dashboard.domain.usecase.GetWeeklyMuscleVolumeUseCase
+
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
-    private val workoutRepository: WorkoutRepository
+    private val workoutRepository: WorkoutRepository,
+    private val programRepository: ProgramRepository,
+    private val getWeeklyMuscleVolume: GetWeeklyMuscleVolumeUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DashboardUiState())
@@ -48,36 +53,48 @@ class DashboardViewModel @Inject constructor(
 
     private fun loadDashboardData() {
         viewModelScope.launch {
+            val calendar = Calendar.getInstance()
+            calendar.set(Calendar.DAY_OF_WEEK, calendar.firstDayOfWeek)
+            calendar.set(Calendar.HOUR_OF_DAY, 0)
+            calendar.set(Calendar.MINUTE, 0)
+            calendar.set(Calendar.SECOND, 0)
+            calendar.set(Calendar.MILLISECOND, 0)
+            val startOfWeek = calendar.timeInMillis
+            val now = System.currentTimeMillis()
+
+            data class DashboardData(
+                val weeklySessions: List<com.example.heavyduty.core.domain.model.WorkoutSession>,
+                val weeklySets: List<com.example.heavyduty.core.domain.model.WorkoutSet>,
+                val activeProgram: com.example.heavyduty.core.domain.model.Program?,
+                val allSessions: List<com.example.heavyduty.core.domain.model.WorkoutSession>,
+                val muscleVolume: Map<com.example.heavyduty.core.domain.model.MuscleGroup, Float>,
+            )
+
             combine(
+                workoutRepository.getSessionsByDateRange(startOfWeek, now),
+                workoutRepository.getCompletedSetsByDateRange(startOfWeek, now),
+                programRepository.getActiveProgram(),
                 workoutRepository.getAllSessions(),
-                workoutRepository.getAllCompletedSets(),
-            ) { sessions, sets -> sessions to sets }
+                getWeeklyMuscleVolume(startOfWeek, now),
+            ) { weeklySessions, weeklySets, activeProgram, allSessions, muscleVolume ->
+                DashboardData(weeklySessions, weeklySets, activeProgram, allSessions, muscleVolume)
+            }
                 .catch { e ->
                     _uiState.update { it.copy(isLoading = false, error = e.message) }
                 }
-                .collect { (sessions, sets) ->
-                    val completedSessions = sessions.filter { it.endTime != null }.sortedByDescending { it.endTime }
-
-                    // Calculate weekly stats
-                    val now = Calendar.getInstance()
-                    now.set(Calendar.DAY_OF_WEEK, now.firstDayOfWeek)
-                    now.set(Calendar.HOUR_OF_DAY, 0)
-                    now.set(Calendar.MINUTE, 0)
-                    now.set(Calendar.SECOND, 0)
-                    now.set(Calendar.MILLISECOND, 0)
-                    val startOfWeek = now.timeInMillis
-
-                    val weeklyWorkouts = completedSessions.filter { it.startTime >= startOfWeek }
+                .collect { data ->
+                    val weeklyWorkouts = data.weeklySessions.filter { it.endTime != null }
                     val weeklyCount = weeklyWorkouts.size
                     val totalTime = weeklyWorkouts.sumOf {
                         if (it.endTime != null) ((it.endTime!! - it.startTime) / 1000).toInt() else 0
                     }
-                    val weeklyVolume = sets
-                        .filter { (it.completedAt ?: 0L) >= startOfWeek }
+                    val weeklyVolume = data.weeklySets
                         .sumOf { ((it.reps ?: 0) * (it.weight ?: 0f)).toDouble() }
                         .toFloat()
 
-                    val recentWorkout = completedSessions.firstOrNull()
+                    val recentWorkout = data.allSessions
+                        .filter { it.endTime != null }
+                        .maxByOrNull { it.endTime!! }
 
                     _uiState.update {
                         it.copy(
@@ -85,9 +102,10 @@ class DashboardViewModel @Inject constructor(
                             weeklyWorkoutsCount = weeklyCount,
                             totalTimeSeconds = totalTime,
                             weeklyVolumeKg = weeklyVolume,
+                            weeklyMuscleVolume = data.muscleVolume,
                             recentWorkoutName = recentWorkout?.sessionName?.takeIf { it.isNotBlank() } ?: "Entrenamiento",
+                            activeProgramName = data.activeProgram?.name,
                             recentWorkoutTime = recentWorkout?.endTime?.let { time ->
-                                // Simple relative time formatting or date
                                 val diff = System.currentTimeMillis() - time
                                 val days = diff / (1000 * 60 * 60 * 24)
                                 when {

@@ -51,6 +51,9 @@ interface WorkoutDao {
     @Query("SELECT * FROM workout_sets WHERE isCompleted = 1")
     fun getAllCompletedSets(): Flow<List<WorkoutSetEntity>>
 
+    @Query("SELECT * FROM workout_sets WHERE isCompleted = 1 AND completedAt BETWEEN :startTime AND :endTime")
+    fun getCompletedSetsByDateRange(startTime: Long, endTime: Long): Flow<List<WorkoutSetEntity>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSet(set: WorkoutSetEntity): Long
 

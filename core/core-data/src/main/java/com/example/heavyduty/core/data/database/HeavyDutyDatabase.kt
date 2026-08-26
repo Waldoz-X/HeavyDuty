@@ -13,6 +13,10 @@ import com.example.heavyduty.core.data.database.entity.RoutineExerciseEntity
 import com.example.heavyduty.core.data.database.entity.WorkoutSessionEntity
 import com.example.heavyduty.core.data.database.entity.WorkoutSetEntity
 
+import com.example.heavyduty.core.data.database.dao.ProgramDao
+import com.example.heavyduty.core.data.database.entity.ProgramEntity
+import com.example.heavyduty.core.data.database.entity.ProgramWeekEntity
+
 @Database(
     entities = [
         ExerciseEntity::class,
@@ -21,8 +25,10 @@ import com.example.heavyduty.core.data.database.entity.WorkoutSetEntity
         WorkoutSessionEntity::class,
         WorkoutSetEntity::class,
         CalendarEntryEntity::class,
+        ProgramEntity::class,
+        ProgramWeekEntity::class,
     ],
-    version = 5,
+    version = 6,
     exportSchema = true,
 )
 abstract class HeavyDutyDatabase : RoomDatabase() {
@@ -30,4 +36,5 @@ abstract class HeavyDutyDatabase : RoomDatabase() {
     abstract fun routineDao(): RoutineDao
     abstract fun workoutDao(): WorkoutDao
     abstract fun calendarDao(): CalendarDao
+    abstract fun programDao(): ProgramDao
 }

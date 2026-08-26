@@ -7,9 +7,12 @@ import com.example.heavyduty.feature.profile.domain.model.ProfileStats
  */
 data class ProfileUiState(
     val displayName: String = "",
-    val isEditingName: Boolean = false,
     val nameInput: String = "",
+    val isEditingName: Boolean = false,
     val stats: ProfileStats = ProfileStats(),
+    val feedItems: List<com.example.heavyduty.core.ui.components.WorkoutFeedItem> = emptyList(),
+    val weeklyHoursChartData: List<Pair<String, Float>> = emptyList(),
+    val currentStreakDays: Int = 0,
     val isLoading: Boolean = true,
 )
 

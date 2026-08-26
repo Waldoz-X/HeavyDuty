@@ -1,6 +1,8 @@
 package com.example.heavyduty.feature.dashboard.presentation
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -81,6 +83,7 @@ private fun DashboardContent(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
+            .verticalScroll(rememberScrollState())
             .padding(24.dp),
     ) {
         Spacer(modifier = Modifier.height(16.dp))
@@ -140,6 +143,66 @@ private fun DashboardContent(
         )
 
         Spacer(modifier = Modifier.height(32.dp))
+
+        // Muscle Distribution Radar Chart
+        if (uiState.weeklyMuscleVolume.isNotEmpty() && uiState.weeklyMuscleVolume.size >= 3) {
+            Text(
+                text = "Distribución Muscular",
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            HdCard(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                // Map the MuscleGroup enum to display strings
+                val chartData = uiState.weeklyMuscleVolume.mapKeys { it.key.displayName }
+                com.example.heavyduty.core.ui.components.HdRadarChart(
+                    data = chartData,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+            Spacer(modifier = Modifier.height(32.dp))
+        }
+
+        // Active Program
+        if (uiState.activeProgramName != null) {
+            Text(
+                text = "Programa Actual",
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            HdCard(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = uiState.activeProgramName,
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "Entrenamiento en curso",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Icon(
+                        imageVector = Icons.Default.DirectionsRun,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(32.dp))
+        }
 
         // Quick Actions
         Text(

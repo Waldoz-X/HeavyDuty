@@ -10,6 +10,8 @@ data class DashboardUiState(
     val weeklyVolumeKg: Float = 0f,
     val recentWorkoutName: String? = null,
     val recentWorkoutTime: String? = null,
+    val activeProgramName: String? = null,
+    val weeklyMuscleVolume: Map<com.example.heavyduty.core.domain.model.MuscleGroup, Float> = emptyMap(),
     val error: String? = null
 )
 

@@ -7,17 +7,30 @@ import androidx.navigation.navArgument
 import com.example.heavyduty.feature.routines.presentation.editor.RoutineEditorScreen
 import com.example.heavyduty.feature.routines.presentation.list.RoutineListScreen
 
+import com.example.heavyduty.feature.routines.presentation.programs.ProgramListScreen
+import com.example.heavyduty.feature.routines.presentation.programs.ProgramDetailScreen
+
 /**
- * Registers the routine list composable in the NavHost.
+ * Registers the program list composable in the NavHost.
  */
 fun NavGraphBuilder.routineListScreen(
     onRoutineClick: (Long) -> Unit,
     onCreateRoutine: () -> Unit,
+    onProgramClick: (Long) -> Unit,
+    onNavigateBack: () -> Unit,
 ) {
     composable(route = "routines_graph") {
-        RoutineListScreen(
-            onRoutineClick = onRoutineClick,
-            onCreateRoutine = onCreateRoutine,
+        ProgramListScreen(
+            onProgramClick = onProgramClick
+        )
+    }
+    composable(
+        route = "program_detail/{programId}",
+        arguments = listOf(navArgument("programId") { type = NavType.LongType })
+    ) {
+        ProgramDetailScreen(
+            onNavigateBack = onNavigateBack,
+            onRoutineClick = onRoutineClick
         )
     }
 }
