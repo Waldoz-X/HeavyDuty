@@ -5,9 +5,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.weight
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -17,9 +17,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.unit.dp
 
@@ -37,7 +35,6 @@ fun HdBodyDiagram(
     modifier: Modifier = Modifier,
     baseColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
     highlightColor: Color = MaterialTheme.colorScheme.primary,
-    outlineColor: Color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
     frontLabel: String = "Frontal",
     backLabel: String = "Posterior",
 ) {
@@ -52,15 +49,11 @@ fun HdBodyDiagram(
         horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Column(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f).fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Canvas(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(0.5f),
-            ) {
-                drawBodyView(FRONT_REGIONS, muscleValues, maxValue, baseColor, highlightColor, outlineColor)
+            Canvas(modifier = Modifier.fillMaxWidth().weight(1f)) {
+                drawBodyView(FRONT_REGIONS, muscleValues, maxValue, baseColor, highlightColor)
             }
             Spacer(modifier = Modifier.height(4.dp))
             Text(
@@ -70,15 +63,11 @@ fun HdBodyDiagram(
             )
         }
         Column(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f).fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Canvas(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(0.5f),
-            ) {
-                drawBodyView(BACK_REGIONS, muscleValues, maxValue, baseColor, highlightColor, outlineColor)
+            Canvas(modifier = Modifier.fillMaxWidth().weight(1f)) {
+                drawBodyView(BACK_REGIONS, muscleValues, maxValue, baseColor, highlightColor)
             }
             Spacer(modifier = Modifier.height(4.dp))
             Text(
@@ -96,63 +85,48 @@ private fun DrawScope.drawBodyView(
     maxValue: Float,
     baseColor: Color,
     highlightColor: Color,
-    outlineColor: Color,
 ) {
     val w = size.width
     val h = size.height
 
-    // Neutral silhouette anchors: head, neck, and an outline of the figure.
-    val headRadius = w * 0.14f
+    // Continuous neutral silhouette (head, neck, torso, hips, arms, legs) so the
+    // figure always reads as one connected body, even where no muscle is highlighted.
+    BASE_SHAPES.forEach { shape -> shape.draw(this, w, h, baseColor) }
+
+    val headRadius = w * 0.11f
     val headCenter = Offset(w * 0.5f, h * 0.075f)
     drawCircle(color = baseColor, radius = headRadius, center = headCenter)
 
-    drawRoundRect(
-        color = baseColor,
-        topLeft = Offset(w * 0.44f, h * 0.13f),
-        size = Size(w * 0.12f, h * 0.05f),
-        cornerRadius = CornerRadius(w * 0.02f),
-    )
-
-    val outline = Path().apply {
-        moveTo(w * 0.30f, h * 0.20f)
-        lineTo(w * 0.70f, h * 0.20f)
-        lineTo(w * 0.82f, h * 0.42f)
-        lineTo(w * 0.66f, h * 0.50f)
-        lineTo(w * 0.64f, h * 0.60f)
-        lineTo(w * 0.66f, h * 0.94f)
-        lineTo(w * 0.54f, h * 0.94f)
-        lineTo(w * 0.52f, h * 0.62f)
-        lineTo(w * 0.48f, h * 0.62f)
-        lineTo(w * 0.46f, h * 0.94f)
-        lineTo(w * 0.34f, h * 0.94f)
-        lineTo(w * 0.36f, h * 0.60f)
-        lineTo(w * 0.34f, h * 0.50f)
-        lineTo(w * 0.18f, h * 0.42f)
-        close()
-    }
-    drawPath(path = outline, color = outlineColor, style = Stroke(width = 1.dp.toPx()))
-
+    // Muscle overlays, drawn on top of the base silhouette in intensity-based color.
     regions.forEach { region ->
         val value = muscleValues[region.label] ?: 0f
         val intensity = (value / maxValue).coerceIn(0f, 1f)
         val color = lerp(baseColor, highlightColor, intensity)
-        drawRoundRect(
-            color = color,
-            topLeft = Offset(w * region.left, h * region.top),
-            size = Size(w * region.width, h * region.height),
-            cornerRadius = CornerRadius(w * region.width * region.cornerFraction),
-        )
+        region.spec.draw(this, w, h, color)
     }
 }
 
-private data class BodyRegionSpec(
-    val label: String,
+private data class RectSpec(
     val left: Float,
     val top: Float,
     val width: Float,
     val height: Float,
     val cornerFraction: Float = 0.35f,
-)
+) {
+    fun draw(scope: DrawScope, w: Float, h: Float, color: Color) {
+        scope.drawRoundRect(
+            color = color,
+            topLeft = Offset(w * left, h * top),
+            size = Size(w * width, h * height),
+            cornerRadius = CornerRadius(w * width * cornerFraction),
+        )
+    }
+}
+
+private data class BodyRegionSpec(val label: String, val spec: RectSpec)
+
+private fun region(label: String, left: Float, top: Float, width: Float, height: Float, cornerFraction: Float = 0.35f) =
+    BodyRegionSpec(label, RectSpec(left, top, width, height, cornerFraction))
 
 /** Full set of muscle group display-name labels this component knows how to place on the body. */
 val BODY_REGION_LABELS: Set<String> = setOf(
@@ -161,33 +135,45 @@ val BODY_REGION_LABELS: Set<String> = setOf(
     "Oblicuos", "Trapecios", "Dorsales",
 )
 
+// Neutral body shapes shared by both views: neck, torso, hips, arms, legs.
+// (Head is drawn separately as a circle.)
+private val BASE_SHAPES = listOf(
+    RectSpec(left = 0.45f, top = 0.12f, width = 0.10f, height = 0.06f, cornerFraction = 0.2f), // neck
+    RectSpec(left = 0.30f, top = 0.16f, width = 0.40f, height = 0.30f, cornerFraction = 0.25f), // torso
+    RectSpec(left = 0.32f, top = 0.44f, width = 0.36f, height = 0.10f, cornerFraction = 0.4f), // hips
+    RectSpec(left = 0.35f, top = 0.50f, width = 0.12f, height = 0.44f, cornerFraction = 0.4f), // left leg
+    RectSpec(left = 0.53f, top = 0.50f, width = 0.12f, height = 0.44f, cornerFraction = 0.4f), // right leg
+    RectSpec(left = 0.17f, top = 0.18f, width = 0.12f, height = 0.40f, cornerFraction = 0.4f), // left arm
+    RectSpec(left = 0.71f, top = 0.18f, width = 0.12f, height = 0.40f, cornerFraction = 0.4f), // right arm
+)
+
 private val FRONT_REGIONS = listOf(
-    BodyRegionSpec("Hombros", left = 0.24f, top = 0.19f, width = 0.11f, height = 0.07f),
-    BodyRegionSpec("Hombros", left = 0.65f, top = 0.19f, width = 0.11f, height = 0.07f),
-    BodyRegionSpec("Pecho", left = 0.32f, top = 0.21f, width = 0.36f, height = 0.13f),
-    BodyRegionSpec("Bíceps", left = 0.19f, top = 0.24f, width = 0.10f, height = 0.16f),
-    BodyRegionSpec("Bíceps", left = 0.71f, top = 0.24f, width = 0.10f, height = 0.16f),
-    BodyRegionSpec("Antebrazos", left = 0.16f, top = 0.40f, width = 0.10f, height = 0.16f),
-    BodyRegionSpec("Antebrazos", left = 0.74f, top = 0.40f, width = 0.10f, height = 0.16f),
-    BodyRegionSpec("Abdominales", left = 0.38f, top = 0.34f, width = 0.24f, height = 0.15f),
-    BodyRegionSpec("Oblicuos", left = 0.32f, top = 0.36f, width = 0.06f, height = 0.13f),
-    BodyRegionSpec("Oblicuos", left = 0.62f, top = 0.36f, width = 0.06f, height = 0.13f),
-    BodyRegionSpec("Cuádriceps", left = 0.34f, top = 0.58f, width = 0.13f, height = 0.22f),
-    BodyRegionSpec("Cuádriceps", left = 0.53f, top = 0.58f, width = 0.13f, height = 0.22f),
+    region("Hombros", left = 0.26f, top = 0.17f, width = 0.10f, height = 0.08f),
+    region("Hombros", left = 0.64f, top = 0.17f, width = 0.10f, height = 0.08f),
+    region("Pecho", left = 0.34f, top = 0.20f, width = 0.32f, height = 0.13f),
+    region("Bíceps", left = 0.18f, top = 0.20f, width = 0.10f, height = 0.18f),
+    region("Bíceps", left = 0.72f, top = 0.20f, width = 0.10f, height = 0.18f),
+    region("Antebrazos", left = 0.18f, top = 0.40f, width = 0.10f, height = 0.17f),
+    region("Antebrazos", left = 0.72f, top = 0.40f, width = 0.10f, height = 0.17f),
+    region("Abdominales", left = 0.38f, top = 0.33f, width = 0.24f, height = 0.13f),
+    region("Oblicuos", left = 0.31f, top = 0.34f, width = 0.06f, height = 0.12f),
+    region("Oblicuos", left = 0.63f, top = 0.34f, width = 0.06f, height = 0.12f),
+    region("Cuádriceps", left = 0.35f, top = 0.52f, width = 0.12f, height = 0.26f),
+    region("Cuádriceps", left = 0.53f, top = 0.52f, width = 0.12f, height = 0.26f),
 )
 
 private val BACK_REGIONS = listOf(
-    BodyRegionSpec("Trapecios", left = 0.38f, top = 0.16f, width = 0.24f, height = 0.08f),
-    BodyRegionSpec("Hombros", left = 0.24f, top = 0.19f, width = 0.11f, height = 0.07f),
-    BodyRegionSpec("Hombros", left = 0.65f, top = 0.19f, width = 0.11f, height = 0.07f),
-    BodyRegionSpec("Dorsales", left = 0.29f, top = 0.24f, width = 0.14f, height = 0.18f),
-    BodyRegionSpec("Dorsales", left = 0.57f, top = 0.24f, width = 0.14f, height = 0.18f),
-    BodyRegionSpec("Espalda", left = 0.40f, top = 0.28f, width = 0.20f, height = 0.20f),
-    BodyRegionSpec("Tríceps", left = 0.19f, top = 0.24f, width = 0.10f, height = 0.16f),
-    BodyRegionSpec("Tríceps", left = 0.71f, top = 0.24f, width = 0.10f, height = 0.16f),
-    BodyRegionSpec("Glúteos", left = 0.35f, top = 0.49f, width = 0.30f, height = 0.10f),
-    BodyRegionSpec("Isquiotibiales", left = 0.35f, top = 0.60f, width = 0.13f, height = 0.19f),
-    BodyRegionSpec("Isquiotibiales", left = 0.52f, top = 0.60f, width = 0.13f, height = 0.19f),
-    BodyRegionSpec("Pantorrillas", left = 0.36f, top = 0.80f, width = 0.11f, height = 0.14f),
-    BodyRegionSpec("Pantorrillas", left = 0.53f, top = 0.80f, width = 0.11f, height = 0.14f),
+    region("Trapecios", left = 0.38f, top = 0.16f, width = 0.24f, height = 0.07f),
+    region("Hombros", left = 0.26f, top = 0.17f, width = 0.10f, height = 0.08f),
+    region("Hombros", left = 0.64f, top = 0.17f, width = 0.10f, height = 0.08f),
+    region("Dorsales", left = 0.32f, top = 0.23f, width = 0.11f, height = 0.17f),
+    region("Dorsales", left = 0.57f, top = 0.23f, width = 0.11f, height = 0.17f),
+    region("Espalda", left = 0.40f, top = 0.26f, width = 0.20f, height = 0.18f),
+    region("Tríceps", left = 0.18f, top = 0.20f, width = 0.10f, height = 0.18f),
+    region("Tríceps", left = 0.72f, top = 0.20f, width = 0.10f, height = 0.18f),
+    region("Glúteos", left = 0.33f, top = 0.47f, width = 0.34f, height = 0.09f),
+    region("Isquiotibiales", left = 0.35f, top = 0.52f, width = 0.12f, height = 0.24f),
+    region("Isquiotibiales", left = 0.53f, top = 0.52f, width = 0.12f, height = 0.24f),
+    region("Pantorrillas", left = 0.36f, top = 0.78f, width = 0.10f, height = 0.15f),
+    region("Pantorrillas", left = 0.54f, top = 0.78f, width = 0.10f, height = 0.15f),
 )
