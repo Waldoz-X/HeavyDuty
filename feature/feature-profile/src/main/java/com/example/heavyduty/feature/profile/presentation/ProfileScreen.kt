@@ -1,6 +1,7 @@
 package com.example.heavyduty.feature.profile.presentation
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import com.example.heavyduty.core.ui.components.HdBarChart
@@ -18,10 +19,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.MonitorWeight
+import androidx.compose.material.icons.filled.QueryStats
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -47,6 +50,7 @@ import com.example.heavyduty.core.ui.components.HdTextButton
 @Composable
 fun ProfileScreen(
     modifier: Modifier = Modifier,
+    onNavigateToStats: () -> Unit = {},
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -59,6 +63,7 @@ fun ProfileScreen(
     ProfileContent(
         uiState = uiState,
         onEvent = viewModel::onEvent,
+        onNavigateToStats = onNavigateToStats,
         modifier = modifier,
     )
 }
@@ -67,6 +72,7 @@ fun ProfileScreen(
 private fun ProfileContent(
     uiState: ProfileUiState,
     onEvent: (ProfileUiEvent) -> Unit,
+    onNavigateToStats: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -134,6 +140,30 @@ private fun ProfileContent(
                     value = "${uiState.currentStreakDays}d",
                     modifier = Modifier.weight(1f),
                 )
+            }
+        }
+
+        item {
+            HdCard(modifier = Modifier.fillMaxWidth().clickable(onClick = onNavigateToStats)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.QueryStats,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = "Ver estadísticas",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
         }
 

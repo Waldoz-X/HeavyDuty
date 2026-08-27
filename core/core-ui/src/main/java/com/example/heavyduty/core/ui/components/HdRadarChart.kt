@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.TextStyle
@@ -35,8 +36,11 @@ import kotlin.math.sin
 fun HdRadarChart(
     data: Map<String, Float>,
     modifier: Modifier = Modifier,
+    secondaryData: Map<String, Float>? = null,
     fillColor: Color = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
     lineColor: Color = MaterialTheme.colorScheme.primary,
+    secondaryFillColor: Color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.25f),
+    secondaryLineColor: Color = MaterialTheme.colorScheme.secondary,
     gridColor: Color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f),
     textColor: Color = MaterialTheme.colorScheme.onSurface,
 ) {
@@ -122,39 +126,66 @@ fun HdRadarChart(
             )
         }
 
-        // Draw the data polygon
-        val maxValue = values.maxOrNull()?.coerceAtLeast(1f) ?: 1f
-        val dataPath = Path()
-        
-        labels.indices.forEach { index ->
-            val value = values[index] * animationProgress.value
-            val normalizedValue = (value / maxValue)
-            val r = radius * normalizedValue
-            val angle = (index * anglePerItem) - (PI / 2)
-            
-            val x = center.x + r * cos(angle).toFloat()
-            val y = center.y + r * sin(angle).toFloat()
-            
-            if (index == 0) dataPath.moveTo(x, y) else dataPath.lineTo(x, y)
-            
-            // Draw points
-            drawCircle(
-                color = lineColor,
-                radius = 3.dp.toPx(),
-                center = Offset(x, y)
+        // Draw the data polygon(s) — scale shared across primary and secondary datasets.
+        val secondaryValues = secondaryData?.let { labels.map { label -> it[label] ?: 0f } }
+        val maxValue = (values + (secondaryValues ?: emptyList())).maxOrNull()?.coerceAtLeast(1f) ?: 1f
+
+        if (secondaryValues != null) {
+            drawRadarPolygon(
+                values = secondaryValues,
+                animationProgress = animationProgress.value,
+                maxValue = maxValue,
+                radius = radius,
+                center = center,
+                anglePerItem = anglePerItem,
+                fillColor = secondaryFillColor,
+                lineColor = secondaryLineColor,
             )
         }
-        dataPath.close()
 
-        drawPath(
-            path = dataPath,
-            color = fillColor,
-            style = Fill
-        )
-        drawPath(
-            path = dataPath,
-            color = lineColor,
-            style = Stroke(width = 2.dp.toPx())
+        drawRadarPolygon(
+            values = values,
+            animationProgress = animationProgress.value,
+            maxValue = maxValue,
+            radius = radius,
+            center = center,
+            anglePerItem = anglePerItem,
+            fillColor = fillColor,
+            lineColor = lineColor,
         )
     }
+}
+
+private fun DrawScope.drawRadarPolygon(
+    values: List<Float>,
+    animationProgress: Float,
+    maxValue: Float,
+    radius: Float,
+    center: Offset,
+    anglePerItem: Double,
+    fillColor: Color,
+    lineColor: Color,
+) {
+    val dataPath = Path()
+    values.indices.forEach { index ->
+        val value = values[index] * animationProgress
+        val normalizedValue = value / maxValue
+        val r = radius * normalizedValue
+        val angle = (index * anglePerItem) - (PI / 2)
+
+        val x = center.x + r * cos(angle).toFloat()
+        val y = center.y + r * sin(angle).toFloat()
+
+        if (index == 0) dataPath.moveTo(x, y) else dataPath.lineTo(x, y)
+
+        drawCircle(
+            color = lineColor,
+            radius = 3.dp.toPx(),
+            center = Offset(x, y)
+        )
+    }
+    dataPath.close()
+
+    drawPath(path = dataPath, color = fillColor, style = Fill)
+    drawPath(path = dataPath, color = lineColor, style = Stroke(width = 2.dp.toPx()))
 }

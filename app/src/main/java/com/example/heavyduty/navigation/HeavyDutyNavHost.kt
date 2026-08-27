@@ -13,6 +13,7 @@ import com.example.heavyduty.feature.history.navigation.progressScreen
 import com.example.heavyduty.feature.profile.navigation.profileScreen
 import com.example.heavyduty.feature.routines.navigation.routineEditorScreen
 import com.example.heavyduty.feature.routines.navigation.routineListScreen
+import com.example.heavyduty.feature.stats.navigation.statsGraph
 import com.example.heavyduty.feature.timer.navigation.timerScreen
 import com.example.heavyduty.feature.workout.navigation.activeWorkoutScreen
 
@@ -92,6 +93,19 @@ fun HeavyDutyNavHost(
         )
 
         // Profile
-        profileScreen()
+        profileScreen(
+            onNavigateToStats = { navController.navigate("stats_graph") },
+        )
+
+        // Statistics
+        statsGraph(
+            onNavigateBack = { navController.popBackStack() },
+            onNavigateToSeries = { navController.navigate("stats/series") },
+            onNavigateToDistribucionRadar = { navController.navigate("stats/distribucion_radar") },
+            onNavigateToDistribucionCuerpo = { navController.navigate("stats/distribucion_cuerpo") },
+            onNavigateToPrincipales = { navController.navigate("stats/principales") },
+            onNavigateToClasificacion = { navController.navigate("stats/clasificacion") },
+            onNavigateToInformeMensual = { navController.navigate("stats/informe_mensual") },
+        )
     }
 }

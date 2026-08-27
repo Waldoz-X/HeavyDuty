@@ -7,8 +7,10 @@ import com.example.heavyduty.feature.profile.presentation.ProfileScreen
 /**
  * Registers the profile composable in the NavHost.
  */
-fun NavGraphBuilder.profileScreen() {
+fun NavGraphBuilder.profileScreen(
+    onNavigateToStats: () -> Unit,
+) {
     composable(route = "profile_graph") {
-        ProfileScreen()
+        ProfileScreen(onNavigateToStats = onNavigateToStats)
     }
 }
