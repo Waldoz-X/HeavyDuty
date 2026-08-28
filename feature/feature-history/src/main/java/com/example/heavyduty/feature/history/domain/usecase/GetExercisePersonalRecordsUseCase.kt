@@ -1,6 +1,7 @@
 package com.example.heavyduty.feature.history.domain.usecase
 
 import com.example.heavyduty.core.domain.model.WorkoutSet
+import com.example.heavyduty.core.domain.model.estimatedOneRepMax
 import com.example.heavyduty.core.domain.model.excludeWarmups
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
 import com.example.heavyduty.feature.history.domain.model.ExercisePersonalRecords
@@ -24,7 +25,9 @@ class GetExercisePersonalRecordsUseCase @Inject constructor(
 
         val maxWeightSet = weightedSets.maxBy { it.weight ?: 0f }
         val maxRepsSet = weightedSets.maxBy { it.reps ?: 0 }
-        val bestEstimatedOneRepMax = weightedSets.maxOf { estimateOneRepMax(it.weight ?: 0f, it.reps ?: 0) }
+        val bestEstimatedOneRepMax = weightedSets
+            .mapNotNull { estimatedOneRepMax(it.weight ?: 0f, it.reps ?: 0) }
+            .maxOrNull()
 
         return ExercisePersonalRecords(
             maxWeight = maxWeightSet.weight,
@@ -35,8 +38,4 @@ class GetExercisePersonalRecordsUseCase @Inject constructor(
             estimatedOneRepMax = bestEstimatedOneRepMax,
         )
     }
-
-    /** Epley formula: a standard, widely-used estimate — not a substitute for an actual 1RM test. */
-    private fun estimateOneRepMax(weight: Float, reps: Int): Float =
-        weight * (1f + reps / 30f)
 }
