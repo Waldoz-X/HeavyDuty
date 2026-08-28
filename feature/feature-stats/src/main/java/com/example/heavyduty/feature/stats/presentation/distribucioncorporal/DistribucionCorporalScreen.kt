@@ -49,6 +49,7 @@ fun DistribucionCorporalScreen(
         }
         HdBodyDiagram(
             muscleValues = uiState.volumeByMuscle,
+            gender = uiState.gender,
             modifier = Modifier
                 .padding(innerPadding)
                 .padding(16.dp)

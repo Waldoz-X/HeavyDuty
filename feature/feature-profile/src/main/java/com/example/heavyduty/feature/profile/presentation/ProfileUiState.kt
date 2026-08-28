@@ -13,6 +13,7 @@ data class ProfileUiState(
     val feedItems: List<com.example.heavyduty.core.ui.components.WorkoutFeedItem> = emptyList(),
     val weeklyHoursChartData: List<Pair<String, Float>> = emptyList(),
     val currentStreakDays: Int = 0,
+    val bodyDiagramGender: String = "male",
     val isLoading: Boolean = true,
 )
 
@@ -24,4 +25,5 @@ sealed interface ProfileUiEvent {
     data class OnNameInputChange(val name: String) : ProfileUiEvent
     data object OnSaveName : ProfileUiEvent
     data object OnCancelEditingName : ProfileUiEvent
+    data class OnBodyDiagramGenderChange(val gender: String) : ProfileUiEvent
 }

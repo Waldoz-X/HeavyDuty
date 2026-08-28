@@ -154,6 +154,7 @@ fun EstadisticasScreen(
             item {
                 HdBodyDiagram(
                     muscleValues = uiState.selectedDayVolumeByMuscle,
+                    gender = uiState.gender,
                     modifier = Modifier.fillMaxWidth().height(240.dp),
                 )
             }

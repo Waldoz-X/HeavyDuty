@@ -2,11 +2,14 @@ package com.example.heavyduty.feature.stats.presentation.distribucioncorporal
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.heavyduty.core.domain.repository.UserPreferencesRepository
+import com.example.heavyduty.core.ui.components.BodyGender
 import com.example.heavyduty.feature.stats.domain.usecase.GetMuscleGroupVolumeUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.Calendar
@@ -15,6 +18,7 @@ import javax.inject.Inject
 @HiltViewModel
 class DistribucionCorporalViewModel @Inject constructor(
     private val getMuscleGroupVolume: GetMuscleGroupVolumeUseCase,
+    private val userPreferencesRepository: UserPreferencesRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DistribucionCorporalUiState())
@@ -32,14 +36,17 @@ class DistribucionCorporalViewModel @Inject constructor(
             val startOfWeek = calendar.timeInMillis
             val now = System.currentTimeMillis()
 
-            getMuscleGroupVolume(startOfWeek, now).collect { volumeByMuscle ->
-                _uiState.update {
-                    it.copy(
-                        volumeByMuscle = volumeByMuscle.mapKeys { entry -> entry.key.displayName },
-                        isLoading = false,
-                    )
+            getMuscleGroupVolume(startOfWeek, now)
+                .combine(userPreferencesRepository.bodyDiagramGender) { volumeByMuscle, genderValue ->
+                    _uiState.update {
+                        it.copy(
+                            volumeByMuscle = volumeByMuscle.mapKeys { entry -> entry.key.displayName },
+                            gender = BodyGender.fromStorageValue(genderValue),
+                            isLoading = false,
+                        )
+                    }
                 }
-            }
+                .collect { }
         }
     }
 }

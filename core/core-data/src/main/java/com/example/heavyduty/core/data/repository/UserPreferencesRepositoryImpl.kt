@@ -27,15 +27,25 @@ class UserPreferencesRepositoryImpl @Inject constructor(
 
     private object Keys {
         val DISPLAY_NAME = stringPreferencesKey("display_name")
+        val BODY_DIAGRAM_GENDER = stringPreferencesKey("body_diagram_gender")
     }
 
-    override val displayName: Flow<String> = context.userPreferencesDataStore.data
+    private val safeData: Flow<Preferences> = context.userPreferencesDataStore.data
         .catch { e ->
             if (e is IOException) emit(emptyPreferences()) else throw e
         }
+
+    override val displayName: Flow<String> = safeData
         .map { prefs -> prefs[Keys.DISPLAY_NAME] ?: "" }
 
     override suspend fun setDisplayName(name: String) {
         context.userPreferencesDataStore.edit { prefs -> prefs[Keys.DISPLAY_NAME] = name }
+    }
+
+    override val bodyDiagramGender: Flow<String> = safeData
+        .map { prefs -> prefs[Keys.BODY_DIAGRAM_GENDER] ?: "male" }
+
+    override suspend fun setBodyDiagramGender(gender: String) {
+        context.userPreferencesDataStore.edit { prefs -> prefs[Keys.BODY_DIAGRAM_GENDER] = gender }
     }
 }

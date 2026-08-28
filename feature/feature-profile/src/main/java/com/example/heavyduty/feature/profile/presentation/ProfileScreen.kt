@@ -43,6 +43,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.heavyduty.core.ui.components.HdButton
 import com.example.heavyduty.core.ui.components.HdCard
+import com.example.heavyduty.core.ui.components.HdChip
 import com.example.heavyduty.core.ui.components.HdLoadingIndicator
 import com.example.heavyduty.core.common.extensions.formatCompact
 import com.example.heavyduty.core.ui.components.HdTextButton
@@ -162,6 +163,34 @@ private fun ProfileContent(
                         imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        }
+
+        item {
+            HdCard(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = "Figura corporal",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Text(
+                    text = "Usada en los mapas musculares de Estadísticas",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    HdChip(
+                        text = "Hombre",
+                        isSelected = uiState.bodyDiagramGender == "male",
+                        onClick = { onEvent(ProfileUiEvent.OnBodyDiagramGenderChange("male")) },
+                    )
+                    HdChip(
+                        text = "Mujer",
+                        isSelected = uiState.bodyDiagramGender == "female",
+                        onClick = { onEvent(ProfileUiEvent.OnBodyDiagramGenderChange("female")) },
                     )
                 }
             }

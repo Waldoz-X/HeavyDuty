@@ -2,11 +2,14 @@ package com.example.heavyduty.feature.stats.presentation.main
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.heavyduty.core.domain.repository.UserPreferencesRepository
+import com.example.heavyduty.core.ui.components.BodyGender
 import com.example.heavyduty.feature.stats.domain.usecase.GetMuscleGroupVolumeUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
@@ -19,6 +22,7 @@ private const val DAY_MILLIS = 24 * 60 * 60 * 1000L
 @HiltViewModel
 class EstadisticasViewModel @Inject constructor(
     private val getMuscleGroupVolume: GetMuscleGroupVolumeUseCase,
+    private val userPreferencesRepository: UserPreferencesRepository,
 ) : ViewModel() {
 
     private val last7Days: List<Long> = buildLast7DaysStartMillis()
@@ -34,15 +38,17 @@ class EstadisticasViewModel @Inject constructor(
                     getMuscleGroupVolume(dayStart, dayStart + DAY_MILLIS - 1)
                         .map { volume -> dayStart to volume }
                 }
-                .collect { (selectedDay, volumeByMuscle) ->
+                .combine(userPreferencesRepository.bodyDiagramGender) { (selectedDay, volumeByMuscle), genderValue ->
                     _uiState.update {
                         it.copy(
                             days = last7Days.map { day -> day.toDayChipUi(isSelected = day == selectedDay) },
                             selectedDayVolumeByMuscle = volumeByMuscle.mapKeys { entry -> entry.key.displayName },
+                            gender = BodyGender.fromStorageValue(genderValue),
                             isLoading = false,
                         )
                     }
                 }
+                .collect { }
         }
     }
 

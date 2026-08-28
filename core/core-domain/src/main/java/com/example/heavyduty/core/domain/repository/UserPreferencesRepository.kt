@@ -8,4 +8,8 @@ import kotlinx.coroutines.flow.Flow
 interface UserPreferencesRepository {
     val displayName: Flow<String>
     suspend fun setDisplayName(name: String)
+
+    /** "male" or "female" — which body figure the muscle-map diagrams draw. Defaults to "male". */
+    val bodyDiagramGender: Flow<String>
+    suspend fun setBodyDiagramGender(gender: String)
 }

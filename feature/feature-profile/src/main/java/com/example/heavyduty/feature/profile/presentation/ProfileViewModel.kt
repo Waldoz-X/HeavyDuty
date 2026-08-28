@@ -2,8 +2,11 @@ package com.example.heavyduty.feature.profile.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.heavyduty.feature.profile.domain.model.ProfileStats
+import com.example.heavyduty.feature.profile.domain.usecase.GetBodyDiagramGenderUseCase
 import com.example.heavyduty.feature.profile.domain.usecase.GetDisplayNameUseCase
 import com.example.heavyduty.feature.profile.domain.usecase.GetProfileStatsUseCase
+import com.example.heavyduty.feature.profile.domain.usecase.SetBodyDiagramGenderUseCase
 import com.example.heavyduty.feature.profile.domain.usecase.SetDisplayNameUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,6 +29,8 @@ class ProfileViewModel @Inject constructor(
     private val getDisplayNameUseCase: GetDisplayNameUseCase,
     private val setDisplayNameUseCase: SetDisplayNameUseCase,
     private val getProfileStatsUseCase: GetProfileStatsUseCase,
+    private val getBodyDiagramGenderUseCase: GetBodyDiagramGenderUseCase,
+    private val setBodyDiagramGenderUseCase: SetBodyDiagramGenderUseCase,
     private val workoutRepository: WorkoutRepository,
     private val exerciseRepository: ExerciseRepository,
 ) : ViewModel() {
@@ -105,19 +110,36 @@ class ProfileViewModel @Inject constructor(
                     chartData.add(Pair(format.format(cal.time), weekHours))
                 }
 
+                ProfileFlowData(
+                    name = name,
+                    stats = stats,
+                    feedItems = feedItems,
+                    chartData = chartData,
+                    streak = calculateCurrentStreakDays(sessions),
+                )
+            }.combine(getBodyDiagramGenderUseCase()) { data, gender ->
                 _uiState.update {
                     it.copy(
-                        displayName = name,
-                        stats = stats,
-                        feedItems = feedItems,
-                        weeklyHoursChartData = chartData,
-                        currentStreakDays = calculateCurrentStreakDays(sessions),
+                        displayName = data.name,
+                        stats = data.stats,
+                        feedItems = data.feedItems,
+                        weeklyHoursChartData = data.chartData,
+                        currentStreakDays = data.streak,
+                        bodyDiagramGender = gender,
                         isLoading = false,
                     )
                 }
             }.collect { }
         }
     }
+
+    private data class ProfileFlowData(
+        val name: String,
+        val stats: ProfileStats,
+        val feedItems: List<WorkoutFeedItem>,
+        val chartData: List<Pair<String, Float>>,
+        val streak: Int,
+    )
 
     /**
      * Consecutive days (ending today) with at least one completed workout.
@@ -176,6 +198,9 @@ class ProfileViewModel @Inject constructor(
                 _uiState.update { it.copy(isEditingName = false, nameInput = "") }
             }
             ProfileUiEvent.OnSaveName -> saveName()
+            is ProfileUiEvent.OnBodyDiagramGenderChange -> {
+                viewModelScope.launch { setBodyDiagramGenderUseCase(event.gender) }
+            }
         }
     }
 

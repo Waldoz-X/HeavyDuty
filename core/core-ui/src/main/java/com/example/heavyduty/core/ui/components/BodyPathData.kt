@@ -50,9 +50,20 @@ private val MUSCLE_LABEL: Map<String, String> = mapOf(
 /** Full set of muscle group display-name labels [HdBodyDiagram] can shade. */
 val BODY_REGION_LABELS: Set<String> = MUSCLE_LABEL.values.toSet()
 
-internal fun loadBodyPaths(context: Context): Pair<BodyView, BodyView> {
+/** Which body figure [HdBodyDiagram] draws — a user-facing preference, not an assumption. */
+enum class BodyGender(val storageValue: String) {
+    MALE("male"),
+    FEMALE("female"),
+    ;
+
+    companion object {
+        fun fromStorageValue(value: String): BodyGender = entries.find { it.storageValue == value } ?: MALE
+    }
+}
+
+internal fun loadBodyPaths(context: Context, gender: BodyGender): Pair<BodyView, BodyView> {
     val json = context.assets.open("body_paths.json").bufferedReader().use { it.readText() }
-    val root = JSONObject(json)
+    val root = JSONObject(json).getJSONObject(gender.storageValue)
     return parseView(root.getJSONObject("front")) to parseView(root.getJSONObject("back"))
 }
 

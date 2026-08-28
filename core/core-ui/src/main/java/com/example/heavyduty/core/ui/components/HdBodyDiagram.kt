@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.weight
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -17,6 +16,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -34,13 +35,14 @@ import androidx.compose.ui.unit.dp
 fun HdBodyDiagram(
     muscleValues: Map<String, Float>,
     modifier: Modifier = Modifier,
+    gender: BodyGender = BodyGender.MALE,
     baseColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
     highlightColor: Color = MaterialTheme.colorScheme.primary,
     frontLabel: String = "Frontal",
     backLabel: String = "Posterior",
 ) {
     val context = LocalContext.current
-    val (front, back) = remember { loadBodyPaths(context) }
+    val (front, back) = remember(gender) { loadBodyPaths(context, gender) }
 
     val maxValue = (front.musclePaths.keys + back.musclePaths.keys)
         .map { muscleValues[it] ?: 0f }
