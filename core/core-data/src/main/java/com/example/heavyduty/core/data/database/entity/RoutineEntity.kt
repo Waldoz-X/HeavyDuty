@@ -62,4 +62,8 @@ data class RoutineExerciseEntity(
     val targetDurationSecs: Int = 0,
     val restBetweenSetsSecs: Int = 60,
     val notes: String = "",
+    val progressionPolicy: String = "LINEAR",
+    val repRangeLow: Int = 8,
+    val repRangeHigh: Int = 10,
+    val stallThreshold: Int = 3,
 )

@@ -12,6 +12,7 @@ import com.example.heavyduty.core.domain.model.CalendarEntry
 import com.example.heavyduty.core.domain.model.Exercise
 import com.example.heavyduty.core.domain.model.ExerciseType
 import com.example.heavyduty.core.domain.model.MuscleGroup
+import com.example.heavyduty.core.domain.model.ProgressionPolicy
 import com.example.heavyduty.core.domain.model.Recurrence
 import com.example.heavyduty.core.domain.model.Routine
 import com.example.heavyduty.core.domain.model.RoutineExercise
@@ -83,6 +84,10 @@ fun RoutineExerciseEntity.toDomain(): RoutineExercise = RoutineExercise(
     targetDurationSecs = targetDurationSecs,
     restBetweenSetsSecs = restBetweenSetsSecs,
     notes = notes,
+    progressionPolicy = ProgressionPolicy.valueOf(progressionPolicy),
+    repRangeLow = repRangeLow,
+    repRangeHigh = repRangeHigh,
+    stallThreshold = stallThreshold,
 )
 
 fun RoutineExercise.toEntity(): RoutineExerciseEntity = RoutineExerciseEntity(
@@ -96,6 +101,10 @@ fun RoutineExercise.toEntity(): RoutineExerciseEntity = RoutineExerciseEntity(
     targetDurationSecs = targetDurationSecs,
     restBetweenSetsSecs = restBetweenSetsSecs,
     notes = notes,
+    progressionPolicy = progressionPolicy.name,
+    repRangeLow = repRangeLow,
+    repRangeHigh = repRangeHigh,
+    stallThreshold = stallThreshold,
 )
 
 fun RoutineWithExercises.toDomain(): Routine = Routine(

@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.heavyduty.core.domain.model.Exercise
 import com.example.heavyduty.core.domain.model.RoutineExercise
+import com.example.heavyduty.core.domain.model.nextPrescription
+import com.example.heavyduty.core.domain.model.toProgressionConfig
 import com.example.heavyduty.core.domain.repository.ExerciseRepository
 import com.example.heavyduty.core.domain.repository.RoutineRepository
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
@@ -62,6 +64,7 @@ class ActiveWorkoutViewModel @Inject constructor(
             }
             is ActiveWorkoutUiEvent.OnSelectExercise -> {
                 _uiState.update { it.copy(currentExerciseIndex = event.index, currentSetNumber = 1) }
+                refreshSuggestion()
             }
             ActiveWorkoutUiEvent.OnLogSet -> logSet()
             ActiveWorkoutUiEvent.OnCompleteWorkout -> completeWorkout()
@@ -72,6 +75,37 @@ class ActiveWorkoutViewModel @Inject constructor(
             ActiveWorkoutUiEvent.OnToggleExercisePicker -> toggleExercisePicker()
             is ActiveWorkoutUiEvent.OnExercisePickerQueryChange -> onExercisePickerQueryChange(event.query)
             is ActiveWorkoutUiEvent.OnAddExercise -> addExerciseToSession(event.exercise)
+            ActiveWorkoutUiEvent.OnUseSuggestion -> useSuggestion()
+        }
+    }
+
+    /**
+     * Recomputes the current exercise's suggested weight/reps from its history in OTHER
+     * sessions — the active session's own sets are excluded so the suggestion stays stable
+     * as sets are logged today, instead of comparing today against itself.
+     */
+    private fun refreshSuggestion() {
+        val state = _uiState.value
+        val routineExercise = state.routineExercises.getOrNull(state.currentExerciseIndex)
+        if (routineExercise == null) {
+            _uiState.update { it.copy(suggestedPrescription = null) }
+            return
+        }
+        viewModelScope.launch {
+            val history = workoutRepository.getSetsByExerciseId(routineExercise.exerciseId).firstOrNull().orEmpty()
+                .filter { it.sessionId != state.sessionId }
+            val prescription = nextPrescription(history, routineExercise.toProgressionConfig())
+            _uiState.update { it.copy(suggestedPrescription = prescription) }
+        }
+    }
+
+    private fun useSuggestion() {
+        val suggestion = _uiState.value.suggestedPrescription ?: return
+        _uiState.update {
+            it.copy(
+                repsInput = suggestion.reps?.toString() ?: it.repsInput,
+                weightInput = suggestion.weightKg?.toString() ?: it.weightInput,
+            )
         }
     }
 
@@ -121,6 +155,7 @@ class ActiveWorkoutViewModel @Inject constructor(
                         isLoading = false,
                     )
                 }
+                refreshSuggestion()
                 startTimer()
             } else {
                 _uiState.update { it.copy(isLoading = false, error = "Rutina no encontrada") }
@@ -148,6 +183,7 @@ class ActiveWorkoutViewModel @Inject constructor(
         viewModelScope.launch {
             routineRepository.getRoutineWithExercises(routineId).firstOrNull()?.let { routine ->
                 _uiState.update { it.copy(routineExercises = routine.exercises) }
+                refreshSuggestion()
             }
         }
     }
@@ -229,6 +265,7 @@ class ActiveWorkoutViewModel @Inject constructor(
                 exercisePickerResults = emptyList(),
             )
         }
+        refreshSuggestion()
     }
 
     private fun completeWorkout() {

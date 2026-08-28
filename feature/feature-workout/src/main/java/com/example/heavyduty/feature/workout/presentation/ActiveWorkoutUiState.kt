@@ -1,6 +1,7 @@
 package com.example.heavyduty.feature.workout.presentation
 
 import com.example.heavyduty.core.domain.model.Exercise
+import com.example.heavyduty.core.domain.model.Prescription
 import com.example.heavyduty.core.domain.model.RoutineExercise
 import com.example.heavyduty.core.domain.model.WorkoutSet
 
@@ -26,6 +27,8 @@ data class ActiveWorkoutUiState(
     val exercisePickerQuery: String = "",
     val exercisePickerResults: List<Exercise> = emptyList(),
     val error: String? = null,
+    /** Suggested weight/reps for the current exercise's next set, from prior sessions only. */
+    val suggestedPrescription: Prescription? = null,
 )
 
 /**
@@ -43,6 +46,7 @@ sealed interface ActiveWorkoutUiEvent {
     data object OnToggleExercisePicker : ActiveWorkoutUiEvent
     data class OnExercisePickerQueryChange(val query: String) : ActiveWorkoutUiEvent
     data class OnAddExercise(val exercise: Exercise) : ActiveWorkoutUiEvent
+    data object OnUseSuggestion : ActiveWorkoutUiEvent
 }
 
 /**

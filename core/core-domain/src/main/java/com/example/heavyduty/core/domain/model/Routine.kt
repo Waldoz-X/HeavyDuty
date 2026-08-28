@@ -31,4 +31,10 @@ data class RoutineExercise(
     val targetDurationSecs: Int = 0,
     val restBetweenSetsSecs: Int = 60,
     val notes: String = "",
+    /** Drives [nextPrescription]'s suggested weight/reps for this exercise's next session. */
+    val progressionPolicy: ProgressionPolicy = ProgressionPolicy.LINEAR,
+    val repRangeLow: Int = (targetReps - 2).coerceAtLeast(1),
+    val repRangeHigh: Int = targetReps,
+    /** Consecutive failed sessions before [nextPrescription] applies a deload. */
+    val stallThreshold: Int = 3,
 )

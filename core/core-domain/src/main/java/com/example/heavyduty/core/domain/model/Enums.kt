@@ -35,3 +35,14 @@ enum class Recurrence {
     WEEKLY,
     CUSTOM,
 }
+
+/**
+ * How [nextPrescription] should adjust an exercise's weight/reps/duration between sessions.
+ */
+enum class ProgressionPolicy(val displayName: String) {
+    OFF("Sin progresión automática"),
+    LINEAR("Lineal"),
+    GREYSKULL_LP("Greyskull LP"),
+    DOUBLE_PROGRESSION("Doble progresión"),
+    TIME("Por tiempo"),
+}

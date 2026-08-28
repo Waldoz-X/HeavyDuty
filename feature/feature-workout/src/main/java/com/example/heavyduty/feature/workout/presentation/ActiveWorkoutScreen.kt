@@ -37,7 +37,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.heavyduty.core.common.extensions.formatDecimal
 import com.example.heavyduty.core.domain.model.Exercise
+import com.example.heavyduty.core.domain.model.Prescription
 import com.example.heavyduty.core.ui.components.HdButton
 import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdChip
@@ -225,6 +227,13 @@ private fun ActiveWorkoutContent(
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.primary,
                 )
+                uiState.suggestedPrescription?.let { suggestion ->
+                    Spacer(modifier = Modifier.height(8.dp))
+                    SuggestionCard(
+                        suggestion = suggestion,
+                        onUseSuggestion = { onEvent(ActiveWorkoutUiEvent.OnUseSuggestion) },
+                    )
+                }
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -349,6 +358,62 @@ private fun ExercisePicker(
                         .padding(vertical = 10.dp),
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun SuggestionCard(
+    suggestion: Prescription,
+    onUseSuggestion: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val target = buildString {
+        append(suggestion.sets)
+        append(" series × ")
+        when {
+            suggestion.durationSecs != null -> append("${suggestion.durationSecs}s")
+            suggestion.weightKg != null -> append("${suggestion.reps} reps × ${suggestion.weightKg.formatDecimal()}kg")
+            else -> append("${suggestion.reps} reps")
+        }
+    }
+    HdCard(
+        containerColor = if (suggestion.isDeload) {
+            MaterialTheme.colorScheme.errorContainer
+        } else {
+            MaterialTheme.colorScheme.secondaryContainer
+        },
+        modifier = modifier,
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Sugerencia: $target",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = if (suggestion.isDeload) {
+                        MaterialTheme.colorScheme.onErrorContainer
+                    } else {
+                        MaterialTheme.colorScheme.onSecondaryContainer
+                    },
+                )
+                suggestion.reasonNote?.let { note ->
+                    Text(
+                        text = note,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (suggestion.isDeload) {
+                            MaterialTheme.colorScheme.onErrorContainer
+                        } else {
+                            MaterialTheme.colorScheme.onSecondaryContainer
+                        },
+                    )
+                }
+            }
+            HdTonalButton(text = "Usar", onClick = onUseSuggestion)
         }
     }
 }
