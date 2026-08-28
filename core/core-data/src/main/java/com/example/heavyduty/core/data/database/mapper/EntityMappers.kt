@@ -9,6 +9,7 @@ import com.example.heavyduty.core.data.database.entity.WorkoutSetEntity
 import com.example.heavyduty.core.data.database.relation.RoutineWithExercises
 import com.example.heavyduty.core.data.database.relation.SessionWithSets
 import com.example.heavyduty.core.domain.model.CalendarEntry
+import com.example.heavyduty.core.domain.model.Effort
 import com.example.heavyduty.core.domain.model.Exercise
 import com.example.heavyduty.core.domain.model.ExerciseType
 import com.example.heavyduty.core.domain.model.MuscleGroup
@@ -196,6 +197,7 @@ fun WorkoutSetEntity.toDomain(): WorkoutSet = WorkoutSet(
     completedAt = completedAt,
     notes = notes,
     isWarmup = isWarmup,
+    effort = effortToDomain(effortType, effortValue),
 )
 
 fun WorkoutSet.toEntity(): WorkoutSetEntity = WorkoutSetEntity(
@@ -211,7 +213,26 @@ fun WorkoutSet.toEntity(): WorkoutSetEntity = WorkoutSetEntity(
     completedAt = completedAt,
     notes = notes,
     isWarmup = isWarmup,
+    effortType = when (effort) {
+        is Effort.Rir -> "RIR"
+        is Effort.Rpe -> "RPE"
+        null -> null
+    },
+    effortValue = when (val e = effort) {
+        is Effort.Rir -> e.value.toFloat()
+        is Effort.Rpe -> e.value
+        null -> null
+    },
 )
+
+private fun effortToDomain(type: String?, value: Float?): Effort? {
+    if (type == null || value == null) return null
+    return when (type) {
+        "RIR" -> Effort.Rir(value.toInt())
+        "RPE" -> Effort.Rpe(value)
+        else -> null
+    }
+}
 
 fun SessionWithSets.toDomain(): WorkoutSession = WorkoutSession(
     id = session.id,

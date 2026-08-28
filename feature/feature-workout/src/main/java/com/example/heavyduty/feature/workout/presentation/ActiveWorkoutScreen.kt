@@ -261,6 +261,19 @@ private fun ActiveWorkoutContent(
                             focusedBorderColor = MaterialTheme.colorScheme.primary,
                         ),
                     )
+                    if (uiState.effortTrackingEnabled) {
+                        OutlinedTextField(
+                            value = uiState.effortInput,
+                            onValueChange = { onEvent(ActiveWorkoutUiEvent.OnEffortInputChange(it)) },
+                            label = { Text(uiState.preferredEffortScale) },
+                            modifier = Modifier.weight(1f),
+                            singleLine = true,
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            ),
+                        )
+                    }
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 HdChip(

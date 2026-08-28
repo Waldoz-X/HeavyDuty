@@ -65,4 +65,7 @@ data class WorkoutSetEntity(
     val completedAt: Long? = null,
     val notes: String = "",
     val isWarmup: Boolean = false,
+    /** "RIR" or "RPE"; null when no effort was logged. Paired with [effortValue]. */
+    val effortType: String? = null,
+    val effortValue: Float? = null,
 )

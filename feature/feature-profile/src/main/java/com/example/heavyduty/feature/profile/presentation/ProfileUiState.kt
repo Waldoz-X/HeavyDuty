@@ -14,6 +14,8 @@ data class ProfileUiState(
     val weeklyHoursChartData: List<Pair<String, Float>> = emptyList(),
     val currentStreakDays: Int = 0,
     val bodyDiagramGender: String = "male",
+    val effortTrackingEnabled: Boolean = false,
+    val preferredEffortScale: String = "RIR",
     val isLoading: Boolean = true,
 )
 
@@ -26,4 +28,6 @@ sealed interface ProfileUiEvent {
     data object OnSaveName : ProfileUiEvent
     data object OnCancelEditingName : ProfileUiEvent
     data class OnBodyDiagramGenderChange(val gender: String) : ProfileUiEvent
+    data class OnEffortTrackingEnabledChange(val enabled: Boolean) : ProfileUiEvent
+    data class OnPreferredEffortScaleChange(val scale: String) : ProfileUiEvent
 }

@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.workout.domain.usecase
 
+import com.example.heavyduty.core.domain.model.Effort
 import com.example.heavyduty.core.domain.model.WorkoutSet
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
 import javax.inject.Inject
@@ -19,6 +20,7 @@ class LogSetUseCase @Inject constructor(
         durationSecs: Int? = null,
         distance: Float? = null,
         isWarmup: Boolean = false,
+        effort: Effort? = null,
     ): Long {
         val set = WorkoutSet(
             sessionId = sessionId,
@@ -31,6 +33,7 @@ class LogSetUseCase @Inject constructor(
             isCompleted = true,
             completedAt = System.currentTimeMillis(),
             isWarmup = isWarmup,
+            effort = effort,
         )
         return workoutRepository.insertSet(set)
     }

@@ -3,6 +3,7 @@ package com.example.heavyduty.core.data.repository
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.floatPreferencesKey
@@ -30,6 +31,8 @@ class UserPreferencesRepositoryImpl @Inject constructor(
         val DISPLAY_NAME = stringPreferencesKey("display_name")
         val BODY_DIAGRAM_GENDER = stringPreferencesKey("body_diagram_gender")
         val GOAL_WEIGHT_KG = floatPreferencesKey("goal_weight_kg")
+        val EFFORT_TRACKING_ENABLED = booleanPreferencesKey("effort_tracking_enabled")
+        val PREFERRED_EFFORT_SCALE = stringPreferencesKey("preferred_effort_scale")
     }
 
     private val safeData: Flow<Preferences> = context.userPreferencesDataStore.data
@@ -62,5 +65,19 @@ class UserPreferencesRepositoryImpl @Inject constructor(
                 prefs[Keys.GOAL_WEIGHT_KG] = kg
             }
         }
+    }
+
+    override val effortTrackingEnabled: Flow<Boolean> = safeData
+        .map { prefs -> prefs[Keys.EFFORT_TRACKING_ENABLED] ?: false }
+
+    override suspend fun setEffortTrackingEnabled(enabled: Boolean) {
+        context.userPreferencesDataStore.edit { prefs -> prefs[Keys.EFFORT_TRACKING_ENABLED] = enabled }
+    }
+
+    override val preferredEffortScale: Flow<String> = safeData
+        .map { prefs -> prefs[Keys.PREFERRED_EFFORT_SCALE] ?: "RIR" }
+
+    override suspend fun setPreferredEffortScale(scale: String) {
+        context.userPreferencesDataStore.edit { prefs -> prefs[Keys.PREFERRED_EFFORT_SCALE] = scale }
     }
 }

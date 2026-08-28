@@ -3,12 +3,14 @@ package com.example.heavyduty.feature.workout.presentation
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.heavyduty.core.domain.model.Effort
 import com.example.heavyduty.core.domain.model.Exercise
 import com.example.heavyduty.core.domain.model.RoutineExercise
 import com.example.heavyduty.core.domain.model.nextPrescription
 import com.example.heavyduty.core.domain.model.toProgressionConfig
 import com.example.heavyduty.core.domain.repository.ExerciseRepository
 import com.example.heavyduty.core.domain.repository.RoutineRepository
+import com.example.heavyduty.core.domain.repository.UserPreferencesRepository
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
 import com.example.heavyduty.feature.workout.domain.usecase.CompleteWorkoutUseCase
 import com.example.heavyduty.feature.workout.domain.usecase.LogSetUseCase
@@ -16,6 +18,7 @@ import com.example.heavyduty.feature.workout.domain.usecase.StartWorkoutUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.combine
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -34,6 +37,7 @@ class ActiveWorkoutViewModel @Inject constructor(
     private val routineRepository: RoutineRepository,
     private val workoutRepository: WorkoutRepository,
     private val exerciseRepository: ExerciseRepository,
+    private val userPreferencesRepository: UserPreferencesRepository,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -49,6 +53,14 @@ class ActiveWorkoutViewModel @Inject constructor(
 
     init {
         checkForActiveSession()
+        viewModelScope.launch {
+            combine(
+                userPreferencesRepository.effortTrackingEnabled,
+                userPreferencesRepository.preferredEffortScale,
+            ) { enabled, scale -> enabled to scale }.collect { (enabled, scale) ->
+                _uiState.update { it.copy(effortTrackingEnabled = enabled, preferredEffortScale = scale) }
+            }
+        }
     }
 
     fun onEvent(event: ActiveWorkoutUiEvent) {
@@ -61,6 +73,9 @@ class ActiveWorkoutViewModel @Inject constructor(
             }
             ActiveWorkoutUiEvent.OnToggleWarmupInput -> {
                 _uiState.update { it.copy(isWarmupInput = !it.isWarmupInput) }
+            }
+            is ActiveWorkoutUiEvent.OnEffortInputChange -> {
+                _uiState.update { it.copy(effortInput = event.value) }
             }
             is ActiveWorkoutUiEvent.OnSelectExercise -> {
                 _uiState.update { it.copy(currentExerciseIndex = event.index, currentSetNumber = 1) }
@@ -197,6 +212,9 @@ class ActiveWorkoutViewModel @Inject constructor(
         val currentExercise = exercises.getOrNull(state.currentExerciseIndex) ?: return
         val reps = state.repsInput.toIntOrNull()
         val weight = state.weightInput.toFloatOrNull()
+        val effort = state.effortInput.toFloatOrNull()?.let { value ->
+            if (state.preferredEffortScale == "RPE") Effort.Rpe(value) else Effort.Rir(value.toInt())
+        }
 
         viewModelScope.launch {
             try {
@@ -207,6 +225,7 @@ class ActiveWorkoutViewModel @Inject constructor(
                     reps = reps,
                     weight = weight,
                     isWarmup = state.isWarmupInput,
+                    effort = effort,
                 )
                 _uiState.update {
                     it.copy(
@@ -214,6 +233,7 @@ class ActiveWorkoutViewModel @Inject constructor(
                         repsInput = "",
                         weightInput = "",
                         isWarmupInput = false,
+                        effortInput = "",
                     )
                 }
                 _uiEffect.emit(ActiveWorkoutUiEffect.ShowMessage("¡Serie registrada!"))

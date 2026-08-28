@@ -197,6 +197,49 @@ private fun ProfileContent(
         }
 
         item {
+            HdCard(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = "Esfuerzo percibido",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Text(
+                    text = "Registra RIR o RPE al terminar una serie. Desactivado por defecto.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    HdChip(
+                        text = "Desactivado",
+                        isSelected = !uiState.effortTrackingEnabled,
+                        onClick = { onEvent(ProfileUiEvent.OnEffortTrackingEnabledChange(false)) },
+                    )
+                    HdChip(
+                        text = "Activado",
+                        isSelected = uiState.effortTrackingEnabled,
+                        onClick = { onEvent(ProfileUiEvent.OnEffortTrackingEnabledChange(true)) },
+                    )
+                }
+                if (uiState.effortTrackingEnabled) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        HdChip(
+                            text = "RIR",
+                            isSelected = uiState.preferredEffortScale == "RIR",
+                            onClick = { onEvent(ProfileUiEvent.OnPreferredEffortScaleChange("RIR")) },
+                        )
+                        HdChip(
+                            text = "RPE",
+                            isSelected = uiState.preferredEffortScale == "RPE",
+                            onClick = { onEvent(ProfileUiEvent.OnPreferredEffortScaleChange("RPE")) },
+                        )
+                    }
+                }
+            }
+        }
+
+        item {
             Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = "Entrenamientos",

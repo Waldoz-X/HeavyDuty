@@ -5,9 +5,13 @@ import androidx.lifecycle.viewModelScope
 import com.example.heavyduty.feature.profile.domain.model.ProfileStats
 import com.example.heavyduty.feature.profile.domain.usecase.GetBodyDiagramGenderUseCase
 import com.example.heavyduty.feature.profile.domain.usecase.GetDisplayNameUseCase
+import com.example.heavyduty.feature.profile.domain.usecase.GetEffortTrackingEnabledUseCase
+import com.example.heavyduty.feature.profile.domain.usecase.GetPreferredEffortScaleUseCase
 import com.example.heavyduty.feature.profile.domain.usecase.GetProfileStatsUseCase
 import com.example.heavyduty.feature.profile.domain.usecase.SetBodyDiagramGenderUseCase
 import com.example.heavyduty.feature.profile.domain.usecase.SetDisplayNameUseCase
+import com.example.heavyduty.feature.profile.domain.usecase.SetEffortTrackingEnabledUseCase
+import com.example.heavyduty.feature.profile.domain.usecase.SetPreferredEffortScaleUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -32,6 +36,10 @@ class ProfileViewModel @Inject constructor(
     private val getProfileStatsUseCase: GetProfileStatsUseCase,
     private val getBodyDiagramGenderUseCase: GetBodyDiagramGenderUseCase,
     private val setBodyDiagramGenderUseCase: SetBodyDiagramGenderUseCase,
+    private val getEffortTrackingEnabledUseCase: GetEffortTrackingEnabledUseCase,
+    private val setEffortTrackingEnabledUseCase: SetEffortTrackingEnabledUseCase,
+    private val getPreferredEffortScaleUseCase: GetPreferredEffortScaleUseCase,
+    private val setPreferredEffortScaleUseCase: SetPreferredEffortScaleUseCase,
     private val workoutRepository: WorkoutRepository,
     private val exerciseRepository: ExerciseRepository,
 ) : ViewModel() {
@@ -119,7 +127,15 @@ class ProfileViewModel @Inject constructor(
                     chartData = chartData,
                     streak = calculateCurrentStreakDays(sessions),
                 )
-            }.combine(getBodyDiagramGenderUseCase()) { data, gender ->
+            }.combine(
+                combine(
+                    getBodyDiagramGenderUseCase(),
+                    getEffortTrackingEnabledUseCase(),
+                    getPreferredEffortScaleUseCase(),
+                ) { gender, effortEnabled, effortScale ->
+                    ProfileSettings(gender, effortEnabled, effortScale)
+                },
+            ) { data, settings ->
                 _uiState.update {
                     it.copy(
                         displayName = data.name,
@@ -127,7 +143,9 @@ class ProfileViewModel @Inject constructor(
                         feedItems = data.feedItems,
                         weeklyHoursChartData = data.chartData,
                         currentStreakDays = data.streak,
-                        bodyDiagramGender = gender,
+                        bodyDiagramGender = settings.bodyDiagramGender,
+                        effortTrackingEnabled = settings.effortTrackingEnabled,
+                        preferredEffortScale = settings.preferredEffortScale,
                         isLoading = false,
                     )
                 }
@@ -141,6 +159,12 @@ class ProfileViewModel @Inject constructor(
         val feedItems: List<WorkoutFeedItem>,
         val chartData: List<Pair<String, Float>>,
         val streak: Int,
+    )
+
+    private data class ProfileSettings(
+        val bodyDiagramGender: String,
+        val effortTrackingEnabled: Boolean,
+        val preferredEffortScale: String,
     )
 
     /**
@@ -202,6 +226,12 @@ class ProfileViewModel @Inject constructor(
             ProfileUiEvent.OnSaveName -> saveName()
             is ProfileUiEvent.OnBodyDiagramGenderChange -> {
                 viewModelScope.launch { setBodyDiagramGenderUseCase(event.gender) }
+            }
+            is ProfileUiEvent.OnEffortTrackingEnabledChange -> {
+                viewModelScope.launch { setEffortTrackingEnabledUseCase(event.enabled) }
+            }
+            is ProfileUiEvent.OnPreferredEffortScaleChange -> {
+                viewModelScope.launch { setPreferredEffortScaleUseCase(event.scale) }
             }
         }
     }

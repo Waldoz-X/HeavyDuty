@@ -18,6 +18,11 @@ data class ActiveWorkoutUiState(
     val repsInput: String = "",
     val weightInput: String = "",
     val isWarmupInput: Boolean = false,
+    val effortInput: String = "",
+    /** From user preferences — off by default, see feature-profile's "Esfuerzo percibido" card. */
+    val effortTrackingEnabled: Boolean = false,
+    /** "RIR" or "RPE" — which scale [effortInput] is interpreted in. */
+    val preferredEffortScale: String = "RIR",
     val elapsedSeconds: Int = 0,
     val isLoading: Boolean = true,
     val isActive: Boolean = false,
@@ -38,6 +43,7 @@ sealed interface ActiveWorkoutUiEvent {
     data class OnRepsChange(val reps: String) : ActiveWorkoutUiEvent
     data class OnWeightChange(val weight: String) : ActiveWorkoutUiEvent
     data object OnToggleWarmupInput : ActiveWorkoutUiEvent
+    data class OnEffortInputChange(val value: String) : ActiveWorkoutUiEvent
     data object OnLogSet : ActiveWorkoutUiEvent
     data class OnSelectExercise(val index: Int) : ActiveWorkoutUiEvent
     data object OnCompleteWorkout : ActiveWorkoutUiEvent

@@ -35,4 +35,6 @@ data class WorkoutSet(
     val notes: String = "",
     /** Ramp-up set — excluded from volume, PRs, 1RM and fatigue (see [excludeWarmups]). */
     val isWarmup: Boolean = false,
+    /** Optional perceived-effort rating — see [Effort] doc for why it's never rewritten. */
+    val effort: Effort? = null,
 )

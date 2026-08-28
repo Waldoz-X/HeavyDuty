@@ -16,4 +16,12 @@ interface UserPreferencesRepository {
     /** Target body weight in kg for the Dashboard's weight chart goal line. Null = no goal set. */
     val goalWeightKg: Flow<Float?>
     suspend fun setGoalWeightKg(kg: Float?)
+
+    /** Whether the active workout screen shows a perceived-effort input. Off by default. */
+    val effortTrackingEnabled: Flow<Boolean>
+    suspend fun setEffortTrackingEnabled(enabled: Boolean)
+
+    /** "RIR" or "RPE" — which scale new sets are logged in. Defaults to "RIR". */
+    val preferredEffortScale: Flow<String>
+    suspend fun setPreferredEffortScale(scale: String)
 }
