@@ -53,6 +53,24 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+// Routes whose own screen already renders a Scaffold + TopAppBar with a back arrow.
+// Showing the outer "HeavyDuty" bar above those doubles up the header, so it's hidden
+// there — the pushed screen's own back arrow is the only way back, which always leads
+// to a route outside this set where the outer bar reappears.
+private val ROUTES_WITH_OWN_TOP_BAR = setOf(
+    "program_detail/{programId}",
+    "routine_editor/{routineId}",
+    "routine_editor",
+    "progress/{exerciseId}",
+    "stats_graph",
+    "stats/series",
+    "stats/distribucion_radar",
+    "stats/distribucion_cuerpo",
+    "stats/principales",
+    "stats/clasificacion",
+    "stats/informe_mensual",
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun HeavyDutyMainScreen() {
@@ -101,20 +119,24 @@ private fun HeavyDutyMainScreen() {
             }
         },
     ) {
+        val currentRouteHasOwnTopBar = currentDestination?.route?.let { it in ROUTES_WITH_OWN_TOP_BAR } ?: false
+
         Scaffold(
             topBar = {
-                TopAppBar(
-                    title = { Text(text = "HeavyDuty") },
-                    navigationIcon = {
-                        IconButton(onClick = { coroutineScope.launch { drawerState.open() } }) {
-                            Icon(
-                                imageVector = Icons.Default.Menu,
-                                contentDescription = "Abrir menú",
-                                modifier = Modifier.size(24.dp),
-                            )
-                        }
-                    },
-                )
+                if (!currentRouteHasOwnTopBar) {
+                    TopAppBar(
+                        title = { Text(text = "HeavyDuty") },
+                        navigationIcon = {
+                            IconButton(onClick = { coroutineScope.launch { drawerState.open() } }) {
+                                Icon(
+                                    imageVector = Icons.Default.Menu,
+                                    contentDescription = "Abrir menú",
+                                    modifier = Modifier.size(24.dp),
+                                )
+                            }
+                        },
+                    )
+                }
             },
             bottomBar = {
                 NavigationBar {
