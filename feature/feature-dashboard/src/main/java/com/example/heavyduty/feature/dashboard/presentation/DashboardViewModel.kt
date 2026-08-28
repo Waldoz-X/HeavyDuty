@@ -2,7 +2,16 @@ package com.example.heavyduty.feature.dashboard.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.heavyduty.core.domain.model.MuscleGroup
+import com.example.heavyduty.core.domain.model.WorkoutSession
+import com.example.heavyduty.core.domain.model.WorkoutSet
+import com.example.heavyduty.core.domain.repository.BodyWeightRepository
+import com.example.heavyduty.core.domain.repository.CalendarRepository
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
+import com.example.heavyduty.feature.dashboard.domain.usecase.GetBodyWeightSummaryUseCase
+import com.example.heavyduty.feature.dashboard.domain.usecase.GetCurrentStreakUseCase
+import com.example.heavyduty.feature.dashboard.domain.usecase.GetWeeklyMuscleVolumeUseCase
+import com.example.heavyduty.feature.dashboard.domain.usecase.GetWeeklyScheduleOverviewUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -11,19 +20,21 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import javax.inject.Inject
 
-import com.example.heavyduty.core.domain.repository.ProgramRepository
-import com.example.heavyduty.feature.dashboard.domain.usecase.GetWeeklyMuscleVolumeUseCase
-
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
     private val workoutRepository: WorkoutRepository,
-    private val programRepository: ProgramRepository,
+    private val bodyWeightRepository: BodyWeightRepository,
+    private val calendarRepository: CalendarRepository,
     private val getWeeklyMuscleVolume: GetWeeklyMuscleVolumeUseCase,
+    private val getWeeklyScheduleOverview: GetWeeklyScheduleOverviewUseCase,
+    private val getBodyWeightSummary: GetBodyWeightSummaryUseCase,
+    private val getCurrentStreak: GetCurrentStreakUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DashboardUiState())
@@ -32,8 +43,11 @@ class DashboardViewModel @Inject constructor(
     private val _uiEffect = MutableSharedFlow<DashboardUiEffect>()
     val uiEffect = _uiEffect.asSharedFlow()
 
+    private val weekOffset = MutableStateFlow(0)
+
     init {
         loadDashboardData()
+        loadWeekPlan()
     }
 
     fun onEvent(event: DashboardUiEvent) {
@@ -48,6 +62,48 @@ class DashboardViewModel @Inject constructor(
                     _uiEffect.emit(DashboardUiEffect.NavigateToRoutines)
                 }
             }
+            is DashboardUiEvent.OnWeekPrev -> changeWeekOffset(-1)
+            is DashboardUiEvent.OnWeekNext -> changeWeekOffset(1)
+            is DashboardUiEvent.OnStartTodayRoutine -> {
+                viewModelScope.launch {
+                    _uiEffect.emit(DashboardUiEffect.NavigateToRoutine(event.routineId))
+                }
+            }
+            is DashboardUiEvent.OnOpenLogWeight -> {
+                _uiState.update { it.copy(showLogWeightSheet = true) }
+            }
+            is DashboardUiEvent.OnDismissLogWeight -> {
+                _uiState.update { it.copy(showLogWeightSheet = false) }
+            }
+            is DashboardUiEvent.OnLogWeight -> saveWeight(event.weightKg)
+        }
+    }
+
+    private fun changeWeekOffset(delta: Int) {
+        weekOffset.update { it + delta }
+        _uiState.update { it.copy(weekOffset = weekOffset.value) }
+    }
+
+    private fun saveWeight(weightKg: Float) {
+        viewModelScope.launch {
+            bodyWeightRepository.logEntry(weightKg)
+            _uiState.update { it.copy(showLogWeightSheet = false) }
+        }
+    }
+
+    private fun loadWeekPlan() {
+        viewModelScope.launch {
+            weekOffset
+                .flatMapLatest { offset -> getWeeklyScheduleOverview(offset) }
+                .combine(calendarRepository.getWeekSchedule()) { plan, schedule ->
+                    _uiState.update {
+                        it.copy(
+                            weekPlan = plan,
+                            plannedDaysThisWeek = schedule.count { entry -> entry.value.isNotEmpty() },
+                        )
+                    }
+                }
+                .collect { }
         }
     }
 
@@ -62,37 +118,33 @@ class DashboardViewModel @Inject constructor(
             val startOfWeek = calendar.timeInMillis
             val now = System.currentTimeMillis()
 
-            data class DashboardData(
-                val weeklySessions: List<com.example.heavyduty.core.domain.model.WorkoutSession>,
-                val weeklySets: List<com.example.heavyduty.core.domain.model.WorkoutSet>,
-                val activeProgram: com.example.heavyduty.core.domain.model.Program?,
-                val allSessions: List<com.example.heavyduty.core.domain.model.WorkoutSession>,
-                val muscleVolume: Map<com.example.heavyduty.core.domain.model.MuscleGroup, Float>,
+            data class DashboardCoreData(
+                val weeklySessions: List<WorkoutSession>,
+                val weeklySets: List<WorkoutSet>,
+                val allSessions: List<WorkoutSession>,
+                val muscleVolume: Map<MuscleGroup, Float>,
             )
 
             combine(
                 workoutRepository.getSessionsByDateRange(startOfWeek, now),
                 workoutRepository.getCompletedSetsByDateRange(startOfWeek, now),
-                programRepository.getActiveProgram(),
                 workoutRepository.getAllSessions(),
                 getWeeklyMuscleVolume(startOfWeek, now),
-            ) { weeklySessions, weeklySets, activeProgram, allSessions, muscleVolume ->
-                DashboardData(weeklySessions, weeklySets, activeProgram, allSessions, muscleVolume)
+            ) { weeklySessions, weeklySets, allSessions, muscleVolume ->
+                DashboardCoreData(weeklySessions, weeklySets, allSessions, muscleVolume)
             }
-                .catch { e ->
-                    _uiState.update { it.copy(isLoading = false, error = e.message) }
-                }
-                .collect { data ->
-                    val weeklyWorkouts = data.weeklySessions.filter { it.endTime != null }
+                .combine(getBodyWeightSummary()) { core, weightSummary -> core to weightSummary }
+                .combine(getCurrentStreak()) { (core, weightSummary), streak ->
+                    val weeklyWorkouts = core.weeklySessions.filter { it.endTime != null }
                     val weeklyCount = weeklyWorkouts.size
                     val totalTime = weeklyWorkouts.sumOf {
                         if (it.endTime != null) ((it.endTime!! - it.startTime) / 1000).toInt() else 0
                     }
-                    val weeklyVolume = data.weeklySets
+                    val weeklyVolume = core.weeklySets
                         .sumOf { ((it.reps ?: 0) * (it.weight ?: 0f)).toDouble() }
                         .toFloat()
 
-                    val recentWorkout = data.allSessions
+                    val recentWorkout = core.allSessions
                         .filter { it.endTime != null }
                         .maxByOrNull { it.endTime!! }
 
@@ -102,9 +154,8 @@ class DashboardViewModel @Inject constructor(
                             weeklyWorkoutsCount = weeklyCount,
                             totalTimeSeconds = totalTime,
                             weeklyVolumeKg = weeklyVolume,
-                            weeklyMuscleVolume = data.muscleVolume,
+                            weeklyMuscleVolume = core.muscleVolume,
                             recentWorkoutName = recentWorkout?.sessionName?.takeIf { it.isNotBlank() } ?: "Entrenamiento",
-                            activeProgramName = data.activeProgram?.name,
                             recentWorkoutTime = recentWorkout?.endTime?.let { time ->
                                 val diff = System.currentTimeMillis() - time
                                 val days = diff / (1000 * 60 * 60 * 24)
@@ -113,10 +164,16 @@ class DashboardViewModel @Inject constructor(
                                     days == 1L -> "Ayer"
                                     else -> "Hace $days días"
                                 }
-                            }
+                            },
+                            bodyWeightSummary = weightSummary,
+                            streakDays = streak,
                         )
                     }
                 }
+                .catch { e ->
+                    _uiState.update { it.copy(isLoading = false, error = e.message) }
+                }
+                .collect { }
         }
     }
 }

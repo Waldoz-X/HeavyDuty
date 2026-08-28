@@ -12,4 +12,8 @@ interface UserPreferencesRepository {
     /** "male" or "female" — which body figure the muscle-map diagrams draw. Defaults to "male". */
     val bodyDiagramGender: Flow<String>
     suspend fun setBodyDiagramGender(gender: String)
+
+    /** Target body weight in kg for the Dashboard's weight chart goal line. Null = no goal set. */
+    val goalWeightKg: Flow<Float?>
+    suspend fun setGoalWeightKg(kg: Float?)
 }

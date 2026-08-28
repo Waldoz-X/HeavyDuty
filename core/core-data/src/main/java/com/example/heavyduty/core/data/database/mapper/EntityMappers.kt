@@ -232,3 +232,19 @@ fun CalendarEntry.toEntity(): CalendarEntryEntity = CalendarEntryEntity(
     recurrence = recurrence.name,
     isActive = isActive,
 )
+
+// ============ Body Weight Mappers ============
+
+fun com.example.heavyduty.core.data.database.entity.BodyWeightEntity.toDomain(): com.example.heavyduty.core.domain.model.BodyWeightEntry =
+    com.example.heavyduty.core.domain.model.BodyWeightEntry(
+        id = id,
+        weightKg = weightKg,
+        loggedAt = loggedAt,
+    )
+
+fun com.example.heavyduty.core.domain.model.BodyWeightEntry.toEntity(): com.example.heavyduty.core.data.database.entity.BodyWeightEntity =
+    com.example.heavyduty.core.data.database.entity.BodyWeightEntity(
+        id = id,
+        weightKg = weightKg,
+        loggedAt = loggedAt,
+    )

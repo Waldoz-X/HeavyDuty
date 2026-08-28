@@ -2,10 +2,12 @@ package com.example.heavyduty.core.data.database
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import com.example.heavyduty.core.data.database.dao.BodyWeightDao
 import com.example.heavyduty.core.data.database.dao.CalendarDao
 import com.example.heavyduty.core.data.database.dao.ExerciseDao
 import com.example.heavyduty.core.data.database.dao.RoutineDao
 import com.example.heavyduty.core.data.database.dao.WorkoutDao
+import com.example.heavyduty.core.data.database.entity.BodyWeightEntity
 import com.example.heavyduty.core.data.database.entity.CalendarEntryEntity
 import com.example.heavyduty.core.data.database.entity.ExerciseEntity
 import com.example.heavyduty.core.data.database.entity.RoutineEntity
@@ -27,8 +29,9 @@ import com.example.heavyduty.core.data.database.entity.ProgramWeekEntity
         CalendarEntryEntity::class,
         ProgramEntity::class,
         ProgramWeekEntity::class,
+        BodyWeightEntity::class,
     ],
-    version = 6,
+    version = 7,
     exportSchema = true,
 )
 abstract class HeavyDutyDatabase : RoomDatabase() {
@@ -37,4 +40,5 @@ abstract class HeavyDutyDatabase : RoomDatabase() {
     abstract fun workoutDao(): WorkoutDao
     abstract fun calendarDao(): CalendarDao
     abstract fun programDao(): ProgramDao
+    abstract fun bodyWeightDao(): BodyWeightDao
 }

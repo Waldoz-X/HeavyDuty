@@ -14,12 +14,14 @@ fun NavController.navigateToDashboard(navOptions: NavOptions? = null) {
 
 fun NavGraphBuilder.dashboardScreen(
     onNavigateToActiveWorkout: () -> Unit,
-    onNavigateToRoutines: () -> Unit
+    onNavigateToRoutines: () -> Unit,
+    onStartRoutine: (Long) -> Unit,
 ) {
     composable(route = dashboardRoute) {
         DashboardScreen(
             onNavigateToActiveWorkout = onNavigateToActiveWorkout,
-            onNavigateToRoutines = onNavigateToRoutines
+            onNavigateToRoutines = onNavigateToRoutines,
+            onStartRoutine = onStartRoutine,
         )
     }
 }

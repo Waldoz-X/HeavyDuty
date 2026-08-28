@@ -1,10 +1,12 @@
 package com.example.heavyduty.core.data.di
 
+import com.example.heavyduty.core.data.repository.BodyWeightRepositoryImpl
 import com.example.heavyduty.core.data.repository.CalendarRepositoryImpl
 import com.example.heavyduty.core.data.repository.ExerciseRepositoryImpl
 import com.example.heavyduty.core.data.repository.RoutineRepositoryImpl
 import com.example.heavyduty.core.data.repository.UserPreferencesRepositoryImpl
 import com.example.heavyduty.core.data.repository.WorkoutRepositoryImpl
+import com.example.heavyduty.core.domain.repository.BodyWeightRepository
 import com.example.heavyduty.core.domain.repository.CalendarRepository
 import com.example.heavyduty.core.domain.repository.ExerciseRepository
 import com.example.heavyduty.core.domain.repository.RoutineRepository
@@ -48,4 +50,8 @@ abstract class RepositoryModule {
     abstract fun bindProgramRepository(
         programRepositoryImpl: com.example.heavyduty.core.data.repository.ProgramRepositoryImpl,
     ): com.example.heavyduty.core.domain.repository.ProgramRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindBodyWeightRepository(impl: BodyWeightRepositoryImpl): BodyWeightRepository
 }

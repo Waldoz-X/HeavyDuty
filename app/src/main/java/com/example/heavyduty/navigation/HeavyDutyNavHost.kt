@@ -34,7 +34,10 @@ fun HeavyDutyNavHost(
             },
             onNavigateToRoutines = {
                 navController.navigate("routines_graph")
-            }
+            },
+            onStartRoutine = { routineId ->
+                navController.navigate("active_workout/$routineId")
+            },
         )
 
         // Workout

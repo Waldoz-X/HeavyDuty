@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.example.heavyduty.core.domain.repository.UserPreferencesRepository
@@ -28,6 +29,7 @@ class UserPreferencesRepositoryImpl @Inject constructor(
     private object Keys {
         val DISPLAY_NAME = stringPreferencesKey("display_name")
         val BODY_DIAGRAM_GENDER = stringPreferencesKey("body_diagram_gender")
+        val GOAL_WEIGHT_KG = floatPreferencesKey("goal_weight_kg")
     }
 
     private val safeData: Flow<Preferences> = context.userPreferencesDataStore.data
@@ -47,5 +49,18 @@ class UserPreferencesRepositoryImpl @Inject constructor(
 
     override suspend fun setBodyDiagramGender(gender: String) {
         context.userPreferencesDataStore.edit { prefs -> prefs[Keys.BODY_DIAGRAM_GENDER] = gender }
+    }
+
+    override val goalWeightKg: Flow<Float?> = safeData
+        .map { prefs -> prefs[Keys.GOAL_WEIGHT_KG] }
+
+    override suspend fun setGoalWeightKg(kg: Float?) {
+        context.userPreferencesDataStore.edit { prefs ->
+            if (kg == null) {
+                prefs.remove(Keys.GOAL_WEIGHT_KG)
+            } else {
+                prefs[Keys.GOAL_WEIGHT_KG] = kg
+            }
+        }
     }
 }

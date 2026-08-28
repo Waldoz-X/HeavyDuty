@@ -1,5 +1,8 @@
 package com.example.heavyduty.feature.dashboard.presentation
 
+import com.example.heavyduty.feature.dashboard.domain.model.BodyWeightSummaryUi
+import com.example.heavyduty.feature.dashboard.domain.model.DayPlanUi
+
 /**
  * Immutable UI state for the dashboard screen.
  */
@@ -10,9 +13,14 @@ data class DashboardUiState(
     val weeklyVolumeKg: Float = 0f,
     val recentWorkoutName: String? = null,
     val recentWorkoutTime: String? = null,
-    val activeProgramName: String? = null,
     val weeklyMuscleVolume: Map<com.example.heavyduty.core.domain.model.MuscleGroup, Float> = emptyMap(),
-    val error: String? = null
+    val weekPlan: List<DayPlanUi> = emptyList(),
+    val weekOffset: Int = 0,
+    val plannedDaysThisWeek: Int = 0,
+    val streakDays: Int = 0,
+    val bodyWeightSummary: BodyWeightSummaryUi = BodyWeightSummaryUi(),
+    val showLogWeightSheet: Boolean = false,
+    val error: String? = null,
 )
 
 /**
@@ -21,6 +29,12 @@ data class DashboardUiState(
 sealed interface DashboardUiEvent {
     object OnStartFreeWorkout : DashboardUiEvent
     object OnChooseRoutine : DashboardUiEvent
+    object OnWeekPrev : DashboardUiEvent
+    object OnWeekNext : DashboardUiEvent
+    data class OnStartTodayRoutine(val routineId: Long) : DashboardUiEvent
+    object OnOpenLogWeight : DashboardUiEvent
+    object OnDismissLogWeight : DashboardUiEvent
+    data class OnLogWeight(val weightKg: Float) : DashboardUiEvent
 }
 
 /**
@@ -29,5 +43,6 @@ sealed interface DashboardUiEvent {
 sealed interface DashboardUiEffect {
     object NavigateToActiveWorkout : DashboardUiEffect
     object NavigateToRoutines : DashboardUiEffect
+    data class NavigateToRoutine(val routineId: Long) : DashboardUiEffect
     data class ShowError(val message: String) : DashboardUiEffect
 }

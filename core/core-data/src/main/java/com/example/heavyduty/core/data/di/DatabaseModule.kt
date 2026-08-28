@@ -7,6 +7,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.heavyduty.core.common.dispatchers.ApplicationScope
 import com.example.heavyduty.core.data.database.HeavyDutyDatabase
 import com.example.heavyduty.core.data.database.SeedData
+import com.example.heavyduty.core.data.database.dao.BodyWeightDao
 import com.example.heavyduty.core.data.database.dao.CalendarDao
 import com.example.heavyduty.core.data.database.dao.ExerciseDao
 import com.example.heavyduty.core.data.database.dao.RoutineDao
@@ -69,4 +70,8 @@ object DatabaseModule {
     @Provides
     fun provideProgramDao(database: HeavyDutyDatabase): com.example.heavyduty.core.data.database.dao.ProgramDao =
         database.programDao()
+
+    @Provides
+    fun provideBodyWeightDao(database: HeavyDutyDatabase): BodyWeightDao =
+        database.bodyWeightDao()
 }
