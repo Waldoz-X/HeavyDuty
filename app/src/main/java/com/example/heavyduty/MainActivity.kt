@@ -4,8 +4,11 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.exclude
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.DrawerValue
@@ -21,6 +24,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
@@ -137,6 +141,15 @@ private fun HeavyDutyMainScreen() {
                         },
                     )
                 }
+            },
+            // When the pushed screen owns its own TopAppBar, it already consumes the status
+            // bar inset itself — without this, Scaffold reserves that inset a second time
+            // here (nothing consumed it, since the outer topBar renders nothing), leaving a
+            // blank gap above the pushed screen's own header.
+            contentWindowInsets = if (currentRouteHasOwnTopBar) {
+                ScaffoldDefaults.contentWindowInsets.exclude(WindowInsets.statusBars)
+            } else {
+                ScaffoldDefaults.contentWindowInsets
             },
             bottomBar = {
                 NavigationBar {
