@@ -48,6 +48,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.example.heavyduty.core.domain.model.Exercise
+import com.example.heavyduty.core.domain.model.ProgressionPolicy
 import com.example.heavyduty.core.domain.model.RoutineExercise
 import com.example.heavyduty.core.domain.model.WorkoutType
 import com.example.heavyduty.core.ui.components.HdButton
@@ -406,6 +407,56 @@ private fun RoutineExerciseItem(
                 onValueChange = { onUpdate(routineExercise.copy(targetWeight = it.toFloat())) },
                 modifier = Modifier.weight(1f),
             )
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+        Text(
+            text = "Progresión",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(modifier = Modifier.height(6.dp))
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            items(ProgressionPolicy.entries.toList()) { policy ->
+                HdChip(
+                    text = policy.displayName,
+                    isSelected = routineExercise.progressionPolicy == policy,
+                    onClick = { onUpdate(routineExercise.copy(progressionPolicy = policy)) },
+                )
+            }
+        }
+
+        if (routineExercise.progressionPolicy != ProgressionPolicy.OFF) {
+            Spacer(modifier = Modifier.height(8.dp))
+            val isTimeBased = routineExercise.progressionPolicy == ProgressionPolicy.TIME
+            val rangeLabel = if (isTimeBased) "Seg" else "Reps"
+            val showStallThreshold = routineExercise.progressionPolicy == ProgressionPolicy.LINEAR ||
+                routineExercise.progressionPolicy == ProgressionPolicy.GREYSKULL_LP
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                CompactNumberField(
+                    label = "$rangeLabel mín",
+                    value = routineExercise.repRangeLow,
+                    onValueChange = { onUpdate(routineExercise.copy(repRangeLow = it)) },
+                    modifier = Modifier.weight(1f),
+                )
+                CompactNumberField(
+                    label = "$rangeLabel máx",
+                    value = routineExercise.repRangeHigh,
+                    onValueChange = { onUpdate(routineExercise.copy(repRangeHigh = it)) },
+                    modifier = Modifier.weight(1f),
+                )
+                if (showStallThreshold) {
+                    CompactNumberField(
+                        label = "Fallos",
+                        value = routineExercise.stallThreshold,
+                        onValueChange = { onUpdate(routineExercise.copy(stallThreshold = it)) },
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+            }
         }
     }
 }
