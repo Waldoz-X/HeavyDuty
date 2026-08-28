@@ -68,6 +68,10 @@ val OnBackgroundDark = Color(0xFFE6E6E6)
 // Scrim
 val Scrim = Color(0xFF000000)
 
+// Fatigue indicator — muscle recovery status on HdBodyDiagram (not part of the M3 ColorScheme;
+// "fatigued" uses the standard error red, "ready" uses the diagram's own base color).
+val FatigueRecoveringAmber = Color(0xFFFFB300)
+
 // Gradient colors for special UI elements
 val GradientCyanStart = Color(0xFF00E5FF)
 val GradientCyanEnd = Color(0xFF0091EA)

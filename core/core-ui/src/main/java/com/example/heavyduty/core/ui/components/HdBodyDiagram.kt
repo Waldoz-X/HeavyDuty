@@ -30,6 +30,11 @@ import androidx.compose.ui.unit.dp
  * Keys in [muscleValues] are muscle group display names (e.g. "Pecho", "Espalda",
  * "Hombros" — see [BODY_REGION_LABELS] for the full recognized set). Unrecognized keys
  * (like whole-body or cardio categories) are simply not drawn.
+ *
+ * By default each muscle is shaded on a [baseColor]→[highlightColor] gradient scaled by
+ * its value in [muscleValues] (e.g. volume). Pass [categoryColors] to shade by discrete
+ * categories instead (e.g. a fatigue traffic light) — when a muscle has an entry there,
+ * that exact color is used and its [muscleValues] entry is ignored.
  */
 @Composable
 fun HdBodyDiagram(
@@ -38,6 +43,7 @@ fun HdBodyDiagram(
     gender: BodyGender = BodyGender.MALE,
     baseColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
     highlightColor: Color = MaterialTheme.colorScheme.primary,
+    categoryColors: Map<String, Color>? = null,
     frontLabel: String = "Frontal",
     backLabel: String = "Posterior",
 ) {
@@ -59,7 +65,7 @@ fun HdBodyDiagram(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Canvas(modifier = Modifier.fillMaxWidth().weight(1f)) {
-                drawBodyView(front, muscleValues, maxValue, baseColor, highlightColor)
+                drawBodyView(front, muscleValues, maxValue, baseColor, highlightColor, categoryColors)
             }
             Spacer(modifier = Modifier.height(4.dp))
             Text(
@@ -73,7 +79,7 @@ fun HdBodyDiagram(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Canvas(modifier = Modifier.fillMaxWidth().weight(1f)) {
-                drawBodyView(back, muscleValues, maxValue, baseColor, highlightColor)
+                drawBodyView(back, muscleValues, maxValue, baseColor, highlightColor, categoryColors)
             }
             Spacer(modifier = Modifier.height(4.dp))
             Text(
@@ -91,6 +97,7 @@ private fun DrawScope.drawBodyView(
     maxValue: Float,
     baseColor: Color,
     highlightColor: Color,
+    categoryColors: Map<String, Color>?,
 ) {
     // Fit the SVG viewBox into the available canvas, preserving aspect ratio and centered.
     val fitScale = minOf(size.width / view.viewBoxWidth, size.height / view.viewBoxHeight)
@@ -104,9 +111,11 @@ private fun DrawScope.drawBodyView(
             translate(left = -view.viewBoxMinX, top = -view.viewBoxMinY) {
                 view.inertPaths.forEach { path -> drawPath(path, color = baseColor) }
                 view.musclePaths.forEach { (label, paths) ->
-                    val value = muscleValues[label] ?: 0f
-                    val intensity = (value / maxValue).coerceIn(0f, 1f)
-                    val color = lerp(baseColor, highlightColor, intensity)
+                    val color = categoryColors?.get(label) ?: run {
+                        val value = muscleValues[label] ?: 0f
+                        val intensity = (value / maxValue).coerceIn(0f, 1f)
+                        lerp(baseColor, highlightColor, intensity)
+                    }
                     paths.forEach { path -> drawPath(path, color = color) }
                 }
             }

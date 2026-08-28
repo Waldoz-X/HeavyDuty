@@ -92,7 +92,7 @@ fun EstadisticasScreen(
             AdvancedStatRow(
                 icon = Icons.Default.Accessibility,
                 title = "Distribución de los músculos (cuerpo)",
-                description = "Mapa semanal de músculos trabajados.",
+                description = "Mapa semanal de volumen o fatiga por músculo.",
                 onClick = onNavigateToDistribucionCuerpo,
             ),
             AdvancedStatRow(

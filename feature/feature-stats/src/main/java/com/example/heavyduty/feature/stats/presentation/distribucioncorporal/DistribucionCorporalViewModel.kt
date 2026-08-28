@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.heavyduty.core.domain.repository.UserPreferencesRepository
 import com.example.heavyduty.core.ui.components.BodyGender
+import com.example.heavyduty.feature.stats.domain.usecase.GetMuscleGroupFatigueUseCase
 import com.example.heavyduty.feature.stats.domain.usecase.GetMuscleGroupVolumeUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,6 +19,7 @@ import javax.inject.Inject
 @HiltViewModel
 class DistribucionCorporalViewModel @Inject constructor(
     private val getMuscleGroupVolume: GetMuscleGroupVolumeUseCase,
+    private val getMuscleGroupFatigue: GetMuscleGroupFatigueUseCase,
     private val userPreferencesRepository: UserPreferencesRepository,
 ) : ViewModel() {
 
@@ -36,17 +38,26 @@ class DistribucionCorporalViewModel @Inject constructor(
             val startOfWeek = calendar.timeInMillis
             val now = System.currentTimeMillis()
 
-            getMuscleGroupVolume(startOfWeek, now)
-                .combine(userPreferencesRepository.bodyDiagramGender) { volumeByMuscle, genderValue ->
-                    _uiState.update {
-                        it.copy(
-                            volumeByMuscle = volumeByMuscle.mapKeys { entry -> entry.key.displayName },
-                            gender = BodyGender.fromStorageValue(genderValue),
-                            isLoading = false,
-                        )
-                    }
+            combine(
+                getMuscleGroupVolume(startOfWeek, now),
+                getMuscleGroupFatigue(),
+                userPreferencesRepository.bodyDiagramGender,
+            ) { volumeByMuscle, fatigueByMuscle, genderValue ->
+                _uiState.update {
+                    it.copy(
+                        volumeByMuscle = volumeByMuscle.mapKeys { entry -> entry.key.displayName },
+                        fatigueByMuscle = fatigueByMuscle.mapKeys { entry -> entry.key.displayName },
+                        gender = BodyGender.fromStorageValue(genderValue),
+                        isLoading = false,
+                    )
                 }
-                .collect { }
+            }.collect { }
+        }
+    }
+
+    fun onEvent(event: DistribucionCorporalUiEvent) {
+        when (event) {
+            is DistribucionCorporalUiEvent.OnModeChange -> _uiState.update { it.copy(mode = event.mode) }
         }
     }
 }
