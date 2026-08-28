@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.stats.domain.usecase
 
+import com.example.heavyduty.core.domain.model.excludeWarmups
 import com.example.heavyduty.core.domain.repository.ExerciseRepository
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
 import com.example.heavyduty.feature.stats.domain.model.ExerciseFrequency
@@ -21,7 +22,8 @@ class GetTopExercisesByFrequencyUseCase @Inject constructor(
             exerciseRepository.getAllExercises(),
         ) { sets, exercises ->
             val exerciseById = exercises.associateBy { it.id }
-            sets.groupBy { it.exerciseId }
+            sets.excludeWarmups()
+                .groupBy { it.exerciseId }
                 .mapNotNull { (exerciseId, setsForExercise) ->
                     val exercise = exerciseById[exerciseId] ?: return@mapNotNull null
                     ExerciseFrequency(

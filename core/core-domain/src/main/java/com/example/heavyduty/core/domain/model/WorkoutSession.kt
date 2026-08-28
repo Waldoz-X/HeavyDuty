@@ -33,4 +33,6 @@ data class WorkoutSet(
     val isCompleted: Boolean = false,
     val completedAt: Long? = null,
     val notes: String = "",
+    /** Ramp-up set — excluded from volume, PRs, 1RM and fatigue (see [excludeWarmups]). */
+    val isWarmup: Boolean = false,
 )

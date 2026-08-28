@@ -64,4 +64,5 @@ data class WorkoutSetEntity(
     val isCompleted: Boolean = false,
     val completedAt: Long? = null,
     val notes: String = "",
+    val isWarmup: Boolean = false,
 )

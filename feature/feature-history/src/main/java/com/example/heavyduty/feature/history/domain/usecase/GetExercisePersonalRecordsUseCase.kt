@@ -1,6 +1,7 @@
 package com.example.heavyduty.feature.history.domain.usecase
 
 import com.example.heavyduty.core.domain.model.WorkoutSet
+import com.example.heavyduty.core.domain.model.excludeWarmups
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
 import com.example.heavyduty.feature.history.domain.model.ExercisePersonalRecords
 import kotlinx.coroutines.flow.Flow
@@ -18,7 +19,7 @@ class GetExercisePersonalRecordsUseCase @Inject constructor(
         workoutRepository.getSetsByExerciseId(exerciseId).map { sets -> computeRecords(sets) }
 
     private fun computeRecords(sets: List<WorkoutSet>): ExercisePersonalRecords {
-        val weightedSets = sets.filter { (it.weight ?: 0f) > 0f && (it.reps ?: 0) > 0 }
+        val weightedSets = sets.excludeWarmups().filter { (it.weight ?: 0f) > 0f && (it.reps ?: 0) > 0 }
         if (weightedSets.isEmpty()) return ExercisePersonalRecords()
 
         val maxWeightSet = weightedSets.maxBy { it.weight ?: 0f }

@@ -1,6 +1,7 @@
 package com.example.heavyduty.feature.stats.domain.usecase
 
 import com.example.heavyduty.core.domain.model.MuscleGroup
+import com.example.heavyduty.core.domain.model.excludeWarmups
 import com.example.heavyduty.core.domain.repository.ExerciseRepository
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
 import kotlinx.coroutines.flow.Flow
@@ -22,7 +23,7 @@ class GetMuscleGroupSetCountUseCase @Inject constructor(
         ) { sets, exercises ->
             val exerciseById = exercises.associateBy { it.id }
             val countByMuscle = mutableMapOf<MuscleGroup, Int>()
-            sets.forEach { set ->
+            sets.excludeWarmups().forEach { set ->
                 val exercise = exerciseById[set.exerciseId] ?: return@forEach
                 countByMuscle[exercise.muscleGroup] = (countByMuscle[exercise.muscleGroup] ?: 0) + 1
             }

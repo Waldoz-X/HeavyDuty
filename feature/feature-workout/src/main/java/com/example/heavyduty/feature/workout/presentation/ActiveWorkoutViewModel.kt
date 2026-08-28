@@ -57,6 +57,9 @@ class ActiveWorkoutViewModel @Inject constructor(
             is ActiveWorkoutUiEvent.OnWeightChange -> {
                 _uiState.update { it.copy(weightInput = event.weight) }
             }
+            ActiveWorkoutUiEvent.OnToggleWarmupInput -> {
+                _uiState.update { it.copy(isWarmupInput = !it.isWarmupInput) }
+            }
             is ActiveWorkoutUiEvent.OnSelectExercise -> {
                 _uiState.update { it.copy(currentExerciseIndex = event.index, currentSetNumber = 1) }
             }
@@ -167,12 +170,14 @@ class ActiveWorkoutViewModel @Inject constructor(
                     setNumber = state.currentSetNumber,
                     reps = reps,
                     weight = weight,
+                    isWarmup = state.isWarmupInput,
                 )
                 _uiState.update {
                     it.copy(
                         currentSetNumber = it.currentSetNumber + 1,
                         repsInput = "",
                         weightInput = "",
+                        isWarmupInput = false,
                     )
                 }
                 _uiEffect.emit(ActiveWorkoutUiEffect.ShowMessage("¡Serie registrada!"))

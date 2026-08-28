@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.heavyduty.core.domain.model.MuscleGroup
 import com.example.heavyduty.core.domain.model.WorkoutSession
 import com.example.heavyduty.core.domain.model.WorkoutSet
+import com.example.heavyduty.core.domain.model.excludeWarmups
 import com.example.heavyduty.core.domain.repository.BodyWeightRepository
 import com.example.heavyduty.core.domain.repository.CalendarRepository
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
@@ -131,7 +132,7 @@ class DashboardViewModel @Inject constructor(
                 workoutRepository.getAllSessions(),
                 getWeeklyMuscleVolume(startOfWeek, now),
             ) { weeklySessions, weeklySets, allSessions, muscleVolume ->
-                DashboardCoreData(weeklySessions, weeklySets, allSessions, muscleVolume)
+                DashboardCoreData(weeklySessions, weeklySets.excludeWarmups(), allSessions, muscleVolume)
             }
                 .combine(getBodyWeightSummary()) { core, weightSummary -> core to weightSummary }
                 .combine(getCurrentStreak()) { (core, weightSummary), streak ->

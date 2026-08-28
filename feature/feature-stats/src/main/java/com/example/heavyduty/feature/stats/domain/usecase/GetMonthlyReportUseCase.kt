@@ -2,6 +2,7 @@ package com.example.heavyduty.feature.stats.domain.usecase
 
 import com.example.heavyduty.core.domain.model.MuscleGroup
 import com.example.heavyduty.core.domain.model.WorkoutStatus
+import com.example.heavyduty.core.domain.model.excludeWarmups
 import com.example.heavyduty.core.domain.repository.ExerciseRepository
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
 import com.example.heavyduty.feature.stats.domain.model.MonthlyReport
@@ -43,7 +44,8 @@ class GetMonthlyReportUseCase @Inject constructor(
             workoutRepository.getSessionsByDateRange(monthStart, monthEnd),
             workoutRepository.getCompletedSetsByDateRange(monthStart, monthEnd),
             exerciseRepository.getAllExercises(),
-        ) { sessions, sets, exercises ->
+        ) { sessions, rawSets, exercises ->
+            val sets = rawSets.excludeWarmups()
             val completedSessions = sessions.filter { it.status == WorkoutStatus.COMPLETED }
             val exerciseById = exercises.associateBy { it.id }
             val volumeByMuscle = mutableMapOf<MuscleGroup, Float>()

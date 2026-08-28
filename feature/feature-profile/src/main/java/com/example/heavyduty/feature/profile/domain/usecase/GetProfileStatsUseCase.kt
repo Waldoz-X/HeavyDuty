@@ -1,6 +1,7 @@
 package com.example.heavyduty.feature.profile.domain.usecase
 
 import com.example.heavyduty.core.domain.model.WorkoutStatus
+import com.example.heavyduty.core.domain.model.excludeWarmups
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
 import com.example.heavyduty.feature.profile.domain.model.ProfileStats
 import kotlinx.coroutines.flow.Flow
@@ -16,7 +17,8 @@ class GetProfileStatsUseCase @Inject constructor(
     operator fun invoke(): Flow<ProfileStats> = combine(
         workoutRepository.getAllSessions(),
         workoutRepository.getAllCompletedSets(),
-    ) { sessions, sets ->
+    ) { sessions, rawSets ->
+        val sets = rawSets.excludeWarmups()
         ProfileStats(
             totalWorkouts = sessions.count { it.status == WorkoutStatus.COMPLETED },
             totalSets = sets.size,

@@ -18,6 +18,7 @@ class LogSetUseCase @Inject constructor(
         weight: Float? = null,
         durationSecs: Int? = null,
         distance: Float? = null,
+        isWarmup: Boolean = false,
     ): Long {
         val set = WorkoutSet(
             sessionId = sessionId,
@@ -29,6 +30,7 @@ class LogSetUseCase @Inject constructor(
             distance = distance,
             isCompleted = true,
             completedAt = System.currentTimeMillis(),
+            isWarmup = isWarmup,
         )
         return workoutRepository.insertSet(set)
     }

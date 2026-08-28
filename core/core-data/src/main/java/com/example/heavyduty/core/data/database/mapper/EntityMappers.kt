@@ -186,6 +186,7 @@ fun WorkoutSetEntity.toDomain(): WorkoutSet = WorkoutSet(
     isCompleted = isCompleted,
     completedAt = completedAt,
     notes = notes,
+    isWarmup = isWarmup,
 )
 
 fun WorkoutSet.toEntity(): WorkoutSetEntity = WorkoutSetEntity(
@@ -200,6 +201,7 @@ fun WorkoutSet.toEntity(): WorkoutSetEntity = WorkoutSetEntity(
     isCompleted = isCompleted,
     completedAt = completedAt,
     notes = notes,
+    isWarmup = isWarmup,
 )
 
 fun SessionWithSets.toDomain(): WorkoutSession = WorkoutSession(

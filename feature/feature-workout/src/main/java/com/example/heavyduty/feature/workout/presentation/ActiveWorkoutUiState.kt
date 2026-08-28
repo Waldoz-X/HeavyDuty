@@ -16,6 +16,7 @@ data class ActiveWorkoutUiState(
     val currentSetNumber: Int = 1,
     val repsInput: String = "",
     val weightInput: String = "",
+    val isWarmupInput: Boolean = false,
     val elapsedSeconds: Int = 0,
     val isLoading: Boolean = true,
     val isActive: Boolean = false,
@@ -33,6 +34,7 @@ data class ActiveWorkoutUiState(
 sealed interface ActiveWorkoutUiEvent {
     data class OnRepsChange(val reps: String) : ActiveWorkoutUiEvent
     data class OnWeightChange(val weight: String) : ActiveWorkoutUiEvent
+    data object OnToggleWarmupInput : ActiveWorkoutUiEvent
     data object OnLogSet : ActiveWorkoutUiEvent
     data class OnSelectExercise(val index: Int) : ActiveWorkoutUiEvent
     data object OnCompleteWorkout : ActiveWorkoutUiEvent

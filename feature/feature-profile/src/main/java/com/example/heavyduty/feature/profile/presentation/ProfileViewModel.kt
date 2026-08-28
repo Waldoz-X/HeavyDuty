@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+import com.example.heavyduty.core.domain.model.excludeWarmups
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
 import com.example.heavyduty.core.domain.repository.ExerciseRepository
 import com.example.heavyduty.core.ui.components.WorkoutFeedItem
@@ -46,7 +47,8 @@ class ProfileViewModel @Inject constructor(
                 workoutRepository.getAllSessions(),
                 workoutRepository.getAllCompletedSets(),
                 exerciseRepository.getAllExercises()
-            ) { name, stats, sessions, sets, exercises ->
+            ) { name, stats, sessions, rawSets, exercises ->
+                val sets = rawSets.excludeWarmups()
                 val exerciseMap = exercises.associateBy { it.id }
 
                 // A set counts as a PR the first time it beats the heaviest weight ever

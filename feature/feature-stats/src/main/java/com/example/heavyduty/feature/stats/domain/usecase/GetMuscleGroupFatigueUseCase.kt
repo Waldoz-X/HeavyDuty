@@ -1,6 +1,7 @@
 package com.example.heavyduty.feature.stats.domain.usecase
 
 import com.example.heavyduty.core.domain.model.MuscleGroup
+import com.example.heavyduty.core.domain.model.excludeWarmups
 import com.example.heavyduty.core.domain.repository.ExerciseRepository
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
 import com.example.heavyduty.feature.stats.domain.model.FatigueState
@@ -25,7 +26,7 @@ class GetMuscleGroupFatigueUseCase @Inject constructor(
         ) { sets, exercises ->
             val exerciseById = exercises.associateBy { it.id }
             val lastTrainedByMuscle = mutableMapOf<MuscleGroup, Long>()
-            sets.forEach { set ->
+            sets.excludeWarmups().forEach { set ->
                 val completedAt = set.completedAt ?: return@forEach
                 val exercise = exerciseById[set.exerciseId] ?: return@forEach
                 val current = lastTrainedByMuscle[exercise.muscleGroup]

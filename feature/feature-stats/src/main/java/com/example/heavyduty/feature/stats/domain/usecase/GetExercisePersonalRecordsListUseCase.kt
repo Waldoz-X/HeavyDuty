@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.stats.domain.usecase
 
+import com.example.heavyduty.core.domain.model.excludeWarmups
 import com.example.heavyduty.core.domain.repository.ExerciseRepository
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
 import com.example.heavyduty.feature.stats.domain.model.ExerciseRanking
@@ -23,7 +24,8 @@ class GetExercisePersonalRecordsListUseCase @Inject constructor(
             exerciseRepository.getAllExercises(),
         ) { sets, exercises ->
             val exerciseById = exercises.associateBy { it.id }
-            sets.filter { it.weight != null }
+            sets.excludeWarmups()
+                .filter { it.weight != null }
                 .groupBy { it.exerciseId }
                 .mapNotNull { (exerciseId, setsForExercise) ->
                     val exercise = exerciseById[exerciseId] ?: return@mapNotNull null

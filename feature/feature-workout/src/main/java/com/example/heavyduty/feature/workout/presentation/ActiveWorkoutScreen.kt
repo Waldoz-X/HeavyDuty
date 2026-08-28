@@ -40,6 +40,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.heavyduty.core.domain.model.Exercise
 import com.example.heavyduty.core.ui.components.HdButton
 import com.example.heavyduty.core.ui.components.HdCard
+import com.example.heavyduty.core.ui.components.HdChip
 import com.example.heavyduty.core.ui.components.HdEmptyState
 import com.example.heavyduty.core.ui.components.HdGradientCard
 import com.example.heavyduty.core.ui.components.HdLoadingIndicator
@@ -252,6 +253,12 @@ private fun ActiveWorkoutContent(
                         ),
                     )
                 }
+                Spacer(modifier = Modifier.height(8.dp))
+                HdChip(
+                    text = "Calentamiento",
+                    isSelected = uiState.isWarmupInput,
+                    onClick = { onEvent(ActiveWorkoutUiEvent.OnToggleWarmupInput) },
+                )
                 Spacer(modifier = Modifier.height(12.dp))
                 HdButton(
                     text = "Registrar Serie",
