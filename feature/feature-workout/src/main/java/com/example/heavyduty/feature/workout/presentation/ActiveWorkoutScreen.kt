@@ -26,6 +26,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -33,6 +34,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -73,6 +75,14 @@ fun ActiveWorkoutScreen(
                 is ActiveWorkoutUiEffect.ShowMessage -> { /* Could show snackbar */ }
             }
         }
+    }
+
+    // Keep the screen on while a session is active, so a rest period between sets doesn't
+    // lock the phone and lose the lifter's place.
+    val view = LocalView.current
+    DisposableEffect(uiState.isActive) {
+        view.keepScreenOn = uiState.isActive
+        onDispose { view.keepScreenOn = false }
     }
 
     when {
