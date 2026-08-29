@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.heavyduty.core.domain.model.Exercise
 import com.example.heavyduty.core.domain.model.Routine
 import com.example.heavyduty.core.domain.model.RoutineExercise
+import com.example.heavyduty.core.domain.model.pairWithNext
+import com.example.heavyduty.core.domain.model.unpair
 import com.example.heavyduty.core.domain.repository.ExerciseRepository
 import com.example.heavyduty.feature.routines.domain.usecase.CreateRoutineUseCase
 import com.example.heavyduty.feature.routines.domain.usecase.GetRoutineWithExercisesUseCase
@@ -67,6 +69,12 @@ class RoutineEditorViewModel @Inject constructor(
                 _uiState.update { state ->
                     state.copy(exercises = state.exercises.filter { it !== event.routineExercise })
                 }
+            }
+            is RoutineEditorUiEvent.OnPairWithNext -> {
+                _uiState.update { state -> state.copy(exercises = state.exercises.pairWithNext(event.index)) }
+            }
+            is RoutineEditorUiEvent.OnUnpair -> {
+                _uiState.update { state -> state.copy(exercises = state.exercises.unpair(event.index)) }
             }
             RoutineEditorUiEvent.OnSave -> saveRoutine()
             RoutineEditorUiEvent.OnNavigateBack -> {

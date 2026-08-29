@@ -89,6 +89,7 @@ fun RoutineExerciseEntity.toDomain(): RoutineExercise = RoutineExercise(
     repRangeLow = repRangeLow,
     repRangeHigh = repRangeHigh,
     stallThreshold = stallThreshold,
+    supersetGroupId = supersetGroupId,
 )
 
 fun RoutineExercise.toEntity(): RoutineExerciseEntity = RoutineExerciseEntity(
@@ -106,6 +107,7 @@ fun RoutineExercise.toEntity(): RoutineExerciseEntity = RoutineExerciseEntity(
     repRangeLow = repRangeLow,
     repRangeHigh = repRangeHigh,
     stallThreshold = stallThreshold,
+    supersetGroupId = supersetGroupId,
 )
 
 fun RoutineWithExercises.toDomain(): Routine = Routine(

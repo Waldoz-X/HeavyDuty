@@ -35,6 +35,8 @@ sealed interface RoutineEditorUiEvent {
     data class OnUpdateExercise(val index: Int, val updated: RoutineExercise) : RoutineEditorUiEvent
     data class OnMoveExercise(val index: Int, val direction: Int) : RoutineEditorUiEvent
     data class OnRemoveExercise(val routineExercise: RoutineExercise) : RoutineEditorUiEvent
+    data class OnPairWithNext(val index: Int) : RoutineEditorUiEvent
+    data class OnUnpair(val index: Int) : RoutineEditorUiEvent
     data object OnSave : RoutineEditorUiEvent
     data object OnNavigateBack : RoutineEditorUiEvent
 }

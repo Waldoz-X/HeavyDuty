@@ -37,4 +37,6 @@ data class RoutineExercise(
     val repRangeHigh: Int = targetReps,
     /** Consecutive failed sessions before [nextPrescription] applies a deload. */
     val stallThreshold: Int = 3,
+    /** See [supersetGroups] doc — membership is by adjacency, not just id equality. */
+    val supersetGroupId: String? = null,
 )

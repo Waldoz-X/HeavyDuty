@@ -25,6 +25,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.LinkOff
 import androidx.compose.material.icons.filled.RemoveCircleOutline
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -203,8 +205,15 @@ fun RoutineEditorScreen(
 
                 // Exercise items
                 itemsIndexed(uiState.exercises) { index, routineExercise ->
+                    val previous = uiState.exercises.getOrNull(index - 1)
+                    val next = uiState.exercises.getOrNull(index + 1)
+                    val isInSuperset = routineExercise.supersetGroupId != null &&
+                        (routineExercise.supersetGroupId == previous?.supersetGroupId ||
+                            routineExercise.supersetGroupId == next?.supersetGroupId)
+
                     RoutineExerciseItem(
                         routineExercise = routineExercise,
+                        isInSuperset = isInSuperset,
                         canMoveUp = index > 0,
                         canMoveDown = index < uiState.exercises.lastIndex,
                         onUpdate = { updated ->
@@ -214,6 +223,22 @@ fun RoutineEditorScreen(
                         onMoveDown = { viewModel.onEvent(RoutineEditorUiEvent.OnMoveExercise(index, 1)) },
                         onRemove = { viewModel.onEvent(RoutineEditorUiEvent.OnRemoveExercise(routineExercise)) },
                     )
+
+                    if (next != null) {
+                        val linkedWithNext = routineExercise.supersetGroupId != null &&
+                            routineExercise.supersetGroupId == next.supersetGroupId
+                        SupersetConnector(
+                            isLinked = linkedWithNext,
+                            onToggle = {
+                                val event = if (linkedWithNext) {
+                                    RoutineEditorUiEvent.OnUnpair(index)
+                                } else {
+                                    RoutineEditorUiEvent.OnPairWithNext(index)
+                                }
+                                viewModel.onEvent(event)
+                            },
+                        )
+                    }
                 }
 
                 // Save button
@@ -307,6 +332,7 @@ private fun ExercisePicker(
 @Composable
 private fun RoutineExerciseItem(
     routineExercise: RoutineExercise,
+    isInSuperset: Boolean,
     canMoveUp: Boolean,
     canMoveDown: Boolean,
     onUpdate: (RoutineExercise) -> Unit,
@@ -315,7 +341,22 @@ private fun RoutineExerciseItem(
     onRemove: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    HdCard(modifier = modifier) {
+    HdCard(
+        containerColor = if (isInSuperset) {
+            MaterialTheme.colorScheme.tertiaryContainer
+        } else {
+            MaterialTheme.colorScheme.surfaceContainerHigh
+        },
+        modifier = modifier,
+    ) {
+        if (isInSuperset) {
+            Text(
+                text = "Superset",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onTertiaryContainer,
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+        }
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
                 modifier = Modifier
@@ -461,6 +502,27 @@ private fun RoutineExerciseItem(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun SupersetConnector(
+    isLinked: Boolean,
+    onToggle: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 2.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        HdTonalButton(
+            text = if (isLinked) "Separar" else "Unir en superset",
+            onClick = onToggle,
+            icon = if (isLinked) Icons.Default.LinkOff else Icons.Default.Link,
+        )
     }
 }
 

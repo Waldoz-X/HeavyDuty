@@ -66,4 +66,5 @@ data class RoutineExerciseEntity(
     val repRangeLow: Int = 8,
     val repRangeHigh: Int = 10,
     val stallThreshold: Int = 3,
+    val supersetGroupId: String? = null,
 )
