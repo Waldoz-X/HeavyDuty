@@ -23,6 +23,10 @@ data class ActiveWorkoutUiState(
     val effortTrackingEnabled: Boolean = false,
     /** "RIR" or "RPE" — which scale [effortInput] is interpreted in. */
     val preferredEffortScale: String = "RIR",
+    /** Per-set toggle for holds/carries — logs durationSecs instead of reps. See [isWorkTimerRunning]. */
+    val isTimedInput: Boolean = false,
+    val isWorkTimerRunning: Boolean = false,
+    val workTimerElapsedSecs: Int = 0,
     val elapsedSeconds: Int = 0,
     val isLoading: Boolean = true,
     val isActive: Boolean = false,
@@ -44,6 +48,8 @@ sealed interface ActiveWorkoutUiEvent {
     data class OnWeightChange(val weight: String) : ActiveWorkoutUiEvent
     data object OnToggleWarmupInput : ActiveWorkoutUiEvent
     data class OnEffortInputChange(val value: String) : ActiveWorkoutUiEvent
+    data object OnToggleTimedInput : ActiveWorkoutUiEvent
+    data object OnToggleWorkTimer : ActiveWorkoutUiEvent
     data object OnLogSet : ActiveWorkoutUiEvent
     data class OnSelectExercise(val index: Int) : ActiveWorkoutUiEvent
     data object OnCompleteWorkout : ActiveWorkoutUiEvent

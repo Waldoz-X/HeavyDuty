@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.workout.presentation
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -21,6 +23,8 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -267,25 +271,34 @@ private fun ActiveWorkoutContent(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    OutlinedTextField(
-                        value = uiState.repsInput,
-                        onValueChange = { onEvent(ActiveWorkoutUiEvent.OnRepsChange(it)) },
-                        label = { Text("Repeticiones") },
-                        supportingText = if (isPerSideExercise) {
-                            {
-                                val total = uiState.repsInput.toIntOrNull()
-                                Text(if (total != null) "${total / 2} por lado" else "Total ambos lados")
-                            }
-                        } else {
-                            null
-                        },
-                        modifier = Modifier.weight(1f),
-                        singleLine = true,
-                        shape = RoundedCornerShape(12.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        ),
-                    )
+                    if (uiState.isTimedInput) {
+                        WorkTimerField(
+                            elapsedSeconds = uiState.workTimerElapsedSecs,
+                            isRunning = uiState.isWorkTimerRunning,
+                            onToggle = { onEvent(ActiveWorkoutUiEvent.OnToggleWorkTimer) },
+                            modifier = Modifier.weight(1f),
+                        )
+                    } else {
+                        OutlinedTextField(
+                            value = uiState.repsInput,
+                            onValueChange = { onEvent(ActiveWorkoutUiEvent.OnRepsChange(it)) },
+                            label = { Text("Repeticiones") },
+                            supportingText = if (isPerSideExercise) {
+                                {
+                                    val total = uiState.repsInput.toIntOrNull()
+                                    Text(if (total != null) "${total / 2} por lado" else "Total ambos lados")
+                                }
+                            } else {
+                                null
+                            },
+                            modifier = Modifier.weight(1f),
+                            singleLine = true,
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            ),
+                        )
+                    }
                     if (!isBodyweightExercise || showExtraWeight) {
                         OutlinedTextField(
                             value = uiState.weightInput,
@@ -327,6 +340,11 @@ private fun ActiveWorkoutContent(
                         text = "Calentamiento",
                         isSelected = uiState.isWarmupInput,
                         onClick = { onEvent(ActiveWorkoutUiEvent.OnToggleWarmupInput) },
+                    )
+                    HdChip(
+                        text = "Cronometrado",
+                        isSelected = uiState.isTimedInput,
+                        onClick = { onEvent(ActiveWorkoutUiEvent.OnToggleTimedInput) },
                     )
                     if (!isBodyweightExercise) {
                         HdChip(
@@ -488,6 +506,42 @@ private fun SuggestionCard(
                 }
             }
             HdTonalButton(text = "Usar", onClick = onUseSuggestion)
+        }
+    }
+}
+
+@Composable
+private fun WorkTimerField(
+    elapsedSeconds: Int,
+    isRunning: Boolean,
+    onToggle: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp))
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+    ) {
+        Text(
+            text = "Tiempo sostenido",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = formatDuration(elapsedSeconds),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f),
+            )
+            IconButton(onClick = onToggle, modifier = Modifier.size(32.dp)) {
+                Icon(
+                    imageVector = if (isRunning) Icons.Default.Stop else Icons.Default.PlayArrow,
+                    contentDescription = if (isRunning) "Detener" else "Iniciar",
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+            }
         }
     }
 }

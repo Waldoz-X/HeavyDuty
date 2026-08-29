@@ -18,6 +18,7 @@ import com.example.heavyduty.feature.workout.domain.usecase.CompleteWorkoutUseCa
 import com.example.heavyduty.feature.workout.domain.usecase.LogSetUseCase
 import com.example.heavyduty.feature.workout.domain.usecase.StartWorkoutUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.combine
@@ -44,6 +45,7 @@ class ActiveWorkoutViewModel @Inject constructor(
 ) : ViewModel() {
 
     private var cachedExercises: List<Exercise>? = null
+    private var workTimerJob: Job? = null
 
     private val routineId: Long? = savedStateHandle.get<Long>("routineId")?.takeIf { it > 0 }
 
@@ -79,7 +81,10 @@ class ActiveWorkoutViewModel @Inject constructor(
             is ActiveWorkoutUiEvent.OnEffortInputChange -> {
                 _uiState.update { it.copy(effortInput = event.value) }
             }
+            ActiveWorkoutUiEvent.OnToggleTimedInput -> toggleTimedInput()
+            ActiveWorkoutUiEvent.OnToggleWorkTimer -> toggleWorkTimer()
             is ActiveWorkoutUiEvent.OnSelectExercise -> {
+                resetWorkTimer()
                 _uiState.update { it.copy(currentExerciseIndex = event.index, currentSetNumber = 1) }
                 refreshSuggestion()
                 prefillCurrentSet()
@@ -147,6 +152,32 @@ class ActiveWorkoutViewModel @Inject constructor(
                 )
             }
         }
+    }
+
+    /** Switches the current set between reps input and a work-hold timer (planks, hangs, carries). */
+    private fun toggleTimedInput() {
+        resetWorkTimer()
+        _uiState.update { it.copy(isTimedInput = !it.isTimedInput) }
+    }
+
+    private fun toggleWorkTimer() {
+        if (_uiState.value.isWorkTimerRunning) {
+            workTimerJob?.cancel()
+            _uiState.update { it.copy(isWorkTimerRunning = false) }
+        } else {
+            _uiState.update { it.copy(isWorkTimerRunning = true) }
+            workTimerJob = viewModelScope.launch {
+                while (true) {
+                    delay(1.seconds)
+                    _uiState.update { it.copy(workTimerElapsedSecs = it.workTimerElapsedSecs + 1) }
+                }
+            }
+        }
+    }
+
+    private fun resetWorkTimer() {
+        workTimerJob?.cancel()
+        _uiState.update { it.copy(isWorkTimerRunning = false, workTimerElapsedSecs = 0) }
     }
 
     /** This exercise's logged sets from every OTHER session — excludes today's own sets. */
@@ -242,7 +273,8 @@ class ActiveWorkoutViewModel @Inject constructor(
         if (exercises.isEmpty()) return
 
         val currentExercise = exercises.getOrNull(state.currentExerciseIndex) ?: return
-        val reps = state.repsInput.toIntOrNull()
+        val reps = if (state.isTimedInput) null else state.repsInput.toIntOrNull()
+        val durationSecs = if (state.isTimedInput) state.workTimerElapsedSecs.takeIf { it > 0 } else null
         val weight = state.weightInput.toFloatOrNull()
         val effort = state.effortInput.toFloatOrNull()?.let { value ->
             if (state.preferredEffortScale == "RPE") Effort.Rpe(value) else Effort.Rir(value.toInt())
@@ -256,10 +288,12 @@ class ActiveWorkoutViewModel @Inject constructor(
                     setNumber = state.currentSetNumber,
                     reps = reps,
                     weight = weight,
+                    durationSecs = durationSecs,
                     isWarmup = state.isWarmupInput,
                     effort = effort,
                     restSeconds = currentExercise.restBetweenSetsSecs,
                 )
+                resetWorkTimer()
                 _uiState.update {
                     it.copy(
                         currentSetNumber = it.currentSetNumber + 1,
@@ -304,6 +338,7 @@ class ActiveWorkoutViewModel @Inject constructor(
     }
 
     private fun addExerciseToSession(exercise: Exercise) {
+        resetWorkTimer()
         _uiState.update { state ->
             val newEntry = RoutineExercise(
                 exerciseId = exercise.id,
@@ -317,6 +352,7 @@ class ActiveWorkoutViewModel @Inject constructor(
                 isPickingExercise = false,
                 exercisePickerQuery = "",
                 exercisePickerResults = emptyList(),
+                isTimedInput = false,
             )
         }
         refreshSuggestion()
