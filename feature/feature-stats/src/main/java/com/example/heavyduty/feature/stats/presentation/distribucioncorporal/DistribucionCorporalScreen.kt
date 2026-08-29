@@ -62,11 +62,19 @@ fun DistribucionCorporalScreen(
 
         val baseColor = MaterialTheme.colorScheme.surfaceContainerHigh
         val fatiguedColor = MaterialTheme.colorScheme.error
+        val strongColor = MaterialTheme.colorScheme.tertiary
 
-        val categoryColors: Map<String, Color>? = if (uiState.mode == BodyMapMode.FATIGUE) {
-            uiState.fatigueByMuscle.mapValues { (_, level) -> lerp(baseColor, fatiguedColor, level.coerceIn(0f, 1f)) }
-        } else {
-            null
+        val categoryColors: Map<String, Color>? = when (uiState.mode) {
+            BodyMapMode.FATIGUE -> uiState.fatigueByMuscle.mapValues { (_, level) ->
+                lerp(baseColor, fatiguedColor, level.coerceIn(0f, 1f))
+            }
+            BodyMapMode.STRENGTH -> uiState.strengthByMuscle.mapValues { (_, retention) ->
+                // Retention floors at 0.5 (see strengthRetention), so normalize that range to
+                // 0..1 before interpolating — otherwise the floor would never read as "base."
+                val fraction = ((retention - 0.5f) / 0.5f).coerceIn(0f, 1f)
+                lerp(baseColor, strongColor, fraction)
+            }
+            BodyMapMode.VOLUME -> null
         }
 
         Column(
@@ -86,12 +94,24 @@ fun DistribucionCorporalScreen(
                     isSelected = uiState.mode == BodyMapMode.FATIGUE,
                     onClick = { viewModel.onEvent(DistribucionCorporalUiEvent.OnModeChange(BodyMapMode.FATIGUE)) },
                 )
+                HdChip(
+                    text = "Fuerza",
+                    isSelected = uiState.mode == BodyMapMode.STRENGTH,
+                    onClick = { viewModel.onEvent(DistribucionCorporalUiEvent.OnModeChange(BodyMapMode.STRENGTH)) },
+                )
             }
             Spacer(modifier = Modifier.height(12.dp))
 
-            if (uiState.mode == BodyMapMode.FATIGUE) {
-                FatigueGradientLegend(baseColor = baseColor, fatiguedColor = fatiguedColor)
-                Spacer(modifier = Modifier.height(12.dp))
+            when (uiState.mode) {
+                BodyMapMode.FATIGUE -> {
+                    GradientLegend(startColor = baseColor, endColor = fatiguedColor, startLabel = "Fresco", endLabel = "Fatigado")
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+                BodyMapMode.STRENGTH -> {
+                    GradientLegend(startColor = baseColor, endColor = strongColor, startLabel = "Hace tiempo", endLabel = "Recién entrenado")
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+                BodyMapMode.VOLUME -> Unit
             }
 
             HdBodyDiagram(
@@ -108,25 +128,31 @@ fun DistribucionCorporalScreen(
 }
 
 @Composable
-private fun FatigueGradientLegend(baseColor: Color, fatiguedColor: Color, modifier: Modifier = Modifier) {
+private fun GradientLegend(
+    startColor: Color,
+    endColor: Color,
+    startLabel: String,
+    endLabel: String,
+    modifier: Modifier = Modifier,
+) {
     Column(modifier = modifier.fillMaxWidth()) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(8.dp)
                 .clip(MaterialTheme.shapes.small)
-                .background(Brush.horizontalGradient(listOf(baseColor, fatiguedColor))),
+                .background(Brush.horizontalGradient(listOf(startColor, endColor))),
         )
         Spacer(modifier = Modifier.height(4.dp))
         Row(modifier = Modifier.fillMaxWidth()) {
             Text(
-                text = "Fresco",
+                text = startLabel,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.weight(1f),
             )
             Text(
-                text = "Fatigado",
+                text = endLabel,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

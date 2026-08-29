@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.heavyduty.core.domain.repository.UserPreferencesRepository
 import com.example.heavyduty.core.ui.components.BodyGender
 import com.example.heavyduty.feature.stats.domain.usecase.GetMuscleGroupFatigueUseCase
+import com.example.heavyduty.feature.stats.domain.usecase.GetMuscleGroupStrengthRetentionUseCase
 import com.example.heavyduty.feature.stats.domain.usecase.GetMuscleGroupVolumeUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,6 +21,7 @@ import javax.inject.Inject
 class DistribucionCorporalViewModel @Inject constructor(
     private val getMuscleGroupVolume: GetMuscleGroupVolumeUseCase,
     private val getMuscleGroupFatigue: GetMuscleGroupFatigueUseCase,
+    private val getMuscleGroupStrengthRetention: GetMuscleGroupStrengthRetentionUseCase,
     private val userPreferencesRepository: UserPreferencesRepository,
 ) : ViewModel() {
 
@@ -41,12 +43,14 @@ class DistribucionCorporalViewModel @Inject constructor(
             combine(
                 getMuscleGroupVolume(startOfWeek, now),
                 getMuscleGroupFatigue(),
+                getMuscleGroupStrengthRetention(),
                 userPreferencesRepository.bodyDiagramGender,
-            ) { volumeByMuscle, fatigueByMuscle, genderValue ->
+            ) { volumeByMuscle, fatigueByMuscle, strengthByMuscle, genderValue ->
                 _uiState.update {
                     it.copy(
                         volumeByMuscle = volumeByMuscle.mapKeys { entry -> entry.key.displayName },
                         fatigueByMuscle = fatigueByMuscle.mapKeys { entry -> entry.key.displayName },
+                        strengthByMuscle = strengthByMuscle.mapKeys { entry -> entry.key.displayName },
                         gender = BodyGender.fromStorageValue(genderValue),
                         isLoading = false,
                     )
