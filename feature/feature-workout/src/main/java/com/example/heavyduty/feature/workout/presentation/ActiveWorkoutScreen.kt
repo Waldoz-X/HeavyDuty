@@ -40,11 +40,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.heavyduty.core.common.extensions.formatDecimal
 import com.example.heavyduty.core.domain.model.Exercise
 import com.example.heavyduty.core.domain.model.Prescription
+import com.example.heavyduty.core.domain.model.calculatePlatesPerSide
 import com.example.heavyduty.core.domain.model.isBodyweight
 import com.example.heavyduty.core.domain.model.isPerSide
 import com.example.heavyduty.core.ui.components.HdButton
@@ -245,6 +247,7 @@ private fun ActiveWorkoutContent(
                 val isBodyweightExercise = currentExercise?.isBodyweight == true
                 val isPerSideExercise = currentExercise?.isPerSide == true
                 var showExtraWeight by remember(uiState.currentExerciseIndex) { mutableStateOf(false) }
+                var showPlateCalculator by remember { mutableStateOf(false) }
 
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
@@ -319,11 +322,20 @@ private fun ActiveWorkoutContent(
                     )
                 }
                 Spacer(modifier = Modifier.height(8.dp))
-                HdChip(
-                    text = "Calentamiento",
-                    isSelected = uiState.isWarmupInput,
-                    onClick = { onEvent(ActiveWorkoutUiEvent.OnToggleWarmupInput) },
-                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    HdChip(
+                        text = "Calentamiento",
+                        isSelected = uiState.isWarmupInput,
+                        onClick = { onEvent(ActiveWorkoutUiEvent.OnToggleWarmupInput) },
+                    )
+                    if (!isBodyweightExercise) {
+                        HdChip(
+                            text = "Discos por lado",
+                            isSelected = false,
+                            onClick = { showPlateCalculator = true },
+                        )
+                    }
+                }
                 Spacer(modifier = Modifier.height(12.dp))
                 HdButton(
                     text = "Registrar Serie",
@@ -331,6 +343,12 @@ private fun ActiveWorkoutContent(
                     icon = Icons.Default.CheckCircle,
                     modifier = Modifier.fillMaxWidth(),
                 )
+                if (showPlateCalculator) {
+                    PlateCalculatorDialog(
+                        initialWeight = uiState.weightInput,
+                        onDismiss = { showPlateCalculator = false },
+                    )
+                }
             }
         } else if (uiState.allowAddingExercises) {
             item {
@@ -470,6 +488,66 @@ private fun SuggestionCard(
                 }
             }
             HdTonalButton(text = "Usar", onClick = onUseSuggestion)
+        }
+    }
+}
+
+private val BAR_WEIGHT_PRESETS_KG = listOf(20f, 15f, 10f)
+
+@Composable
+private fun PlateCalculatorDialog(initialWeight: String, onDismiss: () -> Unit) {
+    var targetInput by remember { mutableStateOf(initialWeight) }
+    var barWeight by remember { mutableStateOf(BAR_WEIGHT_PRESETS_KG.first()) }
+
+    Dialog(onDismissRequest = onDismiss) {
+        HdCard(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                text = "Calculadora de discos",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            OutlinedTextField(
+                value = targetInput,
+                onValueChange = { targetInput = it },
+                label = { Text("Peso objetivo (kg)") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = MaterialTheme.colorScheme.primary),
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                text = "Barra",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                BAR_WEIGHT_PRESETS_KG.forEach { bar ->
+                    HdChip(
+                        text = "${bar.formatDecimal()} kg",
+                        isSelected = barWeight == bar,
+                        onClick = { barWeight = bar },
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+
+            val target = targetInput.toFloatOrNull()
+            val plates = target?.let { calculatePlatesPerSide(it, barWeight) }
+            Text(
+                text = when {
+                    target == null -> "Ingresa un peso objetivo"
+                    plates.isNullOrEmpty() -> "Sin discos extra por lado"
+                    else -> "Por lado: ${plates.joinToString(" + ") { it.formatDecimal() }} kg"
+                },
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            HdButton(text = "Cerrar", onClick = onDismiss, modifier = Modifier.fillMaxWidth())
         }
     }
 }
