@@ -11,6 +11,9 @@ data class ExerciseListUiState(
     val isLoading: Boolean = true,
     val searchQuery: String = "",
     val selectedFilter: MuscleGroup? = null,
+    /** Equipment values present in the current muscle/search filter's results, for the chip row. */
+    val availableEquipment: List<String> = emptyList(),
+    val selectedEquipment: String? = null,
     val error: String? = null,
 )
 
@@ -20,6 +23,7 @@ data class ExerciseListUiState(
 sealed interface ExerciseListUiEvent {
     data class OnSearchQueryChange(val query: String) : ExerciseListUiEvent
     data class OnFilterSelect(val filter: MuscleGroup?) : ExerciseListUiEvent
+    data class OnEquipmentFilterSelect(val equipment: String?) : ExerciseListUiEvent
     data class OnExerciseClick(val exerciseId: Long) : ExerciseListUiEvent
 }
 

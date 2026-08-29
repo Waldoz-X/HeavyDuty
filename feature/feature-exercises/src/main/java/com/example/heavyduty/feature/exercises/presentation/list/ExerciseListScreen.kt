@@ -115,6 +115,22 @@ private fun ExerciseListContent(
             }
         }
 
+        if (uiState.availableEquipment.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(8.dp))
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(vertical = 4.dp),
+            ) {
+                items(uiState.availableEquipment) { equipment ->
+                    HdChip(
+                        text = equipment.split(" ").joinToString(" ") { it.replaceFirstChar(Char::uppercase) },
+                        isSelected = uiState.selectedEquipment == equipment,
+                        onClick = { onEvent(ExerciseListUiEvent.OnEquipmentFilterSelect(equipment)) },
+                    )
+                }
+            }
+        }
+
         Spacer(modifier = Modifier.height(12.dp))
 
         when {
