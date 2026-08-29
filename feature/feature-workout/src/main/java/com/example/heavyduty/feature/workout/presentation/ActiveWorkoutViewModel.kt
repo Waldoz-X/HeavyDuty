@@ -6,7 +6,9 @@ import androidx.lifecycle.viewModelScope
 import com.example.heavyduty.core.domain.model.Effort
 import com.example.heavyduty.core.domain.model.Exercise
 import com.example.heavyduty.core.domain.model.RoutineExercise
+import com.example.heavyduty.core.domain.model.WorkoutSet
 import com.example.heavyduty.core.domain.model.nextPrescription
+import com.example.heavyduty.core.domain.model.prefillFromLastSession
 import com.example.heavyduty.core.domain.model.toProgressionConfig
 import com.example.heavyduty.core.domain.repository.ExerciseRepository
 import com.example.heavyduty.core.domain.repository.RoutineRepository
@@ -80,6 +82,7 @@ class ActiveWorkoutViewModel @Inject constructor(
             is ActiveWorkoutUiEvent.OnSelectExercise -> {
                 _uiState.update { it.copy(currentExerciseIndex = event.index, currentSetNumber = 1) }
                 refreshSuggestion()
+                prefillCurrentSet()
             }
             ActiveWorkoutUiEvent.OnLogSet -> logSet()
             ActiveWorkoutUiEvent.OnCompleteWorkout -> completeWorkout()
@@ -107,8 +110,7 @@ class ActiveWorkoutViewModel @Inject constructor(
             return
         }
         viewModelScope.launch {
-            val history = workoutRepository.getSetsByExerciseId(routineExercise.exerciseId).firstOrNull().orEmpty()
-                .filter { it.sessionId != state.sessionId }
+            val history = historyExcludingCurrentSession(routineExercise.exerciseId)
             val prescription = nextPrescription(history, routineExercise.toProgressionConfig())
             _uiState.update { it.copy(suggestedPrescription = prescription) }
         }
@@ -122,6 +124,36 @@ class ActiveWorkoutViewModel @Inject constructor(
                 weightInput = suggestion.weightKg?.toString() ?: it.weightInput,
             )
         }
+    }
+
+    /**
+     * For a free (unplanned) workout only: fills empty reps/weight inputs with whatever was
+     * logged at this same set position last time, so repeating last session's numbers doesn't
+     * require retyping them. Never overwrites something the lifter already typed.
+     */
+    private fun prefillCurrentSet() {
+        val state = _uiState.value
+        if (!state.allowAddingExercises || state.repsInput.isNotEmpty() || state.weightInput.isNotEmpty()) return
+        val routineExercise = state.routineExercises.getOrNull(state.currentExerciseIndex) ?: return
+        val setNumber = state.currentSetNumber
+        viewModelScope.launch {
+            val history = historyExcludingCurrentSession(routineExercise.exerciseId)
+            val prefill = history.prefillFromLastSession(setNumber) ?: return@launch
+            _uiState.update {
+                if (it.repsInput.isNotEmpty() || it.weightInput.isNotEmpty()) return@update it
+                it.copy(
+                    repsInput = prefill.reps?.toString() ?: it.repsInput,
+                    weightInput = prefill.weight?.toString() ?: it.weightInput,
+                )
+            }
+        }
+    }
+
+    /** This exercise's logged sets from every OTHER session — excludes today's own sets. */
+    private suspend fun historyExcludingCurrentSession(exerciseId: Long): List<WorkoutSet> {
+        val sessionId = _uiState.value.sessionId
+        return workoutRepository.getSetsByExerciseId(exerciseId).firstOrNull().orEmpty()
+            .filter { it.sessionId != sessionId }
     }
 
     private fun checkForActiveSession() {
@@ -237,6 +269,7 @@ class ActiveWorkoutViewModel @Inject constructor(
                         effortInput = "",
                     )
                 }
+                prefillCurrentSet()
                 _uiEffect.emit(ActiveWorkoutUiEffect.ShowMessage("¡Serie registrada!"))
             } catch (_: Exception) {
                 _uiEffect.emit(ActiveWorkoutUiEffect.ShowMessage("Error al registrar la serie"))
@@ -287,6 +320,7 @@ class ActiveWorkoutViewModel @Inject constructor(
             )
         }
         refreshSuggestion()
+        prefillCurrentSet()
     }
 
     private fun completeWorkout() {
