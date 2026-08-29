@@ -24,3 +24,18 @@ data class Exercise(
  */
 val Exercise.isBodyweight: Boolean
     get() = equipment.equals("body weight", ignoreCase = true)
+
+private val PER_SIDE_NAME_KEYWORDS = listOf(
+    "single leg", "single-leg", "single arm", "single-arm",
+    "one arm", "one-arm", "one leg", "one-leg",
+    "lunge", "alternating", "unilateral", "split squat", "pistol squat", "step-up", "step up",
+)
+
+/**
+ * Inferred from the exercise name, like [isBodyweight] — no catalog field or exercise-editor
+ * UI exists to tag this per-exercise, so a keyword heuristic is the practical option. Reps
+ * logged for these exercises are the TOTAL across both sides; UI built on this should show
+ * the per-side split rather than assume the raw number IS per side.
+ */
+val Exercise.isPerSide: Boolean
+    get() = PER_SIDE_NAME_KEYWORDS.any { name.contains(it, ignoreCase = true) }

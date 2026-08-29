@@ -44,6 +44,7 @@ import com.example.heavyduty.core.common.extensions.formatDecimal
 import com.example.heavyduty.core.domain.model.Exercise
 import com.example.heavyduty.core.domain.model.Prescription
 import com.example.heavyduty.core.domain.model.isBodyweight
+import com.example.heavyduty.core.domain.model.isPerSide
 import com.example.heavyduty.core.ui.components.HdButton
 import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdChip
@@ -206,7 +207,12 @@ private fun ActiveWorkoutContent(
                         },
                     )
                     Text(
-                        text = "${routineExercise.targetSets} sets × ${routineExercise.targetReps} reps",
+                        text = if (routineExercise.exercise?.isPerSide == true) {
+                            "${routineExercise.targetSets} sets × ${routineExercise.targetReps} reps " +
+                                "(${routineExercise.targetReps / 2} por lado)"
+                        } else {
+                            "${routineExercise.targetSets} sets × ${routineExercise.targetReps} reps"
+                        },
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -227,6 +233,7 @@ private fun ActiveWorkoutContent(
             item {
                 val currentExercise = uiState.routineExercises.getOrNull(uiState.currentExerciseIndex)?.exercise
                 val isBodyweightExercise = currentExercise?.isBodyweight == true
+                val isPerSideExercise = currentExercise?.isPerSide == true
                 var showExtraWeight by remember(uiState.currentExerciseIndex) { mutableStateOf(false) }
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -251,6 +258,14 @@ private fun ActiveWorkoutContent(
                         value = uiState.repsInput,
                         onValueChange = { onEvent(ActiveWorkoutUiEvent.OnRepsChange(it)) },
                         label = { Text("Repeticiones") },
+                        supportingText = if (isPerSideExercise) {
+                            {
+                                val total = uiState.repsInput.toIntOrNull()
+                                Text(if (total != null) "${total / 2} por lado" else "Total ambos lados")
+                            }
+                        } else {
+                            null
+                        },
                         modifier = Modifier.weight(1f),
                         singleLine = true,
                         shape = RoundedCornerShape(12.dp),

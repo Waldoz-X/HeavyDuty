@@ -17,6 +17,8 @@ data class ProgressionConfig(
     val stallThreshold: Int,
     val targetSets: Int,
     val startingWeightKg: Float,
+    /** Reps are logged as a total across both sides — the rep step must stay even. */
+    val isPerSide: Boolean = false,
 )
 
 fun RoutineExercise.toProgressionConfig(): ProgressionConfig = ProgressionConfig(
@@ -26,6 +28,7 @@ fun RoutineExercise.toProgressionConfig(): ProgressionConfig = ProgressionConfig
     stallThreshold = stallThreshold,
     targetSets = targetSets,
     startingWeightKg = targetWeight,
+    isPerSide = exercise?.isPerSide ?: false,
 )
 
 /**
@@ -159,10 +162,11 @@ private fun doubleProgressionPrescription(sessions: List<List<WorkoutSet>>, conf
     val lastWeight = last.mapNotNull { it.weight }.maxOrNull() ?: config.startingWeightKg
     val minReps = last.minOf { it.reps ?: 0 }
 
+    val repStep = if (config.isPerSide) 2 else 1
     return if (minReps >= config.repRangeHigh) {
         Prescription(sets = config.targetSets, reps = config.repRangeLow, weightKg = lastWeight + WEIGHT_INCREMENT_KG)
     } else {
-        Prescription(sets = config.targetSets, reps = (minReps + 1).coerceAtMost(config.repRangeHigh), weightKg = lastWeight)
+        Prescription(sets = config.targetSets, reps = (minReps + repStep).coerceAtMost(config.repRangeHigh), weightKg = lastWeight)
     }
 }
 
@@ -170,6 +174,7 @@ private fun bodyweightPrescription(sessions: List<List<WorkoutSet>>, config: Pro
     val last = sessions.lastOrNull()
         ?: return Prescription(sets = config.targetSets, reps = config.repRangeLow, weightKg = null)
     val minReps = last.minOf { it.reps ?: 0 }
+    val repStep = if (config.isPerSide) 2 else 1
 
     return when {
         minReps >= config.repRangeHigh -> Prescription(
@@ -178,7 +183,7 @@ private fun bodyweightPrescription(sessions: List<List<WorkoutSet>>, config: Pro
             weightKg = null,
             reasonNote = "Techo de reps alcanzado: se agrega una serie",
         )
-        minReps >= config.repRangeLow -> Prescription(sets = config.targetSets, reps = minReps + 1, weightKg = null)
+        minReps >= config.repRangeLow -> Prescription(sets = config.targetSets, reps = minReps + repStep, weightKg = null)
         else -> Prescription(sets = config.targetSets, reps = minReps, weightKg = null)
     }
 }
