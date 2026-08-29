@@ -7,11 +7,12 @@ import com.example.heavyduty.feature.stats.presentation.distribucioncorporal.Dis
 import com.example.heavyduty.feature.stats.presentation.distribucionmuscular.DistribucionMuscularScreen
 import com.example.heavyduty.feature.stats.presentation.informemensual.InformeMensualScreen
 import com.example.heavyduty.feature.stats.presentation.main.EstadisticasScreen
+import com.example.heavyduty.feature.stats.presentation.mapaactividad.MapaActividadScreen
 import com.example.heavyduty.feature.stats.presentation.principales.EjerciciosPrincipalesScreen
 import com.example.heavyduty.feature.stats.presentation.series.SeriesPorMusculoScreen
 
 /**
- * Registers the "Estadísticas" hub and its six advanced-stat sub-screens in the NavHost.
+ * Registers the "Estadísticas" hub and its seven advanced-stat sub-screens in the NavHost.
  */
 fun NavGraphBuilder.statsGraph(
     onNavigateBack: () -> Unit,
@@ -21,6 +22,7 @@ fun NavGraphBuilder.statsGraph(
     onNavigateToPrincipales: () -> Unit,
     onNavigateToClasificacion: () -> Unit,
     onNavigateToInformeMensual: () -> Unit,
+    onNavigateToMapaActividad: () -> Unit,
 ) {
     composable(route = "stats_graph") {
         EstadisticasScreen(
@@ -31,7 +33,11 @@ fun NavGraphBuilder.statsGraph(
             onNavigateToPrincipales = onNavigateToPrincipales,
             onNavigateToClasificacion = onNavigateToClasificacion,
             onNavigateToInformeMensual = onNavigateToInformeMensual,
+            onNavigateToMapaActividad = onNavigateToMapaActividad,
         )
+    }
+    composable(route = "stats/mapa_actividad") {
+        MapaActividadScreen(onNavigateBack = onNavigateBack)
     }
     composable(route = "stats/series") {
         SeriesPorMusculoScreen(onNavigateBack = onNavigateBack)

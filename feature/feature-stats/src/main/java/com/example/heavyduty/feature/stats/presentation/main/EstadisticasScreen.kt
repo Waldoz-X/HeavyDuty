@@ -19,6 +19,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Accessibility
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Leaderboard
 import androidx.compose.material.icons.filled.PieChart
@@ -53,6 +54,7 @@ fun EstadisticasScreen(
     onNavigateToPrincipales: () -> Unit,
     onNavigateToClasificacion: () -> Unit,
     onNavigateToInformeMensual: () -> Unit,
+    onNavigateToMapaActividad: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: EstadisticasViewModel = hiltViewModel(),
 ) {
@@ -112,6 +114,12 @@ fun EstadisticasScreen(
                 title = "Informe mensual",
                 description = "Resumen de tus entrenamientos y estadísticas mensuales.",
                 onClick = onNavigateToInformeMensual,
+            ),
+            AdvancedStatRow(
+                icon = Icons.Default.DateRange,
+                title = "Mapa de actividad",
+                description = "Vista de un año de entrenamientos, estilo GitHub.",
+                onClick = onNavigateToMapaActividad,
             ),
         )
 

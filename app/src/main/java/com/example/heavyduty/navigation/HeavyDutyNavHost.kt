@@ -109,6 +109,7 @@ fun HeavyDutyNavHost(
             onNavigateToPrincipales = { navController.navigate("stats/principales") },
             onNavigateToClasificacion = { navController.navigate("stats/clasificacion") },
             onNavigateToInformeMensual = { navController.navigate("stats/informe_mensual") },
+            onNavigateToMapaActividad = { navController.navigate("stats/mapa_actividad") },
         )
     }
 }
