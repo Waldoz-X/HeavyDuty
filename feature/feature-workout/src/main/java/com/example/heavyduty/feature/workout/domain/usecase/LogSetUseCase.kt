@@ -2,6 +2,7 @@ package com.example.heavyduty.feature.workout.domain.usecase
 
 import com.example.heavyduty.core.domain.model.Effort
 import com.example.heavyduty.core.domain.model.WorkoutSet
+import com.example.heavyduty.core.domain.repository.RestTimerController
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
 import javax.inject.Inject
 
@@ -10,6 +11,7 @@ import javax.inject.Inject
  */
 class LogSetUseCase @Inject constructor(
     private val workoutRepository: WorkoutRepository,
+    private val restTimerController: RestTimerController,
 ) {
     suspend operator fun invoke(
         sessionId: Long,
@@ -21,6 +23,7 @@ class LogSetUseCase @Inject constructor(
         distance: Float? = null,
         isWarmup: Boolean = false,
         effort: Effort? = null,
+        restSeconds: Int? = null,
     ): Long {
         val set = WorkoutSet(
             sessionId = sessionId,
@@ -35,6 +38,10 @@ class LogSetUseCase @Inject constructor(
             isWarmup = isWarmup,
             effort = effort,
         )
-        return workoutRepository.insertSet(set)
+        val id = workoutRepository.insertSet(set)
+        if (restSeconds != null && restSeconds > 0) {
+            restTimerController.startRest(restSeconds)
+        }
+        return id
     }
 }

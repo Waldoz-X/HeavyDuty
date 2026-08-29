@@ -8,6 +8,7 @@ import android.os.Vibrator
 import android.os.VibratorManager
 import androidx.core.content.ContextCompat
 import com.example.heavyduty.core.common.dispatchers.DefaultDispatcher
+import com.example.heavyduty.core.domain.repository.RestTimerController
 import com.example.heavyduty.feature.timer.domain.model.TimerMode
 import com.example.heavyduty.feature.timer.presentation.TimerUiEffect
 import com.example.heavyduty.feature.timer.presentation.TimerUiEvent
@@ -40,7 +41,7 @@ import javax.inject.Singleton
 class TimerEngine @Inject constructor(
     @ApplicationContext private val context: Context,
     @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher,
-) {
+) : RestTimerController {
     private val engineScope = CoroutineScope(SupervisorJob() + defaultDispatcher)
 
     private val _state = MutableStateFlow(TimerUiState())
@@ -65,6 +66,26 @@ class TimerEngine @Inject constructor(
             TimerUiEvent.OnStartPause -> toggleStartPause()
             TimerUiEvent.OnReset -> reset()
         }
+    }
+
+    /**
+     * Starts (or restarts) a rest countdown from outside this module's own screen — see
+     * [RestTimerController] doc. Replaces whatever timer was running, same as picking REST
+     * mode and pressing start manually.
+     */
+    override fun startRest(seconds: Int) {
+        tickJob?.cancel()
+        _state.update {
+            TimerUiState(
+                mode = TimerMode.REST,
+                totalSeconds = seconds,
+                remainingSeconds = seconds,
+                rounds = 1,
+                isRunning = true,
+            )
+        }
+        startService()
+        startCountDown()
     }
 
     private fun selectMode(mode: TimerMode) {

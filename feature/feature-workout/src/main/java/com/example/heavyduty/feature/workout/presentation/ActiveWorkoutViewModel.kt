@@ -226,6 +226,7 @@ class ActiveWorkoutViewModel @Inject constructor(
                     weight = weight,
                     isWarmup = state.isWarmupInput,
                     effort = effort,
+                    restSeconds = currentExercise.restBetweenSetsSecs,
                 )
                 _uiState.update {
                     it.copy(
