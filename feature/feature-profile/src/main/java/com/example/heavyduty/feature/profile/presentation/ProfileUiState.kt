@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.profile.presentation
 
+import android.net.Uri
 import com.example.heavyduty.feature.profile.domain.model.ProfileStats
 
 /**
@@ -17,6 +18,9 @@ data class ProfileUiState(
     val effortTrackingEnabled: Boolean = false,
     val preferredEffortScale: String = "RIR",
     val isLoading: Boolean = true,
+    val isExportingData: Boolean = false,
+    val isImportingData: Boolean = false,
+    val backupMessage: String? = null,
 )
 
 /**
@@ -30,4 +34,7 @@ sealed interface ProfileUiEvent {
     data class OnBodyDiagramGenderChange(val gender: String) : ProfileUiEvent
     data class OnEffortTrackingEnabledChange(val enabled: Boolean) : ProfileUiEvent
     data class OnPreferredEffortScaleChange(val scale: String) : ProfileUiEvent
+    data class OnExportDataRequested(val uri: Uri) : ProfileUiEvent
+    data class OnImportDataRequested(val uri: Uri) : ProfileUiEvent
+    data object OnDismissBackupMessage : ProfileUiEvent
 }

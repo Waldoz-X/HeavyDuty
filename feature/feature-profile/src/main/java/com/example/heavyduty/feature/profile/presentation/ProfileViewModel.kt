@@ -1,18 +1,23 @@
 package com.example.heavyduty.feature.profile.presentation
 
+import android.content.Context
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.heavyduty.feature.profile.domain.model.ProfileStats
+import com.example.heavyduty.feature.profile.domain.usecase.ExportBackupUseCase
 import com.example.heavyduty.feature.profile.domain.usecase.GetBodyDiagramGenderUseCase
 import com.example.heavyduty.feature.profile.domain.usecase.GetDisplayNameUseCase
 import com.example.heavyduty.feature.profile.domain.usecase.GetEffortTrackingEnabledUseCase
 import com.example.heavyduty.feature.profile.domain.usecase.GetPreferredEffortScaleUseCase
 import com.example.heavyduty.feature.profile.domain.usecase.GetProfileStatsUseCase
+import com.example.heavyduty.feature.profile.domain.usecase.ImportBackupUseCase
 import com.example.heavyduty.feature.profile.domain.usecase.SetBodyDiagramGenderUseCase
 import com.example.heavyduty.feature.profile.domain.usecase.SetDisplayNameUseCase
 import com.example.heavyduty.feature.profile.domain.usecase.SetEffortTrackingEnabledUseCase
 import com.example.heavyduty.feature.profile.domain.usecase.SetPreferredEffortScaleUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -40,8 +45,11 @@ class ProfileViewModel @Inject constructor(
     private val setEffortTrackingEnabledUseCase: SetEffortTrackingEnabledUseCase,
     private val getPreferredEffortScaleUseCase: GetPreferredEffortScaleUseCase,
     private val setPreferredEffortScaleUseCase: SetPreferredEffortScaleUseCase,
+    private val exportBackupUseCase: ExportBackupUseCase,
+    private val importBackupUseCase: ImportBackupUseCase,
     private val workoutRepository: WorkoutRepository,
     private val exerciseRepository: ExerciseRepository,
+    @ApplicationContext private val appContext: Context,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileUiState())
@@ -232,6 +240,47 @@ class ProfileViewModel @Inject constructor(
             }
             is ProfileUiEvent.OnPreferredEffortScaleChange -> {
                 viewModelScope.launch { setPreferredEffortScaleUseCase(event.scale) }
+            }
+            is ProfileUiEvent.OnExportDataRequested -> exportData(event.uri)
+            is ProfileUiEvent.OnImportDataRequested -> importData(event.uri)
+            ProfileUiEvent.OnDismissBackupMessage -> {
+                _uiState.update { it.copy(backupMessage = null) }
+            }
+        }
+    }
+
+    private fun exportData(uri: Uri) {
+        _uiState.update { it.copy(isExportingData = true) }
+        viewModelScope.launch {
+            try {
+                val json = exportBackupUseCase()
+                appContext.contentResolver.openOutputStream(uri)?.use { stream ->
+                    stream.write(json.toByteArray())
+                } ?: throw IllegalStateException("No se pudo abrir el archivo")
+                _uiState.update { it.copy(isExportingData = false, backupMessage = "Datos exportados") }
+            } catch (_: Exception) {
+                _uiState.update { it.copy(isExportingData = false, backupMessage = "Error al exportar los datos") }
+            }
+        }
+    }
+
+    private fun importData(uri: Uri) {
+        _uiState.update { it.copy(isImportingData = true) }
+        viewModelScope.launch {
+            try {
+                val json = appContext.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
+                    ?: throw IllegalStateException("No se pudo leer el archivo")
+                val result = importBackupUseCase(json)
+                val message = buildString {
+                    append("Importado: ${result.routinesImported} rutinas, ${result.sessionsImported} sesiones, ")
+                    append("${result.bodyWeightEntriesImported} pesos, ${result.customExercisesImported} ejercicios")
+                    if (result.skippedReferences > 0) {
+                        append(" (${result.skippedReferences} referencias omitidas por ejercicios no encontrados)")
+                    }
+                }
+                _uiState.update { it.copy(isImportingData = false, backupMessage = message) }
+            } catch (_: Exception) {
+                _uiState.update { it.copy(isImportingData = false, backupMessage = "Archivo de respaldo inválido") }
             }
         }
     }

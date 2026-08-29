@@ -1,5 +1,7 @@
 package com.example.heavyduty.feature.profile.presentation
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyColumn
@@ -21,6 +23,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.FileDownload
+import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.MonitorWeight
@@ -47,6 +51,10 @@ import com.example.heavyduty.core.ui.components.HdChip
 import com.example.heavyduty.core.ui.components.HdLoadingIndicator
 import com.example.heavyduty.core.common.extensions.formatCompact
 import com.example.heavyduty.core.ui.components.HdTextButton
+import com.example.heavyduty.core.ui.components.HdTonalButton
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun ProfileScreen(
@@ -61,10 +69,23 @@ fun ProfileScreen(
         return
     }
 
+    val exportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/json"),
+    ) { uri -> uri?.let { viewModel.onEvent(ProfileUiEvent.OnExportDataRequested(it)) } }
+
+    val importLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument(),
+    ) { uri -> uri?.let { viewModel.onEvent(ProfileUiEvent.OnImportDataRequested(it)) } }
+
     ProfileContent(
         uiState = uiState,
         onEvent = viewModel::onEvent,
         onNavigateToStats = onNavigateToStats,
+        onExportClick = {
+            val fileName = "heavyduty_backup_${SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())}.json"
+            exportLauncher.launch(fileName)
+        },
+        onImportClick = { importLauncher.launch(arrayOf("application/json")) },
         modifier = modifier,
     )
 }
@@ -74,6 +95,8 @@ private fun ProfileContent(
     uiState: ProfileUiState,
     onEvent: (ProfileUiEvent) -> Unit,
     onNavigateToStats: () -> Unit,
+    onExportClick: () -> Unit,
+    onImportClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -235,6 +258,54 @@ private fun ProfileContent(
                             onClick = { onEvent(ProfileUiEvent.OnPreferredEffortScaleChange("RPE")) },
                         )
                     }
+                }
+            }
+        }
+
+        item {
+            HdCard(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = "Tus datos",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Text(
+                    text = "Exporta o importa tus rutinas, entrenamientos y peso corporal como un " +
+                        "archivo JSON que vos controlás. Importar nunca borra nada existente.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    HdTonalButton(
+                        text = "Exportar",
+                        onClick = onExportClick,
+                        icon = Icons.Default.FileDownload,
+                        enabled = !uiState.isExportingData && !uiState.isImportingData,
+                    )
+                    HdTonalButton(
+                        text = "Importar",
+                        onClick = onImportClick,
+                        icon = Icons.Default.FileUpload,
+                        enabled = !uiState.isExportingData && !uiState.isImportingData,
+                    )
+                }
+                if (uiState.isExportingData || uiState.isImportingData) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Procesando...",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                uiState.backupMessage?.let { message ->
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = message,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.clickable { onEvent(ProfileUiEvent.OnDismissBackupMessage) },
+                    )
                 }
             }
         }
