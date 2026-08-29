@@ -28,6 +28,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -40,6 +43,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.heavyduty.core.common.extensions.formatDecimal
 import com.example.heavyduty.core.domain.model.Exercise
 import com.example.heavyduty.core.domain.model.Prescription
+import com.example.heavyduty.core.domain.model.isBodyweight
 import com.example.heavyduty.core.ui.components.HdButton
 import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdChip
@@ -221,6 +225,10 @@ private fun ActiveWorkoutContent(
 
             // Log set input
             item {
+                val currentExercise = uiState.routineExercises.getOrNull(uiState.currentExerciseIndex)?.exercise
+                val isBodyweightExercise = currentExercise?.isBodyweight == true
+                var showExtraWeight by remember(uiState.currentExerciseIndex) { mutableStateOf(false) }
+
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = "Registrar Serie #${uiState.currentSetNumber}",
@@ -250,17 +258,19 @@ private fun ActiveWorkoutContent(
                             focusedBorderColor = MaterialTheme.colorScheme.primary,
                         ),
                     )
-                    OutlinedTextField(
-                        value = uiState.weightInput,
-                        onValueChange = { onEvent(ActiveWorkoutUiEvent.OnWeightChange(it)) },
-                        label = { Text("Peso (kg)") },
-                        modifier = Modifier.weight(1f),
-                        singleLine = true,
-                        shape = RoundedCornerShape(12.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        ),
-                    )
+                    if (!isBodyweightExercise || showExtraWeight) {
+                        OutlinedTextField(
+                            value = uiState.weightInput,
+                            onValueChange = { onEvent(ActiveWorkoutUiEvent.OnWeightChange(it)) },
+                            label = { Text(if (isBodyweightExercise) "Peso extra (kg)" else "Peso (kg)") },
+                            modifier = Modifier.weight(1f),
+                            singleLine = true,
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            ),
+                        )
+                    }
                     if (uiState.effortTrackingEnabled) {
                         OutlinedTextField(
                             value = uiState.effortInput,
@@ -274,6 +284,14 @@ private fun ActiveWorkoutContent(
                             ),
                         )
                     }
+                }
+                if (isBodyweightExercise && !showExtraWeight) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    HdTextButton(
+                        text = "Agregar peso extra (chaleco)",
+                        onClick = { showExtraWeight = true },
+                        icon = Icons.Default.Add,
+                    )
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 HdChip(

@@ -51,6 +51,7 @@ import com.example.heavyduty.core.domain.model.Exercise
 import com.example.heavyduty.core.domain.model.ProgressionPolicy
 import com.example.heavyduty.core.domain.model.RoutineExercise
 import com.example.heavyduty.core.domain.model.WorkoutType
+import com.example.heavyduty.core.domain.model.isBodyweight
 import com.example.heavyduty.core.ui.components.HdButton
 import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdChip
@@ -401,12 +402,14 @@ private fun RoutineExerciseItem(
                 onValueChange = { onUpdate(routineExercise.copy(targetReps = it)) },
                 modifier = Modifier.weight(1f),
             )
-            CompactNumberField(
-                label = "Peso (kg)",
-                value = routineExercise.targetWeight.toInt(),
-                onValueChange = { onUpdate(routineExercise.copy(targetWeight = it.toFloat())) },
-                modifier = Modifier.weight(1f),
-            )
+            if (routineExercise.exercise?.isBodyweight != true) {
+                CompactNumberField(
+                    label = "Peso (kg)",
+                    value = routineExercise.targetWeight.toInt(),
+                    onValueChange = { onUpdate(routineExercise.copy(targetWeight = it.toFloat())) },
+                    modifier = Modifier.weight(1f),
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(12.dp))
