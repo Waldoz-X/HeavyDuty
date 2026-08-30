@@ -463,9 +463,10 @@ private fun SuggestionCard(
     val target = buildString {
         append(suggestion.sets)
         append(" series × ")
+        val weightKg = suggestion.weightKg
         when {
             suggestion.durationSecs != null -> append("${suggestion.durationSecs}s")
-            suggestion.weightKg != null -> append("${suggestion.reps} reps × ${suggestion.weightKg.formatDecimal()}kg")
+            weightKg != null -> append("${suggestion.reps} reps × ${weightKg.formatDecimal()}kg")
             else -> append("${suggestion.reps} reps")
         }
     }
