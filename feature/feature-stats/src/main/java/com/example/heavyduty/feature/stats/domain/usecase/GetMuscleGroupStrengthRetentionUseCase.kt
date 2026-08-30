@@ -43,6 +43,9 @@ class GetMuscleGroupStrengthRetentionUseCase @Inject constructor(
                     exerciseSets.mapNotNull { estimatedOneRepMax(it.weight ?: 0f, it.reps ?: 0) }.maxOrNull()
                 }
 
+            // A hard compound set stresses every muscle it credits (see Exercise.muscleWeights),
+            // not just the exercise's primary — a heavy squat is a hard event for hamstrings
+            // and glutes too, even though they get less volume credit than quads.
             val lastHardSetByMuscle = mutableMapOf<MuscleGroup, Long>()
             for (set in weightedSets) {
                 val exercise = exerciseById[set.exerciseId] ?: continue
@@ -50,9 +53,11 @@ class GetMuscleGroupStrengthRetentionUseCase @Inject constructor(
                 val oneRepMax = oneRepMaxByExercise[set.exerciseId] ?: continue
                 val weight = set.weight ?: 0f
                 if (weight / oneRepMax < HARD_SET_INTENSITY_THRESHOLD) continue
-                val current = lastHardSetByMuscle[exercise.muscleGroup]
-                if (current == null || completedAt > current) {
-                    lastHardSetByMuscle[exercise.muscleGroup] = completedAt
+                exercise.muscleWeights.keys.forEach { muscle ->
+                    val current = lastHardSetByMuscle[muscle]
+                    if (current == null || completedAt > current) {
+                        lastHardSetByMuscle[muscle] = completedAt
+                    }
                 }
             }
 

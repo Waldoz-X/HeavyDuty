@@ -1,12 +1,12 @@
 package com.example.heavyduty.feature.stats.domain.usecase
 
 import com.example.heavyduty.core.domain.model.MuscleGroup
-import com.example.heavyduty.core.domain.model.WorkoutSet
 import com.example.heavyduty.core.domain.model.decayedFatigue
 import com.example.heavyduty.core.domain.model.estimatedOneRepMax
 import com.example.heavyduty.core.domain.model.excludeWarmups
 import com.example.heavyduty.core.domain.model.fatigueLevel
 import com.example.heavyduty.core.domain.model.intensityWeightedTonnage
+import com.example.heavyduty.core.domain.model.muscleCredits
 import com.example.heavyduty.core.domain.repository.ExerciseRepository
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
 import kotlinx.coroutines.flow.Flow
@@ -48,33 +48,35 @@ class GetMuscleGroupFatigueUseCase @Inject constructor(
                     exerciseSets.mapNotNull { estimatedOneRepMax(it.weight ?: 0f, it.reps ?: 0) }.maxOrNull()
                 }
 
-            val now = System.currentTimeMillis()
-            val fatigueByMuscle = weightedSets
-                .groupBy { exerciseById[it.exerciseId]?.muscleGroup }
-                .mapNotNull { (muscle, muscleSets) -> muscle?.let { it to muscleSets } }
-                .associate { (muscle, muscleSets) ->
-                    muscle to accumulateFatigue(muscleSets, oneRepMaxByExercise, now)
+            // Each set fans its stimulus out across every muscle it credits (see
+            // Exercise.muscleCredits), not just its exercise's single primary muscle group.
+            val stimulusByMuscle = mutableMapOf<MuscleGroup, MutableList<Pair<Long, Float>>>()
+            weightedSets.forEach { set ->
+                val exercise = exerciseById[set.exerciseId] ?: return@forEach
+                val timestamp = set.completedAt ?: return@forEach
+                val rawStimulus = intensityWeightedTonnage(
+                    weightKg = set.weight ?: 0f,
+                    reps = set.reps ?: 0,
+                    estimatedOneRepMaxKg = oneRepMaxByExercise[set.exerciseId],
+                ) / FATIGUE_STIMULUS_DIVISOR
+                exercise.muscleCredits(rawStimulus).forEach { (muscle, weightedStimulus) ->
+                    stimulusByMuscle.getOrPut(muscle) { mutableListOf() }.add(timestamp to weightedStimulus)
                 }
+            }
+
+            val now = System.currentTimeMillis()
+            val fatigueByMuscle = stimulusByMuscle.mapValues { (_, entries) ->
+                accumulateFatigue(entries.sortedBy { it.first }, now)
+            }
 
             MuscleGroup.entries.associateWith { fatigueLevel(fatigueByMuscle[it] ?: 0f) }
         }.distinctUntilChanged()
 
-    private fun accumulateFatigue(
-        muscleSets: List<WorkoutSet>,
-        oneRepMaxByExercise: Map<Long, Float?>,
-        now: Long,
-    ): Float {
-        val chronological = muscleSets.sortedBy { it.completedAt }
+    private fun accumulateFatigue(chronologicalStimulus: List<Pair<Long, Float>>, now: Long): Float {
         var accumulator = 0f
         var lastTimestamp: Long? = null
-        for (set in chronological) {
-            val timestamp = set.completedAt ?: continue
+        for ((timestamp, stimulus) in chronologicalStimulus) {
             val hoursElapsed = lastTimestamp?.let { (timestamp - it) / 3_600_000f } ?: 0f
-            val stimulus = intensityWeightedTonnage(
-                weightKg = set.weight ?: 0f,
-                reps = set.reps ?: 0,
-                estimatedOneRepMaxKg = oneRepMaxByExercise[set.exerciseId],
-            ) / FATIGUE_STIMULUS_DIVISOR
             accumulator = decayedFatigue(accumulator, stimulus, hoursElapsed)
             lastTimestamp = timestamp
         }

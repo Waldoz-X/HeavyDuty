@@ -3,6 +3,7 @@ package com.example.heavyduty.feature.stats.domain.usecase
 import com.example.heavyduty.core.domain.model.MuscleGroup
 import com.example.heavyduty.core.domain.model.WorkoutStatus
 import com.example.heavyduty.core.domain.model.excludeWarmups
+import com.example.heavyduty.core.domain.model.muscleCredits
 import com.example.heavyduty.core.domain.repository.ExerciseRepository
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
 import com.example.heavyduty.feature.stats.domain.model.MonthlyReport
@@ -52,7 +53,9 @@ class GetMonthlyReportUseCase @Inject constructor(
             sets.forEach { set ->
                 val exercise = exerciseById[set.exerciseId] ?: return@forEach
                 val setVolume = (set.reps ?: 0) * (set.weight ?: 0f)
-                volumeByMuscle[exercise.muscleGroup] = (volumeByMuscle[exercise.muscleGroup] ?: 0f) + setVolume
+                exercise.muscleCredits(setVolume).forEach { (muscle, credit) ->
+                    volumeByMuscle[muscle] = (volumeByMuscle[muscle] ?: 0f) + credit
+                }
             }
             val totalDurationSecs = completedSessions.sumOf { it.totalDurationSecs }
             MonthlyReport(

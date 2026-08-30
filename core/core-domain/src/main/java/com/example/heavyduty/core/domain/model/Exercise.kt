@@ -10,11 +10,28 @@ data class Exercise(
     val instructions: String = "",
     val imageUrl: String = "",
     val gifUrl: String = "",
+    /** The single "primary" muscle — still what every badge, filter, and accent color uses. */
     val muscleGroup: MuscleGroup,
     val exerciseType: ExerciseType,
     val equipment: String = "",
     val isCustom: Boolean = false,
+    /**
+     * Fractional credit per muscle worked, summing to ~1.0 (a compound movement's secondary
+     * muscles come from the catalog's real secondary_muscles data, not a guess) — use this,
+     * not [muscleGroup] alone, for volume/fatigue/set-count/strength aggregations, so a
+     * compound exercise credits every muscle it actually trains instead of only its primary.
+     * Defaults to crediting [muscleGroup] alone when no secondary data exists.
+     */
+    val muscleWeights: Map<MuscleGroup, Float> = mapOf(muscleGroup to 1f),
 )
+
+/**
+ * Distributes [amount] across this exercise's [Exercise.muscleWeights] instead of crediting
+ * only its primary [Exercise.muscleGroup] — the shared, single point every volume/fatigue/
+ * set-count/strength calculation should go through, matching the [excludeWarmups] convention.
+ */
+fun Exercise.muscleCredits(amount: Float): Map<MuscleGroup, Float> =
+    muscleWeights.mapValues { (_, weight) -> amount * weight }
 
 /**
  * Inferred from [Exercise.equipment] rather than a stored flag, per the catalog's own

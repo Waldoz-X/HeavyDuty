@@ -247,6 +247,16 @@ private fun ExerciseDetailContent(
                     )
                 }
 
+                val secondaryMuscles = exercise.muscleWeights.keys.filter { it != exercise.muscleGroup }
+                if (secondaryMuscles.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "También trabaja: ${secondaryMuscles.joinToString(", ") { it.displayName }}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+
                 Spacer(modifier = Modifier.height(16.dp))
 
                 HdTonalButton(

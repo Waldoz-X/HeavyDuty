@@ -16,4 +16,6 @@ data class ExerciseEntity(
     val exerciseType: String,
     val equipment: String = "",
     val isCustom: Boolean = false,
+    /** Gson-encoded {"MUSCLE_NAME": weight} map — see Exercise.muscleWeights. Empty = unset. */
+    val muscleWeightsJson: String = "",
 )

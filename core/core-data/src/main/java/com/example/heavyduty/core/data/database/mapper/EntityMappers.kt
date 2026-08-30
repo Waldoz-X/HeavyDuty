@@ -1,5 +1,7 @@
 package com.example.heavyduty.core.data.database.mapper
 
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import com.example.heavyduty.core.data.database.entity.CalendarEntryEntity
 import com.example.heavyduty.core.data.database.entity.ExerciseEntity
 import com.example.heavyduty.core.data.database.entity.RoutineEntity
@@ -24,18 +26,22 @@ import com.example.heavyduty.core.domain.model.WorkoutType
 
 // ============ Exercise Mappers ============
 
-fun ExerciseEntity.toDomain(): Exercise = Exercise(
-    id = id,
-    name = name,
-    description = description,
-    instructions = instructions,
-    imageUrl = imageUrl,
-    gifUrl = gifUrl,
-    muscleGroup = MuscleGroup.valueOf(muscleGroup),
-    exerciseType = ExerciseType.valueOf(exerciseType),
-    equipment = equipment,
-    isCustom = isCustom,
-)
+fun ExerciseEntity.toDomain(): Exercise {
+    val primary = MuscleGroup.valueOf(muscleGroup)
+    return Exercise(
+        id = id,
+        name = name,
+        description = description,
+        instructions = instructions,
+        imageUrl = imageUrl,
+        gifUrl = gifUrl,
+        muscleGroup = primary,
+        exerciseType = ExerciseType.valueOf(exerciseType),
+        equipment = equipment,
+        isCustom = isCustom,
+        muscleWeights = decodeMuscleWeights(muscleWeightsJson, primary),
+    )
+}
 
 fun Exercise.toEntity(): ExerciseEntity = ExerciseEntity(
     id = id,
@@ -48,7 +54,28 @@ fun Exercise.toEntity(): ExerciseEntity = ExerciseEntity(
     exerciseType = exerciseType.name,
     equipment = equipment,
     isCustom = isCustom,
+    muscleWeightsJson = encodeMuscleWeights(muscleWeights),
 )
+
+private val muscleWeightsGson = Gson()
+private val muscleWeightsMapType = object : TypeToken<Map<String, Float>>() {}.type
+
+/** Falls back to crediting [primary] alone on blank/unparseable JSON. */
+private fun decodeMuscleWeights(json: String, primary: MuscleGroup): Map<MuscleGroup, Float> {
+    if (json.isBlank()) return mapOf(primary to 1f)
+    return try {
+        val raw: Map<String, Float>? = muscleWeightsGson.fromJson(json, muscleWeightsMapType)
+        raw.orEmpty()
+            .mapNotNull { (key, weight) -> runCatching { MuscleGroup.valueOf(key) }.getOrNull()?.let { it to weight } }
+            .toMap()
+            .ifEmpty { mapOf(primary to 1f) }
+    } catch (e: Exception) {
+        mapOf(primary to 1f)
+    }
+}
+
+private fun encodeMuscleWeights(weights: Map<MuscleGroup, Float>): String =
+    muscleWeightsGson.toJson(weights.mapKeys { it.key.name })
 
 // ============ Routine Mappers ============
 

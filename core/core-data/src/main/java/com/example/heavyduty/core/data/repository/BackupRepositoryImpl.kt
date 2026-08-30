@@ -36,6 +36,8 @@ private data class ExerciseDto(
     val muscleGroup: String = "",
     val exerciseType: String = "",
     val equipment: String = "",
+    /** Raw Gson-encoded fractional muscle weights, carried through as-is — see Exercise.muscleWeights. */
+    val muscleWeightsJson: String = "",
 )
 
 private data class RoutineDto(
@@ -115,6 +117,7 @@ class BackupRepositoryImpl @Inject constructor(
                 muscleGroup = it.muscleGroup,
                 exerciseType = it.exerciseType,
                 equipment = it.equipment,
+                muscleWeightsJson = it.muscleWeightsJson,
             )
         }
 
@@ -209,6 +212,7 @@ class BackupRepositoryImpl @Inject constructor(
                     exerciseType = dto.exerciseType,
                     equipment = dto.equipment,
                     isCustom = true,
+                    muscleWeightsJson = dto.muscleWeightsJson,
                 ),
             )
             existingNames.add(dto.name)

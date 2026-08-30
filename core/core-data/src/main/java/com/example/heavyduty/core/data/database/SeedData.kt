@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import com.example.heavyduty.core.data.database.dao.ExerciseDao
 import com.example.heavyduty.core.data.database.entity.ExerciseEntity
+import com.example.heavyduty.core.domain.model.MuscleGroup
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.io.InputStreamReader
@@ -15,6 +16,54 @@ import java.io.InputStreamReader
 object SeedData {
 
     private const val RAW_BASE_URL = "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/"
+
+    /** Primary muscle's share of an exercise's fractional credit; secondaries split the rest. */
+    private const val PRIMARY_MUSCLE_WEIGHT = 0.6f
+    private const val SECONDARY_MUSCLE_TOTAL_WEIGHT = 0.4f
+
+    /**
+     * Maps the dataset's free-text `secondary_muscles` values (40 distinct strings across the
+     * catalog) to this app's [MuscleGroup] taxonomy. A handful of minor/untracked areas (wrists,
+     * hands, feet, ankles, neck-front) have no matching bucket and are intentionally omitted
+     * rather than forced into a wrong one — the same granularity limit the primary-muscle
+     * mapping below already accepts.
+     */
+    private val SECONDARY_MUSCLE_MAP = mapOf(
+        "shoulders" to "SHOULDERS",
+        "deltoids" to "SHOULDERS",
+        "rear deltoids" to "SHOULDERS",
+        "rotator cuff" to "SHOULDERS",
+        "hamstrings" to "HAMSTRINGS",
+        "forearms" to "FOREARMS",
+        "wrist flexors" to "FOREARMS",
+        "wrist extensors" to "FOREARMS",
+        "grip muscles" to "FOREARMS",
+        "triceps" to "TRICEPS",
+        "biceps" to "BICEPS",
+        "brachialis" to "BICEPS",
+        "quadriceps" to "QUADRICEPS",
+        "hip flexors" to "QUADRICEPS",
+        "groin" to "QUADRICEPS",
+        "inner thighs" to "QUADRICEPS",
+        "calves" to "CALVES",
+        "soleus" to "CALVES",
+        "shins" to "CALVES",
+        "glutes" to "GLUTES",
+        "core" to "ABS",
+        "abdominals" to "ABS",
+        "lower abs" to "ABS",
+        "chest" to "CHEST",
+        "upper chest" to "CHEST",
+        "obliques" to "OBLIQUES",
+        "lower back" to "BACK",
+        "rhomboids" to "BACK",
+        "upper back" to "BACK",
+        "back" to "BACK",
+        "trapezius" to "TRAPS",
+        "traps" to "TRAPS",
+        "latissimus dorsi" to "LATS",
+        "lats" to "LATS",
+    )
 
     data class ExerciseDto(
         val id: String?,
@@ -113,6 +162,23 @@ object SeedData {
 
                 val article = if (equipmentLabel.firstOrNull()?.lowercaseChar() in listOf('a', 'e', 'i', 'o', 'u')) "An" else "A"
 
+                // Real secondary-muscle data from the catalog, not a guess — see
+                // SECONDARY_MUSCLE_MAP doc. Falls back to crediting the primary alone when
+                // none of the listed secondary muscles map to a tracked MuscleGroup.
+                val secondaryGroups = (dto.secondary_muscles ?: emptyList())
+                    .mapNotNull { SECONDARY_MUSCLE_MAP[it.lowercase()] }
+                    .filter { it != muscleGroup }
+                    .distinct()
+                val muscleWeights = if (secondaryGroups.isEmpty()) {
+                    mapOf(muscleGroup to 1f)
+                } else {
+                    val secondaryShare = SECONDARY_MUSCLE_TOTAL_WEIGHT / secondaryGroups.size
+                    buildMap {
+                        put(muscleGroup, PRIMARY_MUSCLE_WEIGHT)
+                        secondaryGroups.forEach { put(it, secondaryShare) }
+                    }
+                }
+
                 ExerciseEntity(
                     name = dto.name ?: "Unknown Exercise",
                     muscleGroup = muscleGroup,
@@ -123,6 +189,7 @@ object SeedData {
                     imageUrl = imageUrl,
                     gifUrl = gifUrl,
                     isCustom = false,
+                    muscleWeightsJson = Gson().toJson(muscleWeights),
                 )
             }
 

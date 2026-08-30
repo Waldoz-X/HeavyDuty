@@ -2,6 +2,7 @@ package com.example.heavyduty.feature.stats.domain.usecase
 
 import com.example.heavyduty.core.domain.model.MuscleGroup
 import com.example.heavyduty.core.domain.model.excludeWarmups
+import com.example.heavyduty.core.domain.model.muscleCredits
 import com.example.heavyduty.core.domain.repository.ExerciseRepository
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
 import kotlinx.coroutines.flow.Flow
@@ -29,7 +30,9 @@ class GetMuscleGroupVolumeUseCase @Inject constructor(
             sets.excludeWarmups().forEach { set ->
                 val exercise = exerciseById[set.exerciseId] ?: return@forEach
                 val setVolume = (set.reps ?: 0) * (set.weight ?: 0f)
-                volumeByMuscle[exercise.muscleGroup] = (volumeByMuscle[exercise.muscleGroup] ?: 0f) + setVolume
+                exercise.muscleCredits(setVolume).forEach { (muscle, credit) ->
+                    volumeByMuscle[muscle] = (volumeByMuscle[muscle] ?: 0f) + credit
+                }
             }
             volumeByMuscle
         }.distinctUntilChanged()
