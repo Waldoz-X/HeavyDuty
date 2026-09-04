@@ -23,6 +23,7 @@
             <option value="$PROJECT_DIR$/feature/feature-history" />
             <option value="$PROJECT_DIR$/feature/feature-profile" />
             <option value="$PROJECT_DIR$/feature/feature-routines" />
+            <option value="$PROJECT_DIR$/feature/feature-stats" />
             <option value="$PROJECT_DIR$/feature/feature-timer" />
             <option value="$PROJECT_DIR$/feature/feature-workout" />
           </set>

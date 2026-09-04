@@ -1,8 +1,8 @@
 [versions]
 # Core
-agp = "9.3.1"
-kotlin = "2.1.21"
-ksp = "2.1.21-2.0.1"
+agp = "9.3.2"
+kotlin = "2.2.10"
+ksp = "2.3.6"
 
 # AndroidX
 coreKtx = "1.16.0"
@@ -23,7 +23,7 @@ hilt = "2.59.2"
 hiltNavigationCompose = "1.2.0"
 
 # Room
-room = "2.7.1"
+room = "2.7.2"
 
 # Coroutines
 coroutines = "1.10.2"

@@ -67,3 +67,6 @@ obj/
 
 # Heap dumps
 *.hprof
+
+# Graphify
+graphify-out/
