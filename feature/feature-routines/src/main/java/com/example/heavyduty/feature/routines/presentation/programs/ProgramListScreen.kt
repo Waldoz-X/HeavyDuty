@@ -22,8 +22,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Slider
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -44,8 +51,14 @@ fun ProgramListScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     
-    // Simple state for creating a new program (dialog could be used here)
-    // For now, let's just show a FAB that creates a mock program, later add a dialog
+    if (uiState.showCreateProgramDialog) {
+        HdCreateProgramDialog(
+            onDismiss = { viewModel.hideCreateProgramDialog() },
+            onConfirm = { name, weeks ->
+                viewModel.createNewProgram(name, weeks)
+            }
+        )
+    }
     
     Scaffold(
         topBar = {
@@ -56,7 +69,7 @@ fun ProgramListScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { viewModel.createNewProgram("New Program", 4) },
+                onClick = { viewModel.showCreateProgramDialog() },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary
             ) {
@@ -149,4 +162,56 @@ private fun ProgramCard(
             }
         }
     }
+}
+
+@Composable
+fun HdCreateProgramDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (String, Int) -> Unit
+) {
+    var name by remember { mutableStateOf("") }
+    var weeks by remember { mutableStateOf(4f) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Create Program") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Program Name") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                
+                Column {
+                    Text("Total Weeks: ${weeks.toInt()}")
+                    Slider(
+                        value = weeks,
+                        onValueChange = { weeks = it },
+                        valueRange = 1f..16f,
+                        steps = 14
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    if (name.isNotBlank()) {
+                        onConfirm(name.trim(), weeks.toInt())
+                    }
+                },
+                enabled = name.isNotBlank()
+            ) {
+                Text("Create")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
 }

@@ -85,7 +85,7 @@ fun ProgramDetailScreen(
                                 }
                             }
                             Button(
-                                onClick = { /* TODO: Add new routine for this week */ },
+                                onClick = { viewModel.addTrainingDay(week.id) },
                                 modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
                             ) {
                                 Icon(imageVector = Icons.Default.Add, contentDescription = null)

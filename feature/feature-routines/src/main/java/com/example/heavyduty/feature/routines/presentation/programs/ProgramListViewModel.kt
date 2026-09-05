@@ -12,9 +12,12 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+import com.example.heavyduty.core.domain.model.ProgramWeek
+
 data class ProgramListUiState(
     val programs: List<Program> = emptyList(),
     val isLoading: Boolean = true,
+    val showCreateProgramDialog: Boolean = false,
 )
 
 @HiltViewModel
@@ -38,6 +41,14 @@ class ProgramListViewModel @Inject constructor(
             }
         }
     }
+    
+    fun showCreateProgramDialog() {
+        _uiState.update { it.copy(showCreateProgramDialog = true) }
+    }
+    
+    fun hideCreateProgramDialog() {
+        _uiState.update { it.copy(showCreateProgramDialog = false) }
+    }
 
     fun createNewProgram(name: String, totalWeeks: Int) {
         viewModelScope.launch {
@@ -45,7 +56,16 @@ class ProgramListViewModel @Inject constructor(
                 name = name,
                 totalWeeks = totalWeeks,
             )
-            programRepository.createProgram(newProgram)
+            val programId = programRepository.createProgram(newProgram)
+            
+            // Auto-create the first week as a template base
+            val firstWeek = ProgramWeek(
+                programId = programId,
+                weekNumber = 1
+            )
+            programRepository.addWeekToProgram(firstWeek)
+            
+            hideCreateProgramDialog()
         }
     }
 

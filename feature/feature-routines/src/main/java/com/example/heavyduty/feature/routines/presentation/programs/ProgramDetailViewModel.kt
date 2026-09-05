@@ -14,6 +14,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+import com.example.heavyduty.core.domain.repository.RoutineRepository
+import com.example.heavyduty.core.domain.model.Routine
+
 data class ProgramDetailUiState(
     val program: Program? = null,
     val isLoading: Boolean = true,
@@ -22,6 +25,7 @@ data class ProgramDetailUiState(
 @HiltViewModel
 class ProgramDetailViewModel @Inject constructor(
     private val programRepository: ProgramRepository,
+    private val routineRepository: RoutineRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -50,6 +54,17 @@ class ProgramDetailViewModel @Inject constructor(
             )
             programRepository.addWeekToProgram(newWeek)
             loadProgram() // reload to get new ID
+        }
+    }
+
+    fun addTrainingDay(weekId: Long) {
+        viewModelScope.launch {
+            val newRoutine = Routine(
+                name = "New Training Day",
+                programWeekId = weekId
+            )
+            routineRepository.insertRoutine(newRoutine)
+            loadProgram() // reload to get the new routine in the list
         }
     }
 }
