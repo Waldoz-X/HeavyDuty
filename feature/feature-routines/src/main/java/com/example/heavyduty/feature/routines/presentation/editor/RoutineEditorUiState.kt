@@ -4,10 +4,13 @@ import com.example.heavyduty.core.domain.model.Exercise
 import com.example.heavyduty.core.domain.model.RoutineExercise
 import com.example.heavyduty.core.domain.model.WorkoutType
 
+import com.example.heavyduty.core.domain.model.Routine
+
 /**
  * Immutable UI state for the routine editor screen.
  */
 data class RoutineEditorUiState(
+    val originalRoutine: Routine? = null,
     val routineId: Long? = null,
     val name: String = "",
     val description: String = "",

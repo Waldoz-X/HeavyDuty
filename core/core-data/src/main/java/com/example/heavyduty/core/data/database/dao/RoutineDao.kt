@@ -51,4 +51,7 @@ interface RoutineDao {
 
     @Update
     suspend fun updateRoutineExercises(routineExercises: List<RoutineExerciseEntity>)
+
+    @Query("DELETE FROM routine_exercises WHERE routineId = :routineId")
+    suspend fun deleteExercisesByRoutineId(routineId: Long)
 }

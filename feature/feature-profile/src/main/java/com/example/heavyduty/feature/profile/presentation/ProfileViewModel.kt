@@ -23,7 +23,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
 import javax.inject.Inject
 
 import com.example.heavyduty.core.domain.model.excludeWarmups
@@ -56,94 +58,99 @@ class ProfileViewModel @Inject constructor(
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
 
     init {
-        viewModelScope.launch {
-            combine(
-                getDisplayNameUseCase(),
-                getProfileStatsUseCase(),
-                workoutRepository.getAllSessions(),
-                workoutRepository.getAllCompletedSets(),
-                exerciseRepository.getAllExercises()
-            ) { name, stats, sessions, rawSets, exercises ->
-                val sets = rawSets.excludeWarmups()
-                val exerciseMap = exercises.associateBy { it.id }
+        val profileDataFlow = combine(
+            getDisplayNameUseCase(),
+            getProfileStatsUseCase(),
+            workoutRepository.getAllSessions(),
+            workoutRepository.getAllCompletedSets(),
+            exerciseRepository.getAllExercises()
+        ) { name, stats, sessions, rawSets, exercises ->
+            val sets = rawSets.excludeWarmups()
+            val exerciseMap = exercises.associateBy { it.id }
 
-                // A set counts as a PR the first time it beats the heaviest weight ever
-                // lifted for that exercise, walking through history chronologically.
-                val personalRecordSetIds = run {
-                    val bestWeightByExercise = mutableMapOf<Long, Float>()
-                    sets
-                        .filter { it.weight != null && it.completedAt != null }
-                        .sortedBy { it.completedAt }
-                        .mapNotNull { set ->
-                            val weight = set.weight ?: return@mapNotNull null
-                            val currentBest = bestWeightByExercise[set.exerciseId] ?: 0f
-                            if (weight > currentBest) {
-                                bestWeightByExercise[set.exerciseId] = weight
-                                set.id
-                            } else {
-                                null
-                            }
+            // A set counts as a PR the first time it beats the heaviest weight ever
+            // lifted for that exercise, walking through history chronologically.
+            val personalRecordSetIds = run {
+                val bestWeightByExercise = mutableMapOf<Long, Float>()
+                sets
+                    .filter { it.weight != null && it.completedAt != null }
+                    .sortedBy { it.completedAt }
+                    .mapNotNull { set ->
+                        val weight = set.weight ?: return@mapNotNull null
+                        val currentBest = bestWeightByExercise[set.exerciseId] ?: 0f
+                        if (weight > currentBest) {
+                            bestWeightByExercise[set.exerciseId] = weight
+                            set.id
+                        } else {
+                            null
                         }
-                        .toSet()
-                }
-
-                // Process Feed Items
-                val sortedSessions = sessions.sortedByDescending { it.startTime }
-                val feedItems = sortedSessions.map { session ->
-                    val sessionSets = sets.filter { it.sessionId == session.id }
-                    val volume = sessionSets.map { (it.weight ?: 0f) * (it.reps ?: 0) }.sum()
-                    val prs = sessionSets.count { it.id in personalRecordSetIds }
-
-                    // Group sets by exercise to create the string "3 series Dominada"
-                    val exerciseCounts = sessionSets.groupBy { it.exerciseId }
-                    val exerciseStrings = exerciseCounts.mapNotNull { (exId, exSets) ->
-                        exerciseMap[exId]?.let { ex -> "${exSets.size} series ${ex.name}" }
                     }
+                    .toSet()
+            }
 
-                    WorkoutFeedItem(
-                        id = session.id,
-                        userName = name.ifBlank { "Atleta" },
-                        userAvatarUrl = null,
-                        relativeTime = formatRelativeTime(session.startTime),
-                        workoutName = session.sessionName.ifBlank { "Entrenamiento" },
-                        durationMinutes = session.totalDurationSecs / 60,
-                        volumeKg = volume,
-                        personalRecords = prs,
-                        exercises = exerciseStrings
-                    )
+            // Group sets by session for O(N) lookup
+            val setsBySession = sets.groupBy { it.sessionId }
+
+            // Process Feed Items
+            val sortedSessions = sessions.sortedByDescending { it.startTime }
+            val feedItems = sortedSessions.map { session ->
+                val sessionSets = setsBySession[session.id] ?: emptyList()
+                val volume = sessionSets.map { (it.weight ?: 0f) * (it.reps ?: 0) }.sum()
+                val prs = sessionSets.count { it.id in personalRecordSetIds }
+
+                // Group sets by exercise to create the string "3 series Dominada"
+                val exerciseCounts = sessionSets.groupBy { it.exerciseId }
+                val exerciseStrings = exerciseCounts.mapNotNull { (exId, exSets) ->
+                    exerciseMap[exId]?.let { ex -> "${exSets.size} series ${ex.name}" }
                 }
 
-                // Process Chart Data (Last 4 weeks hours)
-                val chartData = mutableListOf<Pair<String, Float>>()
-                val cal = Calendar.getInstance()
-                val format = SimpleDateFormat("dd MMM", Locale.Builder().setLanguage("es").setRegion("ES").build())
-
-                repeat(4) { _ ->
-                    val end = cal.timeInMillis
-                    cal.add(Calendar.DAY_OF_YEAR, -7)
-                    val start = cal.timeInMillis
-                    
-                    val weekSessions = sortedSessions.filter { it.startTime in start..end }
-                    val weekHours = weekSessions.sumOf { it.totalDurationSecs } / 3600f
-                    chartData.add(Pair(format.format(cal.time), weekHours))
-                }
-
-                ProfileFlowData(
-                    name = name,
-                    stats = stats,
-                    feedItems = feedItems,
-                    chartData = chartData,
-                    streak = calculateCurrentStreakDays(sessions),
+                WorkoutFeedItem(
+                    id = session.id,
+                    userName = name.ifBlank { "Atleta" },
+                    userAvatarUrl = null,
+                    relativeTime = formatRelativeTime(session.startTime),
+                    workoutName = session.sessionName.ifBlank { "Entrenamiento" },
+                    durationMinutes = session.totalDurationSecs / 60,
+                    volumeKg = volume,
+                    personalRecords = prs,
+                    exercises = exerciseStrings
                 )
-            }.combine(
-                combine(
-                    getBodyDiagramGenderUseCase(),
-                    getEffortTrackingEnabledUseCase(),
-                    getPreferredEffortScaleUseCase(),
-                ) { gender, effortEnabled, effortScale ->
-                    ProfileSettings(gender, effortEnabled, effortScale)
-                },
-            ) { data, settings ->
+            }
+
+            // Process Chart Data (Last 4 weeks hours)
+            val chartData = mutableListOf<Pair<String, Float>>()
+            val cal = Calendar.getInstance()
+            val format = SimpleDateFormat("dd MMM", Locale.Builder().setLanguage("es").setRegion("ES").build())
+
+            repeat(4) { _ ->
+                val end = cal.timeInMillis
+                cal.add(Calendar.DAY_OF_YEAR, -7)
+                val start = cal.timeInMillis
+                
+                val weekSessions = sortedSessions.filter { it.startTime in start..end }
+                val weekHours = weekSessions.sumOf { it.totalDurationSecs } / 3600f
+                chartData.add(Pair(format.format(cal.time), weekHours))
+            }
+
+            ProfileFlowData(
+                name = name,
+                stats = stats,
+                feedItems = feedItems,
+                chartData = chartData,
+                streak = calculateCurrentStreakDays(sessions),
+            )
+        }.flowOn(Dispatchers.Default)
+
+        val settingsFlow = combine(
+            getBodyDiagramGenderUseCase(),
+            getEffortTrackingEnabledUseCase(),
+            getPreferredEffortScaleUseCase(),
+        ) { gender, effortEnabled, effortScale ->
+            ProfileSettings(gender, effortEnabled, effortScale)
+        }
+
+        viewModelScope.launch {
+            combine(profileDataFlow, settingsFlow) { data, settings ->
                 _uiState.update {
                     it.copy(
                         displayName = data.name,

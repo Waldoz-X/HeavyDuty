@@ -157,6 +157,7 @@ class RoutineEditorViewModel @Inject constructor(
                 .firstOrNull()?.let { routine ->
                     _uiState.update {
                         it.copy(
+                            originalRoutine = routine,
                             routineId = routine.id,
                             name = routine.name,
                             description = routine.description,
@@ -182,15 +183,24 @@ class RoutineEditorViewModel @Inject constructor(
         _uiState.update { it.copy(isSaving = true) }
         viewModelScope.launch {
             try {
-                val routine = Routine(
+                val updatedExercises = state.exercises.mapIndexed { index, exercise ->
+                    exercise.copy(orderIndex = index)
+                }
+                
+                val routine = state.originalRoutine?.copy(
+                    name = state.name,
+                    description = state.description,
+                    type = state.type,
+                    exercises = updatedExercises,
+                    updatedAt = System.currentTimeMillis()
+                ) ?: Routine(
                     id = state.routineId ?: 0,
                     name = state.name,
                     description = state.description,
                     type = state.type,
-                    exercises = state.exercises.mapIndexed { index, exercise ->
-                        exercise.copy(orderIndex = index)
-                    },
+                    exercises = updatedExercises,
                 )
+                
                 if (state.isEditMode) {
                     updateRoutineUseCase(routine)
                 } else {
