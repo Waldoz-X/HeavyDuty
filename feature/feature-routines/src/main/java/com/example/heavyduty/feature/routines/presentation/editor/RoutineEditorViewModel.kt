@@ -207,7 +207,7 @@ class RoutineEditorViewModel @Inject constructor(
                     createRoutineUseCase(routine)
                 }
                 _uiEffect.emit(RoutineEditorUiEffect.NavigateBack)
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 _uiState.update { it.copy(isSaving = false) }
                 _uiEffect.emit(RoutineEditorUiEffect.ShowMessage("Error al guardar la rutina"))
             }

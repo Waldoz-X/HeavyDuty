@@ -38,20 +38,20 @@ import java.util.Locale
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
-    private val getDisplayNameUseCase: GetDisplayNameUseCase,
+    getDisplayNameUseCase: GetDisplayNameUseCase,
     private val setDisplayNameUseCase: SetDisplayNameUseCase,
-    private val getProfileStatsUseCase: GetProfileStatsUseCase,
-    private val getBodyDiagramGenderUseCase: GetBodyDiagramGenderUseCase,
+    getProfileStatsUseCase: GetProfileStatsUseCase,
+    getBodyDiagramGenderUseCase: GetBodyDiagramGenderUseCase,
     private val setBodyDiagramGenderUseCase: SetBodyDiagramGenderUseCase,
-    private val getEffortTrackingEnabledUseCase: GetEffortTrackingEnabledUseCase,
+    getEffortTrackingEnabledUseCase: GetEffortTrackingEnabledUseCase,
     private val setEffortTrackingEnabledUseCase: SetEffortTrackingEnabledUseCase,
-    private val getPreferredEffortScaleUseCase: GetPreferredEffortScaleUseCase,
+    getPreferredEffortScaleUseCase: GetPreferredEffortScaleUseCase,
     private val setPreferredEffortScaleUseCase: SetPreferredEffortScaleUseCase,
     private val exportBackupUseCase: ExportBackupUseCase,
     private val importBackupUseCase: ImportBackupUseCase,
-    private val workoutRepository: WorkoutRepository,
-    private val exerciseRepository: ExerciseRepository,
-    @ApplicationContext private val appContext: Context,
+    workoutRepository: WorkoutRepository,
+    exerciseRepository: ExerciseRepository,
+    @param:ApplicationContext private val appContext: Context,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileUiState())
