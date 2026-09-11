@@ -14,7 +14,9 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Locale
 import javax.inject.Inject
 
 private const val DAY_MILLIS = 24 * 60 * 60 * 1000L
@@ -42,7 +44,7 @@ class EstadisticasViewModel @Inject constructor(
                     _uiState.update {
                         it.copy(
                             days = last7Days.map { day -> day.toDayChipUi(isSelected = day == selectedDay) },
-                            selectedDayVolumeByMuscle = volumeByMuscle.mapKeys { entry -> entry.key.displayName },
+                            selectedDayVolumeByMuscle = volumeByMuscle,
                             gender = BodyGender.fromStorageValue(genderValue),
                             isLoading = false,
                         )
@@ -76,15 +78,10 @@ private fun buildLast7DaysStartMillis(): List<Long> {
 
 private fun Long.toDayChipUi(isSelected: Boolean): DayChipUi {
     val calendar = Calendar.getInstance().apply { timeInMillis = this@toDayChipUi }
-    val dayLetter = when (calendar.get(Calendar.DAY_OF_WEEK)) {
-        Calendar.SUNDAY -> "D"
-        Calendar.MONDAY -> "L"
-        Calendar.TUESDAY -> "M"
-        Calendar.WEDNESDAY -> "Mi"
-        Calendar.THURSDAY -> "J"
-        Calendar.FRIDAY -> "V"
-        else -> "S"
-    }
+    val dayLetter = SimpleDateFormat("EE", Locale.getDefault())
+        .format(calendar.time)
+        .take(2)
+        .replaceFirstChar { it.uppercase() }
     return DayChipUi(
         dateMillis = this,
         dayLetter = dayLetter,

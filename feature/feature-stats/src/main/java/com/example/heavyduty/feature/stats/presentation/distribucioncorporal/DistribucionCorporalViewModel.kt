@@ -48,9 +48,9 @@ class DistribucionCorporalViewModel @Inject constructor(
             ) { volumeByMuscle, fatigueByMuscle, strengthByMuscle, genderValue ->
                 _uiState.update {
                     it.copy(
-                        volumeByMuscle = volumeByMuscle.mapKeys { entry -> entry.key.displayName },
-                        fatigueByMuscle = fatigueByMuscle.mapKeys { entry -> entry.key.displayName },
-                        strengthByMuscle = strengthByMuscle.mapKeys { entry -> entry.key.displayName },
+                        volumeByMuscle = volumeByMuscle,
+                        fatigueByMuscle = fatigueByMuscle,
+                        strengthByMuscle = strengthByMuscle,
                         gender = BodyGender.fromStorageValue(genderValue),
                         isLoading = false,
                     )

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Muscle Groups -->
+    <string name="muscle_chest">Pecho</string>
+    <string name="muscle_back">Espalda</string>
+    <string name="muscle_shoulders">Hombros</string>
+    <string name="muscle_biceps">Bíceps</string>
+    <string name="muscle_triceps">Tríceps</string>
+    <string name="muscle_forearms">Antebrazos</string>
+    <string name="muscle_quadriceps">Cuádriceps</string>
+    <string name="muscle_hamstrings">Isquiotibiales</string>
+    <string name="muscle_glutes">Glúteos</string>
+    <string name="muscle_calves">Pantorrillas</string>
+    <string name="muscle_abs">Abdominales</string>
+    <string name="muscle_obliques">Oblicuos</string>
+    <string name="muscle_traps">Trapecios</string>
+    <string name="muscle_lats">Dorsales</string>
+    <string name="muscle_full_body">Cuerpo Completo</string>
+    <string name="muscle_cardio">Cardio</string>
+
+    <!-- Exercise Types -->
+    <string name="exercise_type_strength">Fuerza</string>
+    <string name="exercise_type_cardio">Cardio</string>
+    <string name="exercise_type_functional">Funcional</string>
+
+    <!-- Workout Types -->
+    <string name="workout_type_gym">Gimnasio</string>
+    <string name="workout_type_crossfit">CrossFit</string>
+    <string name="workout_type_cardio">Cardio</string>
+    <string name="workout_type_mixed">Mixto</string>
+
+    <!-- Progression Policies -->
+    <string name="progression_off">Sin progresión automática</string>
+    <string name="progression_linear">Lineal</string>
+    <string name="progression_greyskull">Greyskull LP</string>
+    <string name="progression_double">Doble progresión</string>
+    <string name="progression_time">Por tiempo</string>
+
+    <!-- Timer Modes -->
+    <string name="timer_mode_rest">Descanso</string>
+    <string name="timer_desc_rest">Cuenta regresiva entre series</string>
+    <string name="timer_mode_stopwatch">Cronómetro</string>
+    <string name="timer_desc_stopwatch">Cuenta libremente hacia adelante</string>
+    <string name="timer_mode_amrap">AMRAP</string>
+    <string name="timer_desc_amrap">Tantas repeticiones como sea posible</string>
+    <string name="timer_mode_emom">EMOM</string>
+    <string name="timer_desc_emom">Cada minuto en el minuto</string>
+    <string name="timer_mode_tabata">Tabata</string>
+    <string name="timer_desc_tabata">20s trabajo / 10s descanso</string>
+
+    <!-- Profile & General -->
+    <string name="athlete">Atleta</string>
+    <string name="training">Entrenamiento</string>
+    <string name="sets_lowercase">series</string>
+    
+    <!-- Relative Time -->
+    <string name="time_ago_days">hace %1$d días</string>
+    <string name="time_ago_hours">hace %1$d horas</string>
+    <string name="time_ago_just_now">hace un momento</string>
+
+    <!-- Backup Messages -->
+    <string name="backup_exported">Datos exportados</string>
+    <string name="backup_export_error">Error al exportar los datos</string>
+    <string name="backup_import_error_invalid">Archivo de respaldo inválido</string>
+    <string name="backup_import_error_read">No se pudo leer el archivo</string>
+    <string name="backup_export_error_open">No se pudo abrir el archivo</string>
+    <string name="backup_imported_stats">Importado: %1$d rutinas, %2$d sesiones, %3$d pesos, %4$d ejercicios</string>
+    <string name="backup_imported_skipped"> (%1$d referencias omitidas por ejercicios no encontrados)</string>
+</resources>

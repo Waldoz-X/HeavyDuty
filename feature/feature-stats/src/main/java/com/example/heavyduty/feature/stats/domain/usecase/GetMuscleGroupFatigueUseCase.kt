@@ -11,7 +11,10 @@ import com.example.heavyduty.core.domain.repository.ExerciseRepository
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.Dispatchers
 import javax.inject.Inject
 
 /**
@@ -70,7 +73,7 @@ class GetMuscleGroupFatigueUseCase @Inject constructor(
             }
 
             MuscleGroup.entries.associateWith { fatigueLevel(fatigueByMuscle[it] ?: 0f) }
-        }.distinctUntilChanged()
+        }.distinctUntilChanged().flowOn(Dispatchers.Default)
 
     private fun accumulateFatigue(chronologicalStimulus: List<Pair<Long, Float>>, now: Long): Float {
         var accumulator = 0f

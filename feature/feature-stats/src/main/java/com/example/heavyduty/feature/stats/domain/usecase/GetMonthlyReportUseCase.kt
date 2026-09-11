@@ -10,6 +10,8 @@ import com.example.heavyduty.feature.stats.domain.model.MonthlyReport
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.Dispatchers
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -70,6 +72,6 @@ class GetMonthlyReportUseCase @Inject constructor(
                 },
                 topMuscleGroup = volumeByMuscle.maxByOrNull { it.value }?.key,
             )
-        }.distinctUntilChanged()
+        }.distinctUntilChanged().flowOn(Dispatchers.Default)
     }
 }

@@ -3,10 +3,10 @@ package com.example.heavyduty.core.domain.model
 /**
  * Type of exercise that determines logging behavior.
  */
-enum class ExerciseType(val displayName: String) {
-    STRENGTH("Fuerza"),
-    CARDIO("Cardio"),
-    FUNCTIONAL("Funcional"),
+enum class ExerciseType {
+    STRENGTH,
+    CARDIO,
+    FUNCTIONAL,
 }
 
 /**
@@ -21,11 +21,11 @@ enum class WorkoutStatus {
 /**
  * Type of workout session.
  */
-enum class WorkoutType(val displayName: String) {
-    GYM("Gimnasio"),
-    CROSSFIT("CrossFit"),
-    CARDIO("Cardio"),
-    MIXED("Mixto"),
+enum class WorkoutType {
+    GYM,
+    CROSSFIT,
+    CARDIO,
+    MIXED,
 }
 
 /**
@@ -39,10 +39,10 @@ enum class Recurrence {
 /**
  * How [nextPrescription] should adjust an exercise's weight/reps/duration between sessions.
  */
-enum class ProgressionPolicy(val displayName: String) {
-    OFF("Sin progresión automática"),
-    LINEAR("Lineal"),
-    GREYSKULL_LP("Greyskull LP"),
-    DOUBLE_PROGRESSION("Doble progresión"),
-    TIME("Por tiempo"),
+enum class ProgressionPolicy {
+    OFF,
+    LINEAR,
+    GREYSKULL_LP,
+    DOUBLE_PROGRESSION,
+    TIME,
 }

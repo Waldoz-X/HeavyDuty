@@ -45,8 +45,8 @@ class DistribucionMuscularViewModel @Inject constructor(
                     .distinct()
                     .sortedByDescending { (current[it] ?: 0f) + (previous[it] ?: 0f) }
                     .take(MAX_AXES)
-                val currentMap = topKeys.associate { it.displayName to (current[it] ?: 0f) }
-                val previousMap = topKeys.associate { it.displayName to (previous[it] ?: 0f) }
+                val currentMap = topKeys.associateWith { current[it] ?: 0f }
+                val previousMap = topKeys.associateWith { previous[it] ?: 0f }
                 currentMap to previousMap
             }.collect { (currentMap, previousMap) ->
                 _uiState.update {

@@ -7,6 +7,8 @@ import com.example.heavyduty.feature.stats.domain.model.ExerciseFrequency
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.Dispatchers
 import javax.inject.Inject
 
 /**
@@ -33,5 +35,5 @@ class GetTopExercisesByFrequencyUseCase @Inject constructor(
                     )
                 }
                 .sortedByDescending { it.setCount }
-        }.distinctUntilChanged()
+        }.distinctUntilChanged().flowOn(Dispatchers.Default)
 }

@@ -38,6 +38,9 @@ dependencies {
 
     // Image loading
     implementation(libs.coil.compose)
+
+    api(project(":core:core-domain"))
+    api(project(":core:core-common"))
 }
 
 kotlin {

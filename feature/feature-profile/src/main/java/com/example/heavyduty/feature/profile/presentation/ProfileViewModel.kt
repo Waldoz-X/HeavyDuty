@@ -32,6 +32,7 @@ import com.example.heavyduty.core.domain.model.excludeWarmups
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
 import com.example.heavyduty.core.domain.repository.ExerciseRepository
 import com.example.heavyduty.core.ui.components.WorkoutFeedItem
+import com.example.heavyduty.core.common.R
 import java.util.Calendar
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -100,16 +101,17 @@ class ProfileViewModel @Inject constructor(
 
                 // Group sets by exercise to create the string "3 series Dominada"
                 val exerciseCounts = sessionSets.groupBy { it.exerciseId }
+                val setsStr = appContext.getString(R.string.sets_lowercase)
                 val exerciseStrings = exerciseCounts.mapNotNull { (exId, exSets) ->
-                    exerciseMap[exId]?.let { ex -> "${exSets.size} series ${ex.name}" }
+                    exerciseMap[exId]?.let { ex -> "${exSets.size} $setsStr ${ex.name}" }
                 }
 
                 WorkoutFeedItem(
                     id = session.id,
-                    userName = name.ifBlank { "Atleta" },
+                    userName = name.ifBlank { appContext.getString(R.string.athlete) },
                     userAvatarUrl = null,
                     relativeTime = formatRelativeTime(session.startTime),
-                    workoutName = session.sessionName.ifBlank { "Entrenamiento" },
+                    workoutName = session.sessionName.ifBlank { appContext.getString(R.string.training) },
                     durationMinutes = session.totalDurationSecs / 60,
                     volumeKg = volume,
                     personalRecords = prs,
@@ -120,7 +122,7 @@ class ProfileViewModel @Inject constructor(
             // Process Chart Data (Last 4 weeks hours)
             val chartData = mutableListOf<Pair<String, Float>>()
             val cal = Calendar.getInstance()
-            val format = SimpleDateFormat("dd MMM", Locale.Builder().setLanguage("es").setRegion("ES").build())
+            val format = SimpleDateFormat("dd MMM", Locale.getDefault())
 
             repeat(4) { _ ->
                 val end = cal.timeInMillis
@@ -221,9 +223,9 @@ class ProfileViewModel @Inject constructor(
         val hours = diff / (1000 * 60 * 60)
         val days = hours / 24
         return when {
-            days > 0 -> "hace $days días"
-            hours > 0 -> "hace $hours horas"
-            else -> "hace un momento"
+            days > 0 -> appContext.getString(R.string.time_ago_days, days)
+            hours > 0 -> appContext.getString(R.string.time_ago_hours, hours)
+            else -> appContext.getString(R.string.time_ago_just_now)
         }
     }
 
@@ -263,10 +265,10 @@ class ProfileViewModel @Inject constructor(
                 val json = exportBackupUseCase()
                 appContext.contentResolver.openOutputStream(uri)?.use { stream ->
                     stream.write(json.toByteArray())
-                } ?: throw IllegalStateException("No se pudo abrir el archivo")
-                _uiState.update { it.copy(isExportingData = false, backupMessage = "Datos exportados") }
+                } ?: throw IllegalStateException(appContext.getString(R.string.backup_export_error_open))
+                _uiState.update { it.copy(isExportingData = false, backupMessage = appContext.getString(R.string.backup_exported)) }
             } catch (_: Exception) {
-                _uiState.update { it.copy(isExportingData = false, backupMessage = "Error al exportar los datos") }
+                _uiState.update { it.copy(isExportingData = false, backupMessage = appContext.getString(R.string.backup_export_error)) }
             }
         }
     }
@@ -276,18 +278,17 @@ class ProfileViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val json = appContext.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
-                    ?: throw IllegalStateException("No se pudo leer el archivo")
+                    ?: throw IllegalStateException(appContext.getString(R.string.backup_import_error_read))
                 val result = importBackupUseCase(json)
                 val message = buildString {
-                    append("Importado: ${result.routinesImported} rutinas, ${result.sessionsImported} sesiones, ")
-                    append("${result.bodyWeightEntriesImported} pesos, ${result.customExercisesImported} ejercicios")
+                    append(appContext.getString(R.string.backup_imported_stats, result.routinesImported, result.sessionsImported, result.bodyWeightEntriesImported, result.customExercisesImported))
                     if (result.skippedReferences > 0) {
-                        append(" (${result.skippedReferences} referencias omitidas por ejercicios no encontrados)")
+                        append(appContext.getString(R.string.backup_imported_skipped, result.skippedReferences))
                     }
                 }
                 _uiState.update { it.copy(isImportingData = false, backupMessage = message) }
             } catch (_: Exception) {
-                _uiState.update { it.copy(isImportingData = false, backupMessage = "Archivo de respaldo inválido") }
+                _uiState.update { it.copy(isImportingData = false, backupMessage = appContext.getString(R.string.backup_import_error_invalid)) }
             }
         }
     }

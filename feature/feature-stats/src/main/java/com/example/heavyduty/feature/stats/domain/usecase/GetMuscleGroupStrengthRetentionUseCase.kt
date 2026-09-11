@@ -9,6 +9,8 @@ import com.example.heavyduty.core.domain.repository.WorkoutRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.Dispatchers
 import javax.inject.Inject
 
 private const val DAY_MILLIS = 86_400_000f
@@ -66,5 +68,5 @@ class GetMuscleGroupStrengthRetentionUseCase @Inject constructor(
                 val daysSince = lastHardSetByMuscle[muscle]?.let { (now - it) / DAY_MILLIS }
                 strengthRetention(daysSince)
             }
-        }.distinctUntilChanged()
+        }.distinctUntilChanged().flowOn(Dispatchers.Default)
 }

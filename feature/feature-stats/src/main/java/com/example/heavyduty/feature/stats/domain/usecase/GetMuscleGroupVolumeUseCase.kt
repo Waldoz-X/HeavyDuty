@@ -8,6 +8,8 @@ import com.example.heavyduty.core.domain.repository.WorkoutRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.Dispatchers
 import javax.inject.Inject
 
 /**
@@ -35,5 +37,5 @@ class GetMuscleGroupVolumeUseCase @Inject constructor(
                 }
             }
             volumeByMuscle
-        }.distinctUntilChanged()
+        }.distinctUntilChanged().flowOn(Dispatchers.Default)
 }

@@ -37,7 +37,7 @@ class SeriesPorMusculoViewModel @Inject constructor(
                     it.copy(
                         data = countByMuscle.entries
                             .sortedByDescending { entry -> entry.value }
-                            .map { entry -> entry.key.displayName to entry.value.toFloat() },
+                            .map { entry -> entry.key to entry.value.toFloat() },
                         isLoading = false,
                     )
                 }

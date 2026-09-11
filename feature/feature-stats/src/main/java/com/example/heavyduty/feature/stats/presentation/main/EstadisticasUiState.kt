@@ -1,10 +1,11 @@
 package com.example.heavyduty.feature.stats.presentation.main
 
 import com.example.heavyduty.core.ui.components.BodyGender
+import com.example.heavyduty.core.domain.model.MuscleGroup
 
 data class EstadisticasUiState(
     val days: List<DayChipUi> = emptyList(),
-    val selectedDayVolumeByMuscle: Map<String, Float> = emptyMap(),
+    val selectedDayVolumeByMuscle: Map<MuscleGroup, Float> = emptyMap(),
     val gender: BodyGender = BodyGender.MALE,
     val isLoading: Boolean = true,
 )
