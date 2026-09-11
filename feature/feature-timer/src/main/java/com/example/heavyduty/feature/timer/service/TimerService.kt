@@ -14,6 +14,7 @@ import com.example.heavyduty.feature.timer.domain.model.TimerMode
 import com.example.heavyduty.feature.timer.engine.TimerEngine
 import com.example.heavyduty.feature.timer.presentation.TimerUiEvent
 import com.example.heavyduty.feature.timer.presentation.TimerUiState
+import com.example.heavyduty.feature.timer.presentation.nameResId
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -118,7 +119,7 @@ class TimerService : Service() {
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
-            .setContentTitle(state.mode.displayName)
+            .setContentTitle(getString(state.mode.nameResId))
             .setContentText(contentText)
             .setOnlyAlertOnce(true)
             .setOngoing(true)

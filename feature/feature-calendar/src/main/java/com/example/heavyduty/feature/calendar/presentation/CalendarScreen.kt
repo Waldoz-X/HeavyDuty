@@ -37,6 +37,8 @@ import com.example.heavyduty.core.domain.model.CalendarEntry
 import com.example.heavyduty.core.domain.model.Routine
 import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdEmptyState
+import com.example.heavyduty.core.ui.nameResId
+import androidx.compose.ui.res.stringResource
 import com.example.heavyduty.core.ui.components.HdLoadingIndicator
 import com.example.heavyduty.core.ui.components.HdTonalButton
 
@@ -305,7 +307,7 @@ private fun RoutinePicker(
                             modifier = Modifier.weight(1f),
                         )
                         Text(
-                            text = routine.type.displayName,
+                            text = stringResource(routine.type.nameResId),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
