@@ -6,6 +6,7 @@ import com.example.heavyduty.core.domain.repository.RoutineRepository
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
 import com.example.heavyduty.feature.dashboard.domain.model.DayPlanUi
 import com.example.heavyduty.feature.dashboard.domain.model.DayStatus
+import com.example.heavyduty.feature.dashboard.domain.model.PlannedRoutineUi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import java.time.DayOfWeek
@@ -14,9 +15,10 @@ import java.time.ZoneId
 import javax.inject.Inject
 
 /**
- * The current (or offset) calendar week's day-by-day plan: which routine — if any — is
- * scheduled per [CalendarEntry][com.example.heavyduty.core.domain.model.CalendarEntry]'s
- * weekly template (Monday=1..Sunday=7), and whether each day was completed.
+ * The current (or offset) calendar week's day-by-day plan: which routines — a day can have
+ * more than one [CalendarEntry][com.example.heavyduty.core.domain.model.CalendarEntry] (e.g.
+ * an AM and a PM session) — are scheduled per that weekly template (Monday=1..Sunday=7), and
+ * whether each one was completed.
  */
 class GetWeeklyScheduleOverviewUseCase @Inject constructor(
     private val calendarRepository: CalendarRepository,
@@ -35,17 +37,26 @@ class GetWeeklyScheduleOverviewUseCase @Inject constructor(
 
             (1..7).map { day ->
                 val date = monday.plusDays((day - 1).toLong())
-                val routine = schedule[day]?.firstOrNull()?.let { entry -> routineById[entry.routineId] }
 
                 val dayStartMillis = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
                 val dayEndMillis = date.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-                val completed = sessions.any {
+                val completedSessionsToday = sessions.filter {
                     it.status == WorkoutStatus.COMPLETED && it.startTime in dayStartMillis until dayEndMillis
                 }
 
+                val plannedRoutines = schedule[day].orEmpty().mapNotNull { entry ->
+                    val routine = routineById[entry.routineId] ?: return@mapNotNull null
+                    PlannedRoutineUi(
+                        routineId = routine.id,
+                        routineName = routine.name,
+                        isCompleted = completedSessionsToday.any { it.routineId == routine.id },
+                    )
+                }
+
                 val status = when {
-                    completed -> DayStatus.COMPLETED
-                    routine == null -> DayStatus.REST
+                    plannedRoutines.isEmpty() && completedSessionsToday.isEmpty() -> DayStatus.REST
+                    plannedRoutines.isEmpty() -> DayStatus.COMPLETED // trained anyway on a rest day
+                    plannedRoutines.all { it.isCompleted } -> DayStatus.COMPLETED
                     date.isBefore(today) -> DayStatus.MISSED
                     date.isEqual(today) -> DayStatus.TODAY_PENDING
                     else -> DayStatus.UPCOMING
@@ -55,8 +66,7 @@ class GetWeeklyScheduleOverviewUseCase @Inject constructor(
                     date = date,
                     dayLetter = DAY_LETTERS.getValue(day),
                     dayNumber = date.dayOfMonth,
-                    routineId = routine?.id,
-                    routineName = routine?.name,
+                    routines = plannedRoutines,
                     isToday = date.isEqual(today),
                     status = status,
                 )
