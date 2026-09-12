@@ -42,6 +42,52 @@ fun Exercise.muscleCredits(amount: Float): Map<MuscleGroup, Float> =
 val Exercise.isBodyweight: Boolean
     get() = equipment.equals("body weight", ignoreCase = true)
 
+/**
+ * Spanish label for the catalog's raw `equipment` values (28 distinct strings, all English —
+ * the dataset has no localized equipment field). [Exercise.equipment] itself stays untranslated
+ * in storage on purpose: [isBodyweight] and the exercise-list equipment filter both match
+ * against it directly, so translating the stored value would silently break both. This is a
+ * display-only lookup, analogous to [MuscleGroup]'s nameResId but for a free-text field instead
+ * of an enum.
+ */
+private val EQUIPMENT_DISPLAY_NAMES = mapOf(
+    "assisted" to "Asistido",
+    "band" to "Banda",
+    "barbell" to "Barra",
+    "body weight" to "Peso corporal",
+    "bosu ball" to "Bosu",
+    "cable" to "Polea",
+    "dumbbell" to "Mancuerna",
+    "elliptical machine" to "Elíptica",
+    "ez barbell" to "Barra Z",
+    "hammer" to "Martillo",
+    "kettlebell" to "Pesa rusa",
+    "leverage machine" to "Máquina de palanca",
+    "medicine ball" to "Balón medicinal",
+    "olympic barbell" to "Barra olímpica",
+    "resistance band" to "Banda de resistencia",
+    "roller" to "Rodillo",
+    "rope" to "Cuerda",
+    "skierg machine" to "Máquina SkiErg",
+    "sled machine" to "Trineo",
+    "smith machine" to "Máquina Smith",
+    "stability ball" to "Balón de estabilidad",
+    "stationary bike" to "Bicicleta estática",
+    "stepmill machine" to "Escaladora",
+    "tire" to "Llanta",
+    "trap bar" to "Barra hexagonal",
+    "upper body ergometer" to "Ergómetro de brazos",
+    "weighted" to "Con peso",
+    "wheel roller" to "Rueda abdominal",
+)
+
+/** Translates a raw catalog equipment value (e.g. "body weight") to its Spanish display label. */
+fun equipmentLabelFor(rawEquipment: String): String =
+    EQUIPMENT_DISPLAY_NAMES[rawEquipment.trim().lowercase()] ?: rawEquipment.ifBlank { "Sin equipo" }
+
+val Exercise.equipmentDisplayName: String
+    get() = equipmentLabelFor(equipment)
+
 private val PER_SIDE_NAME_KEYWORDS = listOf(
     "single leg", "single-leg", "single arm", "single-arm",
     "one arm", "one-arm", "one leg", "one-leg",

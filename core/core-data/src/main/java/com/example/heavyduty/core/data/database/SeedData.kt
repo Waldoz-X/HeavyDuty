@@ -5,6 +5,7 @@ import android.util.Log
 import com.example.heavyduty.core.data.database.dao.ExerciseDao
 import com.example.heavyduty.core.data.database.entity.ExerciseEntity
 import com.example.heavyduty.core.domain.model.MuscleGroup
+import com.example.heavyduty.core.domain.model.equipmentLabelFor
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.io.InputStreamReader
@@ -63,6 +64,34 @@ object SeedData {
         "traps" to "TRAPS",
         "latissimus dorsi" to "LATS",
         "lats" to "LATS",
+    )
+
+    /**
+     * Spanish label for the dataset's `target` values (19 distinct strings across the catalog).
+     * Only used to build [ExerciseEntity.description] below — `target` itself isn't a stored
+     * field, unlike `equipment` (see [com.example.heavyduty.core.domain.model.equipmentLabelFor]
+     * for why that one lives in core-domain instead of here).
+     */
+    private val TARGET_LABEL_MAP = mapOf(
+        "abductors" to "Abductores",
+        "abs" to "Abdominales",
+        "adductors" to "Aductores",
+        "biceps" to "Bíceps",
+        "calves" to "Pantorrillas",
+        "cardiovascular system" to "Sistema cardiovascular",
+        "delts" to "Deltoides",
+        "forearms" to "Antebrazos",
+        "glutes" to "Glúteos",
+        "hamstrings" to "Isquiotibiales",
+        "lats" to "Dorsales",
+        "levator scapulae" to "Elevador de la escápula",
+        "pectorals" to "Pectorales",
+        "quads" to "Cuádriceps",
+        "serratus anterior" to "Serrato anterior",
+        "spine" to "Columna",
+        "traps" to "Trapecios",
+        "triceps" to "Tríceps",
+        "upper back" to "Espalda alta",
     )
 
     data class ExerciseDto(
@@ -145,22 +174,27 @@ object SeedData {
                 }
 
                 // Prefer the step-by-step breakdown (one step per line) over the flat paragraph
-                // so the detail screen can render a numbered list.
-                val instructionSteps = dto.instruction_steps?.get("en")
-                val instructionsEn = if (!instructionSteps.isNullOrEmpty()) {
+                // so the detail screen can render a numbered list. The dataset ships a real,
+                // human-translated "es" key for both fields (verified: all 1,324 entries have
+                // one) — it was reading "en" before, showing English instructions everywhere.
+                val instructionSteps = dto.instruction_steps?.get("es")
+                val instructionsEs = if (!instructionSteps.isNullOrEmpty()) {
                     instructionSteps.joinToString("\n")
                 } else {
-                    dto.instructions?.get("en") ?: ""
+                    dto.instructions?.get("es") ?: ""
                 }
 
+                // Stays the raw (title-cased English) catalog value — this is what gets stored
+                // as ExerciseEntity.equipment, and Exercise.isBodyweight plus the exercise-list
+                // equipment filter both match against it directly. Only the auto-generated
+                // description below uses the translated label.
                 val equipmentLabel = dto.equipment
                     ?.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
                     ?: "None"
-                val targetLabel = dto.target
-                    ?.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
-                    ?: "Full Body"
-
-                val article = if (equipmentLabel.firstOrNull()?.lowercaseChar() in listOf('a', 'e', 'i', 'o', 'u')) "An" else "A"
+                val equipmentLabelEs = (dto.equipment?.let { equipmentLabelFor(it) } ?: "Sin equipo")
+                    .replaceFirstChar { it.lowercase() }
+                val targetLabelEs = (dto.target?.lowercase()?.let { TARGET_LABEL_MAP[it] } ?: "cuerpo completo")
+                    .replaceFirstChar { it.lowercase() }
 
                 // Real secondary-muscle data from the catalog, not a guess — see
                 // SECONDARY_MUSCLE_MAP doc. Falls back to crediting the primary alone when
@@ -180,12 +214,12 @@ object SeedData {
                 }
 
                 ExerciseEntity(
-                    name = dto.name ?: "Unknown Exercise",
+                    name = dto.name ?: "Ejercicio sin nombre",
                     muscleGroup = muscleGroup,
                     exerciseType = type,
                     equipment = equipmentLabel,
-                    description = "$article $equipmentLabel exercise targeting the $targetLabel.",
-                    instructions = instructionsEn,
+                    description = "Ejercicio con $equipmentLabelEs enfocado en $targetLabelEs.",
+                    instructions = instructionsEs,
                     imageUrl = imageUrl,
                     gifUrl = gifUrl,
                     isCustom = false,

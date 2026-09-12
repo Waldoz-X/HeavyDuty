@@ -44,6 +44,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.example.heavyduty.core.domain.model.Exercise
+import com.example.heavyduty.core.domain.model.equipmentLabelFor
 import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdLoadingIndicator
 import com.example.heavyduty.core.ui.components.HdTonalButton
@@ -225,7 +226,7 @@ private fun ExerciseDetailContent(
                     if (exercise.equipment.isNotBlank()) {
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = exercise.equipment,
+                            text = equipmentLabelFor(exercise.equipment),
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color.White.copy(alpha = 0.85f),
                         )

@@ -43,6 +43,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.heavyduty.core.domain.model.Exercise
 import com.example.heavyduty.core.domain.model.MuscleGroup
+import com.example.heavyduty.core.domain.model.equipmentLabelFor
 import com.example.heavyduty.core.ui.components.HdChip
 import com.example.heavyduty.core.ui.components.HdEmptyState
 import com.example.heavyduty.core.ui.components.HdLoadingIndicator
@@ -125,7 +126,7 @@ private fun ExerciseListContent(
             ) {
                 items(uiState.availableEquipment) { equipment ->
                     HdChip(
-                        text = equipment.split(" ").joinToString(" ") { it.replaceFirstChar(Char::uppercase) },
+                        text = equipmentLabelFor(equipment),
                         isSelected = uiState.selectedEquipment == equipment,
                         onClick = { onEvent(ExerciseListUiEvent.OnEquipmentFilterSelect(equipment)) },
                     )
@@ -275,7 +276,7 @@ private fun ExerciseListItem(
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = exercise.equipment,
+                            text = equipmentLabelFor(exercise.equipment),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 1,
