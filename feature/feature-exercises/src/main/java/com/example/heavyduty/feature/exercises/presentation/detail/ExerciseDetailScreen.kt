@@ -185,9 +185,9 @@ private fun ExerciseDetailContent(
                         .background(
                             Brush.verticalGradient(
                                 colors = listOf(
-                                    Color.Black.copy(alpha = 0.15f),
+                                    MaterialTheme.colorScheme.scrim.copy(alpha = 0.15f),
                                     Color.Transparent,
-                                    Color.Black.copy(alpha = 0.75f),
+                                    MaterialTheme.colorScheme.scrim.copy(alpha = 0.75f),
                                 ),
                             ),
                         ),
@@ -201,7 +201,7 @@ private fun ExerciseDetailContent(
                     IconButton(
                         onClick = onNavigateBack,
                         colors = IconButtonDefaults.iconButtonColors(
-                            containerColor = Color.Black.copy(alpha = 0.35f),
+                            containerColor = MaterialTheme.colorScheme.scrim.copy(alpha = 0.35f),
                             contentColor = Color.White,
                         ),
                     ) {

@@ -65,6 +65,7 @@ import com.example.heavyduty.core.ui.components.HdTonalButton
 import com.example.heavyduty.core.ui.nameResId
 import com.example.heavyduty.core.ui.theme.GradientCyanEnd
 import com.example.heavyduty.core.ui.theme.GradientCyanStart
+import com.example.heavyduty.core.ui.theme.overlay
 import com.example.heavyduty.feature.dashboard.domain.model.DayPlanUi
 import com.example.heavyduty.feature.dashboard.domain.model.DayStatus
 
@@ -563,7 +564,11 @@ private fun LogWeightBottomSheet(
     val sheetState = rememberModalBottomSheetState()
     val weightKg = weightInput.toFloatOrNull()
 
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = MaterialTheme.colorScheme.overlay,
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
