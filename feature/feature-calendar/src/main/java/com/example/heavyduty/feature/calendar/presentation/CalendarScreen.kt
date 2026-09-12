@@ -28,7 +28,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -181,7 +180,6 @@ fun CalendarScreen(
                         ) {
                             items(entries, key = { it.id }) { entry ->
                                 CalendarEntryItem(
-                                    entry = entry,
                                     routineName = uiState.routines.find { it.id == entry.routineId }?.name ?: "Rutina #${entry.routineId}",
                                     onClick = { viewModel.onEvent(CalendarUiEvent.OnRoutineClick(entry.routineId)) },
                                     onRemove = { viewModel.onEvent(CalendarUiEvent.OnRemoveEntry(entry)) },
@@ -238,7 +236,6 @@ fun CalendarScreen(
 
 @Composable
 private fun CalendarEntryItem(
-    entry: CalendarEntry,
     routineName: String,
     onClick: () -> Unit,
     onRemove: () -> Unit,

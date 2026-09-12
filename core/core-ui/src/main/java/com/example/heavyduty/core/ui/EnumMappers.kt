@@ -7,6 +7,7 @@ import com.example.heavyduty.core.domain.model.MuscleGroup
 import com.example.heavyduty.core.domain.model.ProgressionPolicy
 import com.example.heavyduty.core.domain.model.WorkoutType
 
+@Suppress("unused")
 val MuscleGroup.nameResId: Int
     @StringRes get() = when (this) {
         MuscleGroup.CHEST -> R.string.muscle_chest
@@ -27,6 +28,7 @@ val MuscleGroup.nameResId: Int
         MuscleGroup.CARDIO -> R.string.muscle_cardio
     }
 
+@Suppress("unused")
 val ExerciseType.nameResId: Int
     @StringRes get() = when (this) {
         ExerciseType.STRENGTH -> R.string.exercise_type_strength
@@ -34,6 +36,7 @@ val ExerciseType.nameResId: Int
         ExerciseType.FUNCTIONAL -> R.string.exercise_type_functional
     }
 
+@Suppress("unused")
 val WorkoutType.nameResId: Int
     @StringRes get() = when (this) {
         WorkoutType.GYM -> R.string.workout_type_gym
@@ -42,6 +45,7 @@ val WorkoutType.nameResId: Int
         WorkoutType.MIXED -> R.string.workout_type_mixed
     }
 
+@Suppress("unused")
 val ProgressionPolicy.nameResId: Int
     @StringRes get() = when (this) {
         ProgressionPolicy.OFF -> R.string.progression_off
