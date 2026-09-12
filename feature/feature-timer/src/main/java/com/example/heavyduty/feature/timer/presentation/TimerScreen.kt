@@ -279,8 +279,6 @@ fun TimerScreen(
                     modifier = Modifier.size(36.dp),
                 )
             }
-
-            Spacer(modifier = Modifier.width(80.dp))
         }
     }
     }
