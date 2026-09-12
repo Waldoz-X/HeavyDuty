@@ -69,8 +69,6 @@ import com.example.heavyduty.core.ui.nameResId
 import com.example.heavyduty.core.ui.components.HdLoadingIndicator
 import com.example.heavyduty.core.ui.components.HdSearchBar
 import com.example.heavyduty.core.ui.components.HdTonalButton
-import com.example.heavyduty.core.ui.nameResId
-import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
