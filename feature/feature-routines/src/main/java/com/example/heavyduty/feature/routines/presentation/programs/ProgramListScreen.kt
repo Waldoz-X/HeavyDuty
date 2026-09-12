@@ -42,7 +42,7 @@ import com.example.heavyduty.core.domain.model.Program
 import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdChip
 import com.example.heavyduty.core.ui.components.HdEmptyState
-import com.example.heavyduty.core.ui.components.HdLoadingIndicator
+import com.example.heavyduty.core.ui.components.HdSkeletonCard
 import com.example.heavyduty.core.ui.theme.overlay
 
 private enum class ProgramListScreenState { LOADING, EMPTY, CONTENT }
@@ -90,7 +90,15 @@ fun ProgramListScreen(
         }
         AnimatedContent(targetState = screenState, label = "program_list_state") { state ->
             when (state) {
-                ProgramListScreenState.LOADING -> HdLoadingIndicator(modifier = Modifier.padding(innerPadding))
+                ProgramListScreenState.LOADING -> LazyColumn(
+                    contentPadding = innerPadding,
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp)
+                ) {
+                    items(3) { HdSkeletonCard() }
+                }
                 ProgramListScreenState.EMPTY -> HdEmptyState(
                     title = "Todavía no hay programas",
                     description = "Un programa organiza tus rutinas en semanas — ideal para seguir un mesociclo completo en vez de rutinas sueltas.",

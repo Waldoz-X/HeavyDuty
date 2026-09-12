@@ -1,6 +1,5 @@
 package com.example.heavyduty.feature.routines.presentation.list
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -28,6 +27,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -36,7 +37,7 @@ import com.example.heavyduty.core.domain.model.Routine
 import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdChip
 import com.example.heavyduty.core.ui.components.HdEmptyState
-import com.example.heavyduty.core.ui.components.HdLoadingIndicator
+import com.example.heavyduty.core.ui.components.HdSkeletonCard
 import com.example.heavyduty.core.ui.nameResId
 
 @Composable
@@ -96,7 +97,9 @@ fun RoutineListScreen(
 
             when {
                 uiState.isLoading -> {
-                    HdLoadingIndicator(message = "Cargando rutinas...")
+                    LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        items(3) { HdSkeletonCard() }
+                    }
                 }
                 uiState.routines.isEmpty() -> {
                     HdEmptyState(
@@ -135,7 +138,8 @@ private fun RoutineListItem(
     modifier: Modifier = Modifier,
 ) {
     HdCard(
-        modifier = modifier.clickable(onClick = onClick),
+        modifier = modifier,
+        onClick = onClick,
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -158,7 +162,7 @@ private fun RoutineListItem(
                     if (routine.exercises.isNotEmpty()) {
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "${routine.exercises.size} exercises",
+                            text = "${routine.exercises.size} ejercicios",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.align(Alignment.CenterVertically),
@@ -175,7 +179,13 @@ private fun RoutineListItem(
                     )
                 }
             }
-            IconButton(onClick = onDelete) {
+            val haptic = LocalHapticFeedback.current
+            IconButton(
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onDelete()
+                },
+            ) {
                 Icon(
                     imageVector = Icons.Default.Delete,
                     contentDescription = "Eliminar",
