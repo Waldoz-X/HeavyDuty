@@ -1,7 +1,8 @@
 package com.example.heavyduty.feature.calendar.presentation
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -241,7 +242,8 @@ private fun CalendarEntryItem(
     onRemove: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    HdCard(modifier = modifier.clickable(onClick = onClick)) {
+    val haptic = LocalHapticFeedback.current
+    HdCard(modifier = modifier, onClick = onClick) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -253,7 +255,12 @@ private fun CalendarEntryItem(
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f),
             )
-            androidx.compose.material3.IconButton(onClick = onRemove) {
+            androidx.compose.material3.IconButton(
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onRemove()
+                },
+            ) {
                 androidx.compose.material3.Icon(
                     imageVector = Icons.Default.Close,
                     contentDescription = "Quitar",
