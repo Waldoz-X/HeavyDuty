@@ -42,6 +42,7 @@ import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdChip
 import com.example.heavyduty.core.ui.components.HdEmptyState
 import com.example.heavyduty.core.ui.components.HdLoadingIndicator
+import com.example.heavyduty.core.ui.theme.overlay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -176,6 +177,7 @@ fun HdCreateProgramDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.overlay,
         title = { Text("Crear programa") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {

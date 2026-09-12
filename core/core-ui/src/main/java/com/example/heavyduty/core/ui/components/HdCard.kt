@@ -16,6 +16,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.example.heavyduty.core.ui.theme.card
 
 /**
  * Premium card component with subtle gradient border effect.
@@ -23,7 +24,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun HdCard(
     modifier: Modifier = Modifier,
-    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
+    containerColor: Color = MaterialTheme.colorScheme.card,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Box(
@@ -54,7 +55,7 @@ fun HdGradientCard(
                 brush = Brush.linearGradient(colors = gradientColors),
                 alpha = 0.15f,
             )
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.85f))
+            .background(MaterialTheme.colorScheme.card.copy(alpha = 0.85f))
             .padding(16.dp),
     ) {
         Column(content = content)

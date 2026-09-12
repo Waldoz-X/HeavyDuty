@@ -48,6 +48,9 @@ import com.example.heavyduty.core.ui.components.HdEmptyState
 import com.example.heavyduty.core.ui.components.HdLoadingIndicator
 import com.example.heavyduty.core.ui.components.HdTextButton
 import com.example.heavyduty.core.ui.components.HdTonalButton
+import com.example.heavyduty.core.ui.theme.card
+import com.example.heavyduty.core.ui.theme.overlay
+import com.example.heavyduty.core.ui.theme.raised
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -165,7 +168,7 @@ private fun TrainingDayRow(
         modifier = modifier
             .fillMaxWidth()
             .clip(MaterialTheme.shapes.small)
-            .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+            .background(MaterialTheme.colorScheme.raised)
             .clickable(onClick = onClick)
             .padding(start = 12.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -205,6 +208,7 @@ private fun AddTrainingDayDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.overlay,
         title = { Text("Agregar día de entrenamiento") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -220,7 +224,7 @@ private fun AddTrainingDayDialog(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(MaterialTheme.shapes.small)
-                                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                                    .background(MaterialTheme.colorScheme.card)
                                     .clickable { onUseExisting(routine) }
                                     .padding(12.dp),
                                 verticalAlignment = Alignment.CenterVertically,
