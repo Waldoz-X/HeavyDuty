@@ -1,6 +1,7 @@
 package com.example.heavyduty.core.ui.components
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -30,6 +31,7 @@ fun HdCard(
     Box(
         modifier = modifier
             .fillMaxWidth()
+            .animateContentSize()
             .clip(MaterialTheme.shapes.medium)
             .background(containerColor)
             .padding(16.dp),
@@ -50,6 +52,7 @@ fun HdGradientCard(
     Box(
         modifier = modifier
             .fillMaxWidth()
+            .animateContentSize()
             .clip(MaterialTheme.shapes.medium)
             .background(
                 brush = Brush.linearGradient(colors = gradientColors),

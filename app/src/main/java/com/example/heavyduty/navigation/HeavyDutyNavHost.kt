@@ -1,5 +1,10 @@
 package com.example.heavyduty.navigation
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -17,6 +22,18 @@ import com.example.heavyduty.feature.stats.navigation.statsGraph
 import com.example.heavyduty.feature.timer.navigation.timerScreen
 import com.example.heavyduty.feature.workout.navigation.activeWorkoutScreen
 
+private val topLevelRoutes = TopLevelDestination.entries.map { it.route }.toSet()
+
+private const val TRANSITION_DURATION_MS = 220
+
+/**
+ * Switching between bottom-nav tabs (a sibling swap, not a hierarchical push) reads oddly with
+ * a horizontal slide — it isn't "forward" or "back" navigation, so those tabs only crossfade.
+ * Every other transition (list → detail, hub → sub-screen) slides, matching push/pop intent.
+ */
+private fun isTabSwitch(fromRoute: String?, toRoute: String?): Boolean =
+    fromRoute in topLevelRoutes && toRoute in topLevelRoutes
+
 @Composable
 fun HeavyDutyNavHost(
     navController: NavHostController,
@@ -26,6 +43,34 @@ fun HeavyDutyNavHost(
         navController = navController,
         startDestination = TopLevelDestination.DASHBOARD.route,
         modifier = modifier,
+        enterTransition = {
+            if (isTabSwitch(initialState.destination.route, targetState.destination.route)) {
+                fadeIn(tween(TRANSITION_DURATION_MS))
+            } else {
+                slideInHorizontally(tween(TRANSITION_DURATION_MS)) { it / 3 } + fadeIn(tween(TRANSITION_DURATION_MS))
+            }
+        },
+        exitTransition = {
+            if (isTabSwitch(initialState.destination.route, targetState.destination.route)) {
+                fadeOut(tween(TRANSITION_DURATION_MS))
+            } else {
+                slideOutHorizontally(tween(TRANSITION_DURATION_MS)) { -it / 3 } + fadeOut(tween(TRANSITION_DURATION_MS))
+            }
+        },
+        popEnterTransition = {
+            if (isTabSwitch(initialState.destination.route, targetState.destination.route)) {
+                fadeIn(tween(TRANSITION_DURATION_MS))
+            } else {
+                slideInHorizontally(tween(TRANSITION_DURATION_MS)) { -it / 3 } + fadeIn(tween(TRANSITION_DURATION_MS))
+            }
+        },
+        popExitTransition = {
+            if (isTabSwitch(initialState.destination.route, targetState.destination.route)) {
+                fadeOut(tween(TRANSITION_DURATION_MS))
+            } else {
+                slideOutHorizontally(tween(TRANSITION_DURATION_MS)) { it / 3 } + fadeOut(tween(TRANSITION_DURATION_MS))
+            }
+        },
     ) {
         // Dashboard
         dashboardScreen(

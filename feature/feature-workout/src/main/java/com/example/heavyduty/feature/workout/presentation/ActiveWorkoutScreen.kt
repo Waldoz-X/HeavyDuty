@@ -1,5 +1,10 @@
 package com.example.heavyduty.feature.workout.presentation
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -259,12 +264,26 @@ private fun ActiveWorkoutContent(
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.primary,
                 )
-                uiState.suggestedPrescription?.let { suggestion ->
-                    Spacer(modifier = Modifier.height(8.dp))
-                    SuggestionCard(
-                        suggestion = suggestion,
-                        onUseSuggestion = { onEvent(ActiveWorkoutUiEvent.OnUseSuggestion) },
-                    )
+                // Keeps rendering the last suggestion while it fades out, since suggestedPrescription
+                // can already be null by the time the exit animation plays (e.g. right after logging a set).
+                var cachedSuggestion by remember { mutableStateOf(uiState.suggestedPrescription) }
+                if (uiState.suggestedPrescription != null) {
+                    cachedSuggestion = uiState.suggestedPrescription
+                }
+                AnimatedVisibility(
+                    visible = uiState.suggestedPrescription != null,
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut() + shrinkVertically(),
+                ) {
+                    Column {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        cachedSuggestion?.let { suggestion ->
+                            SuggestionCard(
+                                suggestion = suggestion,
+                                onUseSuggestion = { onEvent(ActiveWorkoutUiEvent.OnUseSuggestion) },
+                            )
+                        }
+                    }
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
