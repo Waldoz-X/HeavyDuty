@@ -252,7 +252,7 @@ private fun ExerciseDetailContent(
                 val secondaryMuscles = exercise.muscleWeights.keys.filter { it != exercise.muscleGroup }
                 if (secondaryMuscles.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(8.dp))
-                    val secondaryNames = secondaryMuscles.joinToString(", ") { stringResource(it.nameResId) }
+                    val secondaryNames = secondaryMuscles.map { stringResource(it.nameResId) }.joinToString(", ")
                     Text(
                         text = "También trabaja: $secondaryNames",
                         style = MaterialTheme.typography.bodySmall,
