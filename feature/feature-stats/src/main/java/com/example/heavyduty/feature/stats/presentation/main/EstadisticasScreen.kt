@@ -1,6 +1,5 @@
 package com.example.heavyduty.feature.stats.presentation.main
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -195,7 +194,7 @@ private data class AdvancedStatRow(
 
 @Composable
 private fun AdvancedStatCard(stat: AdvancedStatRow, modifier: Modifier = Modifier) {
-    HdCard(modifier = modifier.clickable(onClick = stat.onClick)) {
+    HdCard(modifier = modifier, onClick = stat.onClick) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
                 imageVector = stat.icon,
