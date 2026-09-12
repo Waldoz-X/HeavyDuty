@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.routines.presentation.programs
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -132,21 +133,25 @@ private fun WeekCard(
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(bottom = 8.dp)
         )
-        if (week.days.isEmpty()) {
-            Text(
-                text = "Todavía no hay rutinas asignadas a esta semana.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(bottom = 12.dp),
-            )
-        } else {
-            week.days.forEach { routine ->
-                TrainingDayRow(
-                    routine = routine,
-                    onClick = { onRoutineClick(routine.id) },
-                    onRemove = { onRemoveDay(routine) },
+        AnimatedContent(targetState = week.days.isEmpty(), label = "week_days") { isEmpty ->
+            if (isEmpty) {
+                Text(
+                    text = "Todavía no hay rutinas asignadas a esta semana.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 12.dp),
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+            } else {
+                Column {
+                    week.days.forEach { routine ->
+                        TrainingDayRow(
+                            routine = routine,
+                            onClick = { onRoutineClick(routine.id) },
+                            onRemove = { onRemoveDay(routine) },
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                }
             }
         }
         HdTextButton(

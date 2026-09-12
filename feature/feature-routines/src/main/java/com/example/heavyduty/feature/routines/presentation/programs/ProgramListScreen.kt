@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.routines.presentation.programs
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -44,6 +45,8 @@ import com.example.heavyduty.core.ui.components.HdEmptyState
 import com.example.heavyduty.core.ui.components.HdLoadingIndicator
 import com.example.heavyduty.core.ui.theme.overlay
 
+private enum class ProgramListScreenState { LOADING, EMPTY, CONTENT }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProgramListScreen(
@@ -80,31 +83,36 @@ fun ProgramListScreen(
         },
         modifier = modifier.fillMaxSize()
     ) { innerPadding ->
-        if (uiState.isLoading) {
-            HdLoadingIndicator(modifier = Modifier.padding(innerPadding))
-        } else if (uiState.programs.isEmpty()) {
-            HdEmptyState(
-                title = "Todavía no hay programas",
-                description = "Un programa organiza tus rutinas en semanas — ideal para seguir un mesociclo completo en vez de rutinas sueltas.",
-                icon = Icons.Default.Add,
-                modifier = Modifier.padding(innerPadding)
-            )
-        } else {
-            LazyColumn(
-                contentPadding = innerPadding,
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp)
-            ) {
-                items(uiState.programs, key = { it.id }) { program ->
-                    ProgramCard(
-                        program = program,
-                        onClick = { onProgramClick(program.id) },
-                        onSetActive = { viewModel.setActiveProgram(program.id) }
-                    )
+        val screenState = when {
+            uiState.isLoading -> ProgramListScreenState.LOADING
+            uiState.programs.isEmpty() -> ProgramListScreenState.EMPTY
+            else -> ProgramListScreenState.CONTENT
+        }
+        AnimatedContent(targetState = screenState, label = "program_list_state") { state ->
+            when (state) {
+                ProgramListScreenState.LOADING -> HdLoadingIndicator(modifier = Modifier.padding(innerPadding))
+                ProgramListScreenState.EMPTY -> HdEmptyState(
+                    title = "Todavía no hay programas",
+                    description = "Un programa organiza tus rutinas en semanas — ideal para seguir un mesociclo completo en vez de rutinas sueltas.",
+                    icon = Icons.Default.Add,
+                    modifier = Modifier.padding(innerPadding)
+                )
+                ProgramListScreenState.CONTENT -> LazyColumn(
+                    contentPadding = innerPadding,
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp)
+                ) {
+                    items(uiState.programs, key = { it.id }) { program ->
+                        ProgramCard(
+                            program = program,
+                            onClick = { onProgramClick(program.id) },
+                            onSetActive = { viewModel.setActiveProgram(program.id) }
+                        )
+                    }
+                    item { Spacer(modifier = Modifier.height(80.dp)) }
                 }
-                item { Spacer(modifier = Modifier.height(80.dp)) }
             }
         }
     }

@@ -1,5 +1,10 @@
 package com.example.heavyduty.feature.routines.presentation.editor
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -447,12 +452,17 @@ private fun RoutineExerciseItem(
                 onValueChange = { onUpdate(routineExercise.copy(targetReps = it)) },
                 modifier = Modifier.weight(1f),
             )
-            if (routineExercise.exercise?.isBodyweight != true) {
+            AnimatedVisibility(
+                visible = routineExercise.exercise?.isBodyweight != true,
+                modifier = Modifier.weight(1f),
+                enter = fadeIn() + expandHorizontally(),
+                exit = fadeOut() + shrinkHorizontally(),
+            ) {
                 CompactNumberField(
                     label = "Peso (kg)",
                     value = routineExercise.targetWeight.toInt(),
                     onValueChange = { onUpdate(routineExercise.copy(targetWeight = it.toFloat())) },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
         }
