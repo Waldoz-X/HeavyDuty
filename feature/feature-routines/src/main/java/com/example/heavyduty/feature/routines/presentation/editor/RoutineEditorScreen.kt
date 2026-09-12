@@ -48,7 +48,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -423,7 +425,13 @@ private fun RoutineExerciseItem(
                     )
                 }
             }
-            IconButton(onClick = onRemove) {
+            val haptic = LocalHapticFeedback.current
+            IconButton(
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onRemove()
+                },
+            ) {
                 Icon(
                     imageVector = Icons.Default.RemoveCircleOutline,
                     contentDescription = "Quitar",

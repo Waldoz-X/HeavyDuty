@@ -43,6 +43,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -418,10 +420,14 @@ private fun ActiveWorkoutContent(
 
         // Complete workout button
         item {
+            val haptic = LocalHapticFeedback.current
             Spacer(modifier = Modifier.height(16.dp))
             HdButton(
                 text = "Finalizar Entrenamiento",
-                onClick = { onEvent(ActiveWorkoutUiEvent.OnCompleteWorkout) },
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onEvent(ActiveWorkoutUiEvent.OnCompleteWorkout)
+                },
                 icon = Icons.Default.Stop,
                 modifier = Modifier.fillMaxWidth(),
             )
