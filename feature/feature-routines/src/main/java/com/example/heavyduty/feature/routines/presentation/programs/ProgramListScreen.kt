@@ -39,6 +39,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.heavyduty.core.domain.model.Program
 import com.example.heavyduty.core.ui.components.HdCard
+import com.example.heavyduty.core.ui.components.HdChip
 import com.example.heavyduty.core.ui.components.HdEmptyState
 import com.example.heavyduty.core.ui.components.HdLoadingIndicator
 
@@ -63,7 +64,7 @@ fun ProgramListScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Training Programs") },
+                title = { Text("Programas de entrenamiento") },
                 windowInsets = WindowInsets(0.dp)
             )
         },
@@ -73,7 +74,7 @@ fun ProgramListScreen(
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary
             ) {
-                Icon(imageVector = Icons.Default.Add, contentDescription = "Add Program")
+                Icon(imageVector = Icons.Default.Add, contentDescription = "Crear programa")
             }
         },
         modifier = modifier.fillMaxSize()
@@ -82,8 +83,8 @@ fun ProgramListScreen(
             HdLoadingIndicator(modifier = Modifier.padding(innerPadding))
         } else if (uiState.programs.isEmpty()) {
             HdEmptyState(
-                title = "No Programs Yet",
-                description = "Create a training program to track your mesocycle progress.",
+                title = "Todavía no hay programas",
+                description = "Un programa organiza tus rutinas en semanas — ideal para seguir un mesociclo completo en vez de rutinas sueltas.",
                 icon = Icons.Default.Add,
                 modifier = Modifier.padding(innerPadding)
             )
@@ -132,7 +133,7 @@ private fun ProgramCard(
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "${program.totalWeeks} Weeks",
+                    text = "${program.totalWeeks} semanas",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -146,14 +147,14 @@ private fun ProgramCard(
                             modifier = Modifier.padding(end = 4.dp)
                         )
                         Text(
-                            text = "Active Program",
+                            text = "Programa activo",
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.primary
                         )
                     }
                 } else {
                     Text(
-                        text = "Set as Active",
+                        text = "Marcar como activo",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.clickable { onSetActive() }
@@ -171,22 +172,39 @@ fun HdCreateProgramDialog(
 ) {
     var name by remember { mutableStateOf("") }
     var weeks by remember { mutableStateOf(4f) }
+    val weekPresets = listOf(4, 8, 12, 16)
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Create Program") },
+        title = { Text("Crear programa") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Text(
+                    text = "Un programa organiza tus rutinas en semanas, para seguir un mesociclo completo.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Program Name") },
+                    label = { Text("Nombre del programa") },
+                    placeholder = { Text("Ej. Fuerza 4x4, Hipertrofia...") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
-                
+
                 Column {
-                    Text("Total Weeks: ${weeks.toInt()}")
+                    Text("Duración: ${weeks.toInt()} semanas")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        weekPresets.forEach { preset ->
+                            HdChip(
+                                text = "$preset sem.",
+                                isSelected = weeks.toInt() == preset,
+                                onClick = { weeks = preset.toFloat() },
+                            )
+                        }
+                    }
                     Slider(
                         value = weeks,
                         onValueChange = { weeks = it },
@@ -205,12 +223,12 @@ fun HdCreateProgramDialog(
                 },
                 enabled = name.isNotBlank()
             ) {
-                Text("Create")
+                Text("Crear")
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text("Cancelar")
             }
         }
     )
