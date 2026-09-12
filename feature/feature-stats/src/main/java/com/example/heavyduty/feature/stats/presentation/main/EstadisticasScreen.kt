@@ -36,6 +36,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -43,6 +44,7 @@ import com.example.heavyduty.core.ui.components.HdBodyDiagram
 import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdChip
 import com.example.heavyduty.core.ui.components.HdLoadingIndicator
+import com.example.heavyduty.core.ui.nameResId
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -160,8 +162,10 @@ fun EstadisticasScreen(
             }
 
             item {
+                val volumeByMuscle = uiState.selectedDayVolumeByMuscle
+                    .mapKeys { (muscle, _) -> stringResource(muscle.nameResId) }
                 HdBodyDiagram(
-                    muscleValues = uiState.selectedDayVolumeByMuscle,
+                    muscleValues = volumeByMuscle,
                     gender = uiState.gender,
                     modifier = Modifier.fillMaxWidth().height(240.dp),
                 )

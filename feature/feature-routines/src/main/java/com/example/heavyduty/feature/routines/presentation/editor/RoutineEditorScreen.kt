@@ -44,6 +44,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -57,6 +58,7 @@ import com.example.heavyduty.core.domain.model.isBodyweight
 import com.example.heavyduty.core.ui.components.HdButton
 import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdChip
+import com.example.heavyduty.core.ui.nameResId
 import com.example.heavyduty.core.ui.components.HdLoadingIndicator
 import com.example.heavyduty.core.ui.components.HdSearchBar
 import com.example.heavyduty.core.ui.components.HdTonalButton
@@ -163,7 +165,7 @@ fun RoutineEditorScreen(
                     ) {
                         items(WorkoutType.entries.toList()) { type ->
                             HdChip(
-                                text = type.displayName,
+                                text = stringResource(type.nameResId),
                                 isSelected = uiState.type == type,
                                 onClick = { viewModel.onEvent(RoutineEditorUiEvent.OnTypeChange(type)) },
                             )
@@ -463,7 +465,7 @@ private fun RoutineExerciseItem(
         LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             items(ProgressionPolicy.entries.toList()) { policy ->
                 HdChip(
-                    text = policy.displayName,
+                    text = stringResource(policy.nameResId),
                     isSelected = routineExercise.progressionPolicy == policy,
                     onClick = { onUpdate(routineExercise.copy(progressionPolicy = policy)) },
                 )

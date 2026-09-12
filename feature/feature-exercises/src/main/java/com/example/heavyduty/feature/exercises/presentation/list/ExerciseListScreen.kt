@@ -37,6 +37,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -46,6 +47,7 @@ import com.example.heavyduty.core.ui.components.HdChip
 import com.example.heavyduty.core.ui.components.HdEmptyState
 import com.example.heavyduty.core.ui.components.HdLoadingIndicator
 import com.example.heavyduty.core.ui.components.HdSearchBar
+import com.example.heavyduty.core.ui.nameResId
 import com.example.heavyduty.feature.exercises.presentation.accentColor
 
 @Composable
@@ -108,7 +110,7 @@ private fun ExerciseListContent(
         ) {
             items(MuscleGroup.entries.toList()) { group ->
                 HdChip(
-                    text = group.displayName,
+                    text = stringResource(group.nameResId),
                     isSelected = uiState.selectedFilter == group,
                     onClick = { onEvent(ExerciseListUiEvent.OnFilterSelect(group)) },
                 )
@@ -252,12 +254,12 @@ private fun ExerciseListItem(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
                     HdChip(
-                        text = exercise.muscleGroup.displayName,
+                        text = stringResource(exercise.muscleGroup.nameResId),
                         isSelected = true,
                         onClick = {},
                     )
                     HdChip(
-                        text = exercise.exerciseType.displayName,
+                        text = stringResource(exercise.exerciseType.nameResId),
                         isSelected = false,
                         onClick = {},
                     )

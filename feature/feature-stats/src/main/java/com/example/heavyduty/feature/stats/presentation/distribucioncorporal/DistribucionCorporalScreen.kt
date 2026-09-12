@@ -26,12 +26,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.heavyduty.core.ui.components.HdBodyDiagram
 import com.example.heavyduty.core.ui.components.HdChip
 import com.example.heavyduty.core.ui.components.HdLoadingIndicator
+import com.example.heavyduty.core.ui.nameResId
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,14 +67,14 @@ fun DistribucionCorporalScreen(
         val strongColor = MaterialTheme.colorScheme.tertiary
 
         val categoryColors: Map<String, Color>? = when (uiState.mode) {
-            BodyMapMode.FATIGUE -> uiState.fatigueByMuscle.mapValues { (_, level) ->
-                lerp(baseColor, fatiguedColor, level.coerceIn(0f, 1f))
+            BodyMapMode.FATIGUE -> uiState.fatigueByMuscle.entries.associate { (muscle, level) ->
+                stringResource(muscle.nameResId) to lerp(baseColor, fatiguedColor, level.coerceIn(0f, 1f))
             }
-            BodyMapMode.STRENGTH -> uiState.strengthByMuscle.mapValues { (_, retention) ->
+            BodyMapMode.STRENGTH -> uiState.strengthByMuscle.entries.associate { (muscle, retention) ->
                 // Retention floors at 0.5 (see strengthRetention), so normalize that range to
                 // 0..1 before interpolating — otherwise the floor would never read as "base."
                 val fraction = ((retention - 0.5f) / 0.5f).coerceIn(0f, 1f)
-                lerp(baseColor, strongColor, fraction)
+                stringResource(muscle.nameResId) to lerp(baseColor, strongColor, fraction)
             }
             BodyMapMode.VOLUME -> null
         }
@@ -115,7 +117,7 @@ fun DistribucionCorporalScreen(
             }
 
             HdBodyDiagram(
-                muscleValues = uiState.volumeByMuscle,
+                muscleValues = uiState.volumeByMuscle.mapKeys { (muscle, _) -> stringResource(muscle.nameResId) },
                 gender = uiState.gender,
                 baseColor = baseColor,
                 categoryColors = categoryColors,

@@ -49,6 +49,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -61,6 +62,7 @@ import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdLineChart
 import com.example.heavyduty.core.ui.components.HdTextButton
 import com.example.heavyduty.core.ui.components.HdTonalButton
+import com.example.heavyduty.core.ui.nameResId
 import com.example.heavyduty.core.ui.theme.GradientCyanEnd
 import com.example.heavyduty.core.ui.theme.GradientCyanStart
 import com.example.heavyduty.feature.dashboard.domain.model.DayPlanUi
@@ -192,8 +194,9 @@ private fun DashboardContent(
             HdCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
-                // Map the MuscleGroup enum to display strings
-                val chartData = uiState.weeklyMuscleVolume.mapKeys { it.key.displayName }
+                // Map the MuscleGroup enum to localized display strings
+                val chartData = uiState.weeklyMuscleVolume
+                    .mapKeys { stringResource(it.key.nameResId) }
                 com.example.heavyduty.core.ui.components.HdRadarChart(
                     data = chartData,
                     modifier = Modifier.fillMaxWidth()

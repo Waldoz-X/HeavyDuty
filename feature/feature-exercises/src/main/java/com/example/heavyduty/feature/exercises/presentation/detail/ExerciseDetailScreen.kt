@@ -38,6 +38,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -46,6 +47,7 @@ import com.example.heavyduty.core.domain.model.Exercise
 import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdLoadingIndicator
 import com.example.heavyduty.core.ui.components.HdTonalButton
+import com.example.heavyduty.core.ui.nameResId
 import com.example.heavyduty.feature.exercises.presentation.accentColor
 
 private val HeaderHeight = 320.dp
@@ -239,10 +241,10 @@ private fun ExerciseDetailContent(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Row {
-                    AccentChip(text = exercise.muscleGroup.displayName, color = accent)
+                    AccentChip(text = stringResource(exercise.muscleGroup.nameResId), color = accent)
                     Spacer(modifier = Modifier.width(8.dp))
                     AccentChip(
-                        text = exercise.exerciseType.displayName,
+                        text = stringResource(exercise.exerciseType.nameResId),
                         color = MaterialTheme.colorScheme.secondary,
                     )
                 }
@@ -250,8 +252,9 @@ private fun ExerciseDetailContent(
                 val secondaryMuscles = exercise.muscleWeights.keys.filter { it != exercise.muscleGroup }
                 if (secondaryMuscles.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(8.dp))
+                    val secondaryNames = secondaryMuscles.joinToString(", ") { stringResource(it.nameResId) }
                     Text(
-                        text = "También trabaja: ${secondaryMuscles.joinToString(", ") { it.displayName }}",
+                        text = "También trabaja: $secondaryNames",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

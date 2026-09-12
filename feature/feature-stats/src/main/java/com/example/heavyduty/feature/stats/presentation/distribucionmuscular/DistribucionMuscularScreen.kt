@@ -25,12 +25,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.heavyduty.core.ui.components.HdEmptyState
 import com.example.heavyduty.core.ui.components.HdLoadingIndicator
 import com.example.heavyduty.core.ui.components.HdRadarChart
+import com.example.heavyduty.core.ui.nameResId
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -68,8 +70,8 @@ fun DistribucionMuscularScreen(
                     LegendDot(color = MaterialTheme.colorScheme.secondary, label = "Semana anterior")
                 }
                 HdRadarChart(
-                    data = uiState.currentWeek,
-                    secondaryData = uiState.previousWeek,
+                    data = uiState.currentWeek.mapKeys { (muscle, _) -> stringResource(muscle.nameResId) },
+                    secondaryData = uiState.previousWeek.mapKeys { (muscle, _) -> stringResource(muscle.nameResId) },
                     modifier = Modifier.fillMaxSize(),
                 )
             }

@@ -28,6 +28,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -36,6 +37,7 @@ import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdChip
 import com.example.heavyduty.core.ui.components.HdEmptyState
 import com.example.heavyduty.core.ui.components.HdLoadingIndicator
+import com.example.heavyduty.core.ui.nameResId
 
 @Composable
 fun RoutineListScreen(
@@ -149,7 +151,7 @@ private fun RoutineListItem(
                 Spacer(modifier = Modifier.height(4.dp))
                 Row {
                     HdChip(
-                        text = routine.type.displayName,
+                        text = stringResource(routine.type.nameResId),
                         isSelected = false,
                         onClick = { },
                     )
