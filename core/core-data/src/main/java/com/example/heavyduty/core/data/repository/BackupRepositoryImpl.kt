@@ -66,7 +66,7 @@ private data class RoutineExerciseDto(
     val supersetGroupId: String? = null,
 )
 
-/** [routineId]/[endTime] intentionally NOT linked back to a routine — see BackupRepository doc. */
+/** routineId / [endTime] intentionally NOT linked back to a routine — see BackupRepository doc. */
 private data class SessionDto(
     val sessionName: String = "",
     val startTime: Long,

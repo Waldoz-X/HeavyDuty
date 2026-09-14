@@ -69,7 +69,7 @@ private fun decodeMuscleWeights(json: String, primary: MuscleGroup): Map<MuscleG
             .mapNotNull { (key, weight) -> runCatching { MuscleGroup.valueOf(key) }.getOrNull()?.let { it to weight } }
             .toMap()
             .ifEmpty { mapOf(primary to 1f) }
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         mapOf(primary to 1f)
     }
 }
@@ -307,9 +307,3 @@ fun com.example.heavyduty.core.data.database.entity.BodyWeightEntity.toDomain():
         loggedAt = loggedAt,
     )
 
-fun com.example.heavyduty.core.domain.model.BodyWeightEntry.toEntity(): com.example.heavyduty.core.data.database.entity.BodyWeightEntity =
-    com.example.heavyduty.core.data.database.entity.BodyWeightEntity(
-        id = id,
-        weightKg = weightKg,
-        loggedAt = loggedAt,
-    )

@@ -1,7 +1,6 @@
 package com.example.heavyduty.core.data.database.relation
 
 import androidx.room.Embedded
-import androidx.room.Junction
 import androidx.room.Relation
 import com.example.heavyduty.core.data.database.entity.ExerciseEntity
 import com.example.heavyduty.core.data.database.entity.RoutineEntity
