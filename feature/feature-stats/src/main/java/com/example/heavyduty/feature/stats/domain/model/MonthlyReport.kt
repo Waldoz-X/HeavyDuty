@@ -12,4 +12,6 @@ data class MonthlyReport(
     val totalVolumeKg: Float = 0f,
     val avgSessionDurationMinutes: Int = 0,
     val topMuscleGroup: MuscleGroup? = null,
+    val workoutsPerWeek: List<Pair<String, Int>> = emptyList(),
+    val volumePerWeek: List<Pair<String, Float>> = emptyList(),
 )

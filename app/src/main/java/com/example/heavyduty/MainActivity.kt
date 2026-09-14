@@ -75,6 +75,7 @@ private val ROUTES_WITH_OWN_TOP_BAR = setOf(
     "stats/principales",
     "stats/clasificacion",
     "stats/informe_mensual",
+    "stats/peso_corporal",
 )
 
 @OptIn(ExperimentalMaterial3Api::class)

@@ -51,8 +51,22 @@ class GetMonthlyReportUseCase @Inject constructor(
             val sets = rawSets.excludeWarmups()
             val completedSessions = sessions.filter { it.status == WorkoutStatus.COMPLETED }
             val exerciseById = exercises.associateBy { it.id }
+            val sessionsById = completedSessions.associateBy { it.id }
+            
             val volumeByMuscle = mutableMapOf<MuscleGroup, Float>()
+            val workoutsPerWeekMap = mutableMapOf<Int, Int>()
+            val volumePerWeekMap = mutableMapOf<Int, Float>()
+            
             var totalVolumeKg = 0f
+            
+            val cal = Calendar.getInstance()
+            
+            completedSessions.forEach { session ->
+                cal.timeInMillis = session.startTime
+                val week = cal.get(Calendar.WEEK_OF_MONTH)
+                workoutsPerWeekMap[week] = (workoutsPerWeekMap[week] ?: 0) + 1
+            }
+
             sets.forEach { set ->
                 val exercise = exerciseById[set.exerciseId] ?: return@forEach
                 val setVolume = (set.reps ?: 0) * (set.weight ?: 0f)
@@ -60,7 +74,24 @@ class GetMonthlyReportUseCase @Inject constructor(
                 exercise.muscleCredits(setVolume).forEach { (muscle, credit) ->
                     volumeByMuscle[muscle] = (volumeByMuscle[muscle] ?: 0f) + credit
                 }
+                
+                val session = sessionsById[set.sessionId]
+                if (session != null) {
+                    cal.timeInMillis = session.startTime
+                    val week = cal.get(Calendar.WEEK_OF_MONTH)
+                    volumePerWeekMap[week] = (volumePerWeekMap[week] ?: 0f) + setVolume
+                }
             }
+            
+            cal.timeInMillis = monthStart
+            val maxWeek = cal.getActualMaximum(Calendar.WEEK_OF_MONTH)
+            val workoutsPerWeek = (1..maxWeek).map { week ->
+                "Semana $week" to (workoutsPerWeekMap[week] ?: 0)
+            }
+            val volumePerWeek = (1..maxWeek).map { week ->
+                "Semana $week" to (volumePerWeekMap[week] ?: 0f)
+            }
+
             val totalDurationSecs = completedSessions.sumOf { it.totalDurationSecs }
             MonthlyReport(
                 monthLabel = monthLabel.replaceFirstChar { it.uppercase() },
@@ -73,6 +104,8 @@ class GetMonthlyReportUseCase @Inject constructor(
                     0
                 },
                 topMuscleGroup = volumeByMuscle.maxByOrNull { it.value }?.key,
+                workoutsPerWeek = workoutsPerWeek,
+                volumePerWeek = volumePerWeek,
             )
         }.distinctUntilChanged().flowOn(Dispatchers.Default)
     }

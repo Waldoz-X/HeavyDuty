@@ -22,8 +22,16 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -44,6 +52,7 @@ fun BodyWeightStatsScreen(
     viewModel: BodyWeightStatsViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var showGoalDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -116,6 +125,7 @@ fun BodyWeightStatsScreen(
                     MetricCard(
                         title = "Meta",
                         value = report.goalWeightKg,
+                        onClick = { showGoalDialog = true },
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -195,6 +205,42 @@ fun BodyWeightStatsScreen(
             }
         }
     }
+
+    if (showGoalDialog) {
+        var textValue by remember { mutableStateOf(uiState.report?.goalWeightKg?.toString() ?: "") }
+        
+        AlertDialog(
+            onDismissRequest = { showGoalDialog = false },
+            title = { Text("Meta de Peso") },
+            text = {
+                OutlinedTextField(
+                    value = textValue,
+                    onValueChange = { textValue = it },
+                    label = { Text("Peso en kg (ej. 80.5)") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val parsed = textValue.toFloatOrNull()
+                        if (textValue.isBlank() || parsed != null) {
+                            viewModel.updateGoalWeight(parsed)
+                            showGoalDialog = false
+                        }
+                    }
+                ) {
+                    Text("Guardar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showGoalDialog = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
 }
 
 @Composable
@@ -202,8 +248,9 @@ private fun MetricCard(
     title: String,
     value: Float?,
     modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
 ) {
-    HdCard(modifier = modifier) {
+    HdCard(modifier = modifier, onClick = onClick ?: {}) {
         Column {
             Text(
                 text = title,
