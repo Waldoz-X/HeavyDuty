@@ -19,7 +19,7 @@ import javax.inject.Inject
 
 /**
  * Aggregates workouts, sets, volume and the most-trained muscle group for the
- * calendar month containing [referenceMillis] (defaults to the current month).
+ * calendar month containing `referenceMillis` (defaults to the current month).
  */
 class GetMonthlyReportUseCase @Inject constructor(
     private val workoutRepository: WorkoutRepository,
