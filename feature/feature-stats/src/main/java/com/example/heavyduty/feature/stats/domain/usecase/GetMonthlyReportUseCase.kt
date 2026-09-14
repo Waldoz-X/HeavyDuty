@@ -52,9 +52,11 @@ class GetMonthlyReportUseCase @Inject constructor(
             val completedSessions = sessions.filter { it.status == WorkoutStatus.COMPLETED }
             val exerciseById = exercises.associateBy { it.id }
             val volumeByMuscle = mutableMapOf<MuscleGroup, Float>()
+            var totalVolumeKg = 0f
             sets.forEach { set ->
                 val exercise = exerciseById[set.exerciseId] ?: return@forEach
                 val setVolume = (set.reps ?: 0) * (set.weight ?: 0f)
+                totalVolumeKg += setVolume
                 exercise.muscleCredits(setVolume).forEach { (muscle, credit) ->
                     volumeByMuscle[muscle] = (volumeByMuscle[muscle] ?: 0f) + credit
                 }
@@ -64,7 +66,7 @@ class GetMonthlyReportUseCase @Inject constructor(
                 monthLabel = monthLabel.replaceFirstChar { it.uppercase() },
                 totalWorkouts = completedSessions.size,
                 totalSets = sets.size,
-                totalVolumeKg = volumeByMuscle.values.sum(),
+                totalVolumeKg = totalVolumeKg,
                 avgSessionDurationMinutes = if (completedSessions.isNotEmpty()) {
                     totalDurationSecs / completedSessions.size / 60
                 } else {
