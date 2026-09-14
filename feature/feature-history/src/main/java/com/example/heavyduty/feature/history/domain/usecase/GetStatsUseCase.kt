@@ -13,6 +13,7 @@ import javax.inject.Inject
 data class WorkoutStats(
     val totalSessions: Int = 0,
     val completedSessions: Int = 0,
+    val cancelledSessions: Int = 0,
     val totalDurationMinutes: Int = 0,
     val averageDurationMinutes: Int = 0,
 )
@@ -26,10 +27,12 @@ class GetStatsUseCase @Inject constructor(
     operator fun invoke(): Flow<WorkoutStats> =
         workoutRepository.getAllSessions().map { sessions ->
             val completed = sessions.filter { it.status == WorkoutStatus.COMPLETED }
+            val cancelled = sessions.filter { it.status == WorkoutStatus.CANCELLED }
             val totalMinutes = completed.sumOf { it.totalDurationSecs } / 60
             WorkoutStats(
-                totalSessions = sessions.size,
+                totalSessions = completed.size + cancelled.size,
                 completedSessions = completed.size,
+                cancelledSessions = cancelled.size,
                 totalDurationMinutes = totalMinutes,
                 averageDurationMinutes = if (completed.isNotEmpty()) totalMinutes / completed.size else 0,
             )

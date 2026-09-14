@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.stats.domain.usecase
 
+import com.example.heavyduty.core.domain.model.WorkoutStatus
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -33,7 +34,7 @@ class GetTrainingActivityHeatmapUseCase @Inject constructor(
 
             val minutesByDay = mutableMapOf<Long, Float>()
             sessions
-                .filter { it.endTime != null && it.startTime >= windowStart }
+                .filter { it.status == WorkoutStatus.COMPLETED && it.startTime >= windowStart }
                 .forEach { session ->
                     calendar.timeInMillis = session.startTime
                     calendar.set(Calendar.HOUR_OF_DAY, 0)

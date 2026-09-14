@@ -282,7 +282,7 @@ class ActiveWorkoutViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                logSetUseCase(
+                val setId = logSetUseCase(
                     sessionId = sessionId,
                     exerciseId = currentExercise.exerciseId,
                     setNumber = state.currentSetNumber,
@@ -293,9 +293,23 @@ class ActiveWorkoutViewModel @Inject constructor(
                     effort = effort,
                     restSeconds = currentExercise.restBetweenSetsSecs,
                 )
+                val loggedSet = WorkoutSet(
+                    id = setId,
+                    sessionId = sessionId,
+                    exerciseId = currentExercise.exerciseId,
+                    setNumber = state.currentSetNumber,
+                    reps = reps,
+                    weight = weight,
+                    durationSecs = durationSecs,
+                    isCompleted = true,
+                    completedAt = System.currentTimeMillis(),
+                    isWarmup = state.isWarmupInput,
+                    effort = effort,
+                )
                 resetWorkTimer()
                 _uiState.update {
                     it.copy(
+                        completedSets = it.completedSets + loggedSet,
                         currentSetNumber = it.currentSetNumber + 1,
                         repsInput = "",
                         weightInput = "",

@@ -223,6 +223,9 @@ private fun effortToDomain(type: String?, value: Float?): Effort? {
     }
 }
 
+fun com.example.heavyduty.core.data.database.relation.SetWithExercise.toDomain(): WorkoutSet =
+    set.toDomain().copy(exercise = exercise.toDomain())
+
 fun SessionWithSets.toDomain(): WorkoutSession = WorkoutSession(
     id = session.id,
     routineId = session.routineId,
