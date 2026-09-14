@@ -18,6 +18,9 @@ interface CalendarDao {
     @Query("SELECT * FROM calendar_entries WHERE dayOfWeek = :dayOfWeek AND isActive = 1")
     fun getEntriesByDay(dayOfWeek: Int): Flow<List<CalendarEntryEntity>>
 
+    @Query("SELECT EXISTS(SELECT 1 FROM calendar_entries WHERE routineId = :routineId AND dayOfWeek = :dayOfWeek AND isActive = 1)")
+    suspend fun hasRoutineOnDay(routineId: Long, dayOfWeek: Int): Boolean
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertEntry(entry: CalendarEntryEntity): Long
 

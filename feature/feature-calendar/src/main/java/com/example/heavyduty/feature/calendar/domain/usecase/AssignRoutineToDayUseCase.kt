@@ -12,6 +12,9 @@ class AssignRoutineToDayUseCase @Inject constructor(
     private val calendarRepository: CalendarRepository,
 ) {
     suspend operator fun invoke(routineId: Long, dayOfWeek: Int): Long {
+        if (calendarRepository.hasRoutineOnDay(routineId, dayOfWeek)) {
+            throw IllegalStateException("DuplicateRoutine")
+        }
         val entry = CalendarEntry(
             routineId = routineId,
             dayOfWeek = dayOfWeek,

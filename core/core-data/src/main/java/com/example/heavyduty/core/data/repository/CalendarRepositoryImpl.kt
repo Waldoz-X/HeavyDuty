@@ -26,6 +26,9 @@ class CalendarRepositoryImpl @Inject constructor(
             list.map { it.toDomain() }.groupBy { it.dayOfWeek }
         }
 
+    override suspend fun hasRoutineOnDay(routineId: Long, dayOfWeek: Int): Boolean =
+        calendarDao.hasRoutineOnDay(routineId, dayOfWeek)
+
     override suspend fun insertEntry(entry: CalendarEntry): Long =
         calendarDao.insertEntry(entry.toEntity())
 

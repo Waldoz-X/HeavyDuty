@@ -57,7 +57,11 @@ class CalendarViewModel @Inject constructor(
                         _uiState.update { it.copy(isPickingRoutine = false) }
                         _uiEffect.emit(CalendarUiEffect.ShowMessage("Rutina asignada"))
                     } catch (e: Exception) {
-                        _uiEffect.emit(CalendarUiEffect.ShowMessage("Error al asignar la rutina"))
+                        if (e.message == "DuplicateRoutine") {
+                            _uiEffect.emit(CalendarUiEffect.ShowMessage("La rutina ya está asignada a este día"))
+                        } else {
+                            _uiEffect.emit(CalendarUiEffect.ShowMessage("Error al asignar la rutina"))
+                        }
                     }
                 }
             }
