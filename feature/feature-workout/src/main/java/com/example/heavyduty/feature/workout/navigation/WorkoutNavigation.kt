@@ -11,12 +11,16 @@ import com.example.heavyduty.feature.workout.presentation.ActiveWorkoutScreen
  */
 fun NavGraphBuilder.activeWorkoutScreen(
     onNavigateToRoutines: () -> Unit,
+    onWorkoutCompleted: () -> Unit,
 ) {
     composable(
         route = "workout_graph",
         arguments = emptyList(),
     ) {
-        ActiveWorkoutScreen(onNavigateToRoutines = onNavigateToRoutines)
+        ActiveWorkoutScreen(
+            onNavigateToRoutines = onNavigateToRoutines,
+            onWorkoutCompleted = onWorkoutCompleted,
+        )
     }
     composable(
         route = "active_workout/{routineId}",
@@ -27,6 +31,9 @@ fun NavGraphBuilder.activeWorkoutScreen(
             },
         ),
     ) {
-        ActiveWorkoutScreen(onNavigateToRoutines = onNavigateToRoutines)
+        ActiveWorkoutScreen(
+            onNavigateToRoutines = onNavigateToRoutines,
+            onWorkoutCompleted = onWorkoutCompleted,
+        )
     }
 }

@@ -156,8 +156,10 @@ private fun HeavyDutyMainScreen() {
             bottomBar = {
                 NavigationBar {
                     TopLevelDestination.entries.forEach { destination ->
-                        val selected = currentDestination?.hierarchy?.any {
-                            it.route == destination.route
+                        val selected = currentDestination?.route?.let { currentRoute ->
+                            destination.associatedRoutes.any { associated ->
+                                currentRoute.startsWith(associated)
+                            }
                         } == true
 
                         NavigationBarItem(

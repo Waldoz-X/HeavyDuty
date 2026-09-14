@@ -75,6 +75,7 @@ import com.example.heavyduty.core.ui.theme.GradientCyanStart
 @Composable
 fun ActiveWorkoutScreen(
     onNavigateToRoutines: () -> Unit,
+    onWorkoutCompleted: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: ActiveWorkoutViewModel = hiltViewModel(),
 ) {
@@ -84,7 +85,7 @@ fun ActiveWorkoutScreen(
         viewModel.uiEffect.collect { effect ->
             when (effect) {
                 ActiveWorkoutUiEffect.NavigateToRoutines -> onNavigateToRoutines()
-                ActiveWorkoutUiEffect.WorkoutCompleted -> { /* Could show celebration */ }
+                ActiveWorkoutUiEffect.WorkoutCompleted -> onWorkoutCompleted()
                 is ActiveWorkoutUiEffect.ShowMessage -> { /* Could show snackbar */ }
             }
         }

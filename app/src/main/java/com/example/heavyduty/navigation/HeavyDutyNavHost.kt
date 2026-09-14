@@ -90,6 +90,13 @@ fun HeavyDutyNavHost(
             onNavigateToRoutines = {
                 navController.navigate("routines_graph")
             },
+            onWorkoutCompleted = {
+                navController.navigate(TopLevelDestination.DASHBOARD.route) {
+                    popUpTo(navController.graph.id) {
+                        inclusive = true
+                    }
+                }
+            }
         )
 
         // Exercises

@@ -20,29 +20,34 @@ enum class TopLevelDestination(
     val unselectedIcon: ImageVector,
     val label: String,
     val route: String,
+    val associatedRoutes: List<String>,
 ) {
     DASHBOARD(
         selectedIcon = Icons.Filled.Home,
         unselectedIcon = Icons.Outlined.Home,
         label = "Inicio",
         route = "dashboard",
+        associatedRoutes = listOf("dashboard"),
     ),
     WORKOUT(
         selectedIcon = Icons.Filled.PlayArrow,
         unselectedIcon = Icons.Outlined.PlayArrow,
         label = "Entrenar",
         route = "workout_graph",
+        associatedRoutes = listOf("workout_graph", "active_workout"),
     ),
     EXERCISES(
         selectedIcon = Icons.Filled.FitnessCenter,
         unselectedIcon = Icons.Outlined.FitnessCenter,
         label = "Ejercicios",
         route = "exercises_graph",
+        associatedRoutes = listOf("exercises_graph", "exercise_detail"),
     ),
     TIMER(
         selectedIcon = Icons.Filled.Timer,
         unselectedIcon = Icons.Outlined.Timer,
         label = "Temporizador",
         route = "timer_graph",
+        associatedRoutes = listOf("timer_graph"),
     ),
 }
