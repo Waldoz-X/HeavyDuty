@@ -56,6 +56,7 @@ fun EstadisticasScreen(
     onNavigateToClasificacion: () -> Unit,
     onNavigateToInformeMensual: () -> Unit,
     onNavigateToMapaActividad: () -> Unit,
+    onNavigateToPesoCorporal: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: EstadisticasViewModel = hiltViewModel(),
 ) {
@@ -121,6 +122,12 @@ fun EstadisticasScreen(
                 title = "Mapa de actividad",
                 description = "Vista de un año de entrenamientos, estilo GitHub.",
                 onClick = onNavigateToMapaActividad,
+            ),
+            AdvancedStatRow(
+                icon = Icons.Default.Timeline,
+                title = "Historial de Peso Corporal",
+                description = "Gráfico y análisis de tu progreso de peso.",
+                onClick = onNavigateToPesoCorporal,
             ),
         )
 

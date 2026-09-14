@@ -128,22 +128,22 @@ class BackupRepositoryImpl @Inject constructor(
                 type = routineWithExercises.routine.type,
                 createdAt = routineWithExercises.routine.createdAt,
                 updatedAt = routineWithExercises.routine.updatedAt,
-                exercises = routineWithExercises.routineExercises.mapNotNull { re ->
-                    val exerciseName = exerciseNameById[re.exerciseId] ?: return@mapNotNull null
+                exercises = routineWithExercises.routineExercises.map { re ->
+                    val rx = re.routineExercise
                     RoutineExerciseDto(
-                        exerciseName = exerciseName,
-                        orderIndex = re.orderIndex,
-                        targetSets = re.targetSets,
-                        targetReps = re.targetReps,
-                        targetWeight = re.targetWeight,
-                        targetDurationSecs = re.targetDurationSecs,
-                        restBetweenSetsSecs = re.restBetweenSetsSecs,
-                        notes = re.notes,
-                        progressionPolicy = re.progressionPolicy,
-                        repRangeLow = re.repRangeLow,
-                        repRangeHigh = re.repRangeHigh,
-                        stallThreshold = re.stallThreshold,
-                        supersetGroupId = re.supersetGroupId,
+                        exerciseName = re.exercise.name,
+                        orderIndex = rx.orderIndex,
+                        targetSets = rx.targetSets,
+                        targetReps = rx.targetReps,
+                        targetWeight = rx.targetWeight,
+                        targetDurationSecs = rx.targetDurationSecs,
+                        restBetweenSetsSecs = rx.restBetweenSetsSecs,
+                        notes = rx.notes,
+                        progressionPolicy = rx.progressionPolicy,
+                        repRangeLow = rx.repRangeLow,
+                        repRangeHigh = rx.repRangeHigh,
+                        stallThreshold = rx.stallThreshold,
+                        supersetGroupId = rx.supersetGroupId,
                     )
                 },
             )

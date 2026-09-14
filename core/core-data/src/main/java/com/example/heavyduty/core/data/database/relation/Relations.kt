@@ -15,10 +15,11 @@ import com.example.heavyduty.core.data.database.entity.WorkoutSetEntity
 data class RoutineWithExercises(
     @Embedded val routine: RoutineEntity,
     @Relation(
+        entity = RoutineExerciseEntity::class,
         parentColumn = "id",
         entityColumn = "routineId",
     )
-    val routineExercises: List<RoutineExerciseEntity>,
+    val routineExercises: List<RoutineExerciseWithDetails>,
 )
 
 /**

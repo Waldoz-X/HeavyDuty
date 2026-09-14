@@ -10,6 +10,7 @@ import com.example.heavyduty.feature.stats.presentation.main.EstadisticasScreen
 import com.example.heavyduty.feature.stats.presentation.mapaactividad.MapaActividadScreen
 import com.example.heavyduty.feature.stats.presentation.principales.EjerciciosPrincipalesScreen
 import com.example.heavyduty.feature.stats.presentation.series.SeriesPorMusculoScreen
+import com.example.heavyduty.feature.stats.presentation.pesocorporal.BodyWeightStatsScreen
 
 /**
  * Registers the "Estadísticas" hub and its seven advanced-stat sub-screens in the NavHost.
@@ -23,6 +24,7 @@ fun NavGraphBuilder.statsGraph(
     onNavigateToClasificacion: () -> Unit,
     onNavigateToInformeMensual: () -> Unit,
     onNavigateToMapaActividad: () -> Unit,
+    onNavigateToPesoCorporal: () -> Unit,
 ) {
     composable(route = "stats_graph") {
         EstadisticasScreen(
@@ -34,6 +36,7 @@ fun NavGraphBuilder.statsGraph(
             onNavigateToClasificacion = onNavigateToClasificacion,
             onNavigateToInformeMensual = onNavigateToInformeMensual,
             onNavigateToMapaActividad = onNavigateToMapaActividad,
+            onNavigateToPesoCorporal = onNavigateToPesoCorporal,
         )
     }
     composable(route = "stats/mapa_actividad") {
@@ -56,5 +59,8 @@ fun NavGraphBuilder.statsGraph(
     }
     composable(route = "stats/informe_mensual") {
         InformeMensualScreen(onNavigateBack = onNavigateBack)
+    }
+    composable(route = "stats/peso_corporal") {
+        BodyWeightStatsScreen(onNavigateBack = onNavigateBack)
     }
 }

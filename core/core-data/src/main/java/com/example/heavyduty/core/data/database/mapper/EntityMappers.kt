@@ -137,6 +137,10 @@ fun RoutineExercise.toEntity(): RoutineExerciseEntity = RoutineExerciseEntity(
     supersetGroupId = supersetGroupId,
 )
 
+fun com.example.heavyduty.core.data.database.relation.RoutineExerciseWithDetails.toDomain(): RoutineExercise = routineExercise.toDomain().copy(
+    exercise = exercise.toDomain()
+)
+
 fun RoutineWithExercises.toDomain(): Routine = Routine(
     id = routine.id,
     name = routine.name,
