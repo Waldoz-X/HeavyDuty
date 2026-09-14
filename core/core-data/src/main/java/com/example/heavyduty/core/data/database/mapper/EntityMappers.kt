@@ -84,8 +84,6 @@ fun RoutineEntity.toDomain(): Routine = Routine(
     name = name,
     description = description,
     type = WorkoutType.valueOf(type),
-    programWeekId = programWeekId,
-    dayOfWeek = dayOfWeek,
     createdAt = createdAt,
     updatedAt = updatedAt,
 )
@@ -95,8 +93,6 @@ fun Routine.toEntity(): RoutineEntity = RoutineEntity(
     name = name,
     description = description,
     type = type.name,
-    programWeekId = programWeekId,
-    dayOfWeek = dayOfWeek,
     createdAt = createdAt,
     updatedAt = updatedAt,
 )
@@ -146,49 +142,9 @@ fun RoutineWithExercises.toDomain(): Routine = Routine(
     name = routine.name,
     description = routine.description,
     type = WorkoutType.valueOf(routine.type),
-    programWeekId = routine.programWeekId,
-    dayOfWeek = routine.dayOfWeek,
     createdAt = routine.createdAt,
     updatedAt = routine.updatedAt,
     exercises = routineExercises.map { it.toDomain() },
-)
-
-// ============ Program Mappers ============
-
-fun com.example.heavyduty.core.data.database.entity.ProgramEntity.toDomain(weeks: List<com.example.heavyduty.core.domain.model.ProgramWeek> = emptyList()) = com.example.heavyduty.core.domain.model.Program(
-    id = id,
-    name = name,
-    description = description,
-    isActive = isActive,
-    totalWeeks = totalWeeks,
-    createdAt = createdAt,
-    updatedAt = updatedAt,
-    weeks = weeks,
-)
-
-fun com.example.heavyduty.core.domain.model.Program.toEntity() = com.example.heavyduty.core.data.database.entity.ProgramEntity(
-    id = id,
-    name = name,
-    description = description,
-    isActive = isActive,
-    totalWeeks = totalWeeks,
-    createdAt = createdAt,
-    updatedAt = updatedAt,
-)
-
-fun com.example.heavyduty.core.data.database.entity.ProgramWeekEntity.toDomain(days: List<Routine> = emptyList()) = com.example.heavyduty.core.domain.model.ProgramWeek(
-    id = id,
-    programId = programId,
-    weekNumber = weekNumber,
-    notes = notes,
-    days = days,
-)
-
-fun com.example.heavyduty.core.domain.model.ProgramWeek.toEntity() = com.example.heavyduty.core.data.database.entity.ProgramWeekEntity(
-    id = id,
-    programId = programId,
-    weekNumber = weekNumber,
-    notes = notes,
 )
 
 // ============ Workout Mappers ============

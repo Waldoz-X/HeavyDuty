@@ -19,10 +19,6 @@ interface RoutineDao {
     @Query("SELECT * FROM routines ORDER BY createdAt DESC")
     fun getAllRoutines(): Flow<List<RoutineWithExercises>>
 
-    @Transaction
-    @Query("SELECT * FROM routines WHERE programWeekId = :programWeekId ORDER BY dayOfWeek ASC")
-    fun getRoutinesForProgramWeek(programWeekId: Long): Flow<List<RoutineWithExercises>>
-
     @Query("SELECT * FROM routines WHERE id = :id")
     fun getRoutineById(id: Long): Flow<RoutineEntity?>
 

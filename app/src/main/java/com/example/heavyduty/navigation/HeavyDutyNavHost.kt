@@ -26,11 +26,6 @@ private val topLevelRoutes = TopLevelDestination.entries.map { it.route }.toSet(
 
 private const val TRANSITION_DURATION_MS = 220
 
-/**
- * Switching between bottom-nav tabs (a sibling swap, not a hierarchical push) reads oddly with
- * a horizontal slide — it isn't "forward" or "back" navigation, so those tabs only crossfade.
- * Every other transition (list → detail, hub → sub-screen) slides, matching push/pop intent.
- */
 private fun isTabSwitch(fromRoute: String?, toRoute: String?): Boolean =
     fromRoute in topLevelRoutes && toRoute in topLevelRoutes
 
@@ -72,7 +67,6 @@ fun HeavyDutyNavHost(
             }
         },
     ) {
-        // Dashboard
         dashboardScreen(
             onNavigateToActiveWorkout = {
                 navController.navigate(TopLevelDestination.WORKOUT.route)
@@ -85,7 +79,6 @@ fun HeavyDutyNavHost(
             },
         )
 
-        // Workout
         activeWorkoutScreen(
             onNavigateToRoutines = {
                 navController.navigate("routines_graph")
@@ -99,7 +92,6 @@ fun HeavyDutyNavHost(
             }
         )
 
-        // Exercises
         exerciseListScreen(
             onExerciseClick = { exerciseId ->
                 navController.navigate("exercise_detail/$exerciseId")
@@ -112,26 +104,22 @@ fun HeavyDutyNavHost(
             },
         )
 
-        // Routines / Programs
         routineListScreen(
             onRoutineClick = { routineId ->
                 navController.navigate("routine_editor/$routineId")
             },
-            onProgramClick = { programId ->
-                navController.navigate("program_detail/$programId")
-            },
-            onNavigateBack = { navController.popBackStack() },
+            onCreateRoutine = {
+                navController.navigate("routine_editor")
+            }
         )
         routineEditorScreen(
             onNavigateBack = { navController.popBackStack() },
         )
 
-        // Timer
         timerScreen()
 
-        // History
         historyScreen(
-            onSessionClick = { /* future detail */ },
+            onSessionClick = { },
             onExerciseProgressClick = { exerciseId ->
                 navController.navigate("progress/$exerciseId")
             },
@@ -140,19 +128,16 @@ fun HeavyDutyNavHost(
             onNavigateBack = { navController.popBackStack() },
         )
 
-        // Calendar
         calendarScreen(
             onRoutineClick = { routineId ->
                 navController.navigate("routine_editor/$routineId")
             },
         )
 
-        // Profile
         profileScreen(
             onNavigateToStats = { navController.navigate("stats_graph") },
         )
 
-        // Statistics
         statsGraph(
             onNavigateBack = { navController.popBackStack() },
             onNavigateToSeries = { navController.navigate("stats/series") },

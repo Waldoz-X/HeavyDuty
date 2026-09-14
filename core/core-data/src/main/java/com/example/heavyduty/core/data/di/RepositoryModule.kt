@@ -47,11 +47,6 @@ abstract class RepositoryModule {
         userPreferencesRepositoryImpl: UserPreferencesRepositoryImpl,
     ): UserPreferencesRepository
 
-    @Binds
-    @Singleton
-    abstract fun bindProgramRepository(
-        programRepositoryImpl: com.example.heavyduty.core.data.repository.ProgramRepositoryImpl,
-    ): com.example.heavyduty.core.domain.repository.ProgramRepository
 
     @Binds
     @Singleton
