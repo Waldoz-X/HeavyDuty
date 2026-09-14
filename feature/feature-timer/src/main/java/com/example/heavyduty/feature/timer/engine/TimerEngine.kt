@@ -30,6 +30,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Owns the timer's countdown loop and lifecycle as a process-scoped singleton so it keeps
@@ -39,8 +40,8 @@ import javax.inject.Singleton
  */
 @Singleton
 class TimerEngine @Inject constructor(
-    @ApplicationContext private val context: Context,
-    @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher,
+    @param:ApplicationContext private val context: Context,
+    @param:DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher,
 ) : RestTimerController {
     private val engineScope = CoroutineScope(SupervisorJob() + defaultDispatcher)
 
@@ -132,7 +133,7 @@ class TimerEngine @Inject constructor(
         tickJob?.cancel()
         tickJob = engineScope.launch {
             while (_state.value.remainingSeconds > 0 && _state.value.isRunning) {
-                delay(1000)
+                delay(1.seconds)
                 _state.update {
                     it.copy(
                         remainingSeconds = it.remainingSeconds - 1,
@@ -165,7 +166,7 @@ class TimerEngine @Inject constructor(
         tickJob?.cancel()
         tickJob = engineScope.launch {
             while (_state.value.isRunning) {
-                delay(1000)
+                delay(1.seconds)
                 _state.update { it.copy(elapsedSeconds = it.elapsedSeconds + 1) }
             }
         }

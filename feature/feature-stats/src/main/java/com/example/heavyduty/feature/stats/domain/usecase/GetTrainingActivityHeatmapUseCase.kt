@@ -116,10 +116,11 @@ class GetTrainingActivityHeatmapUseCase @Inject constructor(
             var prevDayMillis: Long? = null
 
             trainedDays.forEach { dayMillis ->
-                if (prevDayMillis == null) {
+                val prev = prevDayMillis
+                if (prev == null) {
                     runningDailyStreak = 1
                 } else {
-                    val diffDays = ((dayMillis - prevDayMillis!!) / oneDayMillis).toInt()
+                    val diffDays = ((dayMillis - prev) / oneDayMillis).toInt()
                     if (diffDays == 1) {
                         runningDailyStreak++
                     } else if (diffDays > 1) {
@@ -164,12 +165,13 @@ class GetTrainingActivityHeatmapUseCase @Inject constructor(
             var prevWeekIdx: Long? = null
 
             weeksWithWorkouts.forEach { weekIdx ->
-                if (prevWeekIdx == null) {
+                val prevWeek = prevWeekIdx
+                if (prevWeek == null) {
                     runningWeeklyStreak = 1
                 } else {
-                    if (weekIdx == prevWeekIdx!! + 1) {
+                    if (weekIdx == prevWeek + 1) {
                         runningWeeklyStreak++
-                    } else if (weekIdx > prevWeekIdx!! + 1) {
+                    } else if (weekIdx > prevWeek + 1) {
                         runningWeeklyStreak = 1
                     }
                 }

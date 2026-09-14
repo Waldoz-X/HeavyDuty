@@ -13,10 +13,12 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.advanceUntilIdle
+import com.example.heavyduty.feature.timer.service.TimerService
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * [context] is a relaxed mock: TimerEngine only uses it to start/stop [TimerService] and to
@@ -35,7 +37,7 @@ class TimerEngineTest {
         engine.onEvent(TimerUiEvent.OnDurationChange(10))
 
         engine.onEvent(TimerUiEvent.OnStartPause)
-        advanceTimeBy(3_000)
+        advanceTimeBy(3.seconds)
         runCurrent()
 
         assertEquals(7, engine.state.value.remainingSeconds)
@@ -48,12 +50,12 @@ class TimerEngineTest {
         engine.onEvent(TimerUiEvent.OnModeSelect(TimerMode.REST))
         engine.onEvent(TimerUiEvent.OnDurationChange(10))
         engine.onEvent(TimerUiEvent.OnStartPause)
-        advanceTimeBy(3_000)
+        advanceTimeBy(3.seconds)
         runCurrent()
 
         engine.onEvent(TimerUiEvent.OnStartPause)
         val remainingAtPause = engine.state.value.remainingSeconds
-        advanceTimeBy(5_000)
+        advanceTimeBy(5.seconds)
         runCurrent()
 
         assertEquals(remainingAtPause, engine.state.value.remainingSeconds)
@@ -67,7 +69,7 @@ class TimerEngineTest {
         engine.onEvent(TimerUiEvent.OnModeSelect(TimerMode.REST))
         engine.onEvent(TimerUiEvent.OnDurationChange(30))
         engine.onEvent(TimerUiEvent.OnStartPause)
-        advanceTimeBy(10_000)
+        advanceTimeBy(10.seconds)
         runCurrent()
 
         engine.onEvent(TimerUiEvent.OnReset)
@@ -106,7 +108,7 @@ class TimerEngineTest {
         engine.onEvent(TimerUiEvent.OnDurationChange(2))
         engine.onEvent(TimerUiEvent.OnRoundsChange(2))
         engine.onEvent(TimerUiEvent.OnStartPause)
-        advanceTimeBy(2_000)
+        advanceTimeBy(2.seconds)
         runCurrent()
 
         assertTrue(effects.isEmpty())
