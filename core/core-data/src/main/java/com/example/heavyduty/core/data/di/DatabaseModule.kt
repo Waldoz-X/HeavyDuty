@@ -46,6 +46,13 @@ object DatabaseModule {
                         SeedData.populateExercises(context, exerciseDaoProvider.get())
                     }
                 }
+
+                override fun onDestructiveMigration(db: SupportSQLiteDatabase) {
+                    super.onDestructiveMigration(db)
+                    applicationScope.launch {
+                        SeedData.populateExercises(context, exerciseDaoProvider.get())
+                    }
+                }
             })
             .fallbackToDestructiveMigration(dropAllTables = true)
             .build()

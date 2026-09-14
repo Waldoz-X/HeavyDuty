@@ -37,32 +37,60 @@ class GetMonthlyReportUseCase @Inject constructor(
         val monthLabel = SimpleDateFormat("MMMM yyyy", Locale.Builder().setLanguage("es").setRegion("ES").build())
             .format(calendar.time)
         val monthStart = calendar.timeInMillis
+        val maxWeek = calendar.getActualMaximum(Calendar.WEEK_OF_MONTH)
         calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH))
         calendar.set(Calendar.HOUR_OF_DAY, 23)
         calendar.set(Calendar.MINUTE, 59)
         calendar.set(Calendar.SECOND, 59)
         val monthEnd = calendar.timeInMillis
 
+        // Mes anterior para métricas comparativas
+        val prevCal = Calendar.getInstance().apply {
+            timeInMillis = monthStart
+            add(Calendar.MONTH, -1)
+            set(Calendar.DAY_OF_MONTH, 1)
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        val prevMonthStart = prevCal.timeInMillis
+        prevCal.set(Calendar.DAY_OF_MONTH, prevCal.getActualMaximum(Calendar.DAY_OF_MONTH))
+        prevCal.set(Calendar.HOUR_OF_DAY, 23)
+        prevCal.set(Calendar.MINUTE, 59)
+        prevCal.set(Calendar.SECOND, 59)
+        val prevMonthEnd = prevCal.timeInMillis
+
         return combine(
             workoutRepository.getSessionsByDateRange(monthStart, monthEnd),
             workoutRepository.getCompletedSetsByDateRange(monthStart, monthEnd),
+            workoutRepository.getSessionsByDateRange(prevMonthStart, prevMonthEnd),
+            workoutRepository.getCompletedSetsByDateRange(prevMonthStart, prevMonthEnd),
             exerciseRepository.getAllExercises(),
-        ) { sessions, rawSets, exercises ->
+        ) { sessions, rawSets, prevSessions, prevRawSets, exercises ->
+            val exerciseById = exercises.associateBy { it.id }
+
+            // Datos mes actual
             val sets = rawSets.excludeWarmups()
             val completedSessions = sessions.filter { it.status == WorkoutStatus.COMPLETED }
-            val exerciseById = exercises.associateBy { it.id }
             val sessionsById = completedSessions.associateBy { it.id }
-            // Only count sets that belong to completed sessions
             val completedSets = sets.filter { it.sessionId in sessionsById }
-            
+
+            // Datos mes previo
+            val prevCompletedSessions = prevSessions.filter { it.status == WorkoutStatus.COMPLETED }
+            val prevSessionsById = prevCompletedSessions.associateBy { it.id }
+            val prevCompletedSets = prevRawSets.excludeWarmups().filter { it.sessionId in prevSessionsById }
+            val prevTotalVolumeKg = prevCompletedSets.sumOf {
+                ((it.reps ?: 0) * (it.weight ?: 0f)).toDouble()
+            }.toFloat()
+
             val volumeByMuscle = mutableMapOf<MuscleGroup, Float>()
             val workoutsPerWeekMap = mutableMapOf<Int, Int>()
             val volumePerWeekMap = mutableMapOf<Int, Float>()
-            
+
             var totalVolumeKg = 0f
-            
             val cal = Calendar.getInstance()
-            
+
             completedSessions.forEach { session ->
                 cal.timeInMillis = session.startTime
                 val week = cal.get(Calendar.WEEK_OF_MONTH)
@@ -76,7 +104,7 @@ class GetMonthlyReportUseCase @Inject constructor(
                 exercise.muscleCredits(setVolume).forEach { (muscle, credit) ->
                     volumeByMuscle[muscle] = (volumeByMuscle[muscle] ?: 0f) + credit
                 }
-                
+
                 val session = sessionsById[set.sessionId]
                 if (session != null) {
                     cal.timeInMillis = session.startTime
@@ -84,9 +112,7 @@ class GetMonthlyReportUseCase @Inject constructor(
                     volumePerWeekMap[week] = (volumePerWeekMap[week] ?: 0f) + setVolume
                 }
             }
-            
-            cal.timeInMillis = monthStart
-            val maxWeek = cal.getActualMaximum(Calendar.WEEK_OF_MONTH)
+
             val workoutsPerWeek = (1..maxWeek).map { week ->
                 "Semana $week" to (workoutsPerWeekMap[week] ?: 0)
             }
@@ -94,18 +120,70 @@ class GetMonthlyReportUseCase @Inject constructor(
                 "Semana $week" to (volumePerWeekMap[week] ?: 0f)
             }
 
+            // Desglose de contribución por músculo
+            val muscleContributions = if (totalVolumeKg > 0f) {
+                volumeByMuscle.entries
+                    .filter { it.value > 0f }
+                    .sortedByDescending { it.value }
+                    .map {
+                        com.example.heavyduty.feature.stats.domain.model.MuscleVolumeContribution(
+                            muscleGroup = it.key,
+                            volumeKg = it.value,
+                            percentage = (it.value / totalVolumeKg * 100f).coerceIn(0f, 100f),
+                        )
+                    }
+            } else emptyList()
+
+            // Top ejercicios del mes
+            val topExercises = completedSets
+                .groupBy { it.exerciseId }
+                .mapNotNull { (exerciseId, exSets) ->
+                    val exercise = exerciseById[exerciseId] ?: return@mapNotNull null
+                    val exVolume = exSets.sumOf { ((it.reps ?: 0) * (it.weight ?: 0f)).toDouble() }.toFloat()
+                    val maxWeight = exSets.maxOfOrNull { it.weight ?: 0f } ?: 0f
+                    com.example.heavyduty.feature.stats.domain.model.TopExerciseMonthly(
+                        exerciseId = exerciseId,
+                        exerciseName = exercise.name,
+                        muscleGroup = exercise.muscleGroup,
+                        totalSets = exSets.size,
+                        totalVolumeKg = exVolume,
+                        maxWeightKg = maxWeight,
+                    )
+                }
+                .sortedByDescending { it.totalVolumeKg }
+                .take(5)
+
+            // Comparativas vs mes anterior
+            val workoutsDelta = if (prevCompletedSessions.isNotEmpty() || completedSessions.isNotEmpty()) {
+                completedSessions.size - prevCompletedSessions.size
+            } else null
+
+            val volumeDeltaPercent = if (prevTotalVolumeKg > 0f) {
+                ((totalVolumeKg - prevTotalVolumeKg) / prevTotalVolumeKg * 100f)
+            } else null
+
             val totalDurationSecs = completedSessions.sumOf { it.totalDurationSecs }
+            val avgDurationMins = if (completedSessions.isNotEmpty()) {
+                (totalDurationSecs / completedSessions.size / 60)
+            } else 0
+            val totalDurationMins = (totalDurationSecs / 60)
+            val avgPerWeek = if (maxWeek > 0) completedSessions.size.toFloat() / maxWeek.toFloat() else 0f
+
             MonthlyReport(
                 monthLabel = monthLabel.replaceFirstChar { it.uppercase() },
+                referenceMillis = referenceMillis,
                 totalWorkouts = completedSessions.size,
                 totalSets = completedSets.size,
                 totalVolumeKg = totalVolumeKg,
-                avgSessionDurationMinutes = if (completedSessions.isNotEmpty()) {
-                    totalDurationSecs / completedSessions.size / 60
-                } else {
-                    0
-                },
+                totalDurationMinutes = totalDurationMins,
+                avgSessionDurationMinutes = avgDurationMins,
+                workoutsPerWeekAverage = avgPerWeek,
+                prevMonthWorkoutsDelta = workoutsDelta,
+                prevMonthVolumeDeltaPercent = volumeDeltaPercent,
+                prevMonthVolumeKg = prevTotalVolumeKg,
                 topMuscleGroup = volumeByMuscle.maxByOrNull { it.value }?.key,
+                muscleContributions = muscleContributions,
+                topExercises = topExercises,
                 workoutsPerWeek = workoutsPerWeek,
                 volumePerWeek = volumePerWeek,
             )

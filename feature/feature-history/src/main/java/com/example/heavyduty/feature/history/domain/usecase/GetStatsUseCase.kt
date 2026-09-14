@@ -1,6 +1,5 @@
 package com.example.heavyduty.feature.history.domain.usecase
 
-import com.example.heavyduty.core.domain.model.WorkoutSession
 import com.example.heavyduty.core.domain.model.WorkoutStatus
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
 import kotlinx.coroutines.flow.Flow

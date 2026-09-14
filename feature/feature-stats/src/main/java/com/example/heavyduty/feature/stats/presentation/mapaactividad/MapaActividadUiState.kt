@@ -1,8 +1,11 @@
 package com.example.heavyduty.feature.stats.presentation.mapaactividad
 
+import com.example.heavyduty.feature.stats.domain.usecase.ActivityHeatmapStatsReport
+
 data class MapaActividadUiState(
-    /** Local-midnight millis -> intensity 0..1, over the last ~53 weeks. */
-    val activityByDay: Map<Long, Float> = emptyMap(),
-    val daysTrained: Int = 0,
+    val report: ActivityHeatmapStatsReport = ActivityHeatmapStatsReport(),
     val isLoading: Boolean = true,
-)
+) {
+    val activityByDay: Map<Long, Float> get() = report.activityByDay
+    val daysTrained: Int get() = report.totalDaysTrained
+}

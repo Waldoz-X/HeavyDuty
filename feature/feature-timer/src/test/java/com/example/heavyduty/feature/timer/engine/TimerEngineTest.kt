@@ -82,7 +82,9 @@ class TimerEngineTest {
     fun `finishing the only round emits TimerFinished and stops running`() = runTest {
         val engine = TimerEngine(context, StandardTestDispatcher(testScheduler))
         val effects = mutableListOf<TimerUiEffect>()
-        backgroundScope.launch { engine.effects.toList(effects) }
+        backgroundScope.launch(kotlinx.coroutines.test.UnconfinedTestDispatcher(testScheduler)) {
+            engine.effects.toList(effects)
+        }
 
         engine.onEvent(TimerUiEvent.OnModeSelect(TimerMode.REST))
         engine.onEvent(TimerUiEvent.OnDurationChange(2))

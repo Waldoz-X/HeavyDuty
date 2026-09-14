@@ -7,7 +7,9 @@ plugins {
 
 android {
     namespace = "com.example.heavyduty.feature.dashboard"
-    compileSdk = 34
+    compileSdk {
+        version = release(37)
+    }
 
     defaultConfig {
         minSdk = 24

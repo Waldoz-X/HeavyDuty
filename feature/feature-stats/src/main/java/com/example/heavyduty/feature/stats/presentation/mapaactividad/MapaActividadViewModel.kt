@@ -21,9 +21,9 @@ class MapaActividadViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            getTrainingActivityHeatmap().collect { activityByDay ->
+            getTrainingActivityHeatmap().collect { report ->
                 _uiState.update {
-                    it.copy(activityByDay = activityByDay, daysTrained = activityByDay.size, isLoading = false)
+                    it.copy(report = report, isLoading = false)
                 }
             }
         }
