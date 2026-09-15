@@ -14,8 +14,8 @@ import kotlinx.coroutines.flow.flowOn
 import javax.inject.Inject
 
 /**
- * Workouts/duration/volume/sets for [currentRange], paired with the same totals for
- * [previousRange] so callers can show "vs. previous period" deltas — see [PeriodSummary].
+ * Workouts/duration/volume/sets for the current range, paired with the same totals for the
+ * previous range so callers can show "vs. previous period" deltas — see [PeriodSummary].
  */
 class GetPeriodSummaryUseCase @Inject constructor(
     private val workoutRepository: WorkoutRepository,

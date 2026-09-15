@@ -282,7 +282,7 @@ private fun ExerciseListItem(
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
                 modifier = Modifier
@@ -361,7 +361,7 @@ private fun ExerciseListItem(
                 }
                 if (exercise.equipment.isNotBlank()) {
                     Spacer(modifier = Modifier.height(6.dp))
-                    Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Default.Build,
                             contentDescription = null,

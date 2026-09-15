@@ -51,7 +51,7 @@ enum class ProgressionPolicy {
  * Which unit an exercise's weight is entered/displayed in — set per exercise (a barbell
  * exercise loaded in kg plates vs. a dumbbell line only sold in lb, say). Every weight is
  * still stored in kg everywhere (sets, targets, reports) regardless of this; it only decides
- * the number shown to and typed by the lifter for that exercise. See [WeightUnitExtensions].
+ * the number shown to and typed by the lifter for that exercise. See [kgTo] / [toKgFrom].
  */
 enum class WeightUnit {
     KG,

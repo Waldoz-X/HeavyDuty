@@ -8,7 +8,6 @@ package com.example.heavyduty.core.ui.components
 enum class StatsPeriod(val days: Int, val label: String) {
     LAST_7_DAYS(7, "Últimos 7 días"),
     LAST_30_DAYS(30, "Últimos 30 días"),
-    LAST_90_DAYS(90, "Últimos 90 días"),
 }
 
 /** [now - days, now] and the immediately preceding, equal-length window — for trend deltas. */

@@ -63,7 +63,7 @@ class RoutineEditorViewModel @Inject constructor(
         savedStateHandle.getStateFlow<LongArray?>(SELECTED_EXERCISE_IDS_KEY, null)
             .onEach { ids ->
                 if (ids != null) {
-                    val exercises = ids.mapNotNull { exerciseRepository.getExerciseById(it).firstOrNull() }
+                    val exercises = ids.toList().mapNotNull { exerciseRepository.getExerciseById(it).firstOrNull() }
                     _uiState.update { state ->
                         val newEntries = exercises.mapIndexed { offset, ex ->
                             RoutineExercise(
