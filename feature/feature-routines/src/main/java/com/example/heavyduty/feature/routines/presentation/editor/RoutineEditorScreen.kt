@@ -304,40 +304,37 @@ private fun ReorderableExerciseList(
                     routineExercise = routineExercise,
                     isInSuperset = isInSuperset,
                     isDragging = isDragging,
-                    dragHandleModifier = Modifier.pointerInput(index) {
-                        detectDragGesturesAfterLongPress(
-                            onDragStart = {
-                                draggedIndex = index
-                                dragOffset = 0f
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            },
-                            onDrag = { change, dragAmount ->
-                                change.consume()
-                                dragOffset += dragAmount.y
-                                val current = draggedIndex ?: return@detectDragGesturesAfterLongPress
-                                val currentHeight = itemHeights[current] ?: return@detectDragGesturesAfterLongPress
-                                val halfHeight = currentHeight / 2f
-                                if (dragOffset > halfHeight && current < exercises.lastIndex) {
-                                    val targetHeight = itemHeights[current + 1] ?: currentHeight
-                                    onReorder(current, current + 1)
-                                    draggedIndex = current + 1
-                                    dragOffset -= targetHeight.toFloat()
-                                } else if (dragOffset < -halfHeight && current > 0) {
-                                    val targetHeight = itemHeights[current - 1] ?: currentHeight
-                                    onReorder(current, current - 1)
-                                    draggedIndex = current - 1
-                                    dragOffset += targetHeight.toFloat()
-                                }
-                            },
-                            onDragEnd = {
-                                draggedIndex = null
-                                dragOffset = 0f
-                            },
-                            onDragCancel = {
-                                draggedIndex = null
-                                dragOffset = 0f
-                            },
-                        )
+                    onDragStart = {
+                        draggedIndex = index
+                        dragOffset = 0f
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    },
+                    onDrag = { deltaY ->
+                        dragOffset += deltaY
+                        val current = draggedIndex
+                        val currentHeight = current?.let { itemHeights[it] }
+                        if (current != null && currentHeight != null) {
+                            val halfHeight = currentHeight / 2f
+                            if (dragOffset > halfHeight && current < exercises.lastIndex) {
+                                val targetHeight = itemHeights[current + 1] ?: currentHeight
+                                onReorder(current, current + 1)
+                                draggedIndex = current + 1
+                                dragOffset -= targetHeight.toFloat()
+                            } else if (dragOffset < -halfHeight && current > 0) {
+                                val targetHeight = itemHeights[current - 1] ?: currentHeight
+                                onReorder(current, current - 1)
+                                draggedIndex = current - 1
+                                dragOffset += targetHeight.toFloat()
+                            }
+                        }
+                    },
+                    onDragEnd = {
+                        draggedIndex = null
+                        dragOffset = 0f
+                    },
+                    onDragCancel = {
+                        draggedIndex = null
+                        dragOffset = 0f
                     },
                     onUpdate = { updated -> onUpdate(index, updated) },
                     onRemove = { onRemove(routineExercise) },
@@ -363,7 +360,10 @@ private fun RoutineExerciseItem(
     routineExercise: RoutineExercise,
     isInSuperset: Boolean,
     isDragging: Boolean,
-    dragHandleModifier: Modifier,
+    onDragStart: () -> Unit,
+    onDrag: (deltaY: Float) -> Unit,
+    onDragEnd: () -> Unit,
+    onDragCancel: () -> Unit,
     onUpdate: (RoutineExercise) -> Unit,
     onRemove: () -> Unit,
     modifier: Modifier = Modifier,
@@ -423,7 +423,18 @@ private fun RoutineExerciseItem(
                 imageVector = Icons.Default.DragHandle,
                 contentDescription = "Arrastrar para reordenar",
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = dragHandleModifier
+                modifier = Modifier
+                    .pointerInput(routineExercise.exerciseId) {
+                        detectDragGesturesAfterLongPress(
+                            onDragStart = { onDragStart() },
+                            onDrag = { change, dragAmount ->
+                                change.consume()
+                                onDrag(dragAmount.y)
+                            },
+                            onDragEnd = onDragEnd,
+                            onDragCancel = onDragCancel,
+                        )
+                    }
                     .padding(8.dp)
                     .size(24.dp),
             )
