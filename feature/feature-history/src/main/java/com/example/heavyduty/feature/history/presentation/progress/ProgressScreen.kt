@@ -31,6 +31,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.heavyduty.core.common.extensions.formatDecimal
+import com.example.heavyduty.core.domain.model.WeightUnit
+import com.example.heavyduty.core.domain.model.kgTo
 import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdEmptyState
 import com.example.heavyduty.core.ui.components.HdLoadingIndicator
@@ -108,15 +110,17 @@ fun ProgressScreen(
                         .padding(innerPadding)
                         .padding(16.dp),
                 ) {
+                    val unitLabel = if (uiState.weightUnit == WeightUnit.LB) "lb" else "kg"
+
                     if (uiState.personalRecords.hasRecords) {
-                        PersonalRecordsCard(records = uiState.personalRecords)
+                        PersonalRecordsCard(records = uiState.personalRecords, weightUnit = uiState.weightUnit)
                         Spacer(modifier = Modifier.height(16.dp))
                     }
 
                     val chronologicalWeights = uiState.sets
                         .filter { (it.weight ?: 0f) > 0f }
                         .sortedBy { it.completedAt ?: 0L }
-                        .map { it.weight!! }
+                        .map { it.weight!!.kgTo(uiState.weightUnit) }
 
                     if (chronologicalWeights.size >= 2) {
                         HdCard {
@@ -147,10 +151,10 @@ fun ProgressScreen(
 
                         val weightSets = uiState.sets.filter { (it.weight ?: 0f) > 0f }
                         if (weightSets.isNotEmpty()) {
-                            val maxWeight = weightSets.maxOf { it.weight ?: 0f }
-                            val latestWeight = weightSets.first().weight ?: 0f
+                            val maxWeight = weightSets.maxOf { it.weight ?: 0f }.kgTo(uiState.weightUnit)
+                            val latestWeight = (weightSets.first().weight ?: 0f).kgTo(uiState.weightUnit)
                             Text(
-                                text = "Máx: ${maxWeight}kg · Último: ${latestWeight}kg",
+                                text = "Máx: ${maxWeight.formatDecimal()}$unitLabel · Último: ${latestWeight.formatDecimal()}$unitLabel",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurface,
                             )
@@ -182,9 +186,11 @@ fun ProgressScreen(
                         val repSets = uiState.sets.filter { (it.reps ?: 0) > 0 }
                         if (repSets.isNotEmpty()) {
                             val totalReps = repSets.sumOf { it.reps ?: 0 }
-                            val totalVolume = repSets.sumOf { ((it.reps ?: 0) * (it.weight ?: 0f)).toInt() }
+                            val totalVolume = repSets.sumOf { ((it.reps ?: 0) * (it.weight ?: 0f)).toDouble() }
+                                .toFloat()
+                                .kgTo(uiState.weightUnit)
                             Text(
-                                text = "Repeticiones Totales: $totalReps · Volumen: ${totalVolume}kg",
+                                text = "Repeticiones Totales: $totalReps · Volumen: ${totalVolume.formatDecimal()}$unitLabel",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurface,
                             )
@@ -206,7 +212,9 @@ fun ProgressScreen(
 private fun PersonalRecordsCard(
     records: ExercisePersonalRecords,
     modifier: Modifier = Modifier,
+    weightUnit: WeightUnit = WeightUnit.KG,
 ) {
+    val unitLabel = if (weightUnit == WeightUnit.LB) "lb" else "kg"
     HdCard(modifier = modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
@@ -229,17 +237,17 @@ private fun PersonalRecordsCard(
         ) {
             PersonalRecordItem(
                 label = "Peso Máximo",
-                value = records.maxWeight?.let { "${it.formatDecimal()}kg" } ?: "—",
+                value = records.maxWeight?.let { "${it.kgTo(weightUnit).formatDecimal()}$unitLabel" } ?: "—",
                 detail = records.maxWeightReps?.let { "× $it reps" },
             )
             PersonalRecordItem(
                 label = "Más Repeticiones",
                 value = records.maxReps?.toString() ?: "—",
-                detail = records.maxRepsWeight?.let { "@ ${it.formatDecimal()}kg" },
+                detail = records.maxRepsWeight?.let { "@ ${it.kgTo(weightUnit).formatDecimal()}$unitLabel" },
             )
             PersonalRecordItem(
                 label = "1RM Estimado",
-                value = records.estimatedOneRepMax?.let { "${it.formatDecimal()}kg" } ?: "—",
+                value = records.estimatedOneRepMax?.let { "${it.kgTo(weightUnit).formatDecimal()}$unitLabel" } ?: "—",
                 detail = null,
             )
         }

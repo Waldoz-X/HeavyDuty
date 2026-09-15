@@ -32,6 +32,7 @@ class GetTopExercisesByFrequencyUseCase @Inject constructor(
                         exerciseId = exerciseId,
                         exerciseName = exercise.name,
                         setCount = setsForExercise.size,
+                        imageUrl = exercise.imageUrl,
                     )
                 }
                 .sortedByDescending { it.setCount }

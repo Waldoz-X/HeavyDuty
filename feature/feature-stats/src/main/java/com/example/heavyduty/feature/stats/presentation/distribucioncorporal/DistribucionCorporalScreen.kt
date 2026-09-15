@@ -1,6 +1,8 @@
 package com.example.heavyduty.feature.stats.presentation.distribucioncorporal
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,6 +14,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.Repeat
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -30,10 +36,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.heavyduty.core.common.extensions.formatCompact
 import com.example.heavyduty.core.ui.components.HdBodyDiagram
 import com.example.heavyduty.core.ui.components.HdChip
 import com.example.heavyduty.core.ui.components.HdLoadingIndicator
+import com.example.heavyduty.core.ui.components.HdPeriodSelector
+import com.example.heavyduty.core.ui.components.HdStatCard
 import com.example.heavyduty.core.ui.nameResId
+import com.example.heavyduty.feature.stats.domain.model.PeriodSummary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -83,8 +93,14 @@ fun DistribucionCorporalScreen(
             modifier = Modifier
                 .padding(innerPadding)
                 .padding(16.dp)
-                .fillMaxSize(),
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState()),
         ) {
+            HdPeriodSelector(
+                selected = uiState.selectedPeriod,
+                onSelect = { viewModel.onEvent(DistribucionCorporalUiEvent.OnPeriodChange(it)) },
+            )
+            Spacer(modifier = Modifier.height(12.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 HdChip(
                     text = "Volumen",
@@ -124,6 +140,62 @@ fun DistribucionCorporalScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(400.dp),
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            BodyPeriodTotals(summary = uiState.summary)
+        }
+    }
+}
+
+/** Workouts / duration / volume / sets tiles, each with a delta vs. the previous period. */
+@Composable
+private fun BodyPeriodTotals(summary: PeriodSummary) {
+    fun deltaText(delta: Int): String {
+        val sign = if (delta >= 0) "+" else ""
+        return "$sign$delta vs. anterior"
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            HdStatCard(
+                icon = Icons.Default.CalendarMonth,
+                label = "Entrenamientos",
+                value = "${summary.workouts}",
+                deltaText = deltaText(summary.workoutsDelta),
+                isPositive = summary.workoutsDelta >= 0,
+                modifier = Modifier.weight(1f),
+            )
+            HdStatCard(
+                icon = Icons.Default.Timer,
+                label = "Duración",
+                value = run {
+                    val h = summary.durationMinutes / 60
+                    val m = summary.durationMinutes % 60
+                    if (h > 0) "${h}h ${m}min" else "${m}min"
+                },
+                subtext = null,
+                modifier = Modifier.weight(1f),
+            )
+        }
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            HdStatCard(
+                icon = Icons.Default.FitnessCenter,
+                label = "Volumen",
+                value = "${summary.volumeKg.formatCompact()} kg",
+                deltaText = run {
+                    val sign = if (summary.volumeKgDelta >= 0) "+" else "-"
+                    "$sign${kotlin.math.abs(summary.volumeKgDelta).formatCompact()} kg vs. anterior"
+                },
+                isPositive = summary.volumeKgDelta >= 0,
+                modifier = Modifier.weight(1f),
+            )
+            HdStatCard(
+                icon = Icons.Default.Repeat,
+                label = "Series",
+                value = "${summary.sets}",
+                deltaText = deltaText(summary.setsDelta),
+                isPositive = summary.setsDelta >= 0,
+                modifier = Modifier.weight(1f),
             )
         }
     }

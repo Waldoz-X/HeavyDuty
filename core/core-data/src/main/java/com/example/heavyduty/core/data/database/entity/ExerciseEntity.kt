@@ -16,6 +16,8 @@ data class ExerciseEntity(
     val exerciseType: String,
     val equipment: String = "",
     val isCustom: Boolean = false,
+    /** "KG" or "LB" — see Exercise.weightUnit. Weights are still always stored in kg. */
+    val weightUnit: String = "KG",
     /** Gson-encoded {"MUSCLE_NAME": weight} map — see Exercise.muscleWeights. Empty = unset. */
     val muscleWeightsJson: String = "",
 )

@@ -15,6 +15,8 @@ data class Exercise(
     val exerciseType: ExerciseType,
     val equipment: String = "",
     val isCustom: Boolean = false,
+    /** Unit this exercise's weight is entered/displayed in — storage is always kg regardless, see [WeightUnit]. */
+    val weightUnit: WeightUnit = WeightUnit.KG,
     /**
      * Fractional credit per muscle worked, summing to ~1.0 (a compound movement's secondary
      * muscles come from the catalog's real secondary_muscles data, not a guess) — use this,

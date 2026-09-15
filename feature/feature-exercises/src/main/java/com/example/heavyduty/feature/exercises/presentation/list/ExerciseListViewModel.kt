@@ -61,6 +61,18 @@ class ExerciseListViewModel @Inject constructor(
                     _uiEffect.emit(ExerciseListUiEffect.NavigateToDetail(event.exerciseId))
                 }
             }
+            is ExerciseListUiEvent.OnToggleSelection -> {
+                _uiState.update { state ->
+                    val selected = state.selectedIds
+                    state.copy(
+                        selectedIds = if (event.exerciseId in selected) {
+                            selected - event.exerciseId
+                        } else {
+                            selected + event.exerciseId
+                        },
+                    )
+                }
+            }
         }
     }
 

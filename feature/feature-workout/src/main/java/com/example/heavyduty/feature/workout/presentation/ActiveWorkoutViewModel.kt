@@ -6,9 +6,12 @@ import androidx.lifecycle.viewModelScope
 import com.example.heavyduty.core.domain.model.Effort
 import com.example.heavyduty.core.domain.model.Exercise
 import com.example.heavyduty.core.domain.model.RoutineExercise
+import com.example.heavyduty.core.domain.model.WeightUnit
 import com.example.heavyduty.core.domain.model.WorkoutSet
+import com.example.heavyduty.core.domain.model.kgTo
 import com.example.heavyduty.core.domain.model.nextPrescription
 import com.example.heavyduty.core.domain.model.prefillFromLastSession
+import com.example.heavyduty.core.domain.model.toKgFrom
 import com.example.heavyduty.core.domain.model.toProgressionConfig
 import com.example.heavyduty.core.domain.repository.ExerciseRepository
 import com.example.heavyduty.core.domain.repository.RoutineRepository
@@ -46,6 +49,7 @@ class ActiveWorkoutViewModel @Inject constructor(
 
     private var cachedExercises: List<Exercise>? = null
     private var workTimerJob: Job? = null
+    private var timerJob: Job? = null
 
     private val routineId: Long? = savedStateHandle.get<Long>("routineId")?.takeIf { it > 0 }
 
@@ -85,10 +89,15 @@ class ActiveWorkoutViewModel @Inject constructor(
             ActiveWorkoutUiEvent.OnToggleWorkTimer -> toggleWorkTimer()
             is ActiveWorkoutUiEvent.OnSelectExercise -> {
                 resetWorkTimer()
-                _uiState.update { it.copy(currentExerciseIndex = event.index, currentSetNumber = 1) }
+                val selectedExId = _uiState.value.routineExercises.getOrNull(event.index)?.exerciseId
+                val nextSet = if (selectedExId != null) {
+                    getNextSetNumber(selectedExId, _uiState.value.completedSets)
+                } else 1
+                _uiState.update { it.copy(currentExerciseIndex = event.index, currentSetNumber = nextSet) }
                 refreshSuggestion()
                 prefillCurrentSet()
             }
+            is ActiveWorkoutUiEvent.OnDeleteSet -> deleteSet(event.set)
             ActiveWorkoutUiEvent.OnLogSet -> logSet()
             ActiveWorkoutUiEvent.OnCompleteWorkout -> completeWorkout()
             ActiveWorkoutUiEvent.OnStartFreeWorkout -> startFreeWorkout()
@@ -100,6 +109,23 @@ class ActiveWorkoutViewModel @Inject constructor(
             is ActiveWorkoutUiEvent.OnAddExercise -> addExerciseToSession(event.exercise)
             ActiveWorkoutUiEvent.OnUseSuggestion -> useSuggestion()
         }
+    }
+
+    private fun getNextSetNumber(exerciseId: Long, completedSets: List<WorkoutSet>): Int {
+        val setsForExercise = completedSets.filter { it.exerciseId == exerciseId }
+        val maxSet = setsForExercise.maxOfOrNull { it.setNumber } ?: 0
+        return maxOf(setsForExercise.size, maxSet) + 1
+    }
+
+    /**
+     * Which exercise to land on when (re)computing state for an already-running session —
+     * on first load this is just index 0, but when the ViewModel is recreated mid-session
+     * (process death, or navigating back into the workout tab from elsewhere) it must resolve
+     * to wherever the lifter actually left off, not silently fall back to the first exercise.
+     */
+    private fun resumeExerciseIndex(exercises: List<RoutineExercise>, completedSets: List<WorkoutSet>): Int {
+        val lastLoggedExerciseId = completedSets.maxByOrNull { it.completedAt ?: 0L }?.exerciseId ?: return 0
+        return exercises.indexOfFirst { it.exerciseId == lastLoggedExerciseId }.takeIf { it >= 0 } ?: 0
     }
 
     /**
@@ -122,11 +148,13 @@ class ActiveWorkoutViewModel @Inject constructor(
     }
 
     private fun useSuggestion() {
-        val suggestion = _uiState.value.suggestedPrescription ?: return
+        val state = _uiState.value
+        val suggestion = state.suggestedPrescription ?: return
+        val unit = state.routineExercises.getOrNull(state.currentExerciseIndex)?.exercise?.weightUnit ?: WeightUnit.KG
         _uiState.update {
             it.copy(
                 repsInput = suggestion.reps?.toString() ?: it.repsInput,
-                weightInput = suggestion.weightKg?.toString() ?: it.weightInput,
+                weightInput = suggestion.weightKg?.kgTo(unit)?.toString() ?: it.weightInput,
             )
         }
     }
@@ -140,6 +168,7 @@ class ActiveWorkoutViewModel @Inject constructor(
         val state = _uiState.value
         if (!state.allowAddingExercises || state.repsInput.isNotEmpty() || state.weightInput.isNotEmpty()) return
         val routineExercise = state.routineExercises.getOrNull(state.currentExerciseIndex) ?: return
+        val unit = routineExercise.exercise?.weightUnit ?: WeightUnit.KG
         val setNumber = state.currentSetNumber
         viewModelScope.launch {
             val history = historyExcludingCurrentSession(routineExercise.exerciseId)
@@ -148,7 +177,7 @@ class ActiveWorkoutViewModel @Inject constructor(
                 if (it.repsInput.isNotEmpty() || it.weightInput.isNotEmpty()) return@update it
                 it.copy(
                     repsInput = prefill.reps?.toString() ?: it.repsInput,
-                    weightInput = prefill.weight?.toString() ?: it.weightInput,
+                    weightInput = prefill.weight?.kgTo(unit)?.toString() ?: it.weightInput,
                 )
             }
         }
@@ -191,22 +220,49 @@ class ActiveWorkoutViewModel @Inject constructor(
         viewModelScope.launch {
             val activeSession = workoutRepository.getActiveSession().firstOrNull()
             if (activeSession != null) {
+                val sessionStartTime = activeSession.startTime
+                val currentElapsed = ((System.currentTimeMillis() - sessionStartTime) / 1000).toInt().coerceAtLeast(0)
                 // Resume active session
                 val sessionWithSets = workoutRepository.getSessionWithSets(activeSession.id).firstOrNull()
+                val sets = sessionWithSets?.sets ?: emptyList()
                 _uiState.update {
                     it.copy(
                         sessionId = activeSession.id,
                         sessionName = activeSession.sessionName,
-                        completedSets = sessionWithSets?.sets ?: emptyList(),
+                        completedSets = sets,
                         isActive = true,
                         isLoading = false,
+                        elapsedSeconds = currentElapsed,
+                        sessionStartTime = sessionStartTime,
                         allowAddingExercises = activeSession.routineId == null,
                     )
                 }
-                activeSession.routineId?.let {
-                    loadRoutineExercises(it)
+                val routineId = activeSession.routineId
+                if (routineId != null) {
+                    loadRoutineExercises(routineId)
+                } else if (sets.isNotEmpty()) {
+                    val distinctExerciseIds = sets.map { it.exerciseId }.distinct()
+                    val exercises = distinctExerciseIds.mapNotNull { exerciseRepository.getExerciseById(it).firstOrNull() }
+                    val routineExercises = exercises.mapIndexed { index, ex ->
+                        RoutineExercise(
+                            exerciseId = ex.id,
+                            exercise = ex,
+                            orderIndex = index,
+                        )
+                    }
+                    val resumeIndex = resumeExerciseIndex(routineExercises, sets)
+                    val currentExId = routineExercises.getOrNull(resumeIndex)?.exerciseId
+                    val nextSet = if (currentExId != null) getNextSetNumber(currentExId, sets) else 1
+                    _uiState.update { state ->
+                        state.copy(
+                            routineExercises = routineExercises,
+                            currentExerciseIndex = resumeIndex,
+                            currentSetNumber = nextSet,
+                        )
+                    }
+                    refreshSuggestion()
                 }
-                startTimer()
+                startTimer(sessionStartTime)
             } else {
                 routineId?.let { startWorkoutFromRoutine(it) } ?: run {
                     _uiState.update { it.copy(isLoading = false) }
@@ -219,10 +275,12 @@ class ActiveWorkoutViewModel @Inject constructor(
         viewModelScope.launch {
             val routine = routineRepository.getRoutineWithExercises(routineId).firstOrNull()
             if (routine != null) {
+                val now = System.currentTimeMillis()
                 val sessionId = startWorkoutUseCase(
                     routineId = routineId,
                     sessionName = routine.name,
                     type = routine.type,
+                    startTime = now,
                 )
                 _uiState.update {
                     it.copy(
@@ -231,10 +289,12 @@ class ActiveWorkoutViewModel @Inject constructor(
                         routineExercises = routine.exercises,
                         isActive = true,
                         isLoading = false,
+                        elapsedSeconds = 0,
+                        sessionStartTime = now,
                     )
                 }
                 refreshSuggestion()
-                startTimer()
+                startTimer(now)
             } else {
                 _uiState.update { it.copy(isLoading = false, error = "Rutina no encontrada") }
             }
@@ -243,7 +303,11 @@ class ActiveWorkoutViewModel @Inject constructor(
 
     private fun startFreeWorkout() {
         viewModelScope.launch {
-            val sessionId = startWorkoutUseCase(sessionName = "Entrenamiento Libre")
+            val now = System.currentTimeMillis()
+            val sessionId = startWorkoutUseCase(
+                sessionName = "Entrenamiento Libre",
+                startTime = now,
+            )
             _uiState.update {
                 it.copy(
                     sessionId = sessionId,
@@ -251,16 +315,27 @@ class ActiveWorkoutViewModel @Inject constructor(
                     isActive = true,
                     isLoading = false,
                     allowAddingExercises = true,
+                    elapsedSeconds = 0,
+                    sessionStartTime = now,
                 )
             }
-            startTimer()
+            startTimer(now)
         }
     }
 
     private fun loadRoutineExercises(routineId: Long) {
         viewModelScope.launch {
             routineRepository.getRoutineWithExercises(routineId).firstOrNull()?.let { routine ->
-                _uiState.update { it.copy(routineExercises = routine.exercises) }
+                _uiState.update { state ->
+                    val resumeIndex = resumeExerciseIndex(routine.exercises, state.completedSets)
+                    val currentExId = routine.exercises.getOrNull(resumeIndex)?.exerciseId
+                    val nextSet = if (currentExId != null) getNextSetNumber(currentExId, state.completedSets) else 1
+                    state.copy(
+                        routineExercises = routine.exercises,
+                        currentExerciseIndex = resumeIndex,
+                        currentSetNumber = nextSet,
+                    )
+                }
                 refreshSuggestion()
             }
         }
@@ -275,7 +350,9 @@ class ActiveWorkoutViewModel @Inject constructor(
         val currentExercise = exercises.getOrNull(state.currentExerciseIndex) ?: return
         val reps = if (state.isTimedInput) null else state.repsInput.toIntOrNull()
         val durationSecs = if (state.isTimedInput) state.workTimerElapsedSecs.takeIf { it > 0 } else null
-        val weight = state.weightInput.toFloatOrNull()
+        // weightInput is typed in the exercise's own display unit — always stored in kg.
+        val unit = currentExercise.exercise?.weightUnit ?: WeightUnit.KG
+        val weight = state.weightInput.toFloatOrNull()?.toKgFrom(unit)
         val effort = state.effortInput.toFloatOrNull()?.let { value ->
             if (state.preferredEffortScale == "RPE") Effort.Rpe(value) else Effort.Rir(value.toInt())
         }
@@ -306,11 +383,13 @@ class ActiveWorkoutViewModel @Inject constructor(
                     isWarmup = state.isWarmupInput,
                     effort = effort,
                 )
+                val newCompletedSets = state.completedSets + loggedSet
+                val nextSet = getNextSetNumber(currentExercise.exerciseId, newCompletedSets)
                 resetWorkTimer()
                 _uiState.update {
                     it.copy(
-                        completedSets = it.completedSets + loggedSet,
-                        currentSetNumber = it.currentSetNumber + 1,
+                        completedSets = newCompletedSets,
+                        currentSetNumber = nextSet,
                         repsInput = "",
                         weightInput = "",
                         isWarmupInput = false,
@@ -321,6 +400,28 @@ class ActiveWorkoutViewModel @Inject constructor(
                 _uiEffect.emit(ActiveWorkoutUiEffect.ShowMessage("¡Serie registrada!"))
             } catch (_: Exception) {
                 _uiEffect.emit(ActiveWorkoutUiEffect.ShowMessage("Error al registrar la serie"))
+            }
+        }
+    }
+
+    private fun deleteSet(set: WorkoutSet) {
+        viewModelScope.launch {
+            try {
+                workoutRepository.deleteSet(set)
+                val newCompletedSets = _uiState.value.completedSets.filter { it.id != set.id }
+                val currentExId = _uiState.value.routineExercises.getOrNull(_uiState.value.currentExerciseIndex)?.exerciseId
+                val nextSet = if (currentExId != null) {
+                    getNextSetNumber(currentExId, newCompletedSets)
+                } else 1
+                _uiState.update {
+                    it.copy(
+                        completedSets = newCompletedSets,
+                        currentSetNumber = nextSet,
+                    )
+                }
+                _uiEffect.emit(ActiveWorkoutUiEffect.ShowMessage("Serie eliminada"))
+            } catch (_: Exception) {
+                _uiEffect.emit(ActiveWorkoutUiEffect.ShowMessage("Error al eliminar la serie"))
             }
         }
     }
@@ -353,6 +454,7 @@ class ActiveWorkoutViewModel @Inject constructor(
 
     private fun addExerciseToSession(exercise: Exercise) {
         resetWorkTimer()
+        val nextSet = getNextSetNumber(exercise.id, _uiState.value.completedSets)
         _uiState.update { state ->
             val newEntry = RoutineExercise(
                 exerciseId = exercise.id,
@@ -362,7 +464,7 @@ class ActiveWorkoutViewModel @Inject constructor(
             state.copy(
                 routineExercises = state.routineExercises + newEntry,
                 currentExerciseIndex = state.routineExercises.size,
-                currentSetNumber = 1,
+                currentSetNumber = nextSet,
                 isPickingExercise = false,
                 exercisePickerQuery = "",
                 exercisePickerResults = emptyList(),
@@ -378,7 +480,9 @@ class ActiveWorkoutViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 completeWorkoutUseCase(sessionId)
-                _uiState.update { it.copy(isActive = false) }
+                timerJob?.cancel()
+                timerJob = null
+                _uiState.update { it.copy(isActive = false, sessionStartTime = null) }
                 _uiEffect.emit(ActiveWorkoutUiEffect.WorkoutCompleted)
             } catch (_: Exception) {
                 _uiEffect.emit(ActiveWorkoutUiEffect.ShowMessage("Error al finalizar el entrenamiento"))
@@ -386,14 +490,20 @@ class ActiveWorkoutViewModel @Inject constructor(
         }
     }
 
-
-
-    private fun startTimer() {
-        viewModelScope.launch {
+    private fun startTimer(startTime: Long) {
+        timerJob?.cancel()
+        timerJob = viewModelScope.launch {
             while (_uiState.value.isActive) {
+                val elapsed = ((System.currentTimeMillis() - startTime) / 1000).toInt().coerceAtLeast(0)
+                _uiState.update { it.copy(elapsedSeconds = elapsed) }
                 delay(1.seconds)
-                _uiState.update { it.copy(elapsedSeconds = it.elapsedSeconds + 1) }
             }
         }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        timerJob?.cancel()
+        workTimerJob?.cancel()
     }
 }

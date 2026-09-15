@@ -20,8 +20,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.automirrored.filled.TrendingDown
-import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.FitnessCenter
@@ -41,7 +39,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -52,6 +49,7 @@ import com.example.heavyduty.core.ui.components.HdBarChart
 import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdEmptyState
 import com.example.heavyduty.core.ui.components.HdLoadingIndicator
+import com.example.heavyduty.core.ui.components.HdStatCard
 import com.example.heavyduty.core.ui.nameResId
 import com.example.heavyduty.feature.stats.domain.model.MuscleVolumeContribution
 import com.example.heavyduty.feature.stats.domain.model.TopExerciseMonthly
@@ -127,7 +125,7 @@ fun InformeMensualScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                             ) {
-                                EnrichedStatCard(
+                                HdStatCard(
                                     icon = Icons.Default.FitnessCenter,
                                     label = "Volumen Total",
                                     value = "${report.totalVolumeKg.formatCompact()} kg",
@@ -138,7 +136,7 @@ fun InformeMensualScreen(
                                     isPositive = (report.prevMonthVolumeDeltaPercent ?: 0f) >= 0,
                                     modifier = Modifier.weight(1f),
                                 )
-                                EnrichedStatCard(
+                                HdStatCard(
                                     icon = Icons.Default.CalendarMonth,
                                     label = "Entrenamientos",
                                     value = "${report.totalWorkouts}",
@@ -159,14 +157,14 @@ fun InformeMensualScreen(
                                 val mins = report.totalDurationMinutes % 60
                                 val durationStr = if (hours > 0) "${hours}h ${mins}m" else "${mins}m"
 
-                                EnrichedStatCard(
+                                HdStatCard(
                                     icon = Icons.Default.Timer,
                                     label = "Tiempo Total",
                                     value = durationStr,
                                     subtext = "Promedio: ${report.avgSessionDurationMinutes} min/sesión",
                                     modifier = Modifier.weight(1f),
                                 )
-                                EnrichedStatCard(
+                                HdStatCard(
                                     icon = Icons.Default.Repeat,
                                     label = "Series Efectivas",
                                     value = "${report.totalSets}",
@@ -279,80 +277,6 @@ private fun MonthSelectorHeader(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 contentDescription = "Mes siguiente",
                 tint = if (hasNextMonth) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
-            )
-        }
-    }
-}
-
-@Composable
-private fun EnrichedStatCard(
-    icon: ImageVector,
-    label: String,
-    value: String,
-    modifier: Modifier = Modifier,
-    deltaText: String? = null,
-    isPositive: Boolean = true,
-    subtext: String? = null,
-) {
-    HdCard(modifier = modifier) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(22.dp),
-            )
-            if (deltaText != null) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(
-                            if (isPositive) Color(0xFF4CAF50).copy(alpha = 0.15f)
-                            else Color(0xFFE53935).copy(alpha = 0.15f)
-                        )
-                        .padding(horizontal = 6.dp, vertical = 2.dp),
-                ) {
-                    Icon(
-                        imageVector = if (isPositive) Icons.AutoMirrored.Filled.TrendingUp else Icons.AutoMirrored.Filled.TrendingDown,
-                        contentDescription = null,
-                        tint = if (isPositive) Color(0xFF4CAF50) else Color(0xFFE53935),
-                        modifier = Modifier.size(12.dp),
-                    )
-                    Spacer(modifier = Modifier.width(2.dp))
-                    Text(
-                        text = deltaText,
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = if (isPositive) Color(0xFF4CAF50) else Color(0xFFE53935),
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        Text(
-            text = value,
-            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.onSurface,
-        )
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-
-        if (subtext != null) {
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = subtext,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
             )
         }
     }

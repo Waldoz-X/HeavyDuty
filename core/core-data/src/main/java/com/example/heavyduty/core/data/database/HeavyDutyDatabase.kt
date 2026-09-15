@@ -26,7 +26,7 @@ import com.example.heavyduty.core.data.database.entity.WorkoutSetEntity
 
         BodyWeightEntity::class,
     ],
-    version = 14,
+    version = 15,
     exportSchema = true,
 )
 abstract class HeavyDutyDatabase : RoomDatabase() {

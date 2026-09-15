@@ -23,6 +23,7 @@ class GetTrainingActivityHeatmapUseCaseTest {
         override fun getSessionById(id: Long): Flow<WorkoutSession?> = flowOf(null)
         override fun getSessionWithSets(id: Long): Flow<WorkoutSession?> = flowOf(null)
         override fun getSessionsByDateRange(startTime: Long, endTime: Long): Flow<List<WorkoutSession>> = flowOf(emptyList())
+        override fun getCompletedSessionsByRoutineId(routineId: Long): Flow<List<WorkoutSession>> = flowOf(emptyList())
         override fun getSetsByExerciseId(exerciseId: Long): Flow<List<WorkoutSet>> = flowOf(emptyList())
         override fun getAllCompletedSets(): Flow<List<WorkoutSet>> = flowOf(emptyList())
         override fun getCompletedSetsByDateRange(startTime: Long, endTime: Long): Flow<List<WorkoutSet>> = flowOf(emptyList())

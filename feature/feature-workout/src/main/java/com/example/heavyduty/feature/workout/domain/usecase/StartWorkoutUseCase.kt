@@ -16,11 +16,12 @@ class StartWorkoutUseCase @Inject constructor(
         routineId: Long? = null,
         sessionName: String = "",
         type: WorkoutType = WorkoutType.GYM,
+        startTime: Long = System.currentTimeMillis(),
     ): Long {
         val session = WorkoutSession(
             routineId = routineId,
             sessionName = sessionName,
-            startTime = System.currentTimeMillis(),
+            startTime = startTime,
             status = WorkoutStatus.IN_PROGRESS,
             type = type,
         )

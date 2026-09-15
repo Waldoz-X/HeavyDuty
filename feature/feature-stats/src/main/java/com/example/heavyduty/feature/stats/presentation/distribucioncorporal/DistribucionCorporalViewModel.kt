@@ -4,56 +4,60 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.heavyduty.core.domain.repository.UserPreferencesRepository
 import com.example.heavyduty.core.ui.components.BodyGender
+import com.example.heavyduty.core.ui.components.StatsPeriod
+import com.example.heavyduty.core.ui.components.currentAndPreviousRange
 import com.example.heavyduty.feature.stats.domain.usecase.GetMuscleGroupFatigueUseCase
 import com.example.heavyduty.feature.stats.domain.usecase.GetMuscleGroupStrengthRetentionUseCase
 import com.example.heavyduty.feature.stats.domain.usecase.GetMuscleGroupVolumeUseCase
+import com.example.heavyduty.feature.stats.domain.usecase.GetPeriodSummaryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.Calendar
 import javax.inject.Inject
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class DistribucionCorporalViewModel @Inject constructor(
     private val getMuscleGroupVolume: GetMuscleGroupVolumeUseCase,
     private val getMuscleGroupFatigue: GetMuscleGroupFatigueUseCase,
     private val getMuscleGroupStrengthRetention: GetMuscleGroupStrengthRetentionUseCase,
+    private val getPeriodSummary: GetPeriodSummaryUseCase,
     private val userPreferencesRepository: UserPreferencesRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DistribucionCorporalUiState())
     val uiState: StateFlow<DistribucionCorporalUiState> = _uiState.asStateFlow()
 
+    private val _selectedPeriod = MutableStateFlow(StatsPeriod.LAST_30_DAYS)
+
     init {
         viewModelScope.launch {
-            val calendar = Calendar.getInstance().apply {
-                set(Calendar.DAY_OF_WEEK, firstDayOfWeek)
-                set(Calendar.HOUR_OF_DAY, 0)
-                set(Calendar.MINUTE, 0)
-                set(Calendar.SECOND, 0)
-                set(Calendar.MILLISECOND, 0)
-            }
-            val startOfWeek = calendar.timeInMillis
-            val now = System.currentTimeMillis()
-
-            combine(
-                getMuscleGroupVolume(startOfWeek, now),
-                getMuscleGroupFatigue(),
-                getMuscleGroupStrengthRetention(),
-                userPreferencesRepository.bodyDiagramGender,
-            ) { volumeByMuscle, fatigueByMuscle, strengthByMuscle, genderValue ->
-                _uiState.update {
-                    it.copy(
-                        volumeByMuscle = volumeByMuscle,
-                        fatigueByMuscle = fatigueByMuscle,
-                        strengthByMuscle = strengthByMuscle,
-                        gender = BodyGender.fromStorageValue(genderValue),
-                        isLoading = false,
-                    )
+            _selectedPeriod.flatMapLatest { period ->
+                val (currentRange, previousRange) = period.currentAndPreviousRange()
+                combine(
+                    getMuscleGroupVolume(currentRange.first, currentRange.last),
+                    getMuscleGroupFatigue(),
+                    getMuscleGroupStrengthRetention(),
+                    userPreferencesRepository.bodyDiagramGender,
+                    getPeriodSummary(currentRange, previousRange),
+                ) { volumeByMuscle, fatigueByMuscle, strengthByMuscle, genderValue, summary ->
+                    _uiState.update {
+                        it.copy(
+                            volumeByMuscle = volumeByMuscle,
+                            fatigueByMuscle = fatigueByMuscle,
+                            strengthByMuscle = strengthByMuscle,
+                            gender = BodyGender.fromStorageValue(genderValue),
+                            selectedPeriod = period,
+                            summary = summary,
+                            isLoading = false,
+                        )
+                    }
                 }
             }.collect { }
         }
@@ -62,6 +66,7 @@ class DistribucionCorporalViewModel @Inject constructor(
     fun onEvent(event: DistribucionCorporalUiEvent) {
         when (event) {
             is DistribucionCorporalUiEvent.OnModeChange -> _uiState.update { it.copy(mode = event.mode) }
+            is DistribucionCorporalUiEvent.OnPeriodChange -> _selectedPeriod.value = event.period
         }
     }
 }

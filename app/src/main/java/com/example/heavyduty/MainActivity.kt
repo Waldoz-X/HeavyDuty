@@ -67,6 +67,7 @@ private val ROUTES_WITH_OWN_TOP_BAR = setOf(
     "program_detail/{programId}",
     "routine_editor/{routineId}",
     "routine_editor",
+    "exercise_picker",
     "progress/{exerciseId}",
     "stats_graph",
     "stats/series",

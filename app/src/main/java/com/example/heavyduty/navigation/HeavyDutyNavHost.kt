@@ -13,9 +13,11 @@ import com.example.heavyduty.feature.calendar.navigation.calendarScreen
 import com.example.heavyduty.feature.dashboard.navigation.dashboardScreen
 import com.example.heavyduty.feature.exercises.navigation.exerciseDetailScreen
 import com.example.heavyduty.feature.exercises.navigation.exerciseListScreen
+import com.example.heavyduty.feature.exercises.navigation.exercisePickerScreen
 import com.example.heavyduty.feature.history.navigation.historyScreen
 import com.example.heavyduty.feature.history.navigation.progressScreen
 import com.example.heavyduty.feature.profile.navigation.profileScreen
+import com.example.heavyduty.feature.routines.presentation.editor.SELECTED_EXERCISE_IDS_KEY
 import com.example.heavyduty.feature.routines.navigation.routineEditorScreen
 import com.example.heavyduty.feature.routines.navigation.routineListScreen
 import com.example.heavyduty.feature.stats.navigation.statsGraph
@@ -75,7 +77,12 @@ fun HeavyDutyNavHost(
                 navController.navigate("routines_graph")
             },
             onStartRoutine = { routineId ->
-                navController.navigate("active_workout/$routineId")
+                // launchSingleTop guards against a double-tap pushing two copies of this
+                // destination, which used to race two ViewModels into each starting their
+                // own workout session for the same routine.
+                navController.navigate("active_workout/$routineId") {
+                    launchSingleTop = true
+                }
             },
         )
 
@@ -103,6 +110,17 @@ fun HeavyDutyNavHost(
                 navController.navigate("progress/$exerciseId")
             },
         )
+        exercisePickerScreen(
+            onExercisesSelected = { exerciseIds ->
+                // Hands the picked ids back to whichever screen pushed this route (the
+                // routine editor) via its own SavedStateHandle — the standard nav-result
+                // pattern, so no shared ViewModel is needed between the two features.
+                navController.previousBackStackEntry?.savedStateHandle
+                    ?.set(SELECTED_EXERCISE_IDS_KEY, exerciseIds.toLongArray())
+                navController.popBackStack()
+            },
+            onCancel = { navController.popBackStack() },
+        )
 
         routineListScreen(
             onRoutineClick = { routineId ->
@@ -114,6 +132,7 @@ fun HeavyDutyNavHost(
         )
         routineEditorScreen(
             onNavigateBack = { navController.popBackStack() },
+            onOpenExercisePicker = { navController.navigate("exercise_picker") },
         )
 
         timerScreen()

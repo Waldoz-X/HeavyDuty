@@ -19,6 +19,25 @@ fun NavGraphBuilder.exerciseListScreen(
 }
 
 /**
+ * Registers the exercise picker composable — the same exercise browser (search, filters,
+ * images) as [exerciseListScreen], but in multi-select mode so a caller (e.g. the routine
+ * editor) can send exercises into itself instead of navigating to exercise detail.
+ */
+fun NavGraphBuilder.exercisePickerScreen(
+    onExercisesSelected: (List<Long>) -> Unit,
+    onCancel: () -> Unit,
+) {
+    composable(route = "exercise_picker") {
+        ExerciseListScreen(
+            onExerciseClick = {},
+            selectionMode = true,
+            onConfirmSelection = onExercisesSelected,
+            onCancelSelection = onCancel,
+        )
+    }
+}
+
+/**
  * Registers the exercise detail composable in the NavHost.
  */
 fun NavGraphBuilder.exerciseDetailScreen(

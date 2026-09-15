@@ -28,6 +28,9 @@ class WorkoutRepositoryImpl @Inject constructor(
     override fun getSessionsByDateRange(startTime: Long, endTime: Long): Flow<List<WorkoutSession>> =
         workoutDao.getSessionsByDateRange(startTime, endTime).map { list -> list.map { it.toDomain() } }
 
+    override fun getCompletedSessionsByRoutineId(routineId: Long): Flow<List<WorkoutSession>> =
+        workoutDao.getCompletedSessionsByRoutineId(routineId).map { list -> list.map { it.toDomain() } }
+
     override fun getSetsByExerciseId(exerciseId: Long): Flow<List<WorkoutSet>> =
         workoutDao.getSetsByExerciseId(exerciseId).map { list -> list.map { it.toDomain() } }
 

@@ -24,6 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
@@ -54,11 +55,15 @@ import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.heavyduty.core.common.extensions.formatDecimal
+import com.example.heavyduty.core.domain.model.Effort
 import com.example.heavyduty.core.domain.model.Exercise
 import com.example.heavyduty.core.domain.model.Prescription
+import com.example.heavyduty.core.domain.model.WeightUnit
+import com.example.heavyduty.core.domain.model.WorkoutSet
 import com.example.heavyduty.core.domain.model.calculatePlatesPerSide
 import com.example.heavyduty.core.domain.model.isBodyweight
 import com.example.heavyduty.core.domain.model.isPerSide
+import com.example.heavyduty.core.domain.model.kgTo
 import com.example.heavyduty.core.ui.components.HdButton
 import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdChip
@@ -208,37 +213,73 @@ private fun ActiveWorkoutContent(
 
             itemsIndexed(uiState.routineExercises) { index, routineExercise ->
                 val isSelected = index == uiState.currentExerciseIndex
+                val completedCount = uiState.completedSets.count { it.exerciseId == routineExercise.exerciseId }
+                val isDone = routineExercise.targetSets > 0 && completedCount >= routineExercise.targetSets
                 HdCard(
                     containerColor = if (isSelected) {
                         MaterialTheme.colorScheme.primaryContainer
                     } else {
                         MaterialTheme.colorScheme.surfaceContainerHigh
                     },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            onEvent(ActiveWorkoutUiEvent.OnSelectExercise(index))
-                        },
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = {
+                        onEvent(ActiveWorkoutUiEvent.OnSelectExercise(index))
+                    },
                 ) {
-                    Text(
-                        text = routineExercise.exercise?.name ?: "Ejercicio #${routineExercise.exerciseId}",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = if (isSelected) {
-                            MaterialTheme.colorScheme.onPrimaryContainer
-                        } else {
-                            MaterialTheme.colorScheme.onSurface
-                        },
-                    )
-                    Text(
-                        text = if (routineExercise.exercise?.isPerSide == true) {
-                            "${routineExercise.targetSets} sets × ${routineExercise.targetReps} reps " +
-                                "(${routineExercise.targetReps / 2} por lado)"
-                        } else {
-                            "${routineExercise.targetSets} sets × ${routineExercise.targetReps} reps"
-                        },
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = routineExercise.exercise?.name ?: "Ejercicio #${routineExercise.exerciseId}",
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                color = if (isSelected) {
+                                    MaterialTheme.colorScheme.onPrimaryContainer
+                                } else {
+                                    MaterialTheme.colorScheme.onSurface
+                                },
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = if (routineExercise.exercise?.isPerSide == true) {
+                                    "${routineExercise.targetSets} sets × ${routineExercise.targetReps} reps " +
+                                        "(${routineExercise.targetReps / 2} por lado)"
+                                } else {
+                                    "${routineExercise.targetSets} sets × ${routineExercise.targetReps} reps"
+                                },
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            if (isDone) {
+                                Icon(
+                                    imageVector = Icons.Default.CheckCircle,
+                                    contentDescription = "Completado",
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(18.dp),
+                                )
+                            }
+                            Text(
+                                text = "$completedCount/${routineExercise.targetSets}",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isDone) {
+                                    MaterialTheme.colorScheme.primary
+                                } else if (isSelected) {
+                                    MaterialTheme.colorScheme.onPrimaryContainer
+                                } else {
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                },
+                            )
+                        }
+                    }
                 }
             }
 
@@ -254,18 +295,40 @@ private fun ActiveWorkoutContent(
 
             // Log set input
             item {
-                val currentExercise = uiState.routineExercises.getOrNull(uiState.currentExerciseIndex)?.exercise
+                val currentExerciseEntry = uiState.routineExercises.getOrNull(uiState.currentExerciseIndex)
+                val currentExercise = currentExerciseEntry?.exercise
                 val isBodyweightExercise = currentExercise?.isBodyweight == true
                 val isPerSideExercise = currentExercise?.isPerSide == true
+                val weightUnitLabel = if (currentExercise?.weightUnit == WeightUnit.LB) "lb" else "kg"
                 var showExtraWeight by remember(uiState.currentExerciseIndex) { mutableStateOf(false) }
                 var showPlateCalculator by remember { mutableStateOf(false) }
+                val completedForThisExercise = uiState.completedSets.filter { it.exerciseId == currentExerciseEntry?.exerciseId }
 
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Registrar Serie #${uiState.currentSetNumber}",
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column {
+                        val headerText = if (currentExerciseEntry != null && currentExerciseEntry.targetSets > 0) {
+                            "Registrar Serie #${uiState.currentSetNumber} de ${currentExerciseEntry.targetSets}"
+                        } else {
+                            "Registrar Serie #${uiState.currentSetNumber}"
+                        }
+                        Text(
+                            text = headerText,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                        Text(
+                            text = "Sesión: ${uiState.completedSets.size} series registradas en total",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
                 // Keeps rendering the last suggestion while it fades out, since suggestedPrescription
                 // can already be null by the time the exit animation plays (e.g. right after logging a set).
                 var cachedSuggestion by remember { mutableStateOf(uiState.suggestedPrescription) }
@@ -324,7 +387,7 @@ private fun ActiveWorkoutContent(
                         OutlinedTextField(
                             value = uiState.weightInput,
                             onValueChange = { onEvent(ActiveWorkoutUiEvent.OnWeightChange(it)) },
-                            label = { Text(if (isBodyweightExercise) "Peso extra (kg)" else "Peso (kg)") },
+                            label = { Text(if (isBodyweightExercise) "Peso extra ($weightUnitLabel)" else "Peso ($weightUnitLabel)") },
                             modifier = Modifier.weight(1f),
                             singleLine = true,
                             shape = RoundedCornerShape(12.dp),
@@ -387,6 +450,26 @@ private fun ActiveWorkoutContent(
                         initialWeight = uiState.weightInput,
                         onDismiss = { showPlateCalculator = false },
                     )
+                }
+
+                if (completedForThisExercise.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "Series completadas en este ejercicio (${completedForThisExercise.size}):",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        completedForThisExercise.forEach { set ->
+                            CompletedSetRow(
+                                set = set,
+                                weightUnit = currentExercise?.weightUnit ?: WeightUnit.KG,
+                                onDelete = { onEvent(ActiveWorkoutUiEvent.OnDeleteSet(set)) },
+                            )
+                        }
+                    }
                 }
             }
         } else if (uiState.allowAddingExercises) {
@@ -640,5 +723,85 @@ private fun formatDuration(totalSeconds: Int): String {
         "%d:%02d:%02d".format(hours, minutes, seconds)
     } else {
         "%02d:%02d".format(minutes, seconds)
+    }
+}
+
+@Composable
+private fun CompletedSetRow(
+    set: WorkoutSet,
+    onDelete: () -> Unit,
+    modifier: Modifier = Modifier,
+    weightUnit: WeightUnit = WeightUnit.KG,
+) {
+    val unitLabel = if (weightUnit == WeightUnit.LB) "lb" else "kg"
+    HdCard(
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        modifier = modifier.fillMaxWidth(),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Text(
+                        text = "Serie #${set.setNumber}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    if (set.isWarmup) {
+                        HdChip(
+                            text = "Calentamiento",
+                            isSelected = false,
+                            onClick = {},
+                        )
+                    }
+                    val effortLabel = when (val effort = set.effort) {
+                        is Effort.Rpe -> "RPE ${effort.value.formatDecimal()}"
+                        is Effort.Rir -> "RIR ${effort.value}"
+                        null -> null
+                    }
+                    if (effortLabel != null) {
+                        Text(
+                            text = effortLabel,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.secondary,
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(2.dp))
+                val weight = set.weight
+                val reps = set.reps
+                val durationSecs = set.durationSecs
+                val displayWeight = weight?.kgTo(weightUnit)
+                val detailText = when {
+                    durationSecs != null -> {
+                        val weightPart = displayWeight?.let { " × ${it.formatDecimal()} $unitLabel" } ?: ""
+                        "${durationSecs}s$weightPart"
+                    }
+                    displayWeight != null && reps != null -> "${reps} reps × ${displayWeight.formatDecimal()} $unitLabel"
+                    reps != null -> "${reps} reps"
+                    else -> "Completada"
+                }
+                Text(
+                    text = detailText,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
+            IconButton(onClick = onDelete) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Eliminar serie",
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+        }
     }
 }

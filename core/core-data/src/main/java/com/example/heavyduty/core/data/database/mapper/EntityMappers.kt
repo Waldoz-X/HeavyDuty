@@ -21,6 +21,7 @@ import com.example.heavyduty.core.domain.model.Routine
 import com.example.heavyduty.core.domain.model.RoutineExercise
 import com.example.heavyduty.core.domain.model.WorkoutSession
 import com.example.heavyduty.core.domain.model.WorkoutSet
+import com.example.heavyduty.core.domain.model.WeightUnit
 import com.example.heavyduty.core.domain.model.WorkoutStatus
 import com.example.heavyduty.core.domain.model.WorkoutType
 
@@ -39,6 +40,7 @@ fun ExerciseEntity.toDomain(): Exercise {
         exerciseType = ExerciseType.valueOf(exerciseType),
         equipment = equipment,
         isCustom = isCustom,
+        weightUnit = runCatching { WeightUnit.valueOf(weightUnit) }.getOrDefault(WeightUnit.KG),
         muscleWeights = decodeMuscleWeights(muscleWeightsJson, primary),
     )
 }
@@ -54,6 +56,7 @@ fun Exercise.toEntity(): ExerciseEntity = ExerciseEntity(
     exerciseType = exerciseType.name,
     equipment = equipment,
     isCustom = isCustom,
+    weightUnit = weightUnit.name,
     muscleWeightsJson = encodeMuscleWeights(muscleWeights),
 )
 

@@ -12,6 +12,8 @@ interface WorkoutRepository {
     fun getSessionById(id: Long): Flow<WorkoutSession?>
     fun getSessionWithSets(id: Long): Flow<WorkoutSession?>
     fun getSessionsByDateRange(startTime: Long, endTime: Long): Flow<List<WorkoutSession>>
+    /** Completed sessions for one routine, oldest first, each with its own sets already loaded. */
+    fun getCompletedSessionsByRoutineId(routineId: Long): Flow<List<WorkoutSession>>
     fun getSetsByExerciseId(exerciseId: Long): Flow<List<WorkoutSet>>
     fun getAllCompletedSets(): Flow<List<WorkoutSet>>
     fun getCompletedSetsByDateRange(startTime: Long, endTime: Long): Flow<List<WorkoutSet>>

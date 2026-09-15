@@ -1,6 +1,7 @@
 package com.example.heavyduty.feature.exercises.presentation.detail
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -44,8 +45,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.example.heavyduty.core.domain.model.Exercise
+import com.example.heavyduty.core.domain.model.WeightUnit
 import com.example.heavyduty.core.domain.model.equipmentLabelFor
 import com.example.heavyduty.core.ui.components.HdCard
+import com.example.heavyduty.core.ui.components.HdChip
 import com.example.heavyduty.core.ui.components.HdLoadingIndicator
 import com.example.heavyduty.core.ui.components.HdTonalButton
 import com.example.heavyduty.core.ui.nameResId
@@ -84,6 +87,7 @@ fun ExerciseDetailScreen(
                     exercise = uiState.exercise!!,
                     onNavigateBack = onNavigateBack,
                     onViewProgress = onViewProgress,
+                    onWeightUnitChange = { viewModel.onEvent(ExerciseDetailUiEvent.OnWeightUnitChange(it)) },
                     modifier = Modifier.padding(top = innerPadding.calculateTopPadding()),
                 )
             }
@@ -110,6 +114,7 @@ private fun ExerciseDetailContent(
     exercise: Exercise,
     onNavigateBack: () -> Unit,
     onViewProgress: (Long) -> Unit,
+    onWeightUnitChange: (WeightUnit) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val accent = exercise.muscleGroup.accentColor()
@@ -247,6 +252,22 @@ private fun ExerciseDetailContent(
                     AccentChip(
                         text = stringResource(exercise.exerciseType.nameResId),
                         color = MaterialTheme.colorScheme.secondary,
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+                SectionHeader(title = "Unidad de peso", accent = accent)
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    HdChip(
+                        text = "kg",
+                        isSelected = exercise.weightUnit == WeightUnit.KG,
+                        onClick = { onWeightUnitChange(WeightUnit.KG) },
+                    )
+                    HdChip(
+                        text = "lb",
+                        isSelected = exercise.weightUnit == WeightUnit.LB,
+                        onClick = { onWeightUnitChange(WeightUnit.LB) },
                     )
                 }
 

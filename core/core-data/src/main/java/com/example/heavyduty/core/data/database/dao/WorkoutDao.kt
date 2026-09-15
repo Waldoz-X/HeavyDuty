@@ -29,7 +29,13 @@ interface WorkoutDao {
     @Query("SELECT * FROM workout_sessions WHERE startTime BETWEEN :startTime AND :endTime ORDER BY startTime DESC")
     fun getSessionsByDateRange(startTime: Long, endTime: Long): Flow<List<WorkoutSessionEntity>>
 
-    @Query("SELECT * FROM workout_sessions WHERE status = 'IN_PROGRESS' LIMIT 1")
+    @Transaction
+    @Query("SELECT * FROM workout_sessions WHERE routineId = :routineId AND status = 'COMPLETED' ORDER BY startTime ASC")
+    fun getCompletedSessionsByRoutineId(routineId: Long): Flow<List<SessionWithSets>>
+
+    // ORDER BY makes this deterministic if more than one session is ever left IN_PROGRESS
+    // (e.g. a duplicate created by a double-tap race) so resume always picks the newest one.
+    @Query("SELECT * FROM workout_sessions WHERE status = 'IN_PROGRESS' ORDER BY startTime DESC LIMIT 1")
     fun getActiveSession(): Flow<WorkoutSessionEntity?>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

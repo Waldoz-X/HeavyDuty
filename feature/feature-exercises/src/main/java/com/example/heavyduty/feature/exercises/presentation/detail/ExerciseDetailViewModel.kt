@@ -3,6 +3,8 @@ package com.example.heavyduty.feature.exercises.presentation.detail
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.heavyduty.core.domain.model.WeightUnit
+import com.example.heavyduty.core.domain.repository.ExerciseRepository
 import com.example.heavyduty.feature.exercises.domain.usecase.GetExerciseDetailUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -18,6 +20,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ExerciseDetailViewModel @Inject constructor(
     private val getExerciseDetailUseCase: GetExerciseDetailUseCase,
+    private val exerciseRepository: ExerciseRepository,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -40,6 +43,15 @@ class ExerciseDetailViewModel @Inject constructor(
                     _uiEffect.emit(ExerciseDetailUiEffect.NavigateBack)
                 }
             }
+            is ExerciseDetailUiEvent.OnWeightUnitChange -> changeWeightUnit(event.unit)
+        }
+    }
+
+    private fun changeWeightUnit(unit: WeightUnit) {
+        val exercise = _uiState.value.exercise ?: return
+        if (exercise.weightUnit == unit) return
+        viewModelScope.launch {
+            exerciseRepository.updateExercise(exercise.copy(weightUnit = unit))
         }
     }
 

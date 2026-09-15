@@ -7,6 +7,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,14 +23,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.filled.FitnessCenter
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.LinkOff
 import androidx.compose.material.icons.filled.RemoveCircleOutline
@@ -46,34 +45,45 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
-import com.example.heavyduty.core.domain.model.Exercise
 import com.example.heavyduty.core.domain.model.ProgressionPolicy
 import com.example.heavyduty.core.domain.model.RoutineExercise
+import com.example.heavyduty.core.domain.model.WeightUnit
 import com.example.heavyduty.core.domain.model.WorkoutType
 import com.example.heavyduty.core.domain.model.isBodyweight
+import com.example.heavyduty.core.domain.model.kgTo
+import com.example.heavyduty.core.domain.model.toKgFrom
 import com.example.heavyduty.core.ui.components.HdButton
 import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdChip
+import com.example.heavyduty.core.ui.components.HdLineChart
 import com.example.heavyduty.core.ui.nameResId
 import com.example.heavyduty.core.ui.components.HdLoadingIndicator
-import com.example.heavyduty.core.ui.components.HdSearchBar
 import com.example.heavyduty.core.ui.components.HdTonalButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RoutineEditorScreen(
     onNavigateBack: () -> Unit,
+    onOpenExercisePicker: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: RoutineEditorViewModel = hiltViewModel(),
 ) {
@@ -180,6 +190,28 @@ fun RoutineEditorScreen(
                     }
                 }
 
+                // Volume history — only meaningful once the routine has been trained at least
+                // a couple of times, so it's absent both for new (unsaved) routines and ones
+                // never actually started yet.
+                if (uiState.isEditMode && uiState.volumeHistory.size >= 2) {
+                    item {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        HdCard(modifier = Modifier.fillMaxWidth()) {
+                            Text(
+                                text = "Volumen por sesión",
+                                style = MaterialTheme.typography.titleSmall,
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            HdLineChart(
+                                data = uiState.volumeHistory,
+                                valueLabelFormatter = { "${it.toInt()} kg" },
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        }
+                    }
+                }
+
                 // Exercises section
                 item {
                     Spacer(modifier = Modifier.height(8.dp))
@@ -195,59 +227,29 @@ fun RoutineEditorScreen(
                         )
                         HdTonalButton(
                             text = "Agregar",
-                            onClick = { viewModel.onEvent(RoutineEditorUiEvent.OnToggleExercisePicker) },
+                            onClick = onOpenExercisePicker,
                             icon = Icons.Default.Add,
                         )
                     }
                 }
 
-                if (uiState.isPickingExercise) {
-                    item {
-                        ExercisePicker(
-                            query = uiState.exercisePickerQuery,
-                            results = uiState.exercisePickerResults,
-                            onQueryChange = { viewModel.onEvent(RoutineEditorUiEvent.OnExercisePickerQueryChange(it)) },
-                            onExercisePick = { viewModel.onEvent(RoutineEditorUiEvent.OnAddExercise(it)) },
-                        )
-                    }
-                }
-
-                // Exercise items
-                itemsIndexed(uiState.exercises) { index, routineExercise ->
-                    val previous = uiState.exercises.getOrNull(index - 1)
-                    val next = uiState.exercises.getOrNull(index + 1)
-                    val isInSuperset = routineExercise.supersetGroupId != null &&
-                        (routineExercise.supersetGroupId == previous?.supersetGroupId ||
-                            routineExercise.supersetGroupId == next?.supersetGroupId)
-
-                    RoutineExerciseItem(
-                        routineExercise = routineExercise,
-                        isInSuperset = isInSuperset,
-                        canMoveUp = index > 0,
-                        canMoveDown = index < uiState.exercises.lastIndex,
-                        onUpdate = { updated ->
+                // Exercise items — a plain Column (not further LazyColumn items) so the drag
+                // handle below can reorder freely without fighting lazy-list virtualization.
+                // Routines rarely have more than a couple dozen exercises, so the loss of
+                // virtualization here is not a concern.
+                item {
+                    ReorderableExerciseList(
+                        exercises = uiState.exercises,
+                        onUpdate = { index, updated ->
                             viewModel.onEvent(RoutineEditorUiEvent.OnUpdateExercise(index, updated))
                         },
-                        onMoveUp = { viewModel.onEvent(RoutineEditorUiEvent.OnMoveExercise(index, -1)) },
-                        onMoveDown = { viewModel.onEvent(RoutineEditorUiEvent.OnMoveExercise(index, 1)) },
-                        onRemove = { viewModel.onEvent(RoutineEditorUiEvent.OnRemoveExercise(routineExercise)) },
+                        onReorder = { from, to ->
+                            viewModel.onEvent(RoutineEditorUiEvent.OnMoveExercise(from, to - from))
+                        },
+                        onRemove = { viewModel.onEvent(RoutineEditorUiEvent.OnRemoveExercise(it)) },
+                        onPairWithNext = { viewModel.onEvent(RoutineEditorUiEvent.OnPairWithNext(it)) },
+                        onUnpair = { viewModel.onEvent(RoutineEditorUiEvent.OnUnpair(it)) },
                     )
-
-                    if (next != null) {
-                        val linkedWithNext = routineExercise.supersetGroupId != null &&
-                            routineExercise.supersetGroupId == next.supersetGroupId
-                        SupersetConnector(
-                            isLinked = linkedWithNext,
-                            onToggle = {
-                                val event = if (linkedWithNext) {
-                                    RoutineEditorUiEvent.OnUnpair(index)
-                                } else {
-                                    RoutineEditorUiEvent.OnPairWithNext(index)
-                                }
-                                viewModel.onEvent(event)
-                            },
-                        )
-                    }
                 }
 
                 // Save button
@@ -265,74 +267,93 @@ fun RoutineEditorScreen(
     }
 }
 
+/**
+ * Renders the routine's exercises as a plain (non-lazy) draggable column: long-press the
+ * handle on an exercise card and drag it up/down to reorder — each threshold crossed swaps
+ * it one position via [onReorder], same as the old up/down-arrow buttons did per tap.
+ */
 @Composable
-private fun ExercisePicker(
-    query: String,
-    results: List<Exercise>,
-    onQueryChange: (String) -> Unit,
-    onExercisePick: (Exercise) -> Unit,
-    modifier: Modifier = Modifier,
+private fun ReorderableExerciseList(
+    exercises: List<RoutineExercise>,
+    onUpdate: (Int, RoutineExercise) -> Unit,
+    onReorder: (from: Int, to: Int) -> Unit,
+    onRemove: (RoutineExercise) -> Unit,
+    onPairWithNext: (Int) -> Unit,
+    onUnpair: (Int) -> Unit,
 ) {
-    HdCard(modifier = modifier.fillMaxWidth()) {
-        Text(
-            text = "Buscar Ejercicio",
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.primary,
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        HdSearchBar(
-            query = query,
-            onQueryChange = onQueryChange,
-            placeholder = "Buscar ejercicios...",
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(220.dp)
-                .background(MaterialTheme.colorScheme.surfaceContainerHighest, RoundedCornerShape(12.dp)),
-        ) {
-            items(items = results, key = { it.id }) { exercise ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onExercisePick(exercise) }
-                        .padding(horizontal = 12.dp, vertical = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .background(
-                                MaterialTheme.colorScheme.surfaceContainerHigh,
-                                RoundedCornerShape(8.dp),
-                            ),
-                    ) {
-                        if (exercise.imageUrl.isNotBlank()) {
-                            AsyncImage(
-                                model = exercise.imageUrl,
-                                contentDescription = exercise.name,
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier.fillMaxSize(),
-                            )
-                        } else {
-                            Icon(
-                                imageVector = Icons.Default.FitnessCenter,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(8.dp),
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = exercise.name,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
+    val itemHeights = remember { mutableStateMapOf<Int, Int>() }
+    var draggedIndex by remember { mutableStateOf<Int?>(null) }
+    var dragOffset by remember { mutableStateOf(0f) }
+    val haptic = LocalHapticFeedback.current
+
+    Column {
+        exercises.forEachIndexed { index, routineExercise ->
+            val previous = exercises.getOrNull(index - 1)
+            val next = exercises.getOrNull(index + 1)
+            val isInSuperset = routineExercise.supersetGroupId != null &&
+                (routineExercise.supersetGroupId == previous?.supersetGroupId ||
+                    routineExercise.supersetGroupId == next?.supersetGroupId)
+            val isDragging = draggedIndex == index
+
+            Box(
+                modifier = Modifier
+                    .zIndex(if (isDragging) 1f else 0f)
+                    .graphicsLayer { translationY = if (isDragging) dragOffset else 0f }
+                    .onGloballyPositioned { itemHeights[index] = it.size.height },
+            ) {
+                RoutineExerciseItem(
+                    routineExercise = routineExercise,
+                    isInSuperset = isInSuperset,
+                    isDragging = isDragging,
+                    dragHandleModifier = Modifier.pointerInput(index) {
+                        detectDragGesturesAfterLongPress(
+                            onDragStart = {
+                                draggedIndex = index
+                                dragOffset = 0f
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            },
+                            onDrag = { change, dragAmount ->
+                                change.consume()
+                                dragOffset += dragAmount.y
+                                val current = draggedIndex ?: return@detectDragGesturesAfterLongPress
+                                val currentHeight = itemHeights[current] ?: return@detectDragGesturesAfterLongPress
+                                val halfHeight = currentHeight / 2f
+                                if (dragOffset > halfHeight && current < exercises.lastIndex) {
+                                    val targetHeight = itemHeights[current + 1] ?: currentHeight
+                                    onReorder(current, current + 1)
+                                    draggedIndex = current + 1
+                                    dragOffset -= targetHeight.toFloat()
+                                } else if (dragOffset < -halfHeight && current > 0) {
+                                    val targetHeight = itemHeights[current - 1] ?: currentHeight
+                                    onReorder(current, current - 1)
+                                    draggedIndex = current - 1
+                                    dragOffset += targetHeight.toFloat()
+                                }
+                            },
+                            onDragEnd = {
+                                draggedIndex = null
+                                dragOffset = 0f
+                            },
+                            onDragCancel = {
+                                draggedIndex = null
+                                dragOffset = 0f
+                            },
+                        )
+                    },
+                    onUpdate = { updated -> onUpdate(index, updated) },
+                    onRemove = { onRemove(routineExercise) },
+                )
+            }
+
+            if (next != null) {
+                val linkedWithNext = routineExercise.supersetGroupId != null &&
+                    routineExercise.supersetGroupId == next.supersetGroupId
+                SupersetConnector(
+                    isLinked = linkedWithNext,
+                    onToggle = {
+                        if (linkedWithNext) onUnpair(index) else onPairWithNext(index)
+                    },
+                )
             }
         }
     }
@@ -342,19 +363,17 @@ private fun ExercisePicker(
 private fun RoutineExerciseItem(
     routineExercise: RoutineExercise,
     isInSuperset: Boolean,
-    canMoveUp: Boolean,
-    canMoveDown: Boolean,
+    isDragging: Boolean,
+    dragHandleModifier: Modifier,
     onUpdate: (RoutineExercise) -> Unit,
-    onMoveUp: () -> Unit,
-    onMoveDown: () -> Unit,
     onRemove: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     HdCard(
-        containerColor = if (isInSuperset) {
-            MaterialTheme.colorScheme.tertiaryContainer
-        } else {
-            MaterialTheme.colorScheme.surfaceContainerHigh
+        containerColor = when {
+            isDragging -> MaterialTheme.colorScheme.primaryContainer
+            isInSuperset -> MaterialTheme.colorScheme.tertiaryContainer
+            else -> MaterialTheme.colorScheme.surfaceContainerHigh
         },
         modifier = modifier,
     ) {
@@ -401,30 +420,14 @@ private fun RoutineExerciseItem(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f),
             )
-            Column {
-                IconButton(onClick = onMoveUp, enabled = canMoveUp) {
-                    Icon(
-                        imageVector = Icons.Default.KeyboardArrowUp,
-                        contentDescription = "Subir",
-                        tint = if (canMoveUp) {
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                        } else {
-                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
-                        },
-                    )
-                }
-                IconButton(onClick = onMoveDown, enabled = canMoveDown) {
-                    Icon(
-                        imageVector = Icons.Default.KeyboardArrowDown,
-                        contentDescription = "Bajar",
-                        tint = if (canMoveDown) {
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                        } else {
-                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
-                        },
-                    )
-                }
-            }
+            Icon(
+                imageVector = Icons.Default.DragHandle,
+                contentDescription = "Arrastrar para reordenar",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = dragHandleModifier
+                    .padding(8.dp)
+                    .size(24.dp),
+            )
             val haptic = LocalHapticFeedback.current
             IconButton(
                 onClick = {
@@ -464,10 +467,11 @@ private fun RoutineExerciseItem(
                 enter = fadeIn() + expandHorizontally(),
                 exit = fadeOut() + shrinkHorizontally(),
             ) {
+                val unit = routineExercise.exercise?.weightUnit ?: WeightUnit.KG
                 CompactNumberField(
-                    label = "Peso (kg)",
-                    value = routineExercise.targetWeight.toInt(),
-                    onValueChange = { onUpdate(routineExercise.copy(targetWeight = it.toFloat())) },
+                    label = if (unit == WeightUnit.LB) "Peso (lb)" else "Peso (kg)",
+                    value = routineExercise.targetWeight.kgTo(unit).toInt(),
+                    onValueChange = { onUpdate(routineExercise.copy(targetWeight = it.toFloat().toKgFrom(unit))) },
                     modifier = Modifier.fillMaxWidth(),
                 )
             }

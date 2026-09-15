@@ -3,13 +3,13 @@ package com.example.heavyduty.feature.routines.presentation.editor
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.heavyduty.core.domain.model.Exercise
 import com.example.heavyduty.core.domain.model.Routine
 import com.example.heavyduty.core.domain.model.RoutineExercise
 import com.example.heavyduty.core.domain.model.pairWithNext
 import com.example.heavyduty.core.domain.model.unpair
 import com.example.heavyduty.core.domain.repository.ExerciseRepository
 import com.example.heavyduty.feature.routines.domain.usecase.CreateRoutineUseCase
+import com.example.heavyduty.feature.routines.domain.usecase.GetRoutineVolumeHistoryUseCase
 import com.example.heavyduty.feature.routines.domain.usecase.GetRoutineWithExercisesUseCase
 import com.example.heavyduty.feature.routines.domain.usecase.UpdateRoutineUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -20,22 +20,30 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+/**
+ * Key used to hand exercise ids back from the exercise-picker route into this screen's own
+ * SavedStateHandle (the standard Navigation-Compose result pattern) — shared with the app
+ * module's nav graph, which sets it on this destination's [androidx.navigation.NavBackStackEntry].
+ */
+const val SELECTED_EXERCISE_IDS_KEY = "selected_exercise_ids"
 
 @HiltViewModel
 class RoutineEditorViewModel @Inject constructor(
     private val createRoutineUseCase: CreateRoutineUseCase,
     private val updateRoutineUseCase: UpdateRoutineUseCase,
     private val getRoutineWithExercisesUseCase: GetRoutineWithExercisesUseCase,
+    private val getRoutineVolumeHistoryUseCase: GetRoutineVolumeHistoryUseCase,
     private val exerciseRepository: ExerciseRepository,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
     private val routineId: Long? = savedStateHandle.get<Long>("routineId")
-
-    private var cachedExercises: List<Exercise>? = null
 
     private val _uiState = MutableStateFlow(RoutineEditorUiState())
     val uiState: StateFlow<RoutineEditorUiState> = _uiState.asStateFlow()
@@ -46,7 +54,30 @@ class RoutineEditorViewModel @Inject constructor(
     init {
         if (routineId != null && routineId > 0) {
             loadRoutine(routineId)
+            viewModelScope.launch {
+                getRoutineVolumeHistoryUseCase(routineId).collect { history ->
+                    _uiState.update { it.copy(volumeHistory = history) }
+                }
+            }
         }
+        savedStateHandle.getStateFlow<LongArray?>(SELECTED_EXERCISE_IDS_KEY, null)
+            .onEach { ids ->
+                if (ids != null) {
+                    val exercises = ids.mapNotNull { exerciseRepository.getExerciseById(it).firstOrNull() }
+                    _uiState.update { state ->
+                        val newEntries = exercises.mapIndexed { offset, ex ->
+                            RoutineExercise(
+                                exerciseId = ex.id,
+                                exercise = ex,
+                                orderIndex = state.exercises.size + offset,
+                            )
+                        }
+                        state.copy(exercises = state.exercises + newEntries)
+                    }
+                    savedStateHandle[SELECTED_EXERCISE_IDS_KEY] = null
+                }
+            }
+            .launchIn(viewModelScope)
     }
 
     fun onEvent(event: RoutineEditorUiEvent) {
@@ -60,9 +91,6 @@ class RoutineEditorViewModel @Inject constructor(
             is RoutineEditorUiEvent.OnTypeChange -> {
                 _uiState.update { it.copy(type = event.type) }
             }
-            RoutineEditorUiEvent.OnToggleExercisePicker -> toggleExercisePicker()
-            is RoutineEditorUiEvent.OnExercisePickerQueryChange -> onExercisePickerQueryChange(event.query)
-            is RoutineEditorUiEvent.OnAddExercise -> addExercise(event.exercise)
             is RoutineEditorUiEvent.OnUpdateExercise -> updateExercise(event.index, event.updated)
             is RoutineEditorUiEvent.OnMoveExercise -> moveExercise(event.index, event.direction)
             is RoutineEditorUiEvent.OnRemoveExercise -> {
@@ -80,48 +108,6 @@ class RoutineEditorViewModel @Inject constructor(
             RoutineEditorUiEvent.OnNavigateBack -> {
                 viewModelScope.launch { _uiEffect.emit(RoutineEditorUiEffect.NavigateBack) }
             }
-        }
-    }
-
-    private fun toggleExercisePicker() {
-        val opening = !_uiState.value.isPickingExercise
-        _uiState.update { it.copy(isPickingExercise = opening) }
-        if (opening && cachedExercises == null) {
-            viewModelScope.launch {
-                cachedExercises = exerciseRepository.getAllExercises().firstOrNull().orEmpty()
-                filterExercisePicker(_uiState.value.exercisePickerQuery)
-            }
-        }
-    }
-
-    private fun onExercisePickerQueryChange(query: String) {
-        _uiState.update { it.copy(exercisePickerQuery = query) }
-        filterExercisePicker(query)
-    }
-
-    private fun filterExercisePicker(query: String) {
-        val source = cachedExercises.orEmpty()
-        val filtered = if (query.isBlank()) {
-            source
-        } else {
-            source.filter { it.name.contains(query, ignoreCase = true) }
-        }
-        _uiState.update { it.copy(exercisePickerResults = filtered.take(30)) }
-    }
-
-    private fun addExercise(exercise: Exercise) {
-        _uiState.update { state ->
-            val newEntry = RoutineExercise(
-                exerciseId = exercise.id,
-                exercise = exercise,
-                orderIndex = state.exercises.size,
-            )
-            state.copy(
-                exercises = state.exercises + newEntry,
-                isPickingExercise = false,
-                exercisePickerQuery = "",
-                exercisePickerResults = emptyList(),
-            )
         }
     }
 

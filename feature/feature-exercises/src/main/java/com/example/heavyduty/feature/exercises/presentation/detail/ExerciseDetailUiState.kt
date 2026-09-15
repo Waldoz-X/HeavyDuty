@@ -1,6 +1,7 @@
 package com.example.heavyduty.feature.exercises.presentation.detail
 
 import com.example.heavyduty.core.domain.model.Exercise
+import com.example.heavyduty.core.domain.model.WeightUnit
 
 /**
  * Immutable UI state for the exercise detail screen.
@@ -16,6 +17,7 @@ data class ExerciseDetailUiState(
  */
 sealed interface ExerciseDetailUiEvent {
     data object OnNavigateBack : ExerciseDetailUiEvent
+    data class OnWeightUnitChange(val unit: WeightUnit) : ExerciseDetailUiEvent
 }
 
 /**

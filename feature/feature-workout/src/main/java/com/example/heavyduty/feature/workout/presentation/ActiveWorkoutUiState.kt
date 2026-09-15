@@ -28,6 +28,7 @@ data class ActiveWorkoutUiState(
     val isWorkTimerRunning: Boolean = false,
     val workTimerElapsedSecs: Int = 0,
     val elapsedSeconds: Int = 0,
+    val sessionStartTime: Long? = null,
     val isLoading: Boolean = true,
     val isActive: Boolean = false,
     /** True for free workouts, where exercises aren't fixed by a routine and can be added on the fly. */
@@ -51,6 +52,7 @@ sealed interface ActiveWorkoutUiEvent {
     data object OnToggleTimedInput : ActiveWorkoutUiEvent
     data object OnToggleWorkTimer : ActiveWorkoutUiEvent
     data object OnLogSet : ActiveWorkoutUiEvent
+    data class OnDeleteSet(val set: WorkoutSet) : ActiveWorkoutUiEvent
     data class OnSelectExercise(val index: Int) : ActiveWorkoutUiEvent
     data object OnCompleteWorkout : ActiveWorkoutUiEvent
     data object OnStartFreeWorkout : ActiveWorkoutUiEvent

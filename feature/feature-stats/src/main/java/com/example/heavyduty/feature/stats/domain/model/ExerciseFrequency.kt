@@ -7,4 +7,5 @@ data class ExerciseFrequency(
     val exerciseId: Long,
     val exerciseName: String,
     val setCount: Int,
+    val imageUrl: String = "",
 )

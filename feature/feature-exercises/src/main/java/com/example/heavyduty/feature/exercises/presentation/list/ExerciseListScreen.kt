@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -28,14 +29,22 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -44,6 +53,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.heavyduty.core.domain.model.Exercise
 import com.example.heavyduty.core.domain.model.MuscleGroup
 import com.example.heavyduty.core.domain.model.equipmentLabelFor
+import com.example.heavyduty.core.ui.components.HdButton
 import com.example.heavyduty.core.ui.components.HdChip
 import com.example.heavyduty.core.ui.components.HdEmptyState
 import com.example.heavyduty.core.ui.components.HdLoadingIndicator
@@ -51,10 +61,14 @@ import com.example.heavyduty.core.ui.components.HdSearchBar
 import com.example.heavyduty.core.ui.nameResId
 import com.example.heavyduty.feature.exercises.presentation.accentColor
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExerciseListScreen(
     onExerciseClick: (Long) -> Unit,
     modifier: Modifier = Modifier,
+    selectionMode: Boolean = false,
+    onConfirmSelection: (List<Long>) -> Unit = {},
+    onCancelSelection: () -> Unit = {},
     viewModel: ExerciseListViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -68,17 +82,58 @@ fun ExerciseListScreen(
         }
     }
 
-    ExerciseListContent(
-        uiState = uiState,
-        onEvent = viewModel::onEvent,
-        modifier = modifier,
-    )
+    if (selectionMode) {
+        Scaffold(
+            modifier = modifier,
+            topBar = {
+                TopAppBar(
+                    title = { Text(text = "Elegir ejercicios") },
+                    navigationIcon = {
+                        IconButton(onClick = onCancelSelection) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Cancelar",
+                            )
+                        }
+                    },
+                )
+            },
+            bottomBar = {
+                if (uiState.selectedIds.isNotEmpty()) {
+                    Surface(shadowElevation = 8.dp) {
+                        HdButton(
+                            text = "Agregar (${uiState.selectedIds.size})",
+                            onClick = { onConfirmSelection(uiState.selectedIds.toList()) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                        )
+                    }
+                }
+            },
+        ) { innerPadding ->
+            ExerciseListContent(
+                uiState = uiState,
+                onEvent = viewModel::onEvent,
+                selectionMode = true,
+                modifier = Modifier.padding(innerPadding),
+            )
+        }
+    } else {
+        ExerciseListContent(
+            uiState = uiState,
+            onEvent = viewModel::onEvent,
+            selectionMode = false,
+            modifier = modifier,
+        )
+    }
 }
 
 @Composable
 private fun ExerciseListContent(
     uiState: ExerciseListUiState,
     onEvent: (ExerciseListUiEvent) -> Unit,
+    selectionMode: Boolean,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -88,13 +143,14 @@ private fun ExerciseListContent(
     ) {
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text(
-            text = "Ejercicios",
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
+        if (!selectionMode) {
+            Text(
+                text = "Ejercicios",
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+        }
 
         HdSearchBar(
             query = uiState.searchQuery,
@@ -173,7 +229,15 @@ private fun ExerciseListContent(
                         ) { exercise ->
                             ExerciseListItem(
                                 exercise = exercise,
-                                onClick = { onEvent(ExerciseListUiEvent.OnExerciseClick(exercise.id)) },
+                                selectionMode = selectionMode,
+                                isSelected = exercise.id in uiState.selectedIds,
+                                onClick = {
+                                    if (selectionMode) {
+                                        onEvent(ExerciseListUiEvent.OnToggleSelection(exercise.id))
+                                    } else {
+                                        onEvent(ExerciseListUiEvent.OnExerciseClick(exercise.id))
+                                    }
+                                },
                             )
                         }
                     }
@@ -188,6 +252,8 @@ private fun ExerciseListItem(
     exercise: Exercise,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    selectionMode: Boolean = false,
+    isSelected: Boolean = false,
 ) {
     val accent = exercise.muscleGroup.accentColor()
 
@@ -201,7 +267,16 @@ private fun ExerciseListItem(
                 spotColor = accent.copy(alpha = 0.35f),
             )
             .clip(MaterialTheme.shapes.large)
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .background(
+                if (isSelected) accent.copy(alpha = 0.18f) else MaterialTheme.colorScheme.surfaceContainerHigh,
+            )
+            .then(
+                if (isSelected) {
+                    Modifier.border(2.dp, accent, MaterialTheme.shapes.large)
+                } else {
+                    Modifier
+                },
+            )
             .clickable(onClick = onClick)
             .padding(12.dp),
     ) {
@@ -235,6 +310,25 @@ private fun ExerciseListItem(
                             .fillMaxSize()
                             .padding(24.dp),
                     )
+                }
+                if (selectionMode && isSelected) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(4.dp)
+                            .size(22.dp)
+                            .clip(RoundedCornerShape(50))
+                            .background(accent),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = "Seleccionado",
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(3.dp),
+                        )
+                    }
                 }
             }
 

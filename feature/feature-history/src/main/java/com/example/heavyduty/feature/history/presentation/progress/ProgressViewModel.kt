@@ -3,6 +3,8 @@ package com.example.heavyduty.feature.history.presentation.progress
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.heavyduty.core.domain.model.WeightUnit
+import com.example.heavyduty.core.domain.repository.ExerciseRepository
 import com.example.heavyduty.feature.history.domain.usecase.GetExercisePersonalRecordsUseCase
 import com.example.heavyduty.feature.history.domain.usecase.GetExerciseProgressUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -21,6 +23,7 @@ import javax.inject.Inject
 class ProgressViewModel @Inject constructor(
     private val getExerciseProgressUseCase: GetExerciseProgressUseCase,
     private val getExercisePersonalRecordsUseCase: GetExercisePersonalRecordsUseCase,
+    private val exerciseRepository: ExerciseRepository,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -49,13 +52,14 @@ class ProgressViewModel @Inject constructor(
             combine(
                 getExerciseProgressUseCase(exerciseId),
                 getExercisePersonalRecordsUseCase(exerciseId),
-            ) { sets, records -> sets to records }
+                exerciseRepository.getExerciseById(exerciseId),
+            ) { sets, records, exercise -> Triple(sets, records, exercise?.weightUnit ?: WeightUnit.KG) }
                 .catch { e ->
                     _uiState.update { it.copy(isLoading = false, error = e.message) }
                 }
-                .collect { (sets, records) ->
+                .collect { (sets, records, weightUnit) ->
                     _uiState.update {
-                        it.copy(sets = sets, personalRecords = records, isLoading = false)
+                        it.copy(sets = sets, personalRecords = records, weightUnit = weightUnit, isLoading = false)
                     }
                 }
         }
