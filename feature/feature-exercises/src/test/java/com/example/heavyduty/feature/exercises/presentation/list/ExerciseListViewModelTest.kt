@@ -5,7 +5,6 @@ import com.example.heavyduty.core.domain.model.ExerciseType
 import com.example.heavyduty.core.domain.model.MuscleGroup
 import com.example.heavyduty.core.testing.MainDispatcherRule
 import com.example.heavyduty.feature.exercises.domain.usecase.GetExercisesUseCase
-import com.example.heavyduty.feature.exercises.domain.usecase.SearchExercisesUseCase
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -32,13 +31,10 @@ class ExerciseListViewModelTest {
     private val allExercises = listOf(benchPress, squat)
 
     private val getExercisesUseCase = mockk<GetExercisesUseCase>()
-    private val searchExercisesUseCase = mockk<SearchExercisesUseCase>()
 
     private fun createViewModel(): ExerciseListViewModel {
         every { getExercisesUseCase(null) } returns flowOf(allExercises)
-        every { getExercisesUseCase(MuscleGroup.CHEST) } returns flowOf(listOf(benchPress))
-        every { searchExercisesUseCase("Bench") } returns flowOf(listOf(benchPress))
-        return ExerciseListViewModel(getExercisesUseCase, searchExercisesUseCase)
+        return ExerciseListViewModel(getExercisesUseCase, mainDispatcherRule.testDispatcher)
     }
 
     @Test
@@ -83,6 +79,35 @@ class ExerciseListViewModelTest {
 
         assertEquals("Bench", state.searchQuery)
         assertEquals(listOf(benchPress), state.exercises)
+    }
+
+    @Test
+    fun `search keeps the selected muscle filter`() {
+        val viewModel = createViewModel()
+
+        viewModel.onEvent(ExerciseListUiEvent.OnFilterSelect(MuscleGroup.QUADRICEPS))
+        viewModel.onEvent(ExerciseListUiEvent.OnSearchQueryChange("press"))
+
+        assertTrue(viewModel.uiState.value.exercises.isEmpty())
+    }
+
+    @Test
+    fun `spanish search terms find the english catalog names`() {
+        val viewModel = createViewModel()
+
+        viewModel.onEvent(ExerciseListUiEvent.OnSearchQueryChange("Sentadílla"))
+
+        assertEquals(listOf(squat), viewModel.uiState.value.exercises)
+    }
+
+    @Test
+    fun `selection keeps the order exercises were picked in`() {
+        val viewModel = createViewModel()
+
+        viewModel.onEvent(ExerciseListUiEvent.OnToggleSelection(squat.id))
+        viewModel.onEvent(ExerciseListUiEvent.OnToggleSelection(benchPress.id))
+
+        assertEquals(listOf(squat.id, benchPress.id), viewModel.uiState.value.selectedIds.toList())
     }
 
     private fun exercise(id: Long, name: String, muscleGroup: MuscleGroup) = Exercise(

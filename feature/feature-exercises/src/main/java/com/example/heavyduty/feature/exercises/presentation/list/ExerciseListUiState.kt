@@ -15,8 +15,10 @@ data class ExerciseListUiState(
     val availableEquipment: List<String> = emptyList(),
     val selectedEquipment: String? = null,
     val error: String? = null,
-    /** Only used when the screen is opened in exercise-picker (selection) mode. */
+    /** Only used when the screen is opened in exercise-picker (selection) mode. In pick order. */
     val selectedIds: Set<Long> = emptySet(),
+    /** Exercise shown in the animated preview dialog, if open. */
+    val previewExercise: Exercise? = null,
 )
 
 /**
@@ -28,6 +30,7 @@ sealed interface ExerciseListUiEvent {
     data class OnEquipmentFilterSelect(val equipment: String?) : ExerciseListUiEvent
     data class OnExerciseClick(val exerciseId: Long) : ExerciseListUiEvent
     data class OnToggleSelection(val exerciseId: Long) : ExerciseListUiEvent
+    data class OnPreviewExercise(val exercise: Exercise?) : ExerciseListUiEvent
 }
 
 /**
