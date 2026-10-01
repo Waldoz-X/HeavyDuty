@@ -11,8 +11,10 @@ data class DashboardUiState(
     val weeklyWorkoutsCount: Int = 0,
     val totalTimeSeconds: Int = 0,
     val weeklyVolumeKg: Float = 0f,
+    /** Name of the last finished workout; null when it has none (the screen shows a default). */
     val recentWorkoutName: String? = null,
-    val recentWorkoutTime: String? = null,
+    /** When the last finished workout ended; null when no workout has been completed yet. */
+    val recentWorkoutEndTime: Long? = null,
     val weeklyMuscleVolume: Map<com.example.heavyduty.core.domain.model.MuscleGroup, Float> = emptyMap(),
     val weekPlan: List<DayPlanUi> = emptyList(),
     val weekOffset: Int = 0,

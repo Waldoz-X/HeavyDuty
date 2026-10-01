@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.combine
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.ZoneId
+import java.time.format.TextStyle
+import java.util.Locale
 import javax.inject.Inject
 
 /**
@@ -64,7 +66,7 @@ class GetWeeklyScheduleOverviewUseCase @Inject constructor(
 
                 DayPlanUi(
                     date = date,
-                    dayLetter = DAY_LETTERS.getValue(day),
+                    dayLetter = dayLetter(date.dayOfWeek),
                     dayNumber = date.dayOfMonth,
                     routines = plannedRoutines,
                     isToday = date.isEqual(today),
@@ -73,7 +75,11 @@ class GetWeeklyScheduleOverviewUseCase @Inject constructor(
             }
         }
 
-    private companion object {
-        val DAY_LETTERS = mapOf(1 to "Lu", 2 to "Ma", 3 to "Mi", 4 to "Ju", 5 to "Vi", 6 to "Sá", 7 to "Do")
+    /** Two-letter weekday in the device language ("Lu", "Ma"… / "Mo", "Tu"…). */
+    private fun dayLetter(dayOfWeek: DayOfWeek): String {
+        val locale = Locale.getDefault()
+        return dayOfWeek.getDisplayName(TextStyle.SHORT, locale)
+            .take(2)
+            .replaceFirstChar { it.titlecase(locale) }
     }
 }

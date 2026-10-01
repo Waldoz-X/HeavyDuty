@@ -2,17 +2,15 @@ package com.example.heavyduty.feature.dashboard.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.heavyduty.core.domain.model.MuscleGroup
-import com.example.heavyduty.core.domain.model.WorkoutSession
-import com.example.heavyduty.core.domain.model.WorkoutSet
-import com.example.heavyduty.core.domain.model.excludeWarmups
 import com.example.heavyduty.core.domain.repository.BodyWeightRepository
 import com.example.heavyduty.core.domain.repository.CalendarRepository
-import com.example.heavyduty.core.domain.repository.WorkoutRepository
+import com.example.heavyduty.feature.dashboard.domain.model.currentWeekRanges
 import com.example.heavyduty.feature.dashboard.domain.usecase.GetBodyWeightSummaryUseCase
 import com.example.heavyduty.feature.dashboard.domain.usecase.GetCurrentStreakUseCase
+import com.example.heavyduty.feature.dashboard.domain.usecase.GetRecentWorkoutUseCase
 import com.example.heavyduty.feature.dashboard.domain.usecase.GetWeeklyMuscleVolumeUseCase
 import com.example.heavyduty.feature.dashboard.domain.usecase.GetWeeklyScheduleOverviewUseCase
+import com.example.heavyduty.feature.dashboard.domain.usecase.GetWeeklySummaryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,16 +22,16 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.Calendar
 import javax.inject.Inject
 
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
-    private val workoutRepository: WorkoutRepository,
     private val bodyWeightRepository: BodyWeightRepository,
     private val calendarRepository: CalendarRepository,
+    private val getWeeklySummary: GetWeeklySummaryUseCase,
     private val getWeeklyMuscleVolume: GetWeeklyMuscleVolumeUseCase,
     private val getWeeklyScheduleOverview: GetWeeklyScheduleOverviewUseCase,
+    private val getRecentWorkout: GetRecentWorkoutUseCase,
     private val getBodyWeightSummary: GetBodyWeightSummaryUseCase,
     private val getCurrentStreak: GetCurrentStreakUseCase,
 ) : ViewModel() {
@@ -104,73 +102,44 @@ class DashboardViewModel @Inject constructor(
                         )
                     }
                 }
+                .catch { e ->
+                    _uiState.update { it.copy(error = e.message) }
+                }
                 .collect { }
         }
     }
 
     private fun loadDashboardData() {
         viewModelScope.launch {
-            val calendar = Calendar.getInstance()
-            calendar.set(Calendar.DAY_OF_WEEK, calendar.firstDayOfWeek)
-            calendar.set(Calendar.HOUR_OF_DAY, 0)
-            calendar.set(Calendar.MINUTE, 0)
-            calendar.set(Calendar.SECOND, 0)
-            calendar.set(Calendar.MILLISECOND, 0)
-            val startOfWeek = calendar.timeInMillis
-            val now = System.currentTimeMillis()
-
-            data class DashboardCoreData(
-                val weeklySessions: List<WorkoutSession>,
-                val weeklySets: List<WorkoutSet>,
-                val allSessions: List<WorkoutSession>,
-                val muscleVolume: Map<MuscleGroup, Float>,
-            )
+            // Queries cover the whole current week and move to the next one when it starts,
+            // so workouts logged while the dashboard is kept alive in the back stack show up.
+            val weekly = currentWeekRanges().flatMapLatest { week ->
+                combine(
+                    getWeeklySummary(week),
+                    getWeeklyMuscleVolume(week.first, week.last),
+                ) { totals, muscleVolume -> totals to muscleVolume }
+            }
 
             combine(
-                workoutRepository.getSessionsByDateRange(startOfWeek, now),
-                workoutRepository.getCompletedSetsByDateRange(startOfWeek, now),
-                workoutRepository.getAllSessions(),
-                getWeeklyMuscleVolume(startOfWeek, now),
-            ) { weeklySessions, weeklySets, allSessions, muscleVolume ->
-                DashboardCoreData(weeklySessions, weeklySets.excludeWarmups(), allSessions, muscleVolume)
-            }
-                .combine(getBodyWeightSummary()) { core, weightSummary -> core to weightSummary }
-                .combine(getCurrentStreak()) { (core, weightSummary), streak ->
-                    val weeklyWorkouts = core.weeklySessions.filter { it.endTime != null }
-                    val weeklyCount = weeklyWorkouts.size
-                    val totalTime = weeklyWorkouts.sumOf {
-                        if (it.endTime != null) ((it.endTime!! - it.startTime) / 1000).toInt() else 0
-                    }
-                    val weeklyVolume = core.weeklySets
-                        .sumOf { ((it.reps ?: 0) * (it.weight ?: 0f)).toDouble() }
-                        .toFloat()
-
-                    val recentWorkout = core.allSessions
-                        .filter { it.endTime != null }
-                        .maxByOrNull { it.endTime!! }
-
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            weeklyWorkoutsCount = weeklyCount,
-                            totalTimeSeconds = totalTime,
-                            weeklyVolumeKg = weeklyVolume,
-                            weeklyMuscleVolume = core.muscleVolume,
-                            recentWorkoutName = recentWorkout?.sessionName?.takeIf { it.isNotBlank() } ?: "Entrenamiento",
-                            recentWorkoutTime = recentWorkout?.endTime?.let { time ->
-                                val diff = System.currentTimeMillis() - time
-                                val days = diff / (1000 * 60 * 60 * 24)
-                                when {
-                                    days == 0L -> "Hoy"
-                                    days == 1L -> "Ayer"
-                                    else -> "Hace $days días"
-                                }
-                            },
-                            bodyWeightSummary = weightSummary,
-                            streakDays = streak,
-                        )
-                    }
+                weekly,
+                getRecentWorkout(),
+                getBodyWeightSummary(),
+                getCurrentStreak(),
+            ) { (totals, muscleVolume), recentWorkout, weightSummary, streak ->
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        weeklyWorkoutsCount = totals.workouts,
+                        totalTimeSeconds = totals.durationSecs,
+                        weeklyVolumeKg = totals.volumeKg,
+                        weeklyMuscleVolume = muscleVolume,
+                        recentWorkoutName = recentWorkout?.sessionName?.takeIf { name -> name.isNotBlank() },
+                        recentWorkoutEndTime = recentWorkout?.endTime,
+                        bodyWeightSummary = weightSummary,
+                        streakDays = streak,
+                    )
                 }
+            }
                 .catch { e ->
                     _uiState.update { it.copy(isLoading = false, error = e.message) }
                 }

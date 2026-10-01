@@ -49,6 +49,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -56,6 +57,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.heavyduty.core.common.R
 import com.example.heavyduty.core.common.extensions.formatCompact
 import com.example.heavyduty.core.ui.components.HdButton
 import com.example.heavyduty.core.ui.components.HdCard
@@ -68,6 +70,15 @@ import com.example.heavyduty.core.ui.theme.GradientCyanStart
 import com.example.heavyduty.core.ui.theme.overlay
 import com.example.heavyduty.feature.dashboard.domain.model.DayPlanUi
 import com.example.heavyduty.feature.dashboard.domain.model.DayStatus
+import com.example.heavyduty.feature.dashboard.domain.model.calendarDaysBetween
+import com.example.heavyduty.core.domain.model.label
+import com.example.heavyduty.core.domain.model.toKgFrom
+import com.example.heavyduty.core.domain.model.kgTo
+import com.example.heavyduty.core.ui.weightUnitLabel
+import com.example.heavyduty.core.ui.formatWeightValue
+import com.example.heavyduty.core.ui.formatWeight
+import com.example.heavyduty.core.ui.formatTotalWeight
+import com.example.heavyduty.core.ui.LocalWeightUnit
 
 @Composable
 fun DashboardScreen(
@@ -114,7 +125,7 @@ private fun DashboardContent(
 
         // Header
         Text(
-            text = "¡Bienvenido de nuevo, Atleta!",
+            text = stringResource(R.string.dashboard_welcome_title),
             style = MaterialTheme.typography.headlineLarge.copy(
                 fontWeight = FontWeight.ExtraBold,
                 letterSpacing = (-0.5).sp
@@ -123,7 +134,7 @@ private fun DashboardContent(
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "Vamos a lograr tus metas hoy.",
+            text = stringResource(R.string.dashboard_welcome_subtitle),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -153,9 +164,9 @@ private fun DashboardContent(
         ) {
             // Workouts this week
             StatCard(
-                title = "Esta Semana",
+                title = stringResource(R.string.dashboard_this_week),
                 value = "${uiState.weeklyWorkoutsCount}",
-                subtitle = "Entrenamientos",
+                subtitle = stringResource(R.string.dashboard_workouts),
                 icon = Icons.Default.FitnessCenter,
                 modifier = Modifier.weight(1f)
             )
@@ -163,9 +174,9 @@ private fun DashboardContent(
             // Time trained this week
             val minutes = uiState.totalTimeSeconds / 60
             StatCard(
-                title = "Tiempo Total",
+                title = stringResource(R.string.dashboard_total_time),
                 value = "$minutes",
-                subtitle = "Minutos",
+                subtitle = stringResource(R.string.dashboard_minutes),
                 icon = Icons.Default.Timer,
                 modifier = Modifier.weight(1f)
             )
@@ -175,9 +186,9 @@ private fun DashboardContent(
 
         // Weekly volume
         StatCard(
-            title = "Volumen Semanal",
-            value = "${uiState.weeklyVolumeKg.formatCompact()} kg",
-            subtitle = "Kg Levantados",
+            title = stringResource(R.string.dashboard_weekly_volume),
+            value = stringResource(R.string.dashboard_weekly_volume_value, uiState.weeklyVolumeKg.formatTotalWeight()),
+            subtitle = stringResource(R.string.dashboard_kg_lifted),
             icon = Icons.Default.MonitorWeight,
             modifier = Modifier.fillMaxWidth()
         )
@@ -187,7 +198,7 @@ private fun DashboardContent(
         // Muscle Distribution Radar Chart
         if (uiState.weeklyMuscleVolume.isNotEmpty() && uiState.weeklyMuscleVolume.size >= 3) {
             Text(
-                text = "Distribución Muscular",
+                text = stringResource(R.string.dashboard_muscle_distribution),
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.onBackground
             )
@@ -208,7 +219,7 @@ private fun DashboardContent(
 
         // Quick Actions
         Text(
-            text = "Acciones Rápidas",
+            text = stringResource(R.string.dashboard_quick_actions),
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
             color = MaterialTheme.colorScheme.onBackground
         )
@@ -244,7 +255,7 @@ private fun DashboardContent(
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = "Iniciar Entrenamiento Libre",
+                        text = stringResource(R.string.dashboard_start_free_workout),
                         style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                         color = Color.White
                     )
@@ -255,7 +266,7 @@ private fun DashboardContent(
         Spacer(modifier = Modifier.height(16.dp))
 
         HdTonalButton(
-            text = "Elegir Rutina",
+            text = stringResource(R.string.dashboard_choose_routine),
             onClick = { onEvent(DashboardUiEvent.OnChooseRoutine) },
             modifier = Modifier.fillMaxWidth().height(64.dp),
             icon = Icons.AutoMirrored.Filled.DirectionsRun
@@ -264,9 +275,9 @@ private fun DashboardContent(
         Spacer(modifier = Modifier.height(32.dp))
 
         // Recent Activity
-        if (uiState.recentWorkoutName != null) {
+        if (uiState.recentWorkoutEndTime != null) {
             Text(
-                text = "Actividad Reciente",
+                text = stringResource(R.string.dashboard_recent_activity),
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.onBackground
             )
@@ -293,12 +304,13 @@ private fun DashboardContent(
                     Spacer(modifier = Modifier.width(16.dp))
                     Column {
                         Text(
-                            text = uiState.recentWorkoutName,
+                            text = uiState.recentWorkoutName
+                                ?: stringResource(R.string.dashboard_recent_workout_default),
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = uiState.recentWorkoutTime ?: "Recientemente",
+                            text = relativeDayLabel(uiState.recentWorkoutEndTime),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -308,6 +320,14 @@ private fun DashboardContent(
         }
     }
 }
+
+@Composable
+private fun relativeDayLabel(timeMillis: Long): String =
+    when (val days = calendarDaysBetween(timeMillis, System.currentTimeMillis())) {
+        0 -> stringResource(R.string.time_today)
+        1 -> stringResource(R.string.time_yesterday)
+        else -> stringResource(R.string.time_days_ago, days)
+    }
 
 @Composable
 private fun WeekStripCard(
@@ -322,7 +342,7 @@ private fun WeekStripCard(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             IconButton(onClick = { onEvent(DashboardUiEvent.OnWeekPrev) }) {
-                Icon(imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Semana anterior")
+                Icon(imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = stringResource(R.string.dashboard_previous_week))
             }
             Text(
                 text = weekOffsetLabel(uiState.weekOffset),
@@ -330,7 +350,7 @@ private fun WeekStripCard(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             IconButton(onClick = { onEvent(DashboardUiEvent.OnWeekNext) }) {
-                Icon(imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Semana siguiente")
+                Icon(imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = stringResource(R.string.dashboard_next_week))
             }
         }
         Spacer(modifier = Modifier.height(4.dp))
@@ -343,12 +363,13 @@ private fun WeekStripCard(
     }
 }
 
+@Composable
 private fun weekOffsetLabel(offset: Int): String = when {
-    offset == 0 -> "Esta semana"
-    offset == -1 -> "Semana pasada"
-    offset == 1 -> "Próxima semana"
-    offset < 0 -> "Hace ${-offset} semanas"
-    else -> "En $offset semanas"
+    offset == 0 -> stringResource(R.string.dashboard_week_current)
+    offset == -1 -> stringResource(R.string.dashboard_week_last)
+    offset == 1 -> stringResource(R.string.dashboard_week_upcoming)
+    offset < 0 -> pluralStringResource(R.plurals.dashboard_weeks_ago, -offset, -offset)
+    else -> pluralStringResource(R.plurals.dashboard_weeks_ahead, offset, offset)
 }
 
 @Composable
@@ -401,7 +422,7 @@ private fun TodayCard(
     HdCard(modifier = modifier) {
         Column {
             Text(
-                text = "HOY",
+                text = stringResource(R.string.dashboard_today),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.primary,
             )
@@ -423,7 +444,7 @@ private fun TodayCard(
                     }
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = "Día de descanso",
+                        text = stringResource(R.string.dashboard_rest_day),
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                         color = MaterialTheme.colorScheme.onSurface,
                     )
@@ -457,12 +478,12 @@ private fun TodayCard(
                         if (planned.isCompleted) {
                             Icon(
                                 imageVector = Icons.Default.CheckCircle,
-                                contentDescription = "Completado",
+                                contentDescription = stringResource(R.string.dashboard_completed),
                                 tint = MaterialTheme.colorScheme.primary,
                             )
                         } else {
                             HdButton(
-                                text = "Comenzar",
+                                text = stringResource(R.string.dashboard_start),
                                 onClick = { onEvent(DashboardUiEvent.OnStartTodayRoutine(planned.routineId)) },
                             )
                         }
@@ -487,24 +508,24 @@ private fun BodyWeightCard(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = "Peso corporal",
+                text = stringResource(R.string.dashboard_body_weight),
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.onSurface,
             )
-            HdTextButton(text = "+ Registrar", onClick = { onEvent(DashboardUiEvent.OnOpenLogWeight) })
+            HdTextButton(text = stringResource(R.string.dashboard_log_weight_action), onClick = { onEvent(DashboardUiEvent.OnOpenLogWeight) })
         }
 
         if (summary.currentKg != null) {
             Spacer(modifier = Modifier.height(4.dp))
             Row(verticalAlignment = Alignment.Bottom) {
                 Text(
-                    text = "%.1f".format(summary.currentKg),
+                    text = summary.currentKg.formatWeightValue(),
                     style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onSurface,
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = "kg",
+                    text = weightUnitLabel(),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -517,7 +538,7 @@ private fun BodyWeightCard(
                     }
                     val sign = if (summary.deltaKg >= 0f) "+" else ""
                     Text(
-                        text = "$sign${"%.1f".format(summary.deltaKg)}",
+                        text = "$sign${summary.deltaKg.formatWeightValue()}",
                         style = MaterialTheme.typography.bodyMedium,
                         color = deltaColor,
                     )
@@ -525,21 +546,22 @@ private fun BodyWeightCard(
             }
             if (summary.goalKg != null) {
                 Text(
-                    text = "Meta: ${"%.1f".format(summary.goalKg)} kg",
+                    text = stringResource(R.string.dashboard_weight_goal, summary.goalKg.formatWeight()),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
             Spacer(modifier = Modifier.height(12.dp))
+            val unit = LocalWeightUnit.current
             HdLineChart(
-                data = summary.chartPoints,
-                goalValue = summary.goalKg,
+                data = summary.chartPoints.map { (time, kg) -> time to kg.kgTo(unit) },
+                goalValue = summary.goalKg?.kgTo(unit),
                 modifier = Modifier.fillMaxWidth(),
             )
         } else {
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Registra tu peso para ver la tendencia.",
+                text = stringResource(R.string.dashboard_weight_empty),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -562,7 +584,9 @@ private fun LogWeightBottomSheet(
 ) {
     var weightInput by remember { mutableStateOf("") }
     val sheetState = rememberModalBottomSheetState()
-    val weightKg = weightInput.toFloatOrNull()
+    // Typed in the preferred unit; stored in kg.
+    val unit = LocalWeightUnit.current
+    val weightKg = weightInput.replace(',', '.').toFloatOrNull()?.toKgFrom(unit)
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -576,7 +600,7 @@ private fun LogWeightBottomSheet(
                 .padding(bottom = 24.dp),
         ) {
             Text(
-                text = "Registrar peso",
+                text = stringResource(R.string.dashboard_log_weight_title),
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onSurface,
             )
@@ -584,7 +608,7 @@ private fun LogWeightBottomSheet(
             OutlinedTextField(
                 value = weightInput,
                 onValueChange = { weightInput = it },
-                label = { Text("Peso (kg)") },
+                label = { Text(stringResource(R.string.dashboard_weight_field, unit.label)) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 modifier = Modifier.fillMaxWidth(),
@@ -594,7 +618,7 @@ private fun LogWeightBottomSheet(
             )
             Spacer(modifier = Modifier.height(24.dp))
             HdButton(
-                text = "Guardar",
+                text = stringResource(R.string.dashboard_save),
                 onClick = { weightKg?.let(onSave) },
                 enabled = weightKg != null,
                 modifier = Modifier.fillMaxWidth(),
@@ -616,14 +640,14 @@ private fun StreakCard(uiState: DashboardUiState, modifier: Modifier = Modifier)
             Spacer(modifier = Modifier.width(12.dp))
             Column {
                 Text(
-                    text = "${uiState.streakDays} días seguidos",
+                    text = pluralStringResource(R.plurals.dashboard_streak_days, uiState.streakDays, uiState.streakDays),
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onSurface,
                 )
                 val subtitle = if (uiState.plannedDaysThisWeek > 0) {
-                    "${uiState.weeklyWorkoutsCount}/${uiState.plannedDaysThisWeek} esta semana"
+                    stringResource(R.string.dashboard_planned_progress, uiState.weeklyWorkoutsCount, uiState.plannedDaysThisWeek)
                 } else {
-                    "${uiState.weeklyWorkoutsCount} entrenamientos esta semana"
+                    pluralStringResource(R.plurals.dashboard_workouts_this_week, uiState.weeklyWorkoutsCount, uiState.weeklyWorkoutsCount)
                 }
                 Text(
                     text = subtitle,

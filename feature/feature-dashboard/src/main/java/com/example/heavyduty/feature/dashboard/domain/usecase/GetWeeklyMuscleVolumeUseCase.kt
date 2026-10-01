@@ -1,7 +1,7 @@
 package com.example.heavyduty.feature.dashboard.domain.usecase
 
 import com.example.heavyduty.core.domain.model.MuscleGroup
-import com.example.heavyduty.core.domain.model.excludeWarmups
+import com.example.heavyduty.core.domain.model.countedFor
 import com.example.heavyduty.core.domain.model.muscleCredits
 import com.example.heavyduty.core.domain.repository.ExerciseRepository
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
@@ -12,7 +12,8 @@ import javax.inject.Inject
 
 /**
  * Aggregates training volume (reps * weight) by muscle group for a date range,
- * keeping only the top axes so the radar chart stays readable.
+ * keeping only the top axes so the radar chart stays readable. Counts the same sets as the
+ * weekly volume total (see [countedFor]), so a workout still in progress doesn't show up yet.
  */
 class GetWeeklyMuscleVolumeUseCase @Inject constructor(
     private val workoutRepository: WorkoutRepository,
@@ -20,12 +21,13 @@ class GetWeeklyMuscleVolumeUseCase @Inject constructor(
 ) {
     operator fun invoke(startTime: Long, endTime: Long): Flow<Map<MuscleGroup, Float>> =
         combine(
+            workoutRepository.getSessionsByDateRange(startTime, endTime),
             workoutRepository.getCompletedSetsByDateRange(startTime, endTime),
             exerciseRepository.getAllExercises(),
-        ) { sets, exercises ->
+        ) { sessions, sets, exercises ->
             val exerciseById = exercises.associateBy { it.id }
             val volumeByMuscle = mutableMapOf<MuscleGroup, Float>()
-            sets.excludeWarmups().forEach { set ->
+            sets.countedFor(sessions).forEach { set ->
                 val exercise = exerciseById[set.exerciseId] ?: return@forEach
                 val setVolume = (set.reps ?: 0) * (set.weight ?: 0f)
                 exercise.muscleCredits(setVolume).forEach { (muscle, credit) ->
