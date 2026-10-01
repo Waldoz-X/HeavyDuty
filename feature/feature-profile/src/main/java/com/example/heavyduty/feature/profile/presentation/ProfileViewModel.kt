@@ -30,7 +30,9 @@ import javax.inject.Inject
 
 import com.example.heavyduty.core.domain.model.excludeWarmups
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
+import com.example.heavyduty.core.domain.model.WeightUnit
 import com.example.heavyduty.core.domain.repository.ExerciseRepository
+import com.example.heavyduty.core.domain.repository.UserPreferencesRepository
 import com.example.heavyduty.core.ui.components.WorkoutFeedItem
 import com.example.heavyduty.core.common.R
 import java.util.Calendar
@@ -52,6 +54,7 @@ class ProfileViewModel @Inject constructor(
     private val importBackupUseCase: ImportBackupUseCase,
     workoutRepository: WorkoutRepository,
     exerciseRepository: ExerciseRepository,
+    private val userPreferencesRepository: UserPreferencesRepository,
     @param:ApplicationContext private val appContext: Context,
 ) : ViewModel() {
 
@@ -147,8 +150,9 @@ class ProfileViewModel @Inject constructor(
             getBodyDiagramGenderUseCase(),
             getEffortTrackingEnabledUseCase(),
             getPreferredEffortScaleUseCase(),
-        ) { gender, effortEnabled, effortScale ->
-            ProfileSettings(gender, effortEnabled, effortScale)
+            userPreferencesRepository.preferredWeightUnit,
+        ) { gender, effortEnabled, effortScale, weightUnit ->
+            ProfileSettings(gender, effortEnabled, effortScale, weightUnit)
         }
 
         viewModelScope.launch {
@@ -163,6 +167,7 @@ class ProfileViewModel @Inject constructor(
                         bodyDiagramGender = settings.bodyDiagramGender,
                         effortTrackingEnabled = settings.effortTrackingEnabled,
                         preferredEffortScale = settings.preferredEffortScale,
+                        preferredWeightUnit = settings.preferredWeightUnit,
                         isLoading = false,
                     )
                 }
@@ -182,6 +187,7 @@ class ProfileViewModel @Inject constructor(
         val bodyDiagramGender: String,
         val effortTrackingEnabled: Boolean,
         val preferredEffortScale: String,
+        val preferredWeightUnit: WeightUnit,
     )
 
     /**
@@ -249,6 +255,9 @@ class ProfileViewModel @Inject constructor(
             }
             is ProfileUiEvent.OnPreferredEffortScaleChange -> {
                 viewModelScope.launch { setPreferredEffortScaleUseCase(event.scale) }
+            }
+            is ProfileUiEvent.OnPreferredWeightUnitChange -> {
+                viewModelScope.launch { userPreferencesRepository.setPreferredWeightUnit(event.unit) }
             }
             is ProfileUiEvent.OnExportDataRequested -> exportData(event.uri)
             is ProfileUiEvent.OnImportDataRequested -> importData(event.uri)

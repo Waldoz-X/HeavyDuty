@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.heavyduty.core.ui.components.HdButton
+import com.example.heavyduty.core.domain.model.WeightUnit
 import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdChip
 import com.example.heavyduty.core.ui.components.HdLoadingIndicator
@@ -55,6 +56,7 @@ import com.example.heavyduty.core.ui.components.HdTonalButton
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.example.heavyduty.core.ui.formatTotalWeight
 
 @Composable
 fun ProfileScreen(
@@ -155,7 +157,7 @@ private fun ProfileContent(
                 StatCard(
                     icon = Icons.Default.MonitorWeight,
                     label = "Volumen",
-                    value = "${uiState.stats.totalVolumeKg.formatCompact()} kg",
+                    value = uiState.stats.totalVolumeKg.formatTotalWeight(),
                     modifier = Modifier.weight(1f),
                 )
                 StatCard(
@@ -258,6 +260,35 @@ private fun ProfileContent(
                             onClick = { onEvent(ProfileUiEvent.OnPreferredEffortScaleChange("RPE")) },
                         )
                     }
+                }
+            }
+        }
+
+        item {
+            HdCard(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = "Unidad de peso para totales",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Text(
+                    text = "Volumen, récords y peso corporal se muestran en esta unidad. Cada serie " +
+                        "conserva la unidad de la máquina con que la registraste (kg o lb).",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    HdChip(
+                        text = "Kilos (kg)",
+                        isSelected = uiState.preferredWeightUnit == WeightUnit.KG,
+                        onClick = { onEvent(ProfileUiEvent.OnPreferredWeightUnitChange(WeightUnit.KG)) },
+                    )
+                    HdChip(
+                        text = "Libras (lb)",
+                        isSelected = uiState.preferredWeightUnit == WeightUnit.LB,
+                        onClick = { onEvent(ProfileUiEvent.OnPreferredWeightUnitChange(WeightUnit.LB)) },
+                    )
                 }
             }
         }
