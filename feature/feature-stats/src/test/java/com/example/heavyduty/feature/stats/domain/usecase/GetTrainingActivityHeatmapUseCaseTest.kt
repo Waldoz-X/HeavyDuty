@@ -53,12 +53,16 @@ class GetTrainingActivityHeatmapUseCaseTest {
 
     @Test
     fun `sessions calculate streaks, day of week and time slot distributions`() = runBlocking {
-        val now = System.currentTimeMillis()
-        val cal = Calendar.getInstance().apply { timeInMillis = now }
+        // Pinned to Monday 2026-09-28 so "yesterday" (Sunday) falls in the previous
+        // Monday-first week — with the real clock the weekly streak depended on the weekday.
+        val cal = Calendar.getInstance().apply {
+            clear()
+            set(2026, Calendar.SEPTEMBER, 28, 12, 0)
+        }
+        val now = cal.timeInMillis
 
-        // Set to today at 10:00 AM (Mañana)
+        // Today at 10:00 AM (Mañana)
         cal.set(Calendar.HOUR_OF_DAY, 10)
-        cal.set(Calendar.MINUTE, 0)
         val today10am = cal.timeInMillis
 
         // Yesterday at 10:00 AM (Mañana)
@@ -90,7 +94,7 @@ class GetTrainingActivityHeatmapUseCaseTest {
         val repo = FakeWorkoutRepository(sessions)
         val useCase = GetTrainingActivityHeatmapUseCase(repo)
 
-        val report = useCase().first()
+        val report = useCase { now }.first()
 
         assertEquals(2, report.totalSessions)
         assertEquals(2, report.totalDaysTrained)
@@ -111,5 +115,22 @@ class GetTrainingActivityHeatmapUseCaseTest {
         // Day of week distribution has 7 items
         assertEquals(7, report.dayOfWeekDistribution.size)
         assertTrue(report.favoriteDayName != null)
+    }
+
+    @Test
+    fun `weekly streak continues across new year`() = runBlocking {
+        fun at(year: Int, month: Int, day: Int): Long = Calendar.getInstance().apply {
+            clear()
+            set(year, month, day, 10, 0)
+        }.timeInMillis
+        // Tue Dec 23 2025 and Tue Dec 30 2025: consecutive weeks, the second one is ISO week 1 of 2026.
+        val sessions = listOf(at(2025, Calendar.DECEMBER, 23), at(2025, Calendar.DECEMBER, 30)).mapIndexed { i, start ->
+            WorkoutSession(id = i + 1L, startTime = start, totalDurationSecs = 1800, status = WorkoutStatus.COMPLETED)
+        }
+
+        val report = GetTrainingActivityHeatmapUseCase(FakeWorkoutRepository(sessions)).invoke { at(2025, Calendar.DECEMBER, 31) }.first()
+
+        assertEquals(2, report.currentStreakWeeks)
+        assertEquals(2, report.longestStreakWeeks)
     }
 }

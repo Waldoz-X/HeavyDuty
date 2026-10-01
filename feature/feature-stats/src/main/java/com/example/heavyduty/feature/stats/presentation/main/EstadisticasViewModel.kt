@@ -4,7 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.heavyduty.core.domain.repository.UserPreferencesRepository
 import com.example.heavyduty.core.ui.components.BodyGender
+import com.example.heavyduty.core.ui.components.StatsPeriod
+import com.example.heavyduty.core.ui.components.currentAndPreviousRange
 import com.example.heavyduty.feature.stats.domain.usecase.GetMuscleGroupVolumeUseCase
+import com.example.heavyduty.feature.stats.domain.usecase.GetPeriodSummaryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,11 +22,11 @@ import java.util.Calendar
 import java.util.Locale
 import javax.inject.Inject
 
-private const val DAY_MILLIS = 24 * 60 * 60 * 1000L
 
 @HiltViewModel
 class EstadisticasViewModel @Inject constructor(
     private val getMuscleGroupVolume: GetMuscleGroupVolumeUseCase,
+    private val getPeriodSummary: GetPeriodSummaryUseCase,
     private val userPreferencesRepository: UserPreferencesRepository,
 ) : ViewModel() {
 
@@ -37,7 +40,7 @@ class EstadisticasViewModel @Inject constructor(
         viewModelScope.launch {
             selectedDayMillis
                 .flatMapLatest { dayStart ->
-                    getMuscleGroupVolume(dayStart, dayStart + DAY_MILLIS - 1)
+                    getMuscleGroupVolume(dayStart, nextDayStart(dayStart) - 1)
                         .map { volume -> dayStart to volume }
                 }
                 .combine(userPreferencesRepository.bodyDiagramGender) { (selectedDay, volumeByMuscle), genderValue ->
@@ -51,6 +54,12 @@ class EstadisticasViewModel @Inject constructor(
                     }
                 }
                 .collect { }
+        }
+        viewModelScope.launch {
+            val (current, previous) = StatsPeriod.LAST_30_DAYS.currentAndPreviousRange()
+            getPeriodSummary(current, previous).collect { summary ->
+                _uiState.update { it.copy(summary = summary) }
+            }
         }
     }
 
@@ -89,3 +98,11 @@ private fun Long.toDayChipUi(isSelected: Boolean): DayChipUi {
         isSelected = isSelected,
     )
 }
+
+/** Midnight after [dayStart] — not dayStart + 24h, which is off by an hour on DST days. */
+private fun nextDayStart(dayStart: Long): Long =
+    Calendar.getInstance().apply {
+        timeInMillis = dayStart
+        add(Calendar.DAY_OF_YEAR, 1)
+    }.timeInMillis
+

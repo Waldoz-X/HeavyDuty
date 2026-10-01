@@ -61,6 +61,13 @@ import com.example.heavyduty.core.ui.components.HdLineChart
 import com.example.heavyduty.core.ui.components.HdLoadingIndicator
 import com.example.heavyduty.feature.stats.domain.usecase.BodyWeightHistoryItem
 import com.example.heavyduty.feature.stats.domain.usecase.BodyWeightStatsReport
+import com.example.heavyduty.core.domain.model.label
+import com.example.heavyduty.core.domain.model.toKgFrom
+import com.example.heavyduty.core.domain.model.kgTo
+import com.example.heavyduty.core.ui.weightUnitLabel
+import com.example.heavyduty.core.ui.formatWeightValue
+import com.example.heavyduty.core.ui.formatWeight
+import com.example.heavyduty.core.ui.LocalWeightUnit
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -178,16 +185,17 @@ fun BodyWeightStatsScreen(
                             )
                             if (report.goalWeightKg != null) {
                                 Text(
-                                    text = "Meta: ${"%.1f".format(report.goalWeightKg)} kg",
+                                    text = "Meta: ${report.goalWeightKg.formatWeight()}",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.primary,
                                 )
                             }
                         }
                         Spacer(modifier = Modifier.height(16.dp))
+                        val unit = LocalWeightUnit.current
                         HdLineChart(
-                            data = report.chartPoints,
-                            goalValue = report.goalWeightKg,
+                            data = report.chartPoints.map { (time, kg) -> time to kg.kgTo(unit) },
+                            goalValue = report.goalWeightKg?.kgTo(unit),
                             modifier = Modifier.fillMaxWidth(),
                         )
                     }
@@ -279,7 +287,7 @@ fun BodyWeightStatsScreen(
         AlertDialog(
             onDismissRequest = { entryToDelete = null },
             title = { Text("Eliminar registro") },
-            text = { Text("¿Deseas eliminar el registro de ${entryToDelete?.weightKg?.toWeightString()} kg del ${entryToDelete?.loggedAt?.toFormattedDateTime()}?") },
+            text = { Text("¿Deseas eliminar el registro de ${entryToDelete?.weightKg?.formatWeight()} del ${entryToDelete?.loggedAt?.toFormattedDateTime()}?") },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -355,13 +363,13 @@ private fun WeightGoalHeroCard(
                     )
                     Row(verticalAlignment = Alignment.Bottom) {
                         Text(
-                            text = report.currentWeightKg.toWeightString(),
+                            text = report.currentWeightKg.formatWeightValue(),
                             style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.onSurface,
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "kg",
+                            text = weightUnitLabel(),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(bottom = 4.dp),
@@ -377,13 +385,13 @@ private fun WeightGoalHeroCard(
                     )
                     Row(verticalAlignment = Alignment.Bottom) {
                         Text(
-                            text = report.goalWeightKg.toWeightString(),
+                            text = report.goalWeightKg.formatWeightValue(),
                             style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.primary,
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "kg",
+                            text = weightUnitLabel(),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.padding(bottom = 4.dp),
@@ -403,9 +411,9 @@ private fun WeightGoalHeroCard(
                     val statusText = if (kotlin.math.abs(remaining) <= 0.2f) {
                         "¡Meta cumplida! 🎉"
                     } else if (remaining > 0) {
-                        "Faltan ${"%.1f".format(remaining)} kg"
+                        "Faltan ${remaining.formatWeight()}"
                     } else {
-                        "Exceso: ${"%.1f".format(-remaining)} kg"
+                        "Exceso: ${(-remaining).formatWeight()}"
                     }
 
                     Text(
@@ -442,14 +450,14 @@ private fun WeightGoalHeroCard(
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     Text(
-                        text = "Inicio: ${report.startWeightKg.toWeightString()} kg",
+                        text = "Inicio: ${report.startWeightKg.formatWeight()}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     val totalChange = report.currentWeightKg - report.startWeightKg
                     val sign = if (totalChange > 0) "+" else ""
                     Text(
-                        text = "Cambio total: $sign${"%.1f".format(totalChange)} kg",
+                        text = "Cambio total: $sign${totalChange.formatWeight()}",
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.Medium,
                         color = if (totalChange <= 0) Color(0xFF4CAF50) else MaterialTheme.colorScheme.primary,
@@ -518,7 +526,7 @@ private fun HistoryEntryCard(
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "$sign${"%.1f".format(entry.deltaKg)} kg",
+                            text = "$sign${entry.deltaKg.formatWeight()}",
                             style = MaterialTheme.typography.labelSmall,
                             color = color,
                             fontWeight = FontWeight.SemiBold,
@@ -529,13 +537,13 @@ private fun HistoryEntryCard(
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = entry.weightKg.toWeightString(),
+                    text = entry.weightKg.formatWeightValue(),
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onSurface,
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = "kg",
+                    text = weightUnitLabel(),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -569,13 +577,13 @@ private fun MetricCard(
         if (value != null) {
             Row(verticalAlignment = Alignment.Bottom) {
                 Text(
-                    text = "%.1f".format(value),
+                    text = value.formatWeightValue(),
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onSurface,
                 )
                 Spacer(modifier = Modifier.width(2.dp))
                 Text(
-                    text = "kg",
+                    text = weightUnitLabel(),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -596,7 +604,8 @@ private fun GoalWeightDialog(
     onDismiss: () -> Unit,
     onSave: (Float?) -> Unit,
 ) {
-    var textValue by remember { mutableStateOf(currentGoal?.toString() ?: "") }
+    val unit = LocalWeightUnit.current
+    var textValue by remember { mutableStateOf(currentGoal?.kgTo(unit)?.let { "%.1f".format(it) } ?: "") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -605,7 +614,7 @@ private fun GoalWeightDialog(
         text = {
             Column {
                 Text(
-                    text = "Ingresa tu peso objetivo en kilogramos para calcular tu barra de progreso y trazar la meta en la gráfica.",
+                    text = "Ingresa tu peso objetivo (${unit.label}) para calcular tu barra de progreso y trazar la meta en la gráfica.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -613,7 +622,7 @@ private fun GoalWeightDialog(
                 OutlinedTextField(
                     value = textValue,
                     onValueChange = { textValue = it },
-                    label = { Text("Peso meta (kg)") },
+                    label = { Text("Peso meta (${unit.label})") },
                     placeholder = { Text("ej. 75.0") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true,
@@ -625,7 +634,7 @@ private fun GoalWeightDialog(
             Button(
                 onClick = {
                     val parsed = textValue.replace(',', '.').toFloatOrNull()
-                    onSave(parsed)
+                    onSave(parsed?.toKgFrom(unit))
                 }
             ) {
                 Text("Guardar")
@@ -652,7 +661,8 @@ private fun AddWeightDialog(
     onDismiss: () -> Unit,
     onSave: (Float) -> Unit,
 ) {
-    var textValue by remember { mutableStateOf(initialWeight?.toString() ?: "") }
+    val unit = LocalWeightUnit.current
+    var textValue by remember { mutableStateOf(initialWeight?.kgTo(unit)?.let { "%.1f".format(it) } ?: "") }
     var isError by remember { mutableStateOf(false) }
 
     AlertDialog(
@@ -662,7 +672,7 @@ private fun AddWeightDialog(
         text = {
             Column {
                 Text(
-                    text = "Ingresa tu peso medido en kilogramos:",
+                    text = "Ingresa tu peso medido (${unit.label}):",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -673,7 +683,7 @@ private fun AddWeightDialog(
                         textValue = it
                         isError = false
                     },
-                    label = { Text("Peso corporal (kg)") },
+                    label = { Text("Peso corporal (${unit.label})") },
                     placeholder = { Text("ej. 80.5") },
                     isError = isError,
                     supportingText = if (isError) { { Text("Ingresa un peso numérico válido") } } else null,
@@ -688,7 +698,7 @@ private fun AddWeightDialog(
                 onClick = {
                     val parsed = textValue.replace(',', '.').toFloatOrNull()
                     if (parsed != null && parsed > 0) {
-                        onSave(parsed)
+                        onSave(parsed.toKgFrom(unit))
                     } else {
                         isError = true
                     }

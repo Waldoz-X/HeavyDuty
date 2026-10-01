@@ -44,6 +44,10 @@ import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdChip
 import com.example.heavyduty.core.ui.components.HdLoadingIndicator
 import com.example.heavyduty.core.ui.nameResId
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.font.FontWeight
+import com.example.heavyduty.core.ui.formatTotalWeight
+import com.example.heavyduty.feature.stats.domain.model.PeriodSummary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -83,32 +87,32 @@ fun EstadisticasScreen(
         val advancedStats = listOf(
             AdvancedStatRow(
                 icon = Icons.Default.Timeline,
-                title = "Recuento de series por grupo de músculos",
-                description = "Número de series registradas para cada grupo de músculos.",
+                title = "Series por músculo",
+                description = "Cuántas series efectivas hiciste por grupo muscular.",
                 onClick = onNavigateToSeries,
             ),
             AdvancedStatRow(
                 icon = Icons.Default.PieChart,
-                title = "Distribución de los músculos (gráfico)",
-                description = "Compara las distribuciones actual y previa de los músculos.",
+                title = "Distribución muscular (radar)",
+                description = "Volumen por músculo comparado con el periodo anterior.",
                 onClick = onNavigateToDistribucionRadar,
             ),
             AdvancedStatRow(
                 icon = Icons.Default.Accessibility,
-                title = "Distribución de los músculos (cuerpo)",
-                description = "Mapa semanal de volumen o fatiga por músculo.",
+                title = "Mapa corporal",
+                description = "Volumen, fatiga y fuerza por músculo sobre el cuerpo.",
                 onClick = onNavigateToDistribucionCuerpo,
             ),
             AdvancedStatRow(
                 icon = Icons.Default.EmojiEvents,
-                title = "Ejercicios principales",
-                description = "Lista de ejercicios que realizas con más frecuencia.",
+                title = "Ejercicios más frecuentes",
+                description = "Los ejercicios que más series acumulan.",
                 onClick = onNavigateToPrincipales,
             ),
             AdvancedStatRow(
                 icon = Icons.Default.Leaderboard,
-                title = "Ejercicios de clasificación",
-                description = "Lista de ejercicios elegibles para la clasificación.",
+                title = "Récords personales (1RM)",
+                description = "Tu mejor 1RM estimado en cada ejercicio.",
                 onClick = onNavigateToClasificacion,
             ),
             AdvancedStatRow(
@@ -125,7 +129,7 @@ fun EstadisticasScreen(
             ),
             AdvancedStatRow(
                 icon = Icons.Default.Timeline,
-                title = "Historial de Peso Corporal",
+                title = "Peso corporal",
                 description = "Gráfico y análisis de tu progreso de peso.",
                 onClick = onNavigateToPesoCorporal,
             ),
@@ -134,11 +138,18 @@ fun EstadisticasScreen(
         LazyColumn(
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.fillMaxSize(),
+            // The top bar's height: without it the first cards sat hidden under the title.
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding),
         ) {
             item {
+                SummaryCard(summary = uiState.summary)
+            }
+
+            item {
                 Text(
-                    text = "Gráfico corporal de los últimos siete días",
+                    text = "Músculos trabajados por día",
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
@@ -175,6 +186,15 @@ fun EstadisticasScreen(
                     gender = uiState.gender,
                     modifier = Modifier.fillMaxWidth().height(240.dp),
                 )
+                if (volumeByMuscle.isEmpty()) {
+                    Text(
+                        text = "Sin entrenamiento terminado este día.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center,
+                    )
+                }
             }
 
             item {
@@ -231,3 +251,49 @@ private fun AdvancedStatCard(stat: AdvancedStatRow, modifier: Modifier = Modifie
         }
     }
 }
+
+/** Last 30 days at a glance, each figure against the 30 days before. */
+@Composable
+private fun SummaryCard(summary: PeriodSummary) {
+    HdCard {
+        Text(
+            text = "Últimos 30 días",
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary,
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        Row(modifier = Modifier.fillMaxWidth()) {
+            SummaryFigure("Entrenamientos", summary.workouts.toString(), signed(summary.workoutsDelta), summary.workoutsDelta >= 0, Modifier.weight(1f))
+            SummaryFigure("Series", summary.sets.toString(), signed(summary.setsDelta), summary.setsDelta >= 0, Modifier.weight(1f))
+            val volumeDelta = summary.volumeKgDelta
+            SummaryFigure(
+                label = "Volumen",
+                value = summary.volumeKg.formatTotalWeight(),
+                delta = (if (volumeDelta >= 0) "+" else "−") + kotlin.math.abs(volumeDelta).formatTotalWeight(),
+                isPositive = volumeDelta >= 0,
+                modifier = Modifier.weight(1f),
+            )
+        }
+    }
+}
+
+@Composable
+private fun SummaryFigure(label: String, value: String, delta: String, isPositive: Boolean, modifier: Modifier) {
+    Column(modifier = modifier) {
+        Text(text = label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(
+            text = value,
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        Text(
+            text = delta,
+            style = MaterialTheme.typography.labelSmall,
+            color = if (isPositive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+        )
+    }
+}
+
+private fun signed(value: Int): String = if (value >= 0) "+$value" else "−${-value}"
+

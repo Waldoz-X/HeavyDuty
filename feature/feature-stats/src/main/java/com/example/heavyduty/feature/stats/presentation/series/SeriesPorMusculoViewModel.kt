@@ -2,46 +2,61 @@ package com.example.heavyduty.feature.stats.presentation.series
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.heavyduty.core.ui.components.StatsPeriod
+import com.example.heavyduty.core.ui.components.currentAndPreviousRange
 import com.example.heavyduty.feature.stats.domain.usecase.GetMuscleGroupSetCountUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.Calendar
 import javax.inject.Inject
 
+/**
+ * Working sets per muscle group over a selectable period. The range runs through the end of
+ * today (see [currentAndPreviousRange]) — it used to stop at the moment the screen opened, so
+ * sets logged afterwards were missing, and it only ever covered "this week".
+ */
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class SeriesPorMusculoViewModel @Inject constructor(
     private val getMuscleGroupSetCount: GetMuscleGroupSetCountUseCase,
 ) : ViewModel() {
+
+    private val selectedPeriod = MutableStateFlow(StatsPeriod.LAST_7_DAYS)
 
     private val _uiState = MutableStateFlow(SeriesPorMusculoUiState())
     val uiState: StateFlow<SeriesPorMusculoUiState> = _uiState.asStateFlow()
 
     init {
         viewModelScope.launch {
-            val calendar = Calendar.getInstance().apply {
-                set(Calendar.DAY_OF_WEEK, firstDayOfWeek)
-                set(Calendar.HOUR_OF_DAY, 0)
-                set(Calendar.MINUTE, 0)
-                set(Calendar.SECOND, 0)
-                set(Calendar.MILLISECOND, 0)
-            }
-            val startOfWeek = calendar.timeInMillis
-            val now = System.currentTimeMillis()
-
-            getMuscleGroupSetCount(startOfWeek, now).collect { countByMuscle ->
-                _uiState.update {
-                    it.copy(
-                        data = countByMuscle.entries
-                            .sortedByDescending { entry -> entry.value }
-                            .map { entry -> entry.key to entry.value.toFloat() },
-                        isLoading = false,
-                    )
+            selectedPeriod
+                .flatMapLatest { period ->
+                    val (range, _) = period.currentAndPreviousRange()
+                    getMuscleGroupSetCount(range.first, range.last).map { period to it }
                 }
-            }
+                .collect { (period, countByMuscle) ->
+                    _uiState.update {
+                        it.copy(
+                            data = countByMuscle.entries
+                                .filter { entry -> entry.value > 0f }
+                                .sortedByDescending { entry -> entry.value }
+                                .map { entry -> entry.key to entry.value },
+                            selectedPeriod = period,
+                            isLoading = false,
+                        )
+                    }
+                }
+        }
+    }
+
+    fun onEvent(event: SeriesPorMusculoUiEvent) {
+        when (event) {
+            is SeriesPorMusculoUiEvent.OnPeriodChange -> selectedPeriod.value = event.period
         }
     }
 }

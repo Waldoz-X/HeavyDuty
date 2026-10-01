@@ -56,11 +56,13 @@ private const val HEATMAP_WEEKS = 53
 class GetTrainingActivityHeatmapUseCase @Inject constructor(
     private val workoutRepository: WorkoutRepository,
 ) {
-    operator fun invoke(): Flow<ActivityHeatmapStatsReport> =
+    /** [now] is the clock the streaks are measured against; tests pin it to a fixed date. */
+    operator fun invoke(now: () -> Long = System::currentTimeMillis): Flow<ActivityHeatmapStatsReport> =
         workoutRepository.getAllSessions().map { sessions ->
+            val nowMillis = now()
             val calendar = Calendar.getInstance()
 
-            calendar.timeInMillis = System.currentTimeMillis()
+            calendar.timeInMillis = nowMillis
             calendar.set(Calendar.HOUR_OF_DAY, 0)
             calendar.set(Calendar.MINUTE, 0)
             calendar.set(Calendar.SECOND, 0)
@@ -120,7 +122,8 @@ class GetTrainingActivityHeatmapUseCase @Inject constructor(
                 if (prev == null) {
                     runningDailyStreak = 1
                 } else {
-                    val diffDays = ((dayMillis - prev) / oneDayMillis).toInt()
+                    // Rounded: across a DST change two midnights are 23 or 25 hours apart.
+                    val diffDays = Math.round((dayMillis - prev).toDouble() / oneDayMillis).toInt()
                     if (diffDays == 1) {
                         runningDailyStreak++
                     } else if (diffDays > 1) {
@@ -149,14 +152,19 @@ class GetTrainingActivityHeatmapUseCase @Inject constructor(
             }
 
             // Racha semanal
+            // Consecutive Monday-to-Sunday weeks get consecutive indexes, also across New Year —
+            // "year * 53 + WEEK_OF_YEAR" broke there (Dec 29 can be week 1 of the next year).
             fun getWeekIndex(millis: Long): Long {
                 val cal = Calendar.getInstance().apply {
                     timeInMillis = millis
-                    firstDayOfWeek = Calendar.MONDAY
+                    set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                    val daysSinceMonday = (get(Calendar.DAY_OF_WEEK) - Calendar.MONDAY + 7) % 7
+                    add(Calendar.DAY_OF_YEAR, -daysSinceMonday)
                 }
-                val year = cal.get(Calendar.YEAR)
-                val weekOfYear = cal.get(Calendar.WEEK_OF_YEAR)
-                return (year * 53L) + weekOfYear
+                return Math.round(cal.timeInMillis.toDouble() / (7 * oneDayMillis))
             }
 
             val weeksWithWorkouts = completedSessions.map { getWeekIndex(it.startTime) }.distinct().sorted()
@@ -181,7 +189,7 @@ class GetTrainingActivityHeatmapUseCase @Inject constructor(
                 prevWeekIdx = weekIdx
             }
 
-            val currentWeekIdx = getWeekIndex(System.currentTimeMillis())
+            val currentWeekIdx = getWeekIndex(nowMillis)
             var currentWeeklyStreak = 0
             if (weeksWithWorkouts.contains(currentWeekIdx) || weeksWithWorkouts.contains(currentWeekIdx - 1)) {
                 var checkWeek = if (weeksWithWorkouts.contains(currentWeekIdx)) currentWeekIdx else currentWeekIdx - 1

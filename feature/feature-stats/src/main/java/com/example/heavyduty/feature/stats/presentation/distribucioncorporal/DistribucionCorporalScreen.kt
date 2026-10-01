@@ -44,6 +44,7 @@ import com.example.heavyduty.core.ui.components.HdPeriodSelector
 import com.example.heavyduty.core.ui.components.HdStatCard
 import com.example.heavyduty.core.ui.nameResId
 import com.example.heavyduty.feature.stats.domain.model.PeriodSummary
+import com.example.heavyduty.core.ui.formatTotalWeight
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -181,10 +182,10 @@ private fun BodyPeriodTotals(summary: PeriodSummary) {
             HdStatCard(
                 icon = Icons.Default.FitnessCenter,
                 label = "Volumen",
-                value = "${summary.volumeKg.formatCompact()} kg",
+                value = summary.volumeKg.formatTotalWeight(),
                 deltaText = run {
                     val sign = if (summary.volumeKgDelta >= 0) "+" else "-"
-                    "$sign${kotlin.math.abs(summary.volumeKgDelta).formatCompact()} kg vs. anterior"
+                    "$sign${kotlin.math.abs(summary.volumeKgDelta).formatTotalWeight()} vs. anterior"
                 },
                 isPositive = summary.volumeKgDelta >= 0,
                 modifier = Modifier.weight(1f),

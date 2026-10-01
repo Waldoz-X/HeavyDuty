@@ -1,6 +1,12 @@
 package com.example.heavyduty.feature.stats.presentation.series
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.MaterialTheme
+import com.example.heavyduty.core.common.extensions.formatDecimal
+import com.example.heavyduty.core.ui.components.HdPeriodSelector
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -35,7 +41,7 @@ fun SeriesPorMusculoScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Recuento de series") },
+                title = { Text("Series por músculo") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
@@ -45,22 +51,38 @@ fun SeriesPorMusculoScreen(
         },
         modifier = modifier.fillMaxSize(),
     ) { innerPadding ->
-        when {
-            uiState.isLoading -> HdLoadingIndicator(modifier = Modifier.padding(innerPadding), message = "Cargando...")
-            uiState.data.isEmpty() -> HdEmptyState(
-                icon = Icons.Default.Timeline,
-                title = "Sin series esta semana",
-                description = "Completa entrenamientos para ver el recuento por grupo muscular.",
-                modifier = Modifier.padding(innerPadding),
+        if (uiState.isLoading) {
+            HdLoadingIndicator(modifier = Modifier.padding(innerPadding), message = "Cargando...")
+            return@Scaffold
+        }
+        Column(
+            modifier = Modifier
+                .padding(innerPadding)
+                .padding(16.dp),
+        ) {
+            HdPeriodSelector(
+                selected = uiState.selectedPeriod,
+                onSelect = { viewModel.onEvent(SeriesPorMusculoUiEvent.OnPeriodChange(it)) },
             )
-            else -> {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Series efectivas (sin calentamiento) de entrenamientos terminados. Un ejercicio " +
+                    "compuesto reparte su serie entre los músculos que trabaja.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            if (uiState.data.isEmpty()) {
+                HdEmptyState(
+                    icon = Icons.Default.Timeline,
+                    title = "Sin series en este periodo",
+                    description = "Termina un entrenamiento para ver el recuento por grupo muscular.",
+                )
+            } else {
                 val data = uiState.data.map { (muscle, value) -> stringResource(muscle.nameResId) to value }
                 HdBarChart(
                     data = data,
-                    modifier = Modifier
-                        .padding(innerPadding)
-                        .padding(16.dp),
-                    valueFormatter = { value -> "%.0f".format(value) },
+                    valueFormatter = { value -> value.formatDecimal() },
                 )
             }
         }

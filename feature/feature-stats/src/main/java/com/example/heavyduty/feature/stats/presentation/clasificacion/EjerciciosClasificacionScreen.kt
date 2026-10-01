@@ -29,6 +29,7 @@ import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdEmptyState
 import com.example.heavyduty.core.ui.components.HdLoadingIndicator
 import com.example.heavyduty.feature.stats.domain.model.ExerciseRanking
+import com.example.heavyduty.core.ui.formatWeight
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -88,8 +89,8 @@ private fun RankingRow(ranking: ExerciseRanking, modifier: Modifier = Modifier) 
                 color = MaterialTheme.colorScheme.onSurface,
             )
             Text(
-                text = "${ranking.estimatedOneRepMaxKg.formatDecimal()} kg est. " +
-                    "(${ranking.sourceWeightKg.formatDecimal()} kg × ${ranking.sourceReps})",
+                text = "1RM est. ${ranking.estimatedOneRepMaxKg.formatWeight()} " +
+                    "(${ranking.sourceWeightKg.formatWeight()} × ${ranking.sourceReps})",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

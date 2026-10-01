@@ -2,8 +2,7 @@ package com.example.heavyduty.feature.stats.domain.usecase
 
 import com.example.heavyduty.core.domain.model.WorkoutSession
 import com.example.heavyduty.core.domain.model.WorkoutSet
-import com.example.heavyduty.core.domain.model.WorkoutStatus
-import com.example.heavyduty.core.domain.model.excludeWarmups
+import com.example.heavyduty.core.domain.model.trainingTotals
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
 import com.example.heavyduty.feature.stats.domain.model.PeriodSummary
 import kotlinx.coroutines.Dispatchers
@@ -38,15 +37,12 @@ class GetPeriodSummaryUseCase @Inject constructor(
         }.distinctUntilChanged().flowOn(Dispatchers.Default)
 
     private fun summaryOf(sessions: List<WorkoutSession>, rawSets: List<WorkoutSet>): PeriodSummary {
-        val completedSessions = sessions.filter { it.status == WorkoutStatus.COMPLETED }
-        val completedSessionIds = completedSessions.map { it.id }.toSet()
-        val sets = rawSets.excludeWarmups().filter { it.sessionId in completedSessionIds }
-        val volumeKg = sets.sumOf { ((it.reps ?: 0) * (it.weight ?: 0f)).toDouble() }.toFloat()
+        val totals = trainingTotals(sessions, rawSets)
         return PeriodSummary(
-            workouts = completedSessions.size,
-            durationMinutes = completedSessions.sumOf { it.totalDurationSecs } / 60,
-            volumeKg = volumeKg,
-            sets = sets.size,
+            workouts = totals.workouts,
+            durationMinutes = totals.durationSecs / 60,
+            volumeKg = totals.volumeKg,
+            sets = totals.sets,
         )
     }
 }

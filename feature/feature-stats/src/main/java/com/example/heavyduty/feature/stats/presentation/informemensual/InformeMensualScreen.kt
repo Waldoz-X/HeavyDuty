@@ -53,6 +53,11 @@ import com.example.heavyduty.core.ui.components.HdStatCard
 import com.example.heavyduty.core.ui.nameResId
 import com.example.heavyduty.feature.stats.domain.model.MuscleVolumeContribution
 import com.example.heavyduty.feature.stats.domain.model.TopExerciseMonthly
+import com.example.heavyduty.core.domain.model.kgTo
+import com.example.heavyduty.core.ui.LocalWeightUnit
+import com.example.heavyduty.core.ui.weightUnitLabel
+import com.example.heavyduty.core.ui.formatWeight
+import com.example.heavyduty.core.ui.formatTotalWeight
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -128,7 +133,7 @@ fun InformeMensualScreen(
                                 HdStatCard(
                                     icon = Icons.Default.FitnessCenter,
                                     label = "Volumen Total",
-                                    value = "${report.totalVolumeKg.formatCompact()} kg",
+                                    value = report.totalVolumeKg.formatTotalWeight(),
                                     deltaText = report.prevMonthVolumeDeltaPercent?.let {
                                         val sign = if (it >= 0) "+" else ""
                                         "$sign${"%.1f".format(it)}% vs mes ant."
@@ -218,14 +223,15 @@ fun InformeMensualScreen(
                         item {
                             HdCard(modifier = Modifier.fillMaxWidth()) {
                                 Text(
-                                    text = "Volumen por Semana (kg)",
+                                    text = "Volumen por semana (${weightUnitLabel()})",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.SemiBold,
                                     color = MaterialTheme.colorScheme.onSurface,
                                 )
                                 Spacer(modifier = Modifier.height(16.dp))
+                                val unit = LocalWeightUnit.current
                                 HdBarChart(
-                                    data = report.volumePerWeek,
+                                    data = report.volumePerWeek.map { (week, kg) -> week to kg.kgTo(unit) },
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .height(180.dp),
@@ -326,7 +332,7 @@ private fun MuscleDistributionCard(
                             color = MaterialTheme.colorScheme.onSurface,
                         )
                         Text(
-                            text = "${item.volumeKg.formatCompact()} kg (${"%.0f".format(item.percentage)}%)",
+                            text = "${item.volumeKg.formatTotalWeight()} (${"%.0f".format(item.percentage)}%)",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -417,7 +423,7 @@ private fun TopExercisesCard(
                             color = MaterialTheme.colorScheme.onSurface,
                         )
                         Text(
-                            text = "${exercise.totalSets} series · Peso máx: ${"%.1f".format(exercise.maxWeightKg)} kg",
+                            text = "${exercise.totalSets} series · Peso máx: ${exercise.maxWeightKg.formatWeight()}",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -425,7 +431,7 @@ private fun TopExercisesCard(
 
                     Column(horizontalAlignment = Alignment.End) {
                         Text(
-                            text = "${exercise.totalVolumeKg.formatCompact()} kg",
+                            text = exercise.totalVolumeKg.formatTotalWeight(),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary,
