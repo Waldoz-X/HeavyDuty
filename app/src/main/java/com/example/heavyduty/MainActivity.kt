@@ -1,5 +1,6 @@
 package com.example.heavyduty
 
+import android.app.LocaleManager
 import android.content.Context
 import android.content.res.Configuration
 import android.os.Build
@@ -58,17 +59,23 @@ class MainActivity : ComponentActivity() {
     private val mainViewModel: MainViewModel by viewModels()
 
     /**
-     * Android 12 and older have no per-app language setting, so the Spanish-first default
-     * (see HeavyDutyApp) is applied to this activity's resources directly.
+     * Applies the app language (see HeavyDutyApp) to this activity's resources:
+     * - Android 12 and older have no per-app language setting, so Spanish is applied directly.
+     * - On Android 13+ the system does it, except on the very first launch: HeavyDutyApp sets
+     *   Spanish moments before this activity is created and the system hasn't applied it yet,
+     *   so the first screen came up in the phone's language until the app was reopened.
      */
     override fun attachBaseContext(newBase: Context) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        val appLocale = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            newBase.getSystemService(LocaleManager::class.java)?.applicationLocales?.get(0)
+        } else {
+            Locale.forLanguageTag(HeavyDutyApp.SPANISH).also { Locale.setDefault(it) }
+        }
+        if (appLocale == null || newBase.resources.configuration.locales[0] == appLocale) {
             super.attachBaseContext(newBase)
             return
         }
-        val spanish = Locale.forLanguageTag(HeavyDutyApp.SPANISH)
-        Locale.setDefault(spanish)
-        val config = Configuration(newBase.resources.configuration).apply { setLocale(spanish) }
+        val config = Configuration(newBase.resources.configuration).apply { setLocale(appLocale) }
         super.attachBaseContext(newBase.createConfigurationContext(config))
     }
 
