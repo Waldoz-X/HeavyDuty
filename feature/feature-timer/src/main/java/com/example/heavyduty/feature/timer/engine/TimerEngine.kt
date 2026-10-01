@@ -9,6 +9,7 @@ import android.os.VibratorManager
 import androidx.core.content.ContextCompat
 import com.example.heavyduty.core.common.dispatchers.DefaultDispatcher
 import com.example.heavyduty.core.domain.repository.RestTimerController
+import com.example.heavyduty.core.domain.repository.RestTimerState
 import com.example.heavyduty.feature.timer.domain.model.TimerMode
 import com.example.heavyduty.feature.timer.presentation.TimerUiEffect
 import com.example.heavyduty.feature.timer.presentation.TimerUiEvent
@@ -22,10 +23,13 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -50,6 +54,15 @@ class TimerEngine @Inject constructor(
 
     private val _effects = MutableSharedFlow<TimerUiEffect>(extraBufferCapacity = 1)
     val effects: SharedFlow<TimerUiEffect> = _effects.asSharedFlow()
+
+    override val restState: StateFlow<RestTimerState?> = _state
+        .map { state ->
+            val resting = state.mode == TimerMode.REST &&
+                (state.isRunning || state.isPaused) &&
+                state.remainingSeconds > 0
+            if (resting) RestTimerState(state.remainingSeconds, state.totalSeconds) else null
+        }
+        .stateIn(engineScope, SharingStarted.Eagerly, null)
 
     private var tickJob: Job? = null
 
@@ -87,6 +100,21 @@ class TimerEngine @Inject constructor(
         }
         startService()
         startCountDown()
+    }
+
+    override fun adjustRest(deltaSeconds: Int) {
+        if (restState.value == null) return
+        _state.update {
+            it.copy(
+                remainingSeconds = (it.remainingSeconds + deltaSeconds).coerceAtLeast(0),
+                totalSeconds = (it.totalSeconds + deltaSeconds).coerceAtLeast(1),
+            )
+        }
+    }
+
+    override fun skipRest() {
+        if (restState.value == null) return
+        reset()
     }
 
     private fun selectMode(mode: TimerMode) {

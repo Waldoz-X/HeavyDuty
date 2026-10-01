@@ -2,6 +2,7 @@ package com.example.heavyduty.feature.workout.domain.usecase
 
 import com.example.heavyduty.core.domain.model.Effort
 import com.example.heavyduty.core.domain.model.WorkoutSet
+import com.example.heavyduty.core.domain.model.WeightUnit
 import com.example.heavyduty.core.domain.repository.RestTimerController
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
 import javax.inject.Inject
@@ -24,6 +25,7 @@ class LogSetUseCase @Inject constructor(
         isWarmup: Boolean = false,
         effort: Effort? = null,
         restSeconds: Int? = null,
+        weightUnit: WeightUnit? = null,
     ): Long {
         val set = WorkoutSet(
             sessionId = sessionId,
@@ -37,6 +39,7 @@ class LogSetUseCase @Inject constructor(
             completedAt = System.currentTimeMillis(),
             isWarmup = isWarmup,
             effort = effort,
+            weightUnit = weightUnit,
         )
         val id = workoutRepository.insertSet(set)
         if (restSeconds != null && restSeconds > 0) {
