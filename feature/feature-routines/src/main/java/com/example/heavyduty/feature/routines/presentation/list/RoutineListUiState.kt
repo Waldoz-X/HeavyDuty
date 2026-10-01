@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.routines.presentation.list
 
+import androidx.annotation.StringRes
 import com.example.heavyduty.core.domain.model.Routine
 
 /**
@@ -17,6 +18,8 @@ data class RoutineListUiState(
 sealed interface RoutineListUiEvent {
     data class OnRoutineClick(val routineId: Long) : RoutineListUiEvent
     data object OnCreateRoutine : RoutineListUiEvent
+    data class OnStartRoutine(val routineId: Long) : RoutineListUiEvent
+    /** Sent once the user confirmed the deletion dialog. */
     data class OnDeleteRoutine(val routine: Routine) : RoutineListUiEvent
 }
 
@@ -25,5 +28,7 @@ sealed interface RoutineListUiEvent {
  */
 sealed interface RoutineListUiEffect {
     data class NavigateToEditor(val routineId: Long?) : RoutineListUiEffect
-    data class ShowMessage(val message: String) : RoutineListUiEffect
+    data class StartRoutine(val routineId: Long) : RoutineListUiEffect
+    data class RoutineDeleted(val name: String) : RoutineListUiEffect
+    data class ShowMessage(@param:StringRes val messageResId: Int) : RoutineListUiEffect
 }

@@ -14,11 +14,13 @@ import com.example.heavyduty.feature.routines.presentation.list.RoutineListScree
 fun NavGraphBuilder.routineListScreen(
     onRoutineClick: (Long) -> Unit,
     onCreateRoutine: () -> Unit,
+    onStartRoutine: (Long) -> Unit,
 ) {
     composable(route = "routines_graph") {
         RoutineListScreen(
             onRoutineClick = onRoutineClick,
             onCreateRoutine = onCreateRoutine,
+            onStartRoutine = onStartRoutine,
         )
     }
 }
@@ -39,10 +41,18 @@ fun NavGraphBuilder.routineEditorScreen(
                 defaultValue = -1L
             },
         ),
-    ) {
-        RoutineEditorScreen(onNavigateBack = onNavigateBack, onOpenExercisePicker = onOpenExercisePicker)
+    ) { entry ->
+        RoutineEditorScreen(
+            onNavigateBack = onNavigateBack,
+            onOpenExercisePicker = onOpenExercisePicker,
+            navResults = entry.savedStateHandle,
+        )
     }
-    composable(route = "routine_editor") {
-        RoutineEditorScreen(onNavigateBack = onNavigateBack, onOpenExercisePicker = onOpenExercisePicker)
+    composable(route = "routine_editor") { entry ->
+        RoutineEditorScreen(
+            onNavigateBack = onNavigateBack,
+            onOpenExercisePicker = onOpenExercisePicker,
+            navResults = entry.savedStateHandle,
+        )
     }
 }

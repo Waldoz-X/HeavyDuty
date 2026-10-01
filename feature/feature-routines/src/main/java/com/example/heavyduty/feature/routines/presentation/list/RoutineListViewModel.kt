@@ -2,6 +2,7 @@ package com.example.heavyduty.feature.routines.presentation.list
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.heavyduty.core.common.R
 import com.example.heavyduty.feature.routines.domain.usecase.DeleteRoutineUseCase
 import com.example.heavyduty.feature.routines.domain.usecase.GetRoutinesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -43,13 +44,18 @@ class RoutineListViewModel @Inject constructor(
                     _uiEffect.emit(RoutineListUiEffect.NavigateToEditor(null))
                 }
             }
+            is RoutineListUiEvent.OnStartRoutine -> {
+                viewModelScope.launch {
+                    _uiEffect.emit(RoutineListUiEffect.StartRoutine(event.routineId))
+                }
+            }
             is RoutineListUiEvent.OnDeleteRoutine -> {
                 viewModelScope.launch {
                     try {
                         deleteRoutineUseCase(event.routine)
-                        _uiEffect.emit(RoutineListUiEffect.ShowMessage("Rutina eliminada"))
-                    } catch (e: Exception) {
-                        _uiEffect.emit(RoutineListUiEffect.ShowMessage("Error al eliminar la rutina"))
+                        _uiEffect.emit(RoutineListUiEffect.RoutineDeleted(event.routine.name))
+                    } catch (_: Exception) {
+                        _uiEffect.emit(RoutineListUiEffect.ShowMessage(R.string.routine_error_delete))
                     }
                 }
             }
