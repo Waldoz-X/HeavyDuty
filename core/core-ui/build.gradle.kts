@@ -39,6 +39,8 @@ dependencies {
 
     // Image loading
     implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
+    implementation(libs.coil.gif)
 
     api(project(":core:core-domain"))
     api(project(":core:core-common"))

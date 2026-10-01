@@ -32,6 +32,8 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+        // java.time (LocalDate, DayOfWeek…) needs API 26 natively; minSdk is 24.
+        isCoreLibraryDesugaringEnabled = true
     }
 
 
@@ -41,6 +43,8 @@ android {
 }
 
 dependencies {
+    coreLibraryDesugaring(libs.desugar.jdk.libs)
+
     // Core modules
     implementation(project(":core:core-common"))
     implementation(project(":core:core-domain"))

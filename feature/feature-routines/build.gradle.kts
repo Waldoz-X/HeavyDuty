@@ -50,8 +50,10 @@ dependencies {
 
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
+    implementation(libs.reorderable)
 
     testImplementation(libs.junit)
+    testImplementation(project(":core:core-testing"))
 }
 
 kotlin {
