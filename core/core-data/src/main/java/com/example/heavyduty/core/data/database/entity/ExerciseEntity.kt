@@ -1,5 +1,6 @@
 package com.example.heavyduty.core.data.database.entity
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
@@ -8,6 +9,9 @@ data class ExerciseEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val name: String,
+    /** The catalog's original English name (search matches it too); empty for custom exercises. */
+    @ColumnInfo(defaultValue = "")
+    val nameEn: String = "",
     val description: String = "",
     val instructions: String = "",
     val imageUrl: String = "",

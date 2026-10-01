@@ -1,0 +1,21 @@
+package com.example.heavyduty.core.data.database
+
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
+
+/**
+ * Schema upgrades that keep the user's data. Every future version bump needs one here: the
+ * database no longer falls back to wiping itself on upgrade (see DatabaseModule), because that
+ * silently deleted every workout, routine and weigh-in the user had logged.
+ */
+val MIGRATION_15_16 = object : Migration(15, 16) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        // English catalog name, kept for search once `name` holds the Spanish one.
+        db.execSQL("ALTER TABLE exercises ADD COLUMN nameEn TEXT NOT NULL DEFAULT ''")
+        // kg/lb per routine exercise (the machine used there) and per logged set.
+        db.execSQL("ALTER TABLE routine_exercises ADD COLUMN weightUnit TEXT")
+        db.execSQL("ALTER TABLE workout_sets ADD COLUMN weightUnit TEXT")
+    }
+}
+
+val ALL_MIGRATIONS = arrayOf(MIGRATION_15_16)

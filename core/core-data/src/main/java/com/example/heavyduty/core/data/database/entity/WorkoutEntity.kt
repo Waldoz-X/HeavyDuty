@@ -68,4 +68,6 @@ data class WorkoutSetEntity(
     /** "RIR" or "RPE"; null when no effort was logged. Paired with [effortValue]. */
     val effortType: String? = null,
     val effortValue: Float? = null,
+    /** "KG"/"LB" the set was entered in, so it's shown as logged. [weight] itself is always kg. */
+    val weightUnit: String? = null,
 )

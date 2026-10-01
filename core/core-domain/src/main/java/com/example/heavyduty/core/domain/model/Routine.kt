@@ -37,4 +37,13 @@ data class RoutineExercise(
     val stallThreshold: Int = 3,
     /** See [supersetGroups] doc — membership is by adjacency, not just id equality. */
     val supersetGroupId: String? = null,
+    /**
+     * kg/lb of the equipment used for this exercise in this routine — a machine can be in pounds
+     * while the barbell next to it is in kilos. Null = the exercise's own default ([Exercise.weightUnit]).
+     */
+    val weightUnit: WeightUnit? = null,
 )
+
+/** The unit this routine exercise's weights are shown and typed in. */
+val RoutineExercise.displayUnit: WeightUnit
+    get() = weightUnit ?: exercise?.weightUnit ?: WeightUnit.KG

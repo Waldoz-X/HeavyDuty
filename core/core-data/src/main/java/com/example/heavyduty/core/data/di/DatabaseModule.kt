@@ -5,6 +5,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.heavyduty.core.common.dispatchers.ApplicationScope
+import com.example.heavyduty.core.data.database.ALL_MIGRATIONS
 import com.example.heavyduty.core.data.database.HeavyDutyDatabase
 import com.example.heavyduty.core.data.database.SeedData
 import com.example.heavyduty.core.data.database.dao.BodyWeightDao
@@ -21,6 +22,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import javax.inject.Provider
 import javax.inject.Singleton
+
+/** Oldest schema version with a migration path; see Migrations.kt. */
+private const val FIRST_MIGRATED_VERSION = 15
 
 @Suppress("unused")
 @Module
@@ -47,6 +51,15 @@ object DatabaseModule {
                     }
                 }
 
+                override fun onOpen(db: SupportSQLiteDatabase) {
+                    super.onOpen(db)
+                    // Existing installs seeded with English names get the Spanish ones; a no-op
+                    // once every catalog exercise has been localized.
+                    applicationScope.launch {
+                        SeedData.localizeExerciseNames(context, exerciseDaoProvider.get())
+                    }
+                }
+
                 override fun onDestructiveMigration(db: SupportSQLiteDatabase) {
                     super.onDestructiveMigration(db)
                     applicationScope.launch {
@@ -54,7 +67,12 @@ object DatabaseModule {
                     }
                 }
             })
-            .fallbackToDestructiveMigration(dropAllTables = true)
+            .addMigrations(*ALL_MIGRATIONS)
+            // Only a downgrade (installing an older build over a newer one) may wipe data; an
+            // upgrade without a migration now fails loudly instead of deleting the user's history.
+            .fallbackToDestructiveMigrationOnDowngrade(dropAllTables = true)
+            // Pre-15 builds never shipped migrations; those schemas are still rebuilt as before.
+            .fallbackToDestructiveMigrationFrom(true, *(1 until FIRST_MIGRATED_VERSION).toList().toIntArray())
             .build()
     }
 

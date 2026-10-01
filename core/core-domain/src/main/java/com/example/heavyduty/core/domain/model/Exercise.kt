@@ -6,6 +6,8 @@ package com.example.heavyduty.core.domain.model
 data class Exercise(
     val id: Long = 0,
     val name: String,
+    /** The catalog's original English name — searchable alongside the Spanish [name]. */
+    val nameEn: String = "",
     val description: String = "",
     val instructions: String = "",
     val imageUrl: String = "",
@@ -103,4 +105,5 @@ private val PER_SIDE_NAME_KEYWORDS = listOf(
  * the per-side split rather than assume the raw number IS per side.
  */
 val Exercise.isPerSide: Boolean
-    get() = PER_SIDE_NAME_KEYWORDS.any { name.contains(it, ignoreCase = true) }
+    // The keywords are English: match the catalog's original name, not the translated one.
+    get() = nameEn.ifBlank { name }.let { source -> PER_SIDE_NAME_KEYWORDS.any { source.contains(it, ignoreCase = true) } }

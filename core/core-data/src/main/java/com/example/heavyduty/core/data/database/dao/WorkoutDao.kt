@@ -51,10 +51,20 @@ interface WorkoutDao {
     @Query("SELECT * FROM workout_sets WHERE exerciseId = :exerciseId ORDER BY completedAt DESC")
     fun getSetsByExerciseId(exerciseId: Long): Flow<List<WorkoutSetEntity>>
 
-    @Query("SELECT * FROM workout_sets WHERE isCompleted = 1")
+    /**
+     * Logged sets of FINISHED workouts only — what every stat, record and total counts, so an
+     * unfinished or abandoned workout never inflates them (and all screens agree).
+     */
+    @Query(
+        "SELECT s.* FROM workout_sets s INNER JOIN workout_sessions w ON s.sessionId = w.id " +
+            "WHERE s.isCompleted = 1 AND w.status = 'COMPLETED'",
+    )
     fun getAllCompletedSets(): Flow<List<WorkoutSetEntity>>
 
-    @Query("SELECT * FROM workout_sets WHERE isCompleted = 1 AND completedAt BETWEEN :startTime AND :endTime")
+    @Query(
+        "SELECT s.* FROM workout_sets s INNER JOIN workout_sessions w ON s.sessionId = w.id " +
+            "WHERE s.isCompleted = 1 AND w.status = 'COMPLETED' AND s.completedAt BETWEEN :startTime AND :endTime",
+    )
     fun getCompletedSetsByDateRange(startTime: Long, endTime: Long): Flow<List<WorkoutSetEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -65,4 +75,8 @@ interface WorkoutDao {
 
     @Delete
     suspend fun deleteSet(set: WorkoutSetEntity)
+
+    /** Every logged set, finished workout or not — for backups, which must not drop any. */
+    @Query("SELECT * FROM workout_sets WHERE isCompleted = 1")
+    fun getAllLoggedSets(): Flow<List<WorkoutSetEntity>>
 }

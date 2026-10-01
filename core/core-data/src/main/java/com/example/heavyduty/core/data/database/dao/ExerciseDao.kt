@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import com.example.heavyduty.core.data.database.entity.ExerciseEntity
 import kotlinx.coroutines.flow.Flow
@@ -41,4 +42,21 @@ interface ExerciseDao {
 
     @Query("SELECT COUNT(*) FROM exercises")
     suspend fun getExerciseCount(): Int
+
+    @Query("SELECT COUNT(*) FROM exercises WHERE isCustom = 0 AND nameEn = ''")
+    suspend fun countUnlocalizedExercises(): Int
+
+    @Query("UPDATE exercises SET name = :spanish, nameEn = :english WHERE isCustom = 0 AND nameEn = '' AND name = :english")
+    suspend fun localizeExerciseName(english: String, spanish: String)
+
+    /** Marks catalog rows without a translation as done, keeping their name as-is. */
+    @Query("UPDATE exercises SET nameEn = name WHERE isCustom = 0 AND nameEn = ''")
+    suspend fun markRemainingExercisesLocalized()
+
+    /** Swaps English catalog names for Spanish ones ([names] = english → spanish), all or nothing. */
+    @Transaction
+    suspend fun localizeExerciseNames(names: Map<String, String>) {
+        names.forEach { (english, spanish) -> localizeExerciseName(english, spanish) }
+        markRemainingExercisesLocalized()
+    }
 }

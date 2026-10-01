@@ -50,4 +50,23 @@ interface RoutineDao {
 
     @Query("DELETE FROM routine_exercises WHERE routineId = :routineId")
     suspend fun deleteExercisesByRoutineId(routineId: Long)
+
+    /** Inserts a routine with its exercises atomically; returns the new routine id. */
+    @Transaction
+    suspend fun insertRoutineWithExercises(routine: RoutineEntity, exercises: List<RoutineExerciseEntity>): Long {
+        val routineId = insertRoutine(routine)
+        exercises.forEach { insertRoutineExercise(it.copy(routineId = routineId)) }
+        return routineId
+    }
+
+    /**
+     * Replaces a routine's exercise list atomically, so a failure halfway through can never
+     * leave the routine with only some of its exercises.
+     */
+    @Transaction
+    suspend fun replaceRoutineWithExercises(routine: RoutineEntity, exercises: List<RoutineExerciseEntity>) {
+        updateRoutine(routine)
+        deleteExercisesByRoutineId(routine.id)
+        exercises.forEach { insertRoutineExercise(it.copy(routineId = routine.id)) }
+    }
 }

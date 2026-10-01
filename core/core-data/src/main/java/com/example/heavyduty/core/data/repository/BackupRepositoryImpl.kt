@@ -64,6 +64,7 @@ private data class RoutineExerciseDto(
     val stallThreshold: Int = 3,
     /** Preserved verbatim — still valid, since exercises re-import in the same order. */
     val supersetGroupId: String? = null,
+    val weightUnit: String? = null,
 )
 
 /** routineId / [endTime] intentionally NOT linked back to a routine — see BackupRepository doc. */
@@ -91,6 +92,7 @@ private data class SetDto(
     val isWarmup: Boolean = false,
     val effortType: String? = null,
     val effortValue: Float? = null,
+    val weightUnit: String? = null,
 )
 
 private data class BodyWeightDto(val weightKg: Float, val loggedAt: Long)
@@ -107,7 +109,9 @@ class BackupRepositoryImpl @Inject constructor(
 
     override suspend fun exportSnapshot(): String {
         val exercises = exerciseDao.getAllExercises().first()
-        val exerciseNameById = exercises.associate { it.id to it.name }
+        // Catalog exercises are keyed by their original English name: it never changes, while
+        // the displayed (Spanish) name may be re-translated in a later version.
+        val exerciseNameById = exercises.associate { it.id to it.nameEn.ifBlank { it.name } }
 
         val customExercises = exercises.filter { it.isCustom }.map {
             ExerciseDto(
@@ -144,12 +148,13 @@ class BackupRepositoryImpl @Inject constructor(
                         repRangeHigh = rx.repRangeHigh,
                         stallThreshold = rx.stallThreshold,
                         supersetGroupId = rx.supersetGroupId,
+                        weightUnit = rx.weightUnit,
                     )
                 },
             )
         }
 
-        val setsBySessionId = workoutDao.getAllCompletedSets().first().groupBy { it.sessionId }
+        val setsBySessionId = workoutDao.getAllLoggedSets().first().groupBy { it.sessionId }
         val sessions = workoutDao.getAllSessions().first().map { session ->
             SessionDto(
                 sessionName = session.sessionName,
@@ -174,6 +179,7 @@ class BackupRepositoryImpl @Inject constructor(
                         isWarmup = set.isWarmup,
                         effortType = set.effortType,
                         effortValue = set.effortValue,
+                        weightUnit = set.weightUnit,
                     )
                 },
             )
@@ -220,7 +226,11 @@ class BackupRepositoryImpl @Inject constructor(
         }
 
         // Re-read so newly-inserted custom exercises resolve by name below.
-        val exerciseIdByName = exerciseDao.getAllExercises().first().associate { it.name to it.id }
+        // Backups name exercises in English (catalog key) or by their displayed name (older
+        // backups, custom exercises) — accept either.
+        val exerciseIdByName = exerciseDao.getAllExercises().first().flatMap { exercise ->
+            listOfNotNull(exercise.name to exercise.id, exercise.nameEn.takeIf { it.isNotBlank() }?.let { it to exercise.id })
+        }.toMap()
 
         var routinesImported = 0
         for (routineDto in snapshot.routines) {
@@ -245,6 +255,7 @@ class BackupRepositoryImpl @Inject constructor(
                     repRangeHigh = reDto.repRangeHigh,
                     stallThreshold = reDto.stallThreshold,
                     supersetGroupId = reDto.supersetGroupId,
+                    weightUnit = reDto.weightUnit,
                 )
             }
             val routineId = routineDao.insertRoutine(
@@ -295,6 +306,7 @@ class BackupRepositoryImpl @Inject constructor(
                         isWarmup = setDto.isWarmup,
                         effortType = setDto.effortType,
                         effortValue = setDto.effortValue,
+                        weightUnit = setDto.weightUnit,
                     ),
                 )
             }

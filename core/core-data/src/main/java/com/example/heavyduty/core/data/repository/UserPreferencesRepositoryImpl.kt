@@ -9,6 +9,7 @@ import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.example.heavyduty.core.domain.model.WeightUnit
 import com.example.heavyduty.core.domain.repository.UserPreferencesRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
@@ -33,6 +34,7 @@ class UserPreferencesRepositoryImpl @Inject constructor(
         val GOAL_WEIGHT_KG = floatPreferencesKey("goal_weight_kg")
         val EFFORT_TRACKING_ENABLED = booleanPreferencesKey("effort_tracking_enabled")
         val PREFERRED_EFFORT_SCALE = stringPreferencesKey("preferred_effort_scale")
+        val PREFERRED_WEIGHT_UNIT = stringPreferencesKey("preferred_weight_unit")
     }
 
     private val safeData: Flow<Preferences> = context.userPreferencesDataStore.data
@@ -79,5 +81,14 @@ class UserPreferencesRepositoryImpl @Inject constructor(
 
     override suspend fun setPreferredEffortScale(scale: String) {
         context.userPreferencesDataStore.edit { prefs -> prefs[Keys.PREFERRED_EFFORT_SCALE] = scale }
+    }
+
+    override val preferredWeightUnit: Flow<WeightUnit> = safeData
+        .map { prefs ->
+            prefs[Keys.PREFERRED_WEIGHT_UNIT]?.let { runCatching { WeightUnit.valueOf(it) }.getOrNull() } ?: WeightUnit.KG
+        }
+
+    override suspend fun setPreferredWeightUnit(unit: WeightUnit) {
+        context.userPreferencesDataStore.edit { prefs -> prefs[Keys.PREFERRED_WEIGHT_UNIT] = unit.name }
     }
 }

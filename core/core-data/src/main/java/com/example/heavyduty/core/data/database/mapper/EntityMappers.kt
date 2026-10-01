@@ -32,6 +32,7 @@ fun ExerciseEntity.toDomain(): Exercise {
     return Exercise(
         id = id,
         name = name,
+        nameEn = nameEn,
         description = description,
         instructions = instructions,
         imageUrl = imageUrl,
@@ -48,6 +49,7 @@ fun ExerciseEntity.toDomain(): Exercise {
 fun Exercise.toEntity(): ExerciseEntity = ExerciseEntity(
     id = id,
     name = name,
+    nameEn = nameEn,
     description = description,
     instructions = instructions,
     imageUrl = imageUrl,
@@ -116,6 +118,7 @@ fun RoutineExerciseEntity.toDomain(): RoutineExercise = RoutineExercise(
     repRangeHigh = repRangeHigh,
     stallThreshold = stallThreshold,
     supersetGroupId = supersetGroupId,
+    weightUnit = weightUnit.toWeightUnit(),
 )
 
 fun RoutineExercise.toEntity(): RoutineExerciseEntity = RoutineExerciseEntity(
@@ -134,6 +137,7 @@ fun RoutineExercise.toEntity(): RoutineExerciseEntity = RoutineExerciseEntity(
     repRangeHigh = repRangeHigh,
     stallThreshold = stallThreshold,
     supersetGroupId = supersetGroupId,
+    weightUnit = weightUnit?.name,
 )
 
 fun com.example.heavyduty.core.data.database.relation.RoutineExerciseWithDetails.toDomain(): RoutineExercise = routineExercise.toDomain().copy(
@@ -147,7 +151,8 @@ fun RoutineWithExercises.toDomain(): Routine = Routine(
     type = WorkoutType.valueOf(routine.type),
     createdAt = routine.createdAt,
     updatedAt = routine.updatedAt,
-    exercises = routineExercises.map { it.toDomain() },
+    // Room returns @Relation rows in storage order, not the user's order — sort explicitly.
+    exercises = routineExercises.map { it.toDomain() }.sortedBy { it.orderIndex },
 )
 
 // ============ Workout Mappers ============
@@ -190,6 +195,7 @@ fun WorkoutSetEntity.toDomain(): WorkoutSet = WorkoutSet(
     notes = notes,
     isWarmup = isWarmup,
     effort = effortToDomain(effortType, effortValue),
+    weightUnit = weightUnit.toWeightUnit(),
 )
 
 fun WorkoutSet.toEntity(): WorkoutSetEntity = WorkoutSetEntity(
@@ -215,7 +221,10 @@ fun WorkoutSet.toEntity(): WorkoutSetEntity = WorkoutSetEntity(
         is Effort.Rpe -> e.value
         null -> null
     },
+    weightUnit = weightUnit?.name,
 )
+
+private fun String?.toWeightUnit(): WeightUnit? = this?.let { runCatching { WeightUnit.valueOf(it) }.getOrNull() }
 
 private fun effortToDomain(type: String?, value: Float?): Effort? {
     if (type == null || value == null) return null

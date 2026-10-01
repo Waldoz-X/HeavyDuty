@@ -56,4 +56,6 @@ data class RoutineExerciseEntity(
     val repRangeHigh: Int = 10,
     val stallThreshold: Int = 3,
     val supersetGroupId: String? = null,
+    /** "KG"/"LB" of the equipment used for this exercise in this routine; null = the exercise's default. */
+    val weightUnit: String? = null,
 )

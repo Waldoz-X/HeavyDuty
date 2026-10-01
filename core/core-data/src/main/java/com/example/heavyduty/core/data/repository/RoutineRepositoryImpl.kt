@@ -25,21 +25,15 @@ class RoutineRepositoryImpl @Inject constructor(
     override fun getRoutineWithExercises(id: Long): Flow<Routine?> =
         routineDao.getRoutineWithExercises(id).map { it?.toDomain() }
 
-    override suspend fun insertRoutine(routine: Routine): Long {
-        val routineId = routineDao.insertRoutine(routine.toEntity())
-        routine.exercises.forEach { exercise ->
-            routineDao.insertRoutineExercise(exercise.copy(routineId = routineId).toEntity())
-        }
-        return routineId
-    }
+    override suspend fun insertRoutine(routine: Routine): Long =
+        routineDao.insertRoutineWithExercises(routine.toEntity(), routine.orderedExerciseEntities())
 
-    override suspend fun updateRoutine(routine: Routine) {
-        routineDao.updateRoutine(routine.toEntity())
-        routineDao.deleteExercisesByRoutineId(routine.id)
-        routine.exercises.forEach { exercise ->
-            routineDao.insertRoutineExercise(exercise.copy(routineId = routine.id).toEntity())
-        }
-    }
+    override suspend fun updateRoutine(routine: Routine) =
+        routineDao.replaceRoutineWithExercises(routine.toEntity(), routine.orderedExerciseEntities())
+
+    /** The routine's exercises with [RoutineExercise.orderIndex] matching their list position. */
+    private fun Routine.orderedExerciseEntities() =
+        exercises.mapIndexed { index, exercise -> exercise.copy(orderIndex = index).toEntity() }
 
     override suspend fun deleteRoutine(routine: Routine) =
         routineDao.deleteRoutine(routine.toEntity())

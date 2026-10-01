@@ -3,6 +3,20 @@ package com.example.heavyduty.core.domain.model
 /** Standard kg plate denominations found at most gyms. */
 val STANDARD_PLATES_KG = listOf(25f, 20f, 15f, 10f, 5f, 2.5f, 1.25f)
 
+/** Standard pound plate denominations. */
+val STANDARD_PLATES_LB = listOf(45f, 35f, 25f, 10f, 5f, 2.5f)
+
+/** Common bar weights, heaviest (the standard Olympic bar) first. */
+fun WeightUnit.barPresets(): List<Float> = when (this) {
+    WeightUnit.KG -> listOf(20f, 15f, 10f)
+    WeightUnit.LB -> listOf(45f, 35f, 15f)
+}
+
+fun WeightUnit.standardPlates(): List<Float> = when (this) {
+    WeightUnit.KG -> STANDARD_PLATES_KG
+    WeightUnit.LB -> STANDARD_PLATES_LB
+}
+
 /**
  * Greedy per-side plate breakdown for [targetWeightKg] on a bar weighing [barWeightKg]: at
  * each step, uses the heaviest available plate that still fits the remaining weight — the

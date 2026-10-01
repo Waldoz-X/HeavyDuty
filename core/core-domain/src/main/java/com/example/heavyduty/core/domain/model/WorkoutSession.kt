@@ -37,4 +37,6 @@ data class WorkoutSet(
     val isWarmup: Boolean = false,
     /** Optional perceived-effort rating — see [Effort] doc for why it's never rewritten. */
     val effort: Effort? = null,
+    /** Unit the weight was entered in (shown back that way); [weight] itself is always kg. */
+    val weightUnit: WeightUnit? = null,
 )

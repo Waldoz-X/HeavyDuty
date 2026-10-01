@@ -1,5 +1,6 @@
 package com.example.heavyduty.core.domain.repository
 
+import com.example.heavyduty.core.domain.model.WeightUnit
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -24,4 +25,11 @@ interface UserPreferencesRepository {
     /** "RIR" or "RPE" — which scale new sets are logged in. Defaults to "RIR". */
     val preferredEffortScale: Flow<String>
     suspend fun setPreferredEffortScale(scale: String)
+
+    /**
+     * Unit for totals and summaries (volume, body weight, records). Individual sets keep the
+     * unit of the machine they were logged on; totals mixing kg and lb equipment need one.
+     */
+    val preferredWeightUnit: Flow<WeightUnit>
+    suspend fun setPreferredWeightUnit(unit: WeightUnit)
 }

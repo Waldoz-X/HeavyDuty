@@ -16,6 +16,7 @@ import java.io.InputStreamReader
  */
 object SeedData {
 
+    private const val SPANISH_NAMES_ASSET = "exercise_names_es.json"
     private const val RAW_BASE_URL = "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/"
 
     /** Primary muscle's share of an exercise's fractional credit; secondaries split the rest. */
@@ -110,8 +111,35 @@ object SeedData {
         val media_id: String?
     )
 
+    /** english catalog name → Spanish display name (assets/exercise_names_es.json). */
+    private fun loadSpanishNames(context: Context): Map<String, String> = try {
+        context.assets.open(SPANISH_NAMES_ASSET).use { stream ->
+            val type = object : TypeToken<Map<String, String>>() {}.type
+            Gson().fromJson<Map<String, String>>(InputStreamReader(stream), type).orEmpty()
+        }
+    } catch (e: Exception) {
+        Log.e("SeedData", "Error reading $SPANISH_NAMES_ASSET", e)
+        emptyMap()
+    }
+
+    /**
+     * Gives installs seeded before the catalog was translated their Spanish names (and records
+     * the English one in `nameEn`). Runs on every open; a single COUNT once everything is done.
+     */
+    suspend fun localizeExerciseNames(context: Context, exerciseDao: ExerciseDao) {
+        try {
+            if (exerciseDao.countUnlocalizedExercises() == 0) return
+            val names = loadSpanishNames(context)
+            if (names.isEmpty()) return
+            exerciseDao.localizeExerciseNames(names)
+        } catch (e: Exception) {
+            Log.e("SeedData", "Error localizing exercise names", e)
+        }
+    }
+
     suspend fun populateExercises(context: Context, exerciseDao: ExerciseDao) {
         if (exerciseDao.getExerciseCount() > 0) return
+        val spanishNames = loadSpanishNames(context)
 
         try {
             val inputStream = context.assets.open("exercises.json")
@@ -214,7 +242,8 @@ object SeedData {
                 }
 
                 ExerciseEntity(
-                    name = dto.name ?: "Ejercicio sin nombre",
+                    name = dto.name?.let { spanishNames[it] ?: it } ?: "Ejercicio sin nombre",
+                    nameEn = dto.name.orEmpty(),
                     muscleGroup = muscleGroup,
                     exerciseType = type,
                     equipment = equipmentLabel,
