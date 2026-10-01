@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.baselineprofile)
 }
 
 android {
@@ -23,9 +24,16 @@ android {
 
     buildTypes {
         release {
+            // R8: shrinks, optimizes and obfuscates code and drops unused resources.
             optimization {
-                enable = false
+                enable = true
+                keepRules {
+                    files.add(file("proguard-rules.pro"))
+                }
             }
+            // Debug key so release (and the benchmark builds derived from it) can be installed
+            // and measured locally. Replace with a real signing config before publishing.
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
 
@@ -42,8 +50,28 @@ android {
     }
 }
 
+androidComponents {
+    finalizeDsl { android ->
+        // The baselineprofile plugin copies release into nonMinifiedRelease but, with AGP 9's
+        // `optimization` DSL, doesn't turn R8 off there. The profile must be recorded on
+        // unobfuscated code or its class/method names won't match the release build.
+        android.buildTypes.findByName("nonMinifiedRelease")?.optimization?.enable = false
+    }
+}
+
+baselineProfile {
+    // Regenerate on demand (./gradlew :app:generateBaselineProfile), not on every release build.
+    automaticGenerationDuringBuild = false
+    // Also reorder the dex so startup code sits together on disk.
+    dexLayoutOptimization = true
+}
+
 dependencies {
     coreLibraryDesugaring(libs.desugar.jdk.libs)
+
+    // Installs the Baseline Profile on devices where the app isn't installed from Play.
+    implementation(libs.androidx.profileinstaller)
+    baselineProfile(project(":baselineprofile"))
 
     // Core modules
     implementation(project(":core:core-common"))

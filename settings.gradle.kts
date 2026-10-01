@@ -27,6 +27,9 @@ rootProject.name = "HeavyDuty"
 // App module
 include(":app")
 
+// Baseline Profile generation and Macrobenchmarks for :app
+include(":baselineprofile")
+
 // Core modules
 include(":core:core-common")
 include(":core:core-domain")
