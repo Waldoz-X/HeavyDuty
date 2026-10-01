@@ -28,14 +28,26 @@ private val topLevelRoutes = TopLevelDestination.entries.map { it.route }.toSet(
 
 private const val TRANSITION_DURATION_MS = 220
 
-private fun isTabSwitch(fromRoute: String?, toRoute: String?): Boolean =
-    fromRoute in topLevelRoutes && toRoute in topLevelRoutes
+/** Route without its optional arguments: "workout_graph?routineId={routineId}" → "workout_graph". */
+private fun String?.baseRoute(): String? = this?.substringBefore('?')
 
+private fun isTabSwitch(fromRoute: String?, toRoute: String?): Boolean =
+    fromRoute.baseRoute() in topLevelRoutes && toRoute.baseRoute() in topLevelRoutes
+
+/**
+ * Navigation rules, applied consistently:
+ * - Entering a section (tab, drawer item, or a shortcut to one) uses [navigateToTopLevel], so
+ *   each section keeps its own stack and back always returns to the dashboard.
+ * - Pushing a detail screen uses [navigateIfResumed], and every back arrow uses
+ *   [popBackStackIfResumed], so double taps can't push twice or skip the previous screen.
+ */
 @Composable
 fun HeavyDutyNavHost(
     navController: NavHostController,
     modifier: Modifier = Modifier,
 ) {
+    val navigateBack: () -> Unit = { navController.popBackStackIfResumed() }
+
     NavHost(
         navController = navController,
         startDestination = TopLevelDestination.DASHBOARD.route,
@@ -71,24 +83,20 @@ fun HeavyDutyNavHost(
     ) {
         dashboardScreen(
             onNavigateToActiveWorkout = {
-                navController.navigate(TopLevelDestination.WORKOUT.route)
+                navController.navigateToTopLevel(TopLevelDestination.WORKOUT.route)
             },
+            // The workout tab lists the routines, each with its own "Iniciar" button.
             onNavigateToRoutines = {
-                navController.navigate("routines_graph")
+                navController.navigateToTopLevel(TopLevelDestination.WORKOUT.route)
             },
             onStartRoutine = { routineId ->
-                // launchSingleTop guards against a double-tap pushing two copies of this
-                // destination, which used to race two ViewModels into each starting their
-                // own workout session for the same routine.
-                navController.navigate("active_workout/$routineId") {
-                    launchSingleTop = true
-                }
+                navController.navigateToWorkout(routineId)
             },
         )
 
         activeWorkoutScreen(
             onNavigateToRoutines = {
-                navController.navigate("routines_graph")
+                navController.navigateToTopLevel(DrawerDestination.ROUTINES.route)
             },
             onWorkoutCompleted = {
                 navController.navigate(TopLevelDestination.DASHBOARD.route) {
@@ -96,18 +104,18 @@ fun HeavyDutyNavHost(
                         inclusive = true
                     }
                 }
-            }
+            },
         )
 
         exerciseListScreen(
             onExerciseClick = { exerciseId ->
-                navController.navigate("exercise_detail/$exerciseId")
+                navController.navigateIfResumed("exercise_detail/$exerciseId")
             },
         )
         exerciseDetailScreen(
-            onNavigateBack = { navController.popBackStack() },
+            onNavigateBack = navigateBack,
             onViewProgress = { exerciseId ->
-                navController.navigate("progress/$exerciseId")
+                navController.navigateIfResumed("progress/$exerciseId")
             },
         )
         exercisePickerScreen(
@@ -117,22 +125,25 @@ fun HeavyDutyNavHost(
                 // pattern, so no shared ViewModel is needed between the two features.
                 navController.previousBackStackEntry?.savedStateHandle
                     ?.set(SELECTED_EXERCISE_IDS_KEY, exerciseIds.toLongArray())
-                navController.popBackStack()
+                navController.popBackStackIfResumed()
             },
-            onCancel = { navController.popBackStack() },
+            onCancel = navigateBack,
         )
 
         routineListScreen(
             onRoutineClick = { routineId ->
-                navController.navigate("routine_editor/$routineId")
+                navController.navigateIfResumed("routine_editor/$routineId")
             },
             onCreateRoutine = {
-                navController.navigate("routine_editor")
-            }
+                navController.navigateIfResumed("routine_editor")
+            },
+            onStartRoutine = { routineId ->
+                navController.navigateToWorkout(routineId)
+            },
         )
         routineEditorScreen(
-            onNavigateBack = { navController.popBackStack() },
-            onOpenExercisePicker = { navController.navigate("exercise_picker") },
+            onNavigateBack = navigateBack,
+            onOpenExercisePicker = { navController.navigateIfResumed("exercise_picker") },
         )
 
         timerScreen()
@@ -140,39 +151,33 @@ fun HeavyDutyNavHost(
         historyScreen(
             onSessionClick = { },
             onExerciseProgressClick = { exerciseId ->
-                navController.navigate("progress/$exerciseId")
+                navController.navigateIfResumed("progress/$exerciseId")
             },
         )
         progressScreen(
-            onNavigateBack = { navController.popBackStack() },
+            onNavigateBack = navigateBack,
         )
 
         calendarScreen(
             onRoutineClick = { routineId ->
-                navController.navigate("routine_editor/$routineId")
+                navController.navigateIfResumed("routine_editor/$routineId")
             },
         )
 
         profileScreen(
-            onNavigateToStats = { navController.navigate("stats_graph") },
+            onNavigateToStats = { navController.navigateIfResumed("stats_graph") },
         )
 
         statsGraph(
-            onNavigateBack = { navController.popBackStack() },
-            onNavigateToSeries = { navController.navigate("stats/series") },
-            onNavigateToDistribucionRadar = { navController.navigate("stats/distribucion_radar") },
-            onNavigateToDistribucionCuerpo = { navController.navigate("stats/distribucion_cuerpo") },
-            onNavigateToPrincipales = { navController.navigate("stats/principales") },
-            onNavigateToClasificacion = { navController.navigate("stats/clasificacion") },
-            onNavigateToInformeMensual = {
-                navController.navigate("stats/informe_mensual")
-            },
-            onNavigateToMapaActividad = {
-                navController.navigate("stats/mapa_actividad")
-            },
-            onNavigateToPesoCorporal = {
-                navController.navigate("stats/peso_corporal")
-            }
+            onNavigateBack = navigateBack,
+            onNavigateToSeries = { navController.navigateIfResumed("stats/series") },
+            onNavigateToDistribucionRadar = { navController.navigateIfResumed("stats/distribucion_radar") },
+            onNavigateToDistribucionCuerpo = { navController.navigateIfResumed("stats/distribucion_cuerpo") },
+            onNavigateToPrincipales = { navController.navigateIfResumed("stats/principales") },
+            onNavigateToClasificacion = { navController.navigateIfResumed("stats/clasificacion") },
+            onNavigateToInformeMensual = { navController.navigateIfResumed("stats/informe_mensual") },
+            onNavigateToMapaActividad = { navController.navigateIfResumed("stats/mapa_actividad") },
+            onNavigateToPesoCorporal = { navController.navigateIfResumed("stats/peso_corporal") },
         )
     }
 }

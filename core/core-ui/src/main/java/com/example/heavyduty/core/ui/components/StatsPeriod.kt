@@ -10,11 +10,24 @@ enum class StatsPeriod(val days: Int, val label: String) {
     LAST_30_DAYS(30, "Últimos 30 días"),
 }
 
-/** [now - days, now] and the immediately preceding, equal-length window — for trend deltas. */
+/**
+ * The last [StatsPeriod.days] calendar days including today (through the end of today, so
+ * sets logged after the screen opened still count) and the immediately preceding,
+ * equal-length window — for trend deltas.
+ */
 fun StatsPeriod.currentAndPreviousRange(now: Long = System.currentTimeMillis()): Pair<LongRange, LongRange> {
-    val spanMillis = days * 24L * 60L * 60L * 1000L
-    val currentStart = now - spanMillis
-    val previousEnd = currentStart - 1
-    val previousStart = previousEnd - spanMillis
-    return (currentStart..now) to (previousStart..previousEnd)
+    val calendar = java.util.Calendar.getInstance().apply {
+        timeInMillis = now
+        set(java.util.Calendar.HOUR_OF_DAY, 0)
+        set(java.util.Calendar.MINUTE, 0)
+        set(java.util.Calendar.SECOND, 0)
+        set(java.util.Calendar.MILLISECOND, 0)
+        add(java.util.Calendar.DAY_OF_YEAR, 1)
+    }
+    val currentEnd = calendar.timeInMillis - 1
+    calendar.add(java.util.Calendar.DAY_OF_YEAR, -days)
+    val currentStart = calendar.timeInMillis
+    calendar.add(java.util.Calendar.DAY_OF_YEAR, -days)
+    val previousStart = calendar.timeInMillis
+    return (currentStart..currentEnd) to (previousStart until currentStart)
 }

@@ -57,6 +57,10 @@
     <string name="time_ago_days">%1$d days ago</string>
     <string name="time_ago_hours">%1$d hours ago</string>
     <string name="time_ago_just_now">just now</string>
+    <string name="time_today">Today</string>
+    <string name="time_yesterday">Yesterday</string>
+    <string name="time_days_ago">%1$d days ago</string>
+    <string name="dashboard_recent_workout_default">Workout</string>
 
     <!-- Backup Messages -->
     <string name="backup_exported">Data exported successfully</string>
@@ -66,4 +70,53 @@
     <string name="backup_export_error_open">Could not open file</string>
     <string name="backup_imported_stats">Imported: %1$d routines, %2$d sessions, %3$d weights, %4$d custom exercises</string>
     <string name="backup_imported_skipped"> (%1$d references skipped due to missing exercises)</string>
+
+    <!-- Dashboard -->
+    <string name="dashboard_welcome_title">Welcome back, athlete!</string>
+    <string name="dashboard_welcome_subtitle">Let\'s hit your goals today.</string>
+    <string name="dashboard_this_week">This Week</string>
+    <string name="dashboard_workouts">Workouts</string>
+    <string name="dashboard_total_time">Total Time</string>
+    <string name="dashboard_minutes">Minutes</string>
+    <string name="dashboard_weekly_volume">Weekly Volume</string>
+    <string name="dashboard_weekly_volume_value">%1$s</string>
+    <string name="dashboard_kg_lifted">Lifted</string>
+    <string name="dashboard_muscle_distribution">Muscle Distribution</string>
+    <string name="dashboard_quick_actions">Quick Actions</string>
+    <string name="dashboard_start_free_workout">Start Free Workout</string>
+    <string name="dashboard_choose_routine">Choose Routine</string>
+    <string name="dashboard_recent_activity">Recent Activity</string>
+    <string name="dashboard_previous_week">Previous week</string>
+    <string name="dashboard_next_week">Next week</string>
+    <string name="dashboard_week_current">This week</string>
+    <string name="dashboard_week_last">Last week</string>
+    <string name="dashboard_week_upcoming">Next week</string>
+    <string name="dashboard_today">TODAY</string>
+    <string name="dashboard_rest_day">Rest day</string>
+    <string name="dashboard_completed">Completed</string>
+    <string name="dashboard_start">Start</string>
+    <string name="dashboard_body_weight">Body weight</string>
+    <string name="dashboard_log_weight_action">+ Log</string>
+    <string name="dashboard_weight_goal">Goal: %1$s</string>
+    <string name="dashboard_weight_empty">Log your weight to see the trend.</string>
+    <string name="dashboard_log_weight_title">Log weight</string>
+    <string name="dashboard_weight_field">Weight (%1$s)</string>
+    <string name="dashboard_save">Save</string>
+    <string name="dashboard_planned_progress">%1$d/%2$d this week</string>
+    <plurals name="dashboard_weeks_ago">
+        <item quantity="one">%d week ago</item>
+        <item quantity="other">%d weeks ago</item>
+    </plurals>
+    <plurals name="dashboard_weeks_ahead">
+        <item quantity="one">In %d week</item>
+        <item quantity="other">In %d weeks</item>
+    </plurals>
+    <plurals name="dashboard_streak_days">
+        <item quantity="one">%d day in a row</item>
+        <item quantity="other">%d days in a row</item>
+    </plurals>
+    <plurals name="dashboard_workouts_this_week">
+        <item quantity="one">%d workout this week</item>
+        <item quantity="other">%d workouts this week</item>
+    </plurals>
 </resources>

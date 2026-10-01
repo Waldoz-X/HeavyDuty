@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import com.example.heavyduty.core.ui.formatTotalWeight
 
 /**
  * A single entry in the workout activity feed, shown on the profile screen.
@@ -83,7 +84,7 @@ fun WorkoutFeedCard(
         // Key metrics
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             FeedMetric(icon = Icons.Default.Timer, text = "${item.durationMinutes} min")
-            FeedMetric(icon = Icons.Default.MonitorWeight, text = "${"%.0f".format(item.volumeKg)} kg")
+            FeedMetric(icon = Icons.Default.MonitorWeight, text = item.volumeKg.formatTotalWeight())
             if (item.personalRecords > 0) {
                 FeedMetric(
                     icon = Icons.Default.EmojiEvents,

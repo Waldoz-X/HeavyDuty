@@ -1,8 +1,15 @@
 package com.example.heavyduty
 
+import android.content.Context
+import android.content.res.Configuration
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.heavyduty.core.ui.LocalWeightUnit
 import androidx.activity.enableEdgeToEdge
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.compose.foundation.layout.WindowInsets
@@ -35,25 +42,46 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hierarchy
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.heavyduty.core.ui.theme.HeavyDutyTheme
 import com.example.heavyduty.navigation.DrawerDestination
 import com.example.heavyduty.navigation.HeavyDutyNavHost
 import com.example.heavyduty.navigation.TopLevelDestination
+import com.example.heavyduty.navigation.navigateToTopLevel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    private val mainViewModel: MainViewModel by viewModels()
+
+    /**
+     * Android 12 and older have no per-app language setting, so the Spanish-first default
+     * (see HeavyDutyApp) is applied to this activity's resources directly.
+     */
+    override fun attachBaseContext(newBase: Context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            super.attachBaseContext(newBase)
+            return
+        }
+        val spanish = Locale.forLanguageTag(HeavyDutyApp.SPANISH)
+        Locale.setDefault(spanish)
+        val config = Configuration(newBase.resources.configuration).apply { setLocale(spanish) }
+        super.attachBaseContext(newBase.createConfigurationContext(config))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            HeavyDutyTheme {
-                HeavyDutyMainScreen()
+            val weightUnit by mainViewModel.preferredWeightUnit.collectAsStateWithLifecycle()
+            CompositionLocalProvider(LocalWeightUnit provides weightUnit) {
+                HeavyDutyTheme {
+                    HeavyDutyMainScreen()
+                }
             }
         }
     }
@@ -64,7 +92,6 @@ class MainActivity : ComponentActivity() {
 // there — the pushed screen's own back arrow is the only way back, which always leads
 // to a route outside this set where the outer bar reappears.
 private val ROUTES_WITH_OWN_TOP_BAR = setOf(
-    "program_detail/{programId}",
     "routine_editor/{routineId}",
     "routine_editor",
     "exercise_picker",
@@ -76,6 +103,7 @@ private val ROUTES_WITH_OWN_TOP_BAR = setOf(
     "stats/principales",
     "stats/clasificacion",
     "stats/informe_mensual",
+    "stats/mapa_actividad",
     "stats/peso_corporal",
 )
 
@@ -87,16 +115,6 @@ private fun HeavyDutyMainScreen() {
     val currentDestination = navBackStackEntry?.destination
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val coroutineScope = rememberCoroutineScope()
-
-    fun navigateTo(route: String) {
-        navController.navigate(route) {
-            popUpTo(navController.graph.findStartDestination().id) {
-                saveState = true
-            }
-            launchSingleTop = true
-            restoreState = true
-        }
-    }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -119,7 +137,7 @@ private fun HeavyDutyMainScreen() {
                         selected = selected,
                         onClick = {
                             coroutineScope.launch { drawerState.close() }
-                            navigateTo(destination.route)
+                            navController.navigateToTopLevel(destination.route)
                         },
                         modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding),
                     )
@@ -166,7 +184,7 @@ private fun HeavyDutyMainScreen() {
 
                         NavigationBarItem(
                             selected = selected,
-                            onClick = { navigateTo(destination.route) },
+                            onClick = { navController.navigateToTopLevel(destination.route) },
                             icon = {
                                 Icon(
                                     imageVector = if (selected) {

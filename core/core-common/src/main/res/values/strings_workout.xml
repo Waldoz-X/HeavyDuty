@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Active workout: messages -->
+    <string name="workout_already_active">Ya hay un entrenamiento en curso</string>
+    <string name="workout_routine_not_found">No se encontró la rutina</string>
+    <string name="workout_error_enter_reps">Ingresa las repeticiones</string>
+    <string name="workout_error_enter_time">Cronometra la serie primero</string>
+    <string name="workout_error_log_set">No se pudo registrar la serie</string>
+    <string name="workout_error_delete_set">No se pudo eliminar la serie</string>
+    <string name="workout_error_finish">No se pudo finalizar el entrenamiento</string>
+    <string name="workout_error_start">No se pudo iniciar el entrenamiento</string>
+
+    <!-- Active workout: start screen -->
+    <string name="workout_loading">Cargando entrenamiento…</string>
+    <string name="workout_start_title">Entrenar</string>
+    <string name="workout_start_subtitle">Elige una rutina o entrena libre.</string>
+    <string name="workout_free_title">Entrenamiento libre</string>
+    <string name="workout_free_description">Agrega ejercicios sobre la marcha.</string>
+    <string name="workout_start_action">Iniciar</string>
+    <string name="workout_your_routines">Tus rutinas</string>
+    <string name="workout_manage_routines">Gestionar</string>
+    <string name="workout_no_routines_title">Aún no tienes rutinas</string>
+    <string name="workout_no_routines_description">Crea una rutina para planificar tus series.</string>
+    <string name="workout_create_routine">Crear rutina</string>
+    <plurals name="workout_exercise_count">
+        <item quantity="one">%d ejercicio</item>
+        <item quantity="many">%d ejercicios</item>
+        <item quantity="other">%d ejercicios</item>
+    </plurals>
+
+    <!-- Active workout: session -->
+    <string name="workout_default_name">Entrenamiento</string>
+    <string name="workout_finish">Finalizar</string>
+    <string name="workout_sets_progress">%1$d/%2$d series</string>
+    <plurals name="workout_sets_logged">
+        <item quantity="one">%d serie</item>
+        <item quantity="many">%d series</item>
+        <item quantity="other">%d series</item>
+    </plurals>
+    <string name="workout_rest">Descanso</string>
+    <string name="workout_rest_skip">Saltar</string>
+    <string name="workout_rest_minus">−15 s</string>
+    <string name="workout_rest_plus">+15 s</string>
+    <string name="workout_rest_between">Descanso %1$d s</string>
+    <string name="workout_col_set">SERIE</string>
+    <string name="workout_col_previous">ANTERIOR</string>
+    <string name="workout_col_reps">REPS</string>
+    <string name="workout_col_time">TIEMPO</string>
+    <string name="workout_warmup_short">C</string>
+    <string name="workout_warmup">Calentamiento</string>
+    <string name="workout_timed">Cronometrado</string>
+    <string name="workout_plates">Discos</string>
+    <string name="workout_extra_weight">Peso extra</string>
+    <string name="workout_log_set">Registrar serie</string>
+    <string name="workout_delete_set">Eliminar serie</string>
+    <string name="workout_next_exercise">Siguiente: %1$s</string>
+    <string name="workout_previous_exercise_cd">Ejercicio anterior</string>
+    <string name="workout_next_exercise_cd">Ejercicio siguiente</string>
+    <string name="workout_add_exercise">Agregar ejercicio</string>
+    <string name="workout_search_exercises">Buscar ejercicios…</string>
+    <string name="workout_no_exercises_title">Aún no hay ejercicios</string>
+    <string name="workout_no_exercises_description">Agrega un ejercicio para empezar a registrar series.</string>
+    <string name="workout_suggestion">Sugerido: %1$s</string>
+    <string name="workout_suggestion_use">Usar</string>
+    <string name="workout_deload">Descarga</string>
+    <string name="workout_per_side">%1$d por lado</string>
+    <string name="workout_hold_start">Iniciar cronómetro</string>
+    <string name="workout_hold_stop">Detener cronómetro</string>
+    <string name="workout_done">Completado</string>
+
+    <!-- Active workout: finish dialog -->
+    <string name="workout_finish_dialog_title">¿Finalizar entrenamiento?</string>
+    <string name="workout_finish_dialog_incomplete">Llevas %1$d de %2$d series planificadas. Las que faltan quedarán sin registrar.</string>
+    <string name="workout_finish_dialog_logged">Series registradas: %1$d</string>
+    <string name="workout_cancel">Cancelar</string>
+
+    <!-- Active workout: plate calculator -->
+    <string name="workout_plate_calculator">Calculadora de discos</string>
+    <string name="workout_plate_target">Peso objetivo (%1$s)</string>
+    <string name="workout_plate_bar">Barra</string>
+    <string name="workout_plate_enter_target">Ingresa un peso objetivo</string>
+    <string name="workout_plate_none">Sin discos extra por lado</string>
+    <string name="workout_plate_per_side">Por lado: %1$s %2$s</string>
+    <string name="workout_toggle_unit">Cambiar entre kg y lb</string>
+    <string name="workout_close">Cerrar</string>
+</resources>

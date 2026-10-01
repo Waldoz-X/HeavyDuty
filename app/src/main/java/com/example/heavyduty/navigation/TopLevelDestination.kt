@@ -34,7 +34,7 @@ enum class TopLevelDestination(
         unselectedIcon = Icons.Outlined.PlayArrow,
         label = "Entrenar",
         route = "workout_graph",
-        associatedRoutes = listOf("workout_graph", "active_workout"),
+        associatedRoutes = listOf("workout_graph"),
     ),
     EXERCISES(
         selectedIcon = Icons.Filled.FitnessCenter,

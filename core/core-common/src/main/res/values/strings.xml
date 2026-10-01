@@ -57,6 +57,10 @@
     <string name="time_ago_days">hace %1$d días</string>
     <string name="time_ago_hours">hace %1$d horas</string>
     <string name="time_ago_just_now">hace un momento</string>
+    <string name="time_today">Hoy</string>
+    <string name="time_yesterday">Ayer</string>
+    <string name="time_days_ago">Hace %1$d días</string>
+    <string name="dashboard_recent_workout_default">Entrenamiento</string>
 
     <!-- Backup Messages -->
     <string name="backup_exported">Datos exportados</string>
@@ -66,4 +70,57 @@
     <string name="backup_export_error_open">No se pudo abrir el archivo</string>
     <string name="backup_imported_stats">Importado: %1$d rutinas, %2$d sesiones, %3$d pesos, %4$d ejercicios</string>
     <string name="backup_imported_skipped"> (%1$d referencias omitidas por ejercicios no encontrados)</string>
+
+    <!-- Dashboard -->
+    <string name="dashboard_welcome_title">¡Bienvenido de nuevo, Atleta!</string>
+    <string name="dashboard_welcome_subtitle">Vamos a lograr tus metas hoy.</string>
+    <string name="dashboard_this_week">Esta Semana</string>
+    <string name="dashboard_workouts">Entrenamientos</string>
+    <string name="dashboard_total_time">Tiempo Total</string>
+    <string name="dashboard_minutes">Minutos</string>
+    <string name="dashboard_weekly_volume">Volumen Semanal</string>
+    <string name="dashboard_weekly_volume_value">%1$s</string>
+    <string name="dashboard_kg_lifted">Levantado</string>
+    <string name="dashboard_muscle_distribution">Distribución Muscular</string>
+    <string name="dashboard_quick_actions">Acciones Rápidas</string>
+    <string name="dashboard_start_free_workout">Iniciar Entrenamiento Libre</string>
+    <string name="dashboard_choose_routine">Elegir Rutina</string>
+    <string name="dashboard_recent_activity">Actividad Reciente</string>
+    <string name="dashboard_previous_week">Semana anterior</string>
+    <string name="dashboard_next_week">Semana siguiente</string>
+    <string name="dashboard_week_current">Esta semana</string>
+    <string name="dashboard_week_last">Semana pasada</string>
+    <string name="dashboard_week_upcoming">Próxima semana</string>
+    <string name="dashboard_today">HOY</string>
+    <string name="dashboard_rest_day">Día de descanso</string>
+    <string name="dashboard_completed">Completado</string>
+    <string name="dashboard_start">Comenzar</string>
+    <string name="dashboard_body_weight">Peso corporal</string>
+    <string name="dashboard_log_weight_action">+ Registrar</string>
+    <string name="dashboard_weight_goal">Meta: %1$s</string>
+    <string name="dashboard_weight_empty">Registra tu peso para ver la tendencia.</string>
+    <string name="dashboard_log_weight_title">Registrar peso</string>
+    <string name="dashboard_weight_field">Peso (%1$s)</string>
+    <string name="dashboard_save">Guardar</string>
+    <string name="dashboard_planned_progress">%1$d/%2$d esta semana</string>
+    <plurals name="dashboard_weeks_ago">
+        <item quantity="one">Hace %d semana</item>
+        <item quantity="many">Hace %d semanas</item>
+        <item quantity="other">Hace %d semanas</item>
+    </plurals>
+    <plurals name="dashboard_weeks_ahead">
+        <item quantity="one">En %d semana</item>
+        <item quantity="many">En %d semanas</item>
+        <item quantity="other">En %d semanas</item>
+    </plurals>
+    <plurals name="dashboard_streak_days">
+        <item quantity="one">%d día seguido</item>
+        <item quantity="many">%d días seguidos</item>
+        <item quantity="other">%d días seguidos</item>
+    </plurals>
+    <plurals name="dashboard_workouts_this_week">
+        <item quantity="one">%d entrenamiento esta semana</item>
+        <item quantity="many">%d entrenamientos esta semana</item>
+        <item quantity="other">%d entrenamientos esta semana</item>
+    </plurals>
 </resources>

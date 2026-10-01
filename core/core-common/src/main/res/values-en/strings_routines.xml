@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Routine editor -->
+    <string name="routine_new">New routine</string>
+    <string name="routine_edit">Edit routine</string>
+    <string name="routine_save">Save</string>
+    <string name="routine_back">Back</string>
+    <string name="routine_loading">Loading routine…</string>
+    <string name="routine_name_label">Routine name</string>
+    <string name="routine_name_placeholder">e.g. Upper A, Legs, Full body</string>
+    <string name="routine_name_required">Give the routine a name</string>
+    <string name="routine_description_label">Description (optional)</string>
+    <string name="routine_add_description">Add description</string>
+    <string name="routine_type">Type</string>
+    <string name="routine_volume_history">Volume per session</string>
+    <string name="routine_exercises_header">Exercises</string>
+    <string name="routine_summary">%1$d sets · ~%2$d min</string>
+    <string name="routine_add_exercises">Add exercises</string>
+    <string name="routine_empty_title">Your routine is empty</string>
+    <string name="routine_empty_description">Add exercises; you can then set each one\'s sets, reps, weight and rest.</string>
+    <string name="routine_reorder_hint">Drag ⠿ to change the order. Tap an exercise to set its sets, weight and rest.</string>
+    <string name="routine_drag_handle">Drag to reorder</string>
+    <string name="routine_more_options">More options</string>
+    <string name="routine_menu_edit">Edit</string>
+    <string name="routine_menu_duplicate">Duplicate</string>
+    <string name="routine_menu_move_up">Move up</string>
+    <string name="routine_menu_move_down">Move down</string>
+    <string name="routine_menu_superset">Superset with next</string>
+    <string name="routine_menu_unpair">Split superset</string>
+    <string name="routine_menu_remove">Remove</string>
+    <string name="routine_superset">Superset</string>
+    <string name="routine_units_all_kg">All in kilograms (kg)</string>
+    <string name="routine_units_all_lb">All in pounds (lb)</string>
+    <string name="routine_removed">%1$s removed</string>
+    <string name="routine_undo">Undo</string>
+    <plurals name="routine_exercises_added">
+        <item quantity="one">%d exercise added</item>
+        <item quantity="other">%d exercises added</item>
+    </plurals>
+    <string name="routine_error_name_required">The routine needs a name</string>
+    <string name="routine_error_save">Couldn\'t save the routine</string>
+    <string name="routine_discard_title">Discard changes?</string>
+    <string name="routine_discard_message">You have unsaved changes in this routine.</string>
+    <string name="routine_discard">Discard</string>
+    <string name="routine_keep_editing">Keep editing</string>
+
+    <!-- Exercise settings sheet -->
+    <string name="routine_sets">Sets</string>
+    <string name="routine_reps">Reps</string>
+    <string name="routine_weight">Weight</string>
+    <string name="routine_rest">Rest</string>
+    <string name="routine_unit">Unit</string>
+    <string name="routine_duration">Time (s)</string>
+    <string name="routine_advanced">Automatic progression</string>
+    <string name="routine_progression">Strategy</string>
+    <string name="routine_rep_range_min">Min</string>
+    <string name="routine_rep_range_max">Max</string>
+    <string name="routine_time_range_min">Min sec</string>
+    <string name="routine_time_range_max">Max sec</string>
+    <string name="routine_stall_threshold">Failures before deload</string>
+    <string name="routine_done">Done</string>
+    <string name="routine_decrease">Decrease</string>
+    <string name="routine_increase">Increase</string>
+    <string name="routine_bodyweight_hint">Bodyweight: 0 = no added load</string>
+
+    <!-- Routine list -->
+    <string name="routine_list_title">Routines</string>
+    <string name="routine_list_empty_title">No routines yet</string>
+    <string name="routine_list_empty_description">Create your first routine in under a minute.</string>
+    <string name="routine_create">Create routine</string>
+    <string name="routine_start">Start</string>
+    <string name="routine_delete">Delete</string>
+    <string name="routine_deleted">Routine “%1$s” deleted</string>
+    <string name="routine_delete_title">Delete “%1$s”?</string>
+    <string name="routine_delete_message">The routine will be deleted. Your past workouts stay in your history.</string>
+    <string name="routine_cancel">Cancel</string>
+    <string name="routine_error_delete">Couldn\'t delete the routine</string>
+</resources>

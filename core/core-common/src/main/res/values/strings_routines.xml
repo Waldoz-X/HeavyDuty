@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Routine editor -->
+    <string name="routine_new">Nueva rutina</string>
+    <string name="routine_edit">Editar rutina</string>
+    <string name="routine_save">Guardar</string>
+    <string name="routine_back">Atrás</string>
+    <string name="routine_loading">Cargando rutina…</string>
+    <string name="routine_name_label">Nombre de la rutina</string>
+    <string name="routine_name_placeholder">Ej. Torso A, Pierna, Full body</string>
+    <string name="routine_name_required">Ponle un nombre a la rutina</string>
+    <string name="routine_description_label">Descripción (opcional)</string>
+    <string name="routine_add_description">Añadir descripción</string>
+    <string name="routine_type">Tipo</string>
+    <string name="routine_volume_history">Volumen por sesión</string>
+    <string name="routine_exercises_header">Ejercicios</string>
+    <string name="routine_summary">%1$d series · ~%2$d min</string>
+    <string name="routine_add_exercises">Agregar ejercicios</string>
+    <string name="routine_empty_title">Tu rutina está vacía</string>
+    <string name="routine_empty_description">Agrega ejercicios; podrás ajustar series, repeticiones, peso y descanso de cada uno.</string>
+    <string name="routine_reorder_hint">Arrastra ⠿ para cambiar el orden. Toca un ejercicio para ajustar series, peso y descanso.</string>
+    <string name="routine_drag_handle">Arrastrar para reordenar</string>
+    <string name="routine_more_options">Más opciones</string>
+    <string name="routine_menu_edit">Editar</string>
+    <string name="routine_menu_duplicate">Duplicar</string>
+    <string name="routine_menu_move_up">Subir</string>
+    <string name="routine_menu_move_down">Bajar</string>
+    <string name="routine_menu_superset">Hacer superserie con el siguiente</string>
+    <string name="routine_menu_unpair">Separar superserie</string>
+    <string name="routine_menu_remove">Quitar</string>
+    <string name="routine_superset">Superserie</string>
+    <string name="routine_units_all_kg">Todo en kilos (kg)</string>
+    <string name="routine_units_all_lb">Todo en libras (lb)</string>
+    <string name="routine_removed">%1$s quitado</string>
+    <string name="routine_undo">Deshacer</string>
+    <plurals name="routine_exercises_added">
+        <item quantity="one">%d ejercicio agregado</item>
+        <item quantity="many">%d ejercicios agregados</item>
+        <item quantity="other">%d ejercicios agregados</item>
+    </plurals>
+    <string name="routine_error_name_required">La rutina necesita un nombre</string>
+    <string name="routine_error_save">No se pudo guardar la rutina</string>
+    <string name="routine_discard_title">¿Descartar cambios?</string>
+    <string name="routine_discard_message">Tienes cambios sin guardar en esta rutina.</string>
+    <string name="routine_discard">Descartar</string>
+    <string name="routine_keep_editing">Seguir editando</string>
+
+    <!-- Exercise settings sheet -->
+    <string name="routine_sets">Series</string>
+    <string name="routine_reps">Repeticiones</string>
+    <string name="routine_weight">Peso</string>
+    <string name="routine_rest">Descanso</string>
+    <string name="routine_unit">Unidad</string>
+    <string name="routine_duration">Tiempo (s)</string>
+    <string name="routine_advanced">Progresión automática</string>
+    <string name="routine_progression">Estrategia</string>
+    <string name="routine_rep_range_min">Mín.</string>
+    <string name="routine_rep_range_max">Máx.</string>
+    <string name="routine_time_range_min">Seg. mín.</string>
+    <string name="routine_time_range_max">Seg. máx.</string>
+    <string name="routine_stall_threshold">Fallos antes de descargar</string>
+    <string name="routine_done">Listo</string>
+    <string name="routine_decrease">Disminuir</string>
+    <string name="routine_increase">Aumentar</string>
+    <string name="routine_bodyweight_hint">Peso corporal: 0 = sin lastre</string>
+
+    <!-- Routine list -->
+    <string name="routine_list_title">Rutinas</string>
+    <string name="routine_list_empty_title">Aún no hay rutinas</string>
+    <string name="routine_list_empty_description">Crea tu primera rutina en menos de un minuto.</string>
+    <string name="routine_create">Crear rutina</string>
+    <string name="routine_start">Iniciar</string>
+    <string name="routine_delete">Eliminar</string>
+    <string name="routine_deleted">Rutina «%1$s» eliminada</string>
+    <string name="routine_delete_title">¿Eliminar «%1$s»?</string>
+    <string name="routine_delete_message">La rutina se borrará. Tus entrenamientos anteriores se conservan en el historial.</string>
+    <string name="routine_cancel">Cancelar</string>
+    <string name="routine_error_delete">No se pudo eliminar la rutina</string>
+</resources>

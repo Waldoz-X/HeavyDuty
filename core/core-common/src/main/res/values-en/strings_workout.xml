@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Active workout: messages -->
+    <string name="workout_already_active">A workout is already in progress</string>
+    <string name="workout_routine_not_found">Routine not found</string>
+    <string name="workout_error_enter_reps">Enter the reps</string>
+    <string name="workout_error_enter_time">Time the set first</string>
+    <string name="workout_error_log_set">Couldn\'t log the set</string>
+    <string name="workout_error_delete_set">Couldn\'t delete the set</string>
+    <string name="workout_error_finish">Couldn\'t finish the workout</string>
+    <string name="workout_error_start">Couldn\'t start the workout</string>
+
+    <!-- Active workout: start screen -->
+    <string name="workout_loading">Loading workout…</string>
+    <string name="workout_start_title">Train</string>
+    <string name="workout_start_subtitle">Pick a routine or train freely.</string>
+    <string name="workout_free_title">Free workout</string>
+    <string name="workout_free_description">Add exercises as you go.</string>
+    <string name="workout_start_action">Start</string>
+    <string name="workout_your_routines">Your routines</string>
+    <string name="workout_manage_routines">Manage</string>
+    <string name="workout_no_routines_title">No routines yet</string>
+    <string name="workout_no_routines_description">Create a routine to plan your sets.</string>
+    <string name="workout_create_routine">Create routine</string>
+    <plurals name="workout_exercise_count">
+        <item quantity="one">%d exercise</item>
+        <item quantity="other">%d exercises</item>
+    </plurals>
+
+    <!-- Active workout: session -->
+    <string name="workout_default_name">Workout</string>
+    <string name="workout_finish">Finish</string>
+    <string name="workout_sets_progress">%1$d/%2$d sets</string>
+    <plurals name="workout_sets_logged">
+        <item quantity="one">%d set</item>
+        <item quantity="other">%d sets</item>
+    </plurals>
+    <string name="workout_rest">Rest</string>
+    <string name="workout_rest_skip">Skip</string>
+    <string name="workout_rest_minus">−15 s</string>
+    <string name="workout_rest_plus">+15 s</string>
+    <string name="workout_rest_between">Rest %1$d s</string>
+    <string name="workout_col_set">SET</string>
+    <string name="workout_col_previous">PREVIOUS</string>
+    <string name="workout_col_reps">REPS</string>
+    <string name="workout_col_time">TIME</string>
+    <string name="workout_warmup_short">W</string>
+    <string name="workout_warmup">Warm-up</string>
+    <string name="workout_timed">Timed</string>
+    <string name="workout_plates">Plates</string>
+    <string name="workout_extra_weight">Extra weight</string>
+    <string name="workout_log_set">Log set</string>
+    <string name="workout_delete_set">Delete set</string>
+    <string name="workout_next_exercise">Next: %1$s</string>
+    <string name="workout_previous_exercise_cd">Previous exercise</string>
+    <string name="workout_next_exercise_cd">Next exercise</string>
+    <string name="workout_add_exercise">Add exercise</string>
+    <string name="workout_search_exercises">Search exercises…</string>
+    <string name="workout_no_exercises_title">No exercises yet</string>
+    <string name="workout_no_exercises_description">Add an exercise to start logging sets.</string>
+    <string name="workout_suggestion">Suggested: %1$s</string>
+    <string name="workout_suggestion_use">Use</string>
+    <string name="workout_deload">Deload</string>
+    <string name="workout_per_side">%1$d per side</string>
+    <string name="workout_hold_start">Start timer</string>
+    <string name="workout_hold_stop">Stop timer</string>
+    <string name="workout_done">Completed</string>
+
+    <!-- Active workout: finish dialog -->
+    <string name="workout_finish_dialog_title">Finish workout?</string>
+    <string name="workout_finish_dialog_incomplete">You\'ve done %1$d of %2$d planned sets. The missing ones won\'t be logged.</string>
+    <string name="workout_finish_dialog_logged">Sets logged: %1$d</string>
+    <string name="workout_cancel">Cancel</string>
+
+    <!-- Active workout: plate calculator -->
+    <string name="workout_plate_calculator">Plate calculator</string>
+    <string name="workout_plate_target">Target weight (%1$s)</string>
+    <string name="workout_plate_bar">Bar</string>
+    <string name="workout_plate_enter_target">Enter a target weight</string>
+    <string name="workout_plate_none">No extra plates per side</string>
+    <string name="workout_plate_per_side">Per side: %1$s %2$s</string>
+    <string name="workout_toggle_unit">Switch between kg and lb</string>
+    <string name="workout_close">Close</string>
+</resources>
