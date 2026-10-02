@@ -81,4 +81,24 @@
     <string name="workout_plate_per_side">Per side: %1$s %2$s</string>
     <string name="workout_toggle_unit">Switch between kg and lb</string>
     <string name="workout_close">Close</string>
+    <string name="workout_set_deleted">Set deleted</string>
+    <string name="workout_undo">Undo</string>
+    <string name="workout_pr_title">New personal record!</string>
+    <string name="workout_pr_detail">%1$s · Est. 1RM %2$s %3$s</string>
+    <string name="active_workout_bar_label">Workout in progress</string>
+    <plurals name="active_workout_bar_sets">
+        <item quantity="one">%1$s · %2$d set</item>
+        <item quantity="other">%1$s · %2$d sets</item>
+    </plurals>
+    <string name="active_workout_bar_rest">Rest</string>
+    <string name="active_workout_bar_open">Back to workout</string>
+    <string name="rest_notification_text">Get ready for your next set</string>
+    <string name="rest_notification_paused">Paused · %1$s</string>
+    <string name="rest_notification_add">+15 s</string>
+    <string name="rest_notification_skip">Skip</string>
+    <string name="rest_finished_title">Rest\'s over!</string>
+    <string name="rest_finished_text">Time for your next set</string>
+    <string name="rest_finished_channel">Rest finished</string>
+    <string name="rest_finished_channel_description">Alerts you when the rest between sets ends</string>
+    <string name="timer_notification_round">Round %1$d/%2$d</string>
 </resources>

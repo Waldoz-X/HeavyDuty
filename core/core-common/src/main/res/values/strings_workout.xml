@@ -83,4 +83,24 @@
     <string name="workout_plate_per_side">Por lado: %1$s %2$s</string>
     <string name="workout_toggle_unit">Cambiar entre kg y lb</string>
     <string name="workout_close">Cerrar</string>
+    <string name="workout_set_deleted">Serie eliminada</string>
+    <string name="workout_undo">Deshacer</string>
+    <string name="workout_pr_title">¡Nuevo récord personal!</string>
+    <string name="workout_pr_detail">%1$s · 1RM estimado %2$s %3$s</string>
+    <string name="active_workout_bar_label">Entrenamiento en curso</string>
+    <plurals name="active_workout_bar_sets">
+        <item quantity="one">%1$s · %2$d serie</item>
+        <item quantity="other">%1$s · %2$d series</item>
+    </plurals>
+    <string name="active_workout_bar_rest">Descanso</string>
+    <string name="active_workout_bar_open">Volver al entrenamiento</string>
+    <string name="rest_notification_text">Prepárate para la siguiente serie</string>
+    <string name="rest_notification_paused">En pausa · %1$s</string>
+    <string name="rest_notification_add">+15 s</string>
+    <string name="rest_notification_skip">Saltar</string>
+    <string name="rest_finished_title">¡Descanso terminado!</string>
+    <string name="rest_finished_text">Hora de tu siguiente serie</string>
+    <string name="rest_finished_channel">Fin del descanso</string>
+    <string name="rest_finished_channel_description">Avisa cuando termina el descanso entre series</string>
+    <string name="timer_notification_round">Ronda %1$d/%2$d</string>
 </resources>

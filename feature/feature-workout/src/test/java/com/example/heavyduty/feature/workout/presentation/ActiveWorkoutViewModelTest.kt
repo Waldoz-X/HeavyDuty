@@ -22,6 +22,7 @@ import com.example.heavyduty.feature.workout.domain.usecase.LogSetUseCase
 import com.example.heavyduty.feature.workout.domain.usecase.StartWorkoutUseCase
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,6 +30,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -215,6 +217,60 @@ class ActiveWorkoutViewModelTest {
         assertEquals(listOf(WeightUnit.KG, WeightUnit.LB), state.setsFor(bench.id).map { it.weightUnit })
     }
 
+    /** Collects the ViewModel's one-shot effects (the test dispatcher delivers them at once). */
+    private fun ActiveWorkoutViewModel.collectEffects(): List<ActiveWorkoutUiEffect> {
+        val effects = mutableListOf<ActiveWorkoutUiEffect>()
+        CoroutineScope(mainDispatcherRule.testDispatcher).launch { uiEffect.collect { effects += it } }
+        return effects
+    }
+
+    @Test
+    fun `a set beating the exercise's best estimated 1RM is celebrated as a record`() {
+        workoutRepository.seedHistory(WorkoutSet(exerciseId = bench.id, reps = 8, weight = 60f, isCompleted = true))
+        val viewModel = createViewModel()
+        val effects = viewModel.collectEffects()
+        viewModel.onEvent(ActiveWorkoutUiEvent.OnStartRoutine(routine.id))
+
+        viewModel.logSet(reps = "8", weight = "60")
+        assertTrue(effects.none { it is ActiveWorkoutUiEffect.PersonalRecord })
+
+        viewModel.logSet(reps = "8", weight = "70")
+        val record = effects.filterIsInstance<ActiveWorkoutUiEffect.PersonalRecord>().single()
+        assertEquals("Press banca", record.exerciseName)
+        assertEquals(70f * (1f + 8 / 30f), record.estimatedOneRepMaxKg, 0.01f)
+    }
+
+    @Test
+    fun `an exercise's first session has nothing to beat so nothing is called a record`() {
+        val viewModel = createViewModel()
+        val effects = viewModel.collectEffects()
+        viewModel.onEvent(ActiveWorkoutUiEvent.OnStartRoutine(routine.id))
+
+        viewModel.logSet(reps = "8", weight = "60")
+
+        assertTrue(effects.none { it is ActiveWorkoutUiEffect.PersonalRecord })
+    }
+
+    @Test
+    fun `a deleted set can be put back with its number`() {
+        val viewModel = createViewModel()
+        val effects = viewModel.collectEffects()
+        viewModel.onEvent(ActiveWorkoutUiEvent.OnStartRoutine(routine.id))
+        viewModel.logSet("8")
+        viewModel.logSet("6")
+        val second = viewModel.uiState.value.setsFor(bench.id).single { it.setNumber == 2 }
+
+        viewModel.onEvent(ActiveWorkoutUiEvent.OnDeleteSet(second))
+        assertEquals(1, viewModel.uiState.value.setsFor(bench.id).size)
+        val deleted = effects.filterIsInstance<ActiveWorkoutUiEffect.SetDeleted>().single().set
+
+        viewModel.onEvent(ActiveWorkoutUiEvent.OnUndoDeleteSet(deleted))
+        val restored = viewModel.uiState.value.setsFor(bench.id).single { it.id == second.id }
+        assertEquals(2, restored.setNumber)
+        assertEquals(6, restored.reps)
+        assertEquals(3, viewModel.uiState.value.currentSetNumber)
+    }
+
     private class FakeWorkoutRepository : WorkoutRepository {
         val sessions = MutableStateFlow<List<WorkoutSession>>(emptyList())
         private val sets = MutableStateFlow<List<WorkoutSet>>(emptyList())
@@ -245,10 +301,16 @@ class ActiveWorkoutViewModelTest {
         override suspend fun deleteSession(session: WorkoutSession) {
             sessions.value = sessions.value.filter { it.id != session.id }
         }
+        /** Like the DAO's REPLACE insert: a set that already has an id keeps it. */
         override suspend fun insertSet(set: WorkoutSet): Long {
-            val id = nextId++
-            sets.value = sets.value + set.copy(id = id)
+            val id = if (set.id != 0L) set.id else nextId++
+            sets.value = sets.value.filter { it.id != id } + set.copy(id = id)
             return id
+        }
+
+        /** A set from an earlier, finished session. */
+        fun seedHistory(set: WorkoutSet) {
+            sets.value = sets.value + set.copy(id = nextId++, sessionId = 999, completedAt = 1L)
         }
         override suspend fun updateSet(set: WorkoutSet) {
             sets.value = sets.value.map { if (it.id == set.id) set else it }

@@ -11,7 +11,9 @@ import com.example.heavyduty.core.domain.model.WeightUnit
 import com.example.heavyduty.core.domain.model.WorkoutSession
 import com.example.heavyduty.core.domain.model.WorkoutSet
 import com.example.heavyduty.core.domain.model.WorkoutStatus
+import com.example.heavyduty.core.domain.model.bestEstimatedOneRepMax
 import com.example.heavyduty.core.domain.model.displayUnit
+import com.example.heavyduty.core.domain.model.estimatedOneRepMax
 import com.example.heavyduty.core.domain.model.kgToRounded
 import com.example.heavyduty.core.domain.model.other
 import com.example.heavyduty.core.domain.model.nextPrescription
@@ -100,6 +102,7 @@ class ActiveWorkoutViewModel @Inject constructor(
             ActiveWorkoutUiEvent.OnToggleWorkTimer -> toggleWorkTimer()
             is ActiveWorkoutUiEvent.OnSelectExercise -> selectExercise(event.index)
             is ActiveWorkoutUiEvent.OnDeleteSet -> deleteSet(event.set)
+            is ActiveWorkoutUiEvent.OnUndoDeleteSet -> restoreSet(event.set)
             ActiveWorkoutUiEvent.OnLogSet -> logSet()
             ActiveWorkoutUiEvent.OnCompleteWorkout -> completeWorkout()
             ActiveWorkoutUiEvent.OnStartFreeWorkout -> startFreeWorkout()
@@ -274,7 +277,10 @@ class ActiveWorkoutViewModel @Inject constructor(
      * lifter last logged a set, not silently the first exercise.
      */
     private fun resumeExerciseIndex(exercises: List<RoutineExercise>, completedSets: List<WorkoutSet>): Int {
-        val lastLoggedExerciseId = completedSets.maxByOrNull { it.completedAt ?: 0L }?.exerciseId ?: return 0
+        // Ties (two sets in the same millisecond) go to the one saved last.
+        val lastLoggedExerciseId = completedSets
+            .maxWithOrNull(compareBy<WorkoutSet>({ it.completedAt ?: 0L }, { it.id }))
+            ?.exerciseId ?: return 0
         return exercises.indexOfFirst { it.exerciseId == lastLoggedExerciseId }.takeIf { it >= 0 } ?: 0
     }
 
@@ -536,6 +542,7 @@ class ActiveWorkoutViewModel @Inject constructor(
                         effortInput = "",
                     )
                 }
+                checkPersonalRecord(loggedSet, earlierToday = state.setsFor(currentExercise.exerciseId), unit = unit)
             } catch (_: Exception) {
                 showMessage(R.string.workout_error_log_set)
             } finally {
@@ -544,13 +551,52 @@ class ActiveWorkoutViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Celebrates a set that beats every earlier set of the exercise — from past sessions and
+     * earlier today — by estimated 1RM. The first time an exercise is done there's nothing to
+     * beat yet, so it isn't called a record.
+     */
+    private suspend fun checkPersonalRecord(set: WorkoutSet, earlierToday: List<WorkoutSet>, unit: WeightUnit) {
+        if (set.isWarmup) return
+        val estimate = estimatedOneRepMax(set.weight ?: return, set.reps ?: return) ?: return
+        // Only a bonus: if history can't be read, the set is still logged, just not celebrated.
+        val history = try {
+            historyExcludingCurrentSession(set.exerciseId)
+        } catch (_: Exception) {
+            return
+        }
+        val previousBest = (history + earlierToday).bestEstimatedOneRepMax() ?: return
+        if (estimate > previousBest + PR_MIN_GAIN_KG) {
+            _uiEffect.emit(
+                ActiveWorkoutUiEffect.PersonalRecord(
+                    exerciseName = set.exercise?.name.orEmpty(),
+                    estimatedOneRepMaxKg = estimate,
+                    unit = unit,
+                ),
+            )
+        }
+    }
+
     private fun deleteSet(set: WorkoutSet) {
         viewModelScope.launch {
             try {
                 workoutRepository.deleteSet(set)
                 _uiState.update { it.copy(completedSets = it.completedSets.filter { s -> s.id != set.id }) }
+                _uiEffect.emit(ActiveWorkoutUiEffect.SetDeleted(set))
             } catch (_: Exception) {
                 showMessage(R.string.workout_error_delete_set)
+            }
+        }
+    }
+
+    /** Undo for [deleteSet]: re-inserts the set with its original id and number. */
+    private fun restoreSet(set: WorkoutSet) {
+        viewModelScope.launch {
+            try {
+                workoutRepository.insertSet(set)
+                _uiState.update { it.copy(completedSets = it.completedSets.filter { s -> s.id != set.id } + set) }
+            } catch (_: Exception) {
+                showMessage(R.string.workout_error_log_set)
             }
         }
     }
@@ -635,6 +681,9 @@ class ActiveWorkoutViewModel @Inject constructor(
         const val KEY_ADDED_EXERCISE_IDS = "addedExerciseIds"
         const val FREE_WORKOUT_NAME = "Entrenamiento libre"
         const val PICKER_RESULTS = 50
+
+        /** Margin over the previous best e1RM for a set to count as a record (float noise). */
+        const val PR_MIN_GAIN_KG = 0.1f
 
         /** "62.5" stays "62.5", "60.0" becomes "60" — what a lifter would type. */
         fun formatInput(value: Float): String =

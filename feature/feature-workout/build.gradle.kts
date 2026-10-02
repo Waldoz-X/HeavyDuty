@@ -42,6 +42,9 @@ dependencies {
     // Navigation
     implementation(libs.androidx.navigation.compose)
 
+    // Runtime permission request (notifications for the rest timer)
+    implementation(libs.androidx.activity.compose)
+
     // Lifecycle
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)

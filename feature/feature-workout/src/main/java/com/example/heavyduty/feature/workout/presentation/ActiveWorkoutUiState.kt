@@ -121,6 +121,8 @@ sealed interface ActiveWorkoutUiEvent {
     data object OnToggleWorkTimer : ActiveWorkoutUiEvent
     data object OnLogSet : ActiveWorkoutUiEvent
     data class OnDeleteSet(val set: WorkoutSet) : ActiveWorkoutUiEvent
+    /** Puts back a set just deleted, from the snackbar's "Deshacer". */
+    data class OnUndoDeleteSet(val set: WorkoutSet) : ActiveWorkoutUiEvent
     data class OnSelectExercise(val index: Int) : ActiveWorkoutUiEvent
     data object OnCompleteWorkout : ActiveWorkoutUiEvent
     data object OnStartFreeWorkout : ActiveWorkoutUiEvent
@@ -143,4 +145,12 @@ sealed interface ActiveWorkoutUiEffect {
     data object NavigateToRoutines : ActiveWorkoutUiEffect
     data class ShowMessage(@param:StringRes val messageResId: Int) : ActiveWorkoutUiEffect
     data object WorkoutCompleted : ActiveWorkoutUiEffect
+    /** A set was deleted — offer to undo it. */
+    data class SetDeleted(val set: WorkoutSet) : ActiveWorkoutUiEffect
+    /** The set just logged beats every earlier set of the exercise (by estimated 1RM). */
+    data class PersonalRecord(
+        val exerciseName: String,
+        val estimatedOneRepMaxKg: Float,
+        val unit: WeightUnit,
+    ) : ActiveWorkoutUiEffect
 }
