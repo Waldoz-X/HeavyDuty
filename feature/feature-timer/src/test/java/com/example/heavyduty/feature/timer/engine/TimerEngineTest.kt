@@ -5,6 +5,7 @@ import com.example.heavyduty.feature.timer.domain.model.TimerMode
 import com.example.heavyduty.feature.timer.presentation.TimerUiEffect
 import com.example.heavyduty.feature.timer.presentation.TimerUiEvent
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
@@ -13,6 +14,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.advanceUntilIdle
+import com.example.heavyduty.feature.timer.service.TimerNotifications
 import com.example.heavyduty.feature.timer.service.TimerService
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -29,10 +31,11 @@ import kotlin.time.Duration.Companion.seconds
 class TimerEngineTest {
 
     private val context: Context = mockk(relaxed = true)
+    private val notifications: TimerNotifications = mockk(relaxed = true)
 
     @Test
     fun `counts down every second while running`() = runTest {
-        val engine = TimerEngine(context, StandardTestDispatcher(testScheduler))
+        val engine = TimerEngine(context, StandardTestDispatcher(testScheduler), notifications)
         engine.onEvent(TimerUiEvent.OnModeSelect(TimerMode.REST))
         engine.onEvent(TimerUiEvent.OnDurationChange(10))
 
@@ -46,7 +49,7 @@ class TimerEngineTest {
 
     @Test
     fun `pausing stops the countdown without resetting remaining time`() = runTest {
-        val engine = TimerEngine(context, StandardTestDispatcher(testScheduler))
+        val engine = TimerEngine(context, StandardTestDispatcher(testScheduler), notifications)
         engine.onEvent(TimerUiEvent.OnModeSelect(TimerMode.REST))
         engine.onEvent(TimerUiEvent.OnDurationChange(10))
         engine.onEvent(TimerUiEvent.OnStartPause)
@@ -65,7 +68,7 @@ class TimerEngineTest {
 
     @Test
     fun `reset returns to the configured duration`() = runTest {
-        val engine = TimerEngine(context, StandardTestDispatcher(testScheduler))
+        val engine = TimerEngine(context, StandardTestDispatcher(testScheduler), notifications)
         engine.onEvent(TimerUiEvent.OnModeSelect(TimerMode.REST))
         engine.onEvent(TimerUiEvent.OnDurationChange(30))
         engine.onEvent(TimerUiEvent.OnStartPause)
@@ -82,7 +85,7 @@ class TimerEngineTest {
 
     @Test
     fun `finishing the only round emits TimerFinished and stops running`() = runTest {
-        val engine = TimerEngine(context, StandardTestDispatcher(testScheduler))
+        val engine = TimerEngine(context, StandardTestDispatcher(testScheduler), notifications)
         val effects = mutableListOf<TimerUiEffect>()
         backgroundScope.launch(kotlinx.coroutines.test.UnconfinedTestDispatcher(testScheduler)) {
             engine.effects.toList(effects)
@@ -100,7 +103,7 @@ class TimerEngineTest {
 
     @Test
     fun `advances to the next round instead of finishing when more rounds remain`() = runTest {
-        val engine = TimerEngine(context, StandardTestDispatcher(testScheduler))
+        val engine = TimerEngine(context, StandardTestDispatcher(testScheduler), notifications)
         val effects = mutableListOf<TimerUiEffect>()
         backgroundScope.launch { engine.effects.toList(effects) }
 
@@ -114,5 +117,21 @@ class TimerEngineTest {
         assertTrue(effects.isEmpty())
         assertEquals(2, engine.state.value.currentRound)
         assertTrue(engine.state.value.isRunning)
+    }
+
+    @Test
+    fun `a rest that runs out alerts the lifter, a skipped one doesn't`() = runTest {
+        val engine = TimerEngine(context, StandardTestDispatcher(testScheduler), notifications)
+
+        engine.startRest(2)
+        advanceUntilIdle()
+        verify(exactly = 1) { notifications.notifyRestFinished() }
+
+        engine.startRest(30)
+        runCurrent()
+        engine.skipRest()
+        advanceUntilIdle()
+        verify(exactly = 1) { notifications.notifyRestFinished() }
+        verify(exactly = 2) { notifications.cancelRestFinished() }
     }
 }

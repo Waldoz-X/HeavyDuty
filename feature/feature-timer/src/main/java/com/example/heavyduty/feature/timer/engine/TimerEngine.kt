@@ -14,6 +14,7 @@ import com.example.heavyduty.feature.timer.domain.model.TimerMode
 import com.example.heavyduty.feature.timer.presentation.TimerUiEffect
 import com.example.heavyduty.feature.timer.presentation.TimerUiEvent
 import com.example.heavyduty.feature.timer.presentation.TimerUiState
+import com.example.heavyduty.feature.timer.service.TimerNotifications
 import com.example.heavyduty.feature.timer.service.TimerService
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
@@ -46,6 +47,7 @@ import kotlin.time.Duration.Companion.seconds
 class TimerEngine @Inject constructor(
     @param:ApplicationContext private val context: Context,
     @param:DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher,
+    private val notifications: TimerNotifications,
 ) : RestTimerController {
     private val engineScope = CoroutineScope(SupervisorJob() + defaultDispatcher)
 
@@ -89,6 +91,7 @@ class TimerEngine @Inject constructor(
      */
     override fun startRest(seconds: Int) {
         tickJob?.cancel()
+        notifications.cancelRestFinished()
         _state.update {
             TimerUiState(
                 mode = TimerMode.REST,
@@ -184,6 +187,8 @@ class TimerEngine @Inject constructor(
                     _state.update { it.copy(isRunning = false) }
                     vibrate()
                     _effects.emit(TimerUiEffect.TimerFinished)
+                    // Only a rest that ran out — skipping one means the lifter is already on it.
+                    if (current.mode == TimerMode.REST) notifications.notifyRestFinished()
                     stopService()
                 }
             }

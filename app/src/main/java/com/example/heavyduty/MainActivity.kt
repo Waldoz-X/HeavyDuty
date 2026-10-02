@@ -2,6 +2,23 @@ package com.example.heavyduty
 
 import android.app.LocaleManager
 import android.content.Context
+import android.content.Intent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
+import com.example.heavyduty.core.ui.LocalSharedTransitionScope
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.layout.Column
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import com.example.heavyduty.core.common.navigation.AppSections
+import com.example.heavyduty.ui.ActiveWorkoutBar
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
@@ -83,14 +100,29 @@ class MainActivity : ComponentActivity() {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        // A recreated activity (rotation…) already handled its launch intent.
+        if (savedInstanceState == null) mainViewModel.openSection(intent.getStringExtra(AppSections.EXTRA_OPEN_SECTION))
         setContent {
             val weightUnit by mainViewModel.preferredWeightUnit.collectAsStateWithLifecycle()
+            val activeWorkout by mainViewModel.activeWorkout.collectAsStateWithLifecycle()
+            val pendingSection by mainViewModel.pendingSection.collectAsStateWithLifecycle()
             CompositionLocalProvider(LocalWeightUnit provides weightUnit) {
                 HeavyDutyTheme {
-                    HeavyDutyMainScreen()
+                    HeavyDutyMainScreen(
+                        activeWorkout = activeWorkout,
+                        pendingSection = pendingSection,
+                        onSectionOpened = mainViewModel::onSectionOpened,
+                    )
                 }
             }
         }
+    }
+
+    /** A notification tapped while the app is already open (see AppSections). */
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        mainViewModel.openSection(intent.getStringExtra(AppSections.EXTRA_OPEN_SECTION))
     }
 }
 
@@ -114,14 +146,28 @@ private val ROUTES_WITH_OWN_TOP_BAR = setOf(
     "stats/peso_corporal",
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
-private fun HeavyDutyMainScreen() {
+private fun HeavyDutyMainScreen(
+    activeWorkout: ActiveWorkoutSummary?,
+    pendingSection: String?,
+    onSectionOpened: () -> Unit,
+) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val coroutineScope = rememberCoroutineScope()
+
+    LaunchedEffect(pendingSection) {
+        val route = when (pendingSection) {
+            AppSections.SECTION_WORKOUT -> TopLevelDestination.WORKOUT.route
+            AppSections.SECTION_TIMER -> TopLevelDestination.TIMER.route
+            else -> return@LaunchedEffect
+        }
+        navController.navigateToTopLevel(route)
+        onSectionOpened()
+    }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -181,37 +227,58 @@ private fun HeavyDutyMainScreen() {
                 ScaffoldDefaults.contentWindowInsets
             },
             bottomBar = {
-                NavigationBar {
-                    TopLevelDestination.entries.forEach { destination ->
-                        val selected = currentDestination?.route?.let { currentRoute ->
-                            destination.associatedRoutes.any { associated ->
-                                currentRoute.startsWith(associated)
-                            }
-                        } == true
+                Column {
+                    // The workout screen shows the session itself; everywhere else a bar leads back.
+                    val onWorkoutScreen = currentDestination?.route?.startsWith(TopLevelDestination.WORKOUT.route) == true
+                    // Keeps drawing the last workout while the bar animates out after finishing it.
+                    var shownWorkout by remember { mutableStateOf(activeWorkout) }
+                    if (activeWorkout != null) shownWorkout = activeWorkout
+                    AnimatedVisibility(
+                        visible = activeWorkout != null && !onWorkoutScreen,
+                        enter = expandVertically(expandFrom = Alignment.Bottom) + fadeIn(),
+                        exit = shrinkVertically(shrinkTowards = Alignment.Bottom) + fadeOut(),
+                    ) {
+                        shownWorkout?.let { workout ->
+                            ActiveWorkoutBar(
+                                workout = workout,
+                                onClick = { navController.navigateToTopLevel(TopLevelDestination.WORKOUT.route) },
+                            )
+                        }
+                    }
+                    NavigationBar {
+                        TopLevelDestination.entries.forEach { destination ->
+                            val selected = currentDestination?.route?.let { currentRoute ->
+                                destination.associatedRoutes.any { associated ->
+                                    currentRoute.startsWith(associated)
+                                }
+                            } == true
 
-                        NavigationBarItem(
-                            selected = selected,
-                            onClick = { navController.navigateToTopLevel(destination.route) },
-                            icon = {
-                                Icon(
-                                    imageVector = if (selected) {
-                                        destination.selectedIcon
-                                    } else {
-                                        destination.unselectedIcon
-                                    },
-                                    contentDescription = destination.label,
-                                )
-                            },
-                            label = { Text(text = destination.label) },
-                        )
+                            NavigationBarItem(
+                                selected = selected,
+                                onClick = { navController.navigateToTopLevel(destination.route) },
+                                icon = {
+                                    Icon(
+                                        imageVector = if (selected) {
+                                            destination.selectedIcon
+                                        } else {
+                                            destination.unselectedIcon
+                                        },
+                                        contentDescription = destination.label,
+                                    )
+                                },
+                                label = { Text(text = destination.label) },
+                            )
+                        }
                     }
                 }
             },
         ) { innerPadding ->
-            HeavyDutyNavHost(
-                navController = navController,
-                modifier = Modifier.padding(innerPadding),
-            )
+            // Lets screens share elements across navigation (see core.ui.hdSharedBounds).
+            SharedTransitionLayout(modifier = Modifier.padding(innerPadding)) {
+                CompositionLocalProvider(LocalSharedTransitionScope provides this) {
+                    HeavyDutyNavHost(navController = navController)
+                }
+            }
         }
     }
 }
