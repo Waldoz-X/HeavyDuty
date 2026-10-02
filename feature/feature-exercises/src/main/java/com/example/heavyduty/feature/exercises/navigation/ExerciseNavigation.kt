@@ -1,9 +1,11 @@
 package com.example.heavyduty.feature.exercises.navigation
 
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.example.heavyduty.core.ui.LocalNavAnimatedVisibilityScope
 import com.example.heavyduty.feature.exercises.presentation.detail.ExerciseDetailScreen
 import com.example.heavyduty.feature.exercises.presentation.list.ExerciseListScreen
 
@@ -14,7 +16,10 @@ fun NavGraphBuilder.exerciseListScreen(
     onExerciseClick: (Long) -> Unit,
 ) {
     composable(route = "exercises_graph") {
-        ExerciseListScreen(onExerciseClick = onExerciseClick)
+        // Lets the list's images grow into the detail screen (see core.ui.hdSharedBounds).
+        CompositionLocalProvider(LocalNavAnimatedVisibilityScope provides this) {
+            ExerciseListScreen(onExerciseClick = onExerciseClick)
+        }
     }
 }
 
@@ -50,6 +55,8 @@ fun NavGraphBuilder.exerciseDetailScreen(
             navArgument("exerciseId") { type = NavType.LongType },
         ),
     ) {
-        ExerciseDetailScreen(onNavigateBack = onNavigateBack, onViewProgress = onViewProgress)
+        CompositionLocalProvider(LocalNavAnimatedVisibilityScope provides this) {
+            ExerciseDetailScreen(onNavigateBack = onNavigateBack, onViewProgress = onViewProgress)
+        }
     }
 }

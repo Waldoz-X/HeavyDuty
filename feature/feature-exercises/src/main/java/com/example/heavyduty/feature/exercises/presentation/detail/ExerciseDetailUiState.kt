@@ -7,6 +7,8 @@ import com.example.heavyduty.core.domain.model.WeightUnit
  * Immutable UI state for the exercise detail screen.
  */
 data class ExerciseDetailUiState(
+    /** Known from the route before [exercise] loads — the loading header uses it (shared image). */
+    val exerciseId: Long = 0,
     val exercise: Exercise? = null,
     val isLoading: Boolean = true,
     val error: String? = null,

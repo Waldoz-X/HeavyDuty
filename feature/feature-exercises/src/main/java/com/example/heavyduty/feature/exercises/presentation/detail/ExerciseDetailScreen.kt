@@ -43,7 +43,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import com.example.heavyduty.core.ui.hdSharedBounds
+import com.example.heavyduty.feature.exercises.presentation.exerciseImageKey
 import com.example.heavyduty.core.domain.model.Exercise
 import com.example.heavyduty.core.domain.model.WeightUnit
 import com.example.heavyduty.core.domain.model.equipmentLabelFor
@@ -77,9 +82,9 @@ fun ExerciseDetailScreen(
     Scaffold(modifier = modifier) { innerPadding ->
         when {
             uiState.isLoading -> {
-                HdLoadingIndicator(
-                    modifier = Modifier.padding(innerPadding),
-                    message = "Cargando ejercicio...",
+                ExerciseDetailLoading(
+                    exerciseId = uiState.exerciseId,
+                    modifier = Modifier.padding(top = innerPadding.calculateTopPadding()),
                 )
             }
             uiState.exercise != null -> {
@@ -106,6 +111,33 @@ fun ExerciseDetailScreen(
                 }
             }
         }
+    }
+}
+
+/**
+ * The header's frame while the exercise loads, in the same place and with the same shared key
+ * as the loaded image: the list's thumbnail grows into it from the first frame instead of the
+ * transition finding nothing to match and falling back to a plain slide.
+ */
+@Composable
+private fun ExerciseDetailLoading(exerciseId: Long, modifier: Modifier = Modifier) {
+    Column(modifier = modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(HeaderHeight),
+            contentAlignment = Alignment.Center,
+        ) {
+            Box(
+                modifier = Modifier
+                    .padding(top = 12.dp)
+                    .size(208.dp)
+                    .hdSharedBounds(exerciseImageKey(exerciseId), RoundedCornerShape(20.dp))
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+            )
+        }
+        HdLoadingIndicator(message = "Cargando ejercicio...")
     }
 }
 
@@ -158,6 +190,7 @@ private fun ExerciseDetailContent(
                             .align(Alignment.Center)
                             .padding(top = 12.dp)
                             .size(208.dp)
+                            .hdSharedBounds(exerciseImageKey(exercise.id), RoundedCornerShape(20.dp))
                             .graphicsLayer {
                                 translationY = scrollState.value * 0.5f
                             }
@@ -165,8 +198,17 @@ private fun ExerciseDetailContent(
                             .clip(RoundedCornerShape(20.dp))
                             .background(MaterialTheme.colorScheme.surfaceContainerHigh),
                     ) {
+                        // While the demo loads, show the list's still image (already in memory)
+                        // so the shared transition doesn't grow an empty box.
+                        val context = LocalContext.current
+                        val heroRequest = remember(heroImage, exercise.imageUrl) {
+                            ImageRequest.Builder(context)
+                                .data(heroImage)
+                                .placeholderMemoryCacheKey(exercise.imageUrl.takeIf { it.isNotBlank() })
+                                .build()
+                        }
                         AsyncImage(
-                            model = heroImage,
+                            model = heroRequest,
                             contentDescription = exercise.name,
                             contentScale = ContentScale.Fit,
                             modifier = Modifier.fillMaxSize(),

@@ -65,6 +65,8 @@ import com.example.heavyduty.core.ui.components.HdChip
 import com.example.heavyduty.core.ui.components.HdEmptyState
 import com.example.heavyduty.core.ui.components.HdLoadingIndicator
 import com.example.heavyduty.core.ui.components.HdExerciseAnimation
+import com.example.heavyduty.core.ui.hdSharedBounds
+import com.example.heavyduty.feature.exercises.presentation.exerciseImageKey
 import com.example.heavyduty.core.ui.components.HdExerciseThumbnail
 import com.example.heavyduty.core.ui.components.HdSearchBar
 import com.example.heavyduty.core.ui.nameResId
@@ -341,6 +343,8 @@ private fun ExerciseListItem(
             Box(
                 modifier = Modifier
                     .size(88.dp)
+                    // Grows into the detail screen's image when the exercise is opened.
+                    .hdSharedBounds(exerciseImageKey(exercise.id), RoundedCornerShape(14.dp))
                     .clip(RoundedCornerShape(14.dp))
                     .background(
                         Brush.linearGradient(

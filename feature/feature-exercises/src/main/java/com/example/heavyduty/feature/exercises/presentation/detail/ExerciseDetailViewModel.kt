@@ -26,7 +26,7 @@ class ExerciseDetailViewModel @Inject constructor(
 
     private val exerciseId: Long = checkNotNull(savedStateHandle["exerciseId"])
 
-    private val _uiState = MutableStateFlow(ExerciseDetailUiState())
+    private val _uiState = MutableStateFlow(ExerciseDetailUiState(exerciseId = exerciseId))
     val uiState: StateFlow<ExerciseDetailUiState> = _uiState.asStateFlow()
 
     private val _uiEffect = MutableSharedFlow<ExerciseDetailUiEffect>()
