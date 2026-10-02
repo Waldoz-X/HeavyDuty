@@ -1,0 +1,16 @@
+# Line endings: the repo stores text files with LF whatever the OS or editor writes, so a
+# tool saving a file with CRLF on Windows no longer shows it as modified.
+* text=auto eol=lf
+
+# Windows scripts must keep CRLF.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binary files: never touch their bytes.
+*.png binary
+*.jpg binary
+*.webp binary
+*.gif binary
+*.jar binary
+*.jks binary
+*.keystore binary
