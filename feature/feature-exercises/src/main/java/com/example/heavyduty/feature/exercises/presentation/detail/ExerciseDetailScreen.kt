@@ -54,7 +54,7 @@ import com.example.heavyduty.core.domain.model.WeightUnit
 import com.example.heavyduty.core.domain.model.equipmentLabelFor
 import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdChip
-import com.example.heavyduty.core.ui.components.HdLoadingIndicator
+import com.example.heavyduty.core.ui.components.HdSkeletonLine
 import com.example.heavyduty.core.ui.components.HdTonalButton
 import com.example.heavyduty.core.ui.nameResId
 import com.example.heavyduty.feature.exercises.presentation.accentColor
@@ -137,7 +137,15 @@ private fun ExerciseDetailLoading(exerciseId: Long, modifier: Modifier = Modifie
                     .background(MaterialTheme.colorScheme.surfaceContainerHigh),
             )
         }
-        HdLoadingIndicator(message = "Cargando ejercicio...")
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            HdSkeletonLine(modifier = Modifier.fillMaxWidth(0.6f), height = 28.dp)
+            HdSkeletonLine(modifier = Modifier.fillMaxWidth(0.35f), height = 16.dp)
+            Spacer(modifier = Modifier.height(8.dp))
+            repeat(3) { HdSkeletonLine(modifier = Modifier.fillMaxWidth(), height = 14.dp) }
+        }
     }
 }
 

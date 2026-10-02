@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.exercises.presentation.list
 
+import com.example.heavyduty.core.ui.components.HdTonalButton
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -63,7 +64,7 @@ import com.example.heavyduty.core.domain.model.equipmentLabelFor
 import com.example.heavyduty.core.ui.components.HdButton
 import com.example.heavyduty.core.ui.components.HdChip
 import com.example.heavyduty.core.ui.components.HdEmptyState
-import com.example.heavyduty.core.ui.components.HdLoadingIndicator
+import com.example.heavyduty.core.ui.components.HdCardListSkeleton
 import com.example.heavyduty.core.ui.components.HdExerciseAnimation
 import com.example.heavyduty.core.ui.hdSharedBounds
 import com.example.heavyduty.feature.exercises.presentation.exerciseImageKey
@@ -232,12 +233,16 @@ private fun ExerciseListContent(
 
         when {
             uiState.isLoading -> {
-                HdLoadingIndicator(
-                    message = "Cargando ejercicios...",
-                    modifier = Modifier.weight(1f)
+                // Same shape as the rows that are coming, so nothing jumps when they arrive.
+                HdCardListSkeleton(
+                    modifier = Modifier.weight(1f),
+                    rows = 5,
+                    thumbnailSize = if (selectionMode) 64.dp else 88.dp,
                 )
             }
             uiState.exercises.isEmpty() -> {
+                val hasActiveFilters = uiState.searchQuery.isNotBlank() ||
+                    uiState.selectedFilter != null || uiState.selectedEquipment != null
                 HdEmptyState(
                     icon = Icons.Default.FitnessCenter,
                     title = "No se encontraron ejercicios",
@@ -246,7 +251,21 @@ private fun ExerciseListContent(
                     } else {
                         "Los ejercicios aparecerán aquí"
                     },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    action = if (hasActiveFilters) {
+                        {
+                            HdTonalButton(
+                                text = "Quitar filtros",
+                                onClick = {
+                                    onEvent(ExerciseListUiEvent.OnSearchQueryChange(""))
+                                    onEvent(ExerciseListUiEvent.OnFilterSelect(null))
+                                    onEvent(ExerciseListUiEvent.OnEquipmentFilterSelect(null))
+                                },
+                            )
+                        }
+                    } else {
+                        null
+                    },
                 )
             }
             else -> {

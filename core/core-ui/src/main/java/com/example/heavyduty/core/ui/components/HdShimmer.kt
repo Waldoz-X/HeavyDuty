@@ -6,7 +6,6 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Box
@@ -14,9 +13,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.unit.Dp
@@ -33,23 +32,31 @@ import com.example.heavyduty.core.ui.theme.raised
 @Composable
 fun Modifier.shimmer(): Modifier {
     val transition = rememberInfiniteTransition(label = "shimmer")
-    val translateX by transition.animateFloat(
-        initialValue = -400f,
-        targetValue = 1000f,
+    // Kept as a State and read only inside drawBehind: every frame repaints the bar without
+    // recomposing it (reading it here, during composition, recomposed each bar every frame).
+    val progress = transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
         animationSpec = infiniteRepeatable(
             animation = tween(durationMillis = 1300, easing = LinearEasing),
             repeatMode = RepeatMode.Restart,
         ),
-        label = "shimmerTranslateX",
+        label = "shimmerProgress",
     )
     val base = MaterialTheme.colorScheme.raised
     val highlight = MaterialTheme.colorScheme.surfaceBright
-    val brush = Brush.linearGradient(
-        colors = listOf(base, highlight, base),
-        start = Offset(translateX - 300f, 0f),
-        end = Offset(translateX, 0f),
-    )
-    return this.background(brush)
+    return this.drawBehind {
+        // The band is sized to the element, so short and long bars sweep at the same pace.
+        val band = size.width.coerceAtLeast(size.height) * 0.6f
+        val x = -band + (size.width + 2 * band) * progress.value
+        drawRect(
+            Brush.linearGradient(
+                colors = listOf(base, highlight, base),
+                start = Offset(x - band, 0f),
+                end = Offset(x, 0f),
+            ),
+        )
+    }
 }
 
 /** One shimmering placeholder bar, standing in for a line of text while content loads. */

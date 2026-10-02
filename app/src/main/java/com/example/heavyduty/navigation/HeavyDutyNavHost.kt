@@ -149,6 +149,7 @@ fun HeavyDutyNavHost(
         timerScreen()
 
         historyScreen(
+            onStartWorkout = { navController.navigateToTopLevel(TopLevelDestination.WORKOUT.route) },
             onSessionClick = { },
             onExerciseProgressClick = { exerciseId ->
                 navController.navigateIfResumed("progress/$exerciseId")

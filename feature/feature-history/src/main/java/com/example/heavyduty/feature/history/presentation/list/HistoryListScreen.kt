@@ -1,5 +1,7 @@
 package com.example.heavyduty.feature.history.presentation.list
 
+import androidx.compose.material.icons.filled.PlayArrow
+import com.example.heavyduty.core.ui.components.HdButton
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -28,7 +30,7 @@ import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdChip
 import com.example.heavyduty.core.ui.components.HdEmptyState
 import com.example.heavyduty.core.ui.components.HdGradientCard
-import com.example.heavyduty.core.ui.components.HdLoadingIndicator
+import com.example.heavyduty.core.ui.components.HdSkeletonCard
 import com.example.heavyduty.core.ui.theme.GradientLimeEnd
 import com.example.heavyduty.core.ui.theme.GradientLimeStart
 import java.text.SimpleDateFormat
@@ -40,6 +42,7 @@ fun HistoryListScreen(
     onSessionClick: (Long) -> Unit,
     onExerciseProgressClick: (Long) -> Unit,
     modifier: Modifier = Modifier,
+    onStartWorkout: () -> Unit = {},
     viewModel: HistoryListViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -92,13 +95,18 @@ fun HistoryListScreen(
 
         when {
             uiState.isLoading -> {
-                HdLoadingIndicator(message = "Cargando historial...")
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    repeat(5) { HdSkeletonCard() }
+                }
             }
             uiState.sessions.isEmpty() -> {
                 HdEmptyState(
                     icon = Icons.Default.History,
                     title = "Aún no hay entrenamientos",
                     description = "Completa un entrenamiento para ver tu historial",
+                    action = {
+                        HdButton(text = "Empezar a entrenar", onClick = onStartWorkout, icon = Icons.Default.PlayArrow)
+                    },
                 )
             }
             else -> {

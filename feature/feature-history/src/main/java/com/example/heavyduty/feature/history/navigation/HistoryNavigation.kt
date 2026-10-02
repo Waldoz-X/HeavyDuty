@@ -13,11 +13,13 @@ import com.example.heavyduty.feature.history.presentation.progress.ProgressScree
 fun NavGraphBuilder.historyScreen(
     onSessionClick: (Long) -> Unit,
     onExerciseProgressClick: (Long) -> Unit,
+    onStartWorkout: () -> Unit = {},
 ) {
     composable(route = "history_graph") {
         HistoryListScreen(
             onSessionClick = onSessionClick,
             onExerciseProgressClick = onExerciseProgressClick,
+            onStartWorkout = onStartWorkout,
         )
     }
 }

@@ -1,10 +1,21 @@
 package com.example.heavyduty.core.ui.components
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -17,7 +28,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
 /**
- * Empty state component with icon, title, description, and optional action.
+ * Empty state: icon in a tinted circle, title, description and an optional action — ideally
+ * the one thing that fills the screen (e.g. "Crear rutina").
  */
 @Composable
 fun HdEmptyState(
@@ -28,16 +40,37 @@ fun HdEmptyState(
     action: @Composable (() -> Unit)? = null,
 ) {
     Column(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier
+            .fillMaxSize()
+            .padding(horizontal = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            modifier = Modifier.size(72.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-        )
+        // Settles in once when shown (drawing-phase only), then stays still.
+        val appear = remember { Animatable(0f) }
+        LaunchedEffect(Unit) {
+            appear.animateTo(1f, spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow))
+        }
+        Box(
+            modifier = Modifier
+                .size(112.dp)
+                .graphicsLayer {
+                    val p = appear.value
+                    alpha = p.coerceIn(0f, 1f)
+                    scaleX = 0.8f + 0.2f * p
+                    scaleY = scaleX
+                }
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(56.dp),
+                tint = MaterialTheme.colorScheme.primary,
+            )
+        }
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = title,

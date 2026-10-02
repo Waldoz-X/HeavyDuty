@@ -42,7 +42,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.heavyduty.core.ui.components.HdBodyDiagram
 import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdChip
-import com.example.heavyduty.core.ui.components.HdLoadingIndicator
+import com.example.heavyduty.core.ui.components.HdCardsSkeleton
 import com.example.heavyduty.core.ui.nameResId
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.font.FontWeight
@@ -80,7 +80,12 @@ fun EstadisticasScreen(
         modifier = modifier.fillMaxSize(),
     ) { innerPadding ->
         if (uiState.isLoading) {
-            HdLoadingIndicator(modifier = Modifier.padding(innerPadding), message = "Cargando estadísticas...")
+            HdCardsSkeleton(
+                modifier = Modifier
+                    .padding(innerPadding)
+                    .padding(16.dp),
+                heights = listOf(140.dp, 220.dp, 120.dp, 120.dp),
+            )
             return@Scaffold
         }
 
