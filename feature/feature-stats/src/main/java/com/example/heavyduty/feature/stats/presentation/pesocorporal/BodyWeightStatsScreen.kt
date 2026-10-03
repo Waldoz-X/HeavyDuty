@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.stats.presentation.pesocorporal
 
+import com.example.heavyduty.core.common.extensions.formatOneDecimal
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -605,7 +606,7 @@ private fun GoalWeightDialog(
     onSave: (Float?) -> Unit,
 ) {
     val unit = LocalWeightUnit.current
-    var textValue by remember { mutableStateOf(currentGoal?.kgTo(unit)?.let { "%.1f".format(it) } ?: "") }
+    var textValue by remember { mutableStateOf(currentGoal?.kgTo(unit)?.formatOneDecimal() ?: "") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -662,7 +663,7 @@ private fun AddWeightDialog(
     onSave: (Float) -> Unit,
 ) {
     val unit = LocalWeightUnit.current
-    var textValue by remember { mutableStateOf(initialWeight?.kgTo(unit)?.let { "%.1f".format(it) } ?: "") }
+    var textValue by remember { mutableStateOf(initialWeight?.kgTo(unit)?.formatOneDecimal() ?: "") }
     var isError by remember { mutableStateOf(false) }
 
     AlertDialog(

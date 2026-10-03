@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.workout.presentation
 
+import com.example.heavyduty.core.common.extensions.formatOneDecimal
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -687,6 +688,6 @@ class ActiveWorkoutViewModel @Inject constructor(
 
         /** "62.5" stays "62.5", "60.0" becomes "60" — what a lifter would type. */
         fun formatInput(value: Float): String =
-            if (value % 1f == 0f) value.toInt().toString() else "%.1f".format(value).replace(',', '.')
+            if (value % 1f == 0f) value.toInt().toString() else value.formatOneDecimal()
     }
 }

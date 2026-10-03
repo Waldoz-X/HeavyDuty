@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.stats.presentation.informemensual
 
+import com.example.heavyduty.core.common.extensions.formatOneDecimal
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -136,7 +137,7 @@ fun InformeMensualScreen(
                                     value = report.totalVolumeKg.formatTotalWeight(),
                                     deltaText = report.prevMonthVolumeDeltaPercent?.let {
                                         val sign = if (it >= 0) "+" else ""
-                                        "$sign${"%.1f".format(it)}% vs mes ant."
+                                        "$sign${it.formatOneDecimal()}% vs mes ant."
                                     },
                                     isPositive = (report.prevMonthVolumeDeltaPercent ?: 0f) >= 0,
                                     modifier = Modifier.weight(1f),
@@ -173,7 +174,7 @@ fun InformeMensualScreen(
                                     icon = Icons.Default.Repeat,
                                     label = "Series Efectivas",
                                     value = "${report.totalSets}",
-                                    subtext = "${"%.1f".format(report.workoutsPerWeekAverage)} sesiones / sem",
+                                    subtext = "${report.workoutsPerWeekAverage.formatOneDecimal()} sesiones / sem",
                                     modifier = Modifier.weight(1f),
                                 )
                             }

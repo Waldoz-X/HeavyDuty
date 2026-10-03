@@ -1,5 +1,6 @@
 package com.example.heavyduty.core.ui
 
+import com.example.heavyduty.core.common.extensions.formatOneDecimal
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
@@ -27,7 +28,7 @@ fun Float.formatTotalWeight(): String {
 /** A single weight to one decimal, without the unit: "72.5" (kg) / "159.8" (lb). */
 @Composable
 @ReadOnlyComposable
-fun Float.formatWeightValue(): String = "%.1f".format(kgTo(LocalWeightUnit.current))
+fun Float.formatWeightValue(): String = kgTo(LocalWeightUnit.current).formatOneDecimal()
 
 /** A single weight to one decimal with its unit: "72.5 kg" / "159.8 lb". */
 @Composable
