@@ -1,9 +1,21 @@
+import java.io.StringReader
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
     alias(libs.plugins.baselineprofile)
+}
+
+// Release signing key, read from keystore.properties at the project root (git-ignored; see
+// keystore.properties.example). Read through a Gradle provider so the configuration cache
+// notices when the file is added or changed.
+val keystoreProperties = Properties().apply {
+    providers.fileContents(rootProject.layout.projectDirectory.file("keystore.properties"))
+        .asText.orNull
+        ?.let { load(StringReader(it)) }
 }
 
 android {
@@ -22,6 +34,17 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        if (!keystoreProperties.isEmpty) {
+            create("release") {
+                storeFile = rootProject.file(keystoreProperties.getProperty("storeFile"))
+                storePassword = keystoreProperties.getProperty("storePassword")
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
             // R8: shrinks, optimizes and obfuscates code and drops unused resources.
@@ -31,9 +54,10 @@ android {
                     files.add(file("proguard-rules.pro"))
                 }
             }
-            // Debug key so release (and the benchmark builds derived from it) can be installed
-            // and measured locally. Replace with a real signing config before publishing.
-            signingConfig = signingConfigs.getByName("debug")
+            // The real key when keystore.properties exists. Without it, the debug key, so release
+            // (and the benchmark builds derived from it) can still be installed and measured
+            // locally — but such an APK/AAB can't be uploaded to Google Play.
+            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
         }
     }
 

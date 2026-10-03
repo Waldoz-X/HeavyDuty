@@ -69,4 +69,9 @@ obj/
 *.hprof
 
 # Graphify
-graphify-out/
+graphify-out/
+
+# Release signing (secrets — never commit)
+keystore.properties
+*.jks
+*.keystore
