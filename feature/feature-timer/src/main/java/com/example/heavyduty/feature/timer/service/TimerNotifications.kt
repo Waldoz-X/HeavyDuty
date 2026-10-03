@@ -11,6 +11,7 @@ import androidx.core.app.NotificationChannelCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.example.heavyduty.core.common.R
+import com.example.heavyduty.feature.timer.R as TimerR
 import com.example.heavyduty.core.common.navigation.AppSections
 import com.example.heavyduty.feature.timer.domain.model.TimerMode
 import com.example.heavyduty.feature.timer.presentation.TimerUiState
@@ -62,7 +63,8 @@ class TimerNotifications @Inject constructor(
             else -> null
         }
         val builder = NotificationCompat.Builder(context, ONGOING_CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
+            .setSmallIcon(TimerR.drawable.ic_stat_workout)
+            .setColor(ACCENT_COLOR)
             .setContentTitle(title)
             .setContentText(text)
             .setCategory(NotificationCompat.CATEGORY_STOPWATCH)
@@ -103,7 +105,8 @@ class TimerNotifications @Inject constructor(
     fun notifyRestFinished() {
         if (isAppInForeground() || !manager.areNotificationsEnabled()) return
         val notification = NotificationCompat.Builder(context, REST_FINISHED_CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
+            .setSmallIcon(TimerR.drawable.ic_stat_workout)
+            .setColor(ACCENT_COLOR)
             .setContentTitle(context.getString(R.string.rest_finished_title))
             .setContentText(context.getString(R.string.rest_finished_text))
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
@@ -200,5 +203,8 @@ class TimerNotifications @Inject constructor(
         private const val REST_FINISHED_CHANNEL_ID = "rest_finished_channel"
         private const val REST_FINISHED_TIMEOUT_MS = 2 * 60 * 1_000L
         private const val ANCHOR_TOLERANCE_MS = 1_500L
+
+        /** The app's primary cyan (core-ui PrimaryCyan), used to tint the icon and actions. */
+        private const val ACCENT_COLOR = 0xFF00E5FF.toInt()
     }
 }
