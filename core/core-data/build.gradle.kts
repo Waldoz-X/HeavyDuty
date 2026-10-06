@@ -13,6 +13,7 @@ android {
 
     defaultConfig {
         minSdk = 24
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     compileOptions {
@@ -52,6 +53,12 @@ dependencies {
 
     // Testing
     testImplementation(libs.junit)
+
+    // Instrumented tests (real SQLite on a device/emulator): migrations and backups
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.room.testing)
+    androidTestImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.kotlinx.coroutines.test)
 }
 

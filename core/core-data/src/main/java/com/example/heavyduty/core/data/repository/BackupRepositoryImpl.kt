@@ -18,6 +18,8 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 private const val BACKUP_FORMAT_VERSION = 1
+private const val STATUS_IN_PROGRESS = "IN_PROGRESS"
+private const val STATUS_COMPLETED = "COMPLETED"
 
 private data class BackupSnapshotDto(
     val version: Int = BACKUP_FORMAT_VERSION,
@@ -135,7 +137,9 @@ class BackupRepositoryImpl @Inject constructor(
                 exercises = routineWithExercises.routineExercises.map { re ->
                     val rx = re.routineExercise
                     RoutineExerciseDto(
-                        exerciseName = re.exercise.name,
+                        // Same stable key as sets: the English catalog name, so a re-translated
+                        // catalog still resolves it (it used to export the Spanish display name).
+                        exerciseName = re.exercise.nameEn.ifBlank { re.exercise.name },
                         orderIndex = rx.orderIndex,
                         targetSets = rx.targetSets,
                         targetReps = rx.targetReps,
@@ -273,14 +277,26 @@ class BackupRepositoryImpl @Inject constructor(
 
         var sessionsImported = 0
         for (sessionDto in snapshot.sessions) {
+            // A workout still running when the backup was made comes back finished at its last
+            // set: imported as running, it would take over the workout screen on this install.
+            val wasRunning = sessionDto.status == STATUS_IN_PROGRESS
+            val endTime = if (wasRunning) {
+                sessionDto.sets.mapNotNull { it.completedAt }.maxOrNull() ?: sessionDto.startTime
+            } else {
+                sessionDto.endTime
+            }
             val sessionId = workoutDao.insertSession(
                 WorkoutSessionEntity(
                     routineId = null,
                     sessionName = sessionDto.sessionName,
                     startTime = sessionDto.startTime,
-                    endTime = sessionDto.endTime,
-                    totalDurationSecs = sessionDto.totalDurationSecs,
-                    status = sessionDto.status,
+                    endTime = endTime,
+                    totalDurationSecs = if (wasRunning) {
+                        ((endTime!! - sessionDto.startTime) / 1_000).toInt().coerceAtLeast(0)
+                    } else {
+                        sessionDto.totalDurationSecs
+                    },
+                    status = if (wasRunning) STATUS_COMPLETED else sessionDto.status,
                     notes = sessionDto.notes,
                     type = sessionDto.type,
                 ),
