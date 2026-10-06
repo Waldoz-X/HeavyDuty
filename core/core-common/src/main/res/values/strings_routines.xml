@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:locale="es">
     <!-- Routine editor -->
     <string name="routine_new">Nueva rutina</string>
     <string name="routine_edit">Editar rutina</string>

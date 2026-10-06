@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.workout.presentation
 
+import androidx.compose.ui.platform.LocalResources
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
@@ -165,6 +166,7 @@ fun ActiveWorkoutScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
+    val resources = LocalResources.current
     val scope = rememberCoroutineScope()
     val haptic = LocalHapticFeedback.current
     var personalRecord by remember { mutableStateOf<ActiveWorkoutUiEffect.PersonalRecord?>(null) }
@@ -176,13 +178,13 @@ fun ActiveWorkoutScreen(
                 ActiveWorkoutUiEffect.WorkoutCompleted -> onWorkoutCompleted()
                 // Shown in its own coroutine so a visible snackbar never holds up navigation.
                 is ActiveWorkoutUiEffect.ShowMessage -> scope.launch {
-                    snackbarHostState.showSnackbar(context.getString(effect.messageResId))
+                    snackbarHostState.showSnackbar(resources.getString(effect.messageResId))
                 }
                 is ActiveWorkoutUiEffect.SetDeleted -> scope.launch {
                     snackbarHostState.currentSnackbarData?.dismiss()
                     val result = snackbarHostState.showSnackbar(
-                        message = context.getString(R.string.workout_set_deleted),
-                        actionLabel = context.getString(R.string.workout_undo),
+                        message = resources.getString(R.string.workout_set_deleted),
+                        actionLabel = resources.getString(R.string.workout_undo),
                         // Long enough to notice a mistaken swipe mid-workout and reach the button.
                         duration = SnackbarDuration.Long,
                     )

@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.routines.presentation.editor
 
+import androidx.compose.ui.platform.LocalResources
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -89,7 +90,6 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -143,7 +143,7 @@ fun RoutineEditorScreen(
     val onEvent = viewModel::onEvent
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    val context = LocalContext.current
+    val resources = LocalResources.current
     val listState = rememberLazyListState()
     var showDiscardDialog by rememberSaveable { mutableStateOf(false) }
     var showUnitMenu by remember { mutableStateOf(false) }
@@ -162,13 +162,13 @@ fun RoutineEditorScreen(
             when (effect) {
                 RoutineEditorUiEffect.NavigateBack -> onNavigateBack()
                 is RoutineEditorUiEffect.ShowMessage -> scope.launch {
-                    snackbarHostState.showSnackbar(context.getString(effect.messageResId))
+                    snackbarHostState.showSnackbar(resources.getString(effect.messageResId))
                 }
                 is RoutineEditorUiEffect.ShowUndoRemove -> scope.launch {
                     snackbarHostState.currentSnackbarData?.dismiss()
                     val result = snackbarHostState.showSnackbar(
-                        message = context.getString(R.string.routine_removed, effect.exerciseName.capitalized()),
-                        actionLabel = context.getString(R.string.routine_undo),
+                        message = resources.getString(R.string.routine_removed, effect.exerciseName.capitalized()),
+                        actionLabel = resources.getString(R.string.routine_undo),
                         duration = SnackbarDuration.Short,
                     )
                     if (result == SnackbarResult.ActionPerformed) onEvent(RoutineEditorUiEvent.OnUndoRemove)
@@ -178,7 +178,7 @@ fun RoutineEditorScreen(
                     val lastIndex = listState.layoutInfo.totalItemsCount - 1
                     if (lastIndex >= 0) listState.animateScrollToItem(lastIndex)
                     snackbarHostState.showSnackbar(
-                        context.resources.getQuantityString(R.plurals.routine_exercises_added, effect.count, effect.count),
+                        resources.getQuantityString(R.plurals.routine_exercises_added, effect.count, effect.count),
                     )
                 }
             }

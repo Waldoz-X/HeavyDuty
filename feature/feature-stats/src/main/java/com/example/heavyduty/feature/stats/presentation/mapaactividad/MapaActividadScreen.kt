@@ -1,5 +1,7 @@
 package com.example.heavyduty.feature.stats.presentation.mapaactividad
 
+import kotlin.math.roundToInt
+import com.example.heavyduty.core.common.extensions.formatOneDecimal
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -47,7 +49,6 @@ import com.example.heavyduty.core.ui.components.HdActivityHeatmap
 import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdLoadingIndicator
 import com.example.heavyduty.feature.stats.domain.usecase.ActivityHeatmapStatsReport
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -218,7 +219,7 @@ private fun StreaksHeroCard(report: ActivityHeatmapStatsReport) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Text(
-                        text = "${String.format(Locale.getDefault(), "%.1f", report.consistencyPercentage)}%",
+                        text = "${report.consistencyPercentage.formatOneDecimal()}%",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.primary,
@@ -373,7 +374,7 @@ private fun DayOfWeekDistributionCard(report: ActivityHeatmapStatsReport) {
                         Spacer(modifier = Modifier.width(8.dp))
 
                         Text(
-                            text = "${stat.count} (${String.format(Locale.getDefault(), "%.0f", stat.percentage)}%)",
+                            text = "${stat.count} (${stat.percentage.roundToInt()}%)",
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.End,
@@ -468,7 +469,7 @@ private fun TimeSlotDistributionCard(report: ActivityHeatmapStatsReport) {
                         Spacer(modifier = Modifier.width(8.dp))
 
                         Text(
-                            text = "${slot.count} (${String.format(Locale.getDefault(), "%.0f", slot.percentage)}%)",
+                            text = "${slot.count} (${slot.percentage.roundToInt()}%)",
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.End,
@@ -502,7 +503,7 @@ private fun OverviewMetricsCard(report: ActivityHeatmapStatsReport) {
                     modifier = Modifier.size(22.dp),
                 )
                 Text(
-                    text = "${String.format(Locale.getDefault(), "%.1f", report.totalHoursTrained)} h",
+                    text = "${report.totalHoursTrained.formatOneDecimal()} h",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                 )

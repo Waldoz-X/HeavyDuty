@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:locale="es">
     <!-- Active workout: messages -->
     <string name="workout_already_active">Ya hay un entrenamiento en curso</string>
     <string name="workout_routine_not_found">No se encontró la rutina</string>
@@ -91,6 +91,7 @@
     <plurals name="active_workout_bar_sets">
         <item quantity="one">%1$s · %2$d serie</item>
         <item quantity="other">%1$s · %2$d series</item>
+        <item quantity="many">%1$s · %2$d series</item>
     </plurals>
     <string name="active_workout_bar_rest">Descanso</string>
     <string name="active_workout_bar_open">Volver al entrenamiento</string>

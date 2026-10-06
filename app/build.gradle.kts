@@ -72,6 +72,15 @@ android {
     buildFeatures {
         compose = true
     }
+
+    bundle {
+        // The app switches language itself (Spanish by default, English from the system's
+        // per-app setting), so every install needs both: with Play's language splits a phone
+        // only gets its own language and English could be missing when chosen. Strings are tiny.
+        language {
+            enableSplit = false
+        }
+    }
 }
 
 androidComponents {

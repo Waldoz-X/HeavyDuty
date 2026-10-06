@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.routines.presentation.list
 
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,7 +43,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -71,7 +71,7 @@ fun RoutineListScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    val context = LocalContext.current
+    val resources = LocalResources.current
     var routineToDelete by remember { mutableStateOf<Routine?>(null) }
 
     LaunchedEffect(Unit) {
@@ -82,10 +82,10 @@ fun RoutineListScreen(
                 }
                 is RoutineListUiEffect.StartRoutine -> onStartRoutine(effect.routineId)
                 is RoutineListUiEffect.RoutineDeleted -> scope.launch {
-                    snackbarHostState.showSnackbar(context.getString(R.string.routine_deleted, effect.name))
+                    snackbarHostState.showSnackbar(resources.getString(R.string.routine_deleted, effect.name))
                 }
                 is RoutineListUiEffect.ShowMessage -> scope.launch {
-                    snackbarHostState.showSnackbar(context.getString(effect.messageResId))
+                    snackbarHostState.showSnackbar(resources.getString(effect.messageResId))
                 }
             }
         }
