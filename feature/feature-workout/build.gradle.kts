@@ -24,6 +24,11 @@ android {
     buildFeatures {
         compose = true
     }
+
+    testOptions {
+        // Robolectric needs the merged resources (strings, theme) to render composables.
+        unitTests.isIncludeAndroidResources = true
+    }
 }
 
 dependencies {
@@ -60,6 +65,13 @@ dependencies {
     // Testing
     testImplementation(libs.junit)
     testImplementation(project(":core:core-testing"))
+
+    // Compose UI tests on the JVM (Robolectric): no device needed, run with the unit tests.
+    testImplementation(platform(libs.androidx.compose.bom))
+    testImplementation(libs.androidx.compose.ui.test.junit4)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.junit)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
 
 kotlin {

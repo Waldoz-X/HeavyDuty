@@ -141,6 +141,8 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material.icons.extended)
     debugImplementation(libs.androidx.compose.ui.tooling)
+    // Debug builds only: reports leaked screens/ViewModels with a notification and heap analysis.
+    debugImplementation(libs.leakcanary.android)
     implementation(libs.androidx.compose.ui.tooling.preview)
 
     // Navigation
