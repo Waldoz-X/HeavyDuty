@@ -33,3 +33,13 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+
+## Exercise catalog
+
+The exercise names, instructions and media references in
+`core/core-data/src/main/assets/exercises.json` come from the
+[**exercises-dataset**](https://github.com/hasaneyldrm/exercises-dataset) by hasaneyldrm. The
+exercise images and animations, loaded from that repository at runtime, are credited by the
+dataset as **© Gym visual — https://gymvisual.com/**. The bundled copy is trimmed to the
+fields and languages the app uses (see `tools/trim_exercises.py`); the content itself is
+unchanged.
