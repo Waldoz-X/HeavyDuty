@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.stats.presentation.distribucioncorporal
 
+import com.example.heavyduty.core.ui.components.HdCardsSkeleton
 import androidx.compose.ui.platform.LocalResources
 import com.example.heavyduty.core.common.R
 import com.example.heavyduty.core.domain.model.MuscleGroup
@@ -42,7 +43,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.heavyduty.core.common.extensions.formatCompact
 import com.example.heavyduty.core.ui.components.HdBodyDiagram
 import com.example.heavyduty.core.ui.components.HdChip
-import com.example.heavyduty.core.ui.components.HdLoadingIndicator
 import com.example.heavyduty.core.ui.components.HdPeriodSelector
 import com.example.heavyduty.core.ui.components.HdStatCard
 import com.example.heavyduty.core.ui.nameResId
@@ -72,7 +72,7 @@ fun DistribucionCorporalScreen(
         modifier = modifier.fillMaxSize(),
     ) { innerPadding ->
         if (uiState.isLoading) {
-            HdLoadingIndicator(modifier = Modifier.padding(innerPadding), message = stringResource(R.string.state_loading))
+            HdCardsSkeleton(modifier = Modifier.padding(innerPadding).padding(16.dp), heights = listOf(48.dp, 400.dp, 120.dp))
             return@Scaffold
         }
 

@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.profile.presentation
 
+import com.example.heavyduty.core.ui.components.HdCardsSkeleton
 import com.example.heavyduty.core.common.R
 import androidx.compose.ui.res.stringResource
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -51,7 +52,6 @@ import com.example.heavyduty.core.ui.components.HdButton
 import com.example.heavyduty.core.domain.model.WeightUnit
 import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdChip
-import com.example.heavyduty.core.ui.components.HdLoadingIndicator
 import com.example.heavyduty.core.common.extensions.formatCompact
 import com.example.heavyduty.core.ui.components.HdTextButton
 import com.example.heavyduty.core.ui.components.HdTonalButton
@@ -69,7 +69,7 @@ fun ProfileScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     if (uiState.isLoading) {
-        HdLoadingIndicator(modifier = modifier, message = stringResource(R.string.profile_loading))
+        HdCardsSkeleton(modifier = modifier.padding(16.dp), heights = listOf(120.dp, 160.dp, 140.dp, 140.dp))
         return
     }
 

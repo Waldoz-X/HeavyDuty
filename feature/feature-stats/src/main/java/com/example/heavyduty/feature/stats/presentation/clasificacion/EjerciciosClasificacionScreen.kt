@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.stats.presentation.clasificacion
 
+import com.example.heavyduty.core.ui.components.HdCardListSkeleton
 import com.example.heavyduty.core.common.R
 import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Arrangement
@@ -29,7 +30,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.heavyduty.core.common.extensions.formatDecimal
 import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdEmptyState
-import com.example.heavyduty.core.ui.components.HdLoadingIndicator
 import com.example.heavyduty.feature.stats.domain.model.ExerciseRanking
 import com.example.heavyduty.core.ui.formatWeight
 
@@ -56,7 +56,7 @@ fun EjerciciosClasificacionScreen(
         modifier = modifier.fillMaxSize(),
     ) { innerPadding ->
         when {
-            uiState.isLoading -> HdLoadingIndicator(modifier = Modifier.padding(innerPadding), message = stringResource(R.string.state_loading))
+            uiState.isLoading -> HdCardListSkeleton(modifier = Modifier.padding(innerPadding).padding(16.dp), rows = 6, thumbnailSize = 40.dp)
             uiState.rankings.isEmpty() -> HdEmptyState(
                 icon = Icons.Default.Leaderboard,
                 title = stringResource(R.string.stats_records_empty_title),

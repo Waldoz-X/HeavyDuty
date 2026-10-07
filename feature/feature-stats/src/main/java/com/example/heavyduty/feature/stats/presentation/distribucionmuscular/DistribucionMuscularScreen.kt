@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.stats.presentation.distribucionmuscular
 
+import com.example.heavyduty.core.ui.components.HdCardsSkeleton
 import androidx.compose.ui.platform.LocalResources
 import com.example.heavyduty.core.common.R
 import androidx.compose.foundation.background
@@ -42,7 +43,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.heavyduty.core.common.extensions.formatCompact
 import com.example.heavyduty.core.ui.components.HdEmptyState
-import com.example.heavyduty.core.ui.components.HdLoadingIndicator
 import com.example.heavyduty.core.ui.components.HdPeriodSelector
 import com.example.heavyduty.core.ui.components.HdRadarChart
 import com.example.heavyduty.core.ui.components.HdStatCard
@@ -73,7 +73,7 @@ fun DistribucionMuscularScreen(
         modifier = modifier.fillMaxSize(),
     ) { innerPadding ->
         when {
-            uiState.isLoading -> HdLoadingIndicator(modifier = Modifier.padding(innerPadding), message = stringResource(R.string.state_loading))
+            uiState.isLoading -> HdCardsSkeleton(modifier = Modifier.padding(innerPadding).padding(16.dp), heights = listOf(48.dp, 320.dp, 120.dp, 120.dp))
             uiState.currentWeek.size < 3 -> HdEmptyState(
                 icon = Icons.Default.PieChart,
                 title = stringResource(R.string.stats_insufficient_data),

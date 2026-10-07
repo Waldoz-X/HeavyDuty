@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.routines.presentation.editor
 
+import com.example.heavyduty.core.ui.components.HdCardListSkeleton
 import androidx.compose.ui.platform.LocalResources
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
@@ -121,7 +122,6 @@ import com.example.heavyduty.core.ui.components.HdChip
 import com.example.heavyduty.core.ui.components.HdEmptyState
 import com.example.heavyduty.core.ui.components.HdExerciseThumbnail
 import com.example.heavyduty.core.ui.components.HdLineChart
-import com.example.heavyduty.core.ui.components.HdLoadingIndicator
 import com.example.heavyduty.core.ui.components.HdTonalButton
 import com.example.heavyduty.core.ui.nameResId
 import kotlinx.coroutines.launch
@@ -249,10 +249,7 @@ fun RoutineEditorScreen(
         modifier = modifier,
     ) { innerPadding ->
         if (uiState.isLoading) {
-            HdLoadingIndicator(
-                modifier = Modifier.padding(innerPadding),
-                message = stringResource(R.string.routine_loading),
-            )
+            HdCardListSkeleton(modifier = Modifier.padding(innerPadding).padding(16.dp), rows = 6, thumbnailSize = 48.dp)
         } else {
             EditorContent(
                 uiState = uiState,

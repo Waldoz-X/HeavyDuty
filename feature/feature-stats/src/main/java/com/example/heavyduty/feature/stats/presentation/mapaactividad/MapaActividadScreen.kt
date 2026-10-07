@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.stats.presentation.mapaactividad
 
+import com.example.heavyduty.core.ui.components.HdCardsSkeleton
 import com.example.heavyduty.feature.stats.domain.usecase.TimeSlot
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.platform.LocalConfiguration
@@ -53,7 +54,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.heavyduty.core.ui.components.HdActivityHeatmap
 import com.example.heavyduty.core.ui.components.HdCard
-import com.example.heavyduty.core.ui.components.HdLoadingIndicator
 import com.example.heavyduty.feature.stats.domain.usecase.ActivityHeatmapStatsReport
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -82,10 +82,7 @@ fun MapaActividadScreen(
         modifier = modifier.fillMaxSize(),
     ) { innerPadding ->
         if (uiState.isLoading) {
-            HdLoadingIndicator(
-                modifier = Modifier.padding(innerPadding),
-                message = stringResource(R.string.activity_loading),
-            )
+            HdCardsSkeleton(modifier = Modifier.padding(innerPadding).padding(16.dp), heights = listOf(180.dp, 200.dp, 220.dp))
             return@Scaffold
         }
 
@@ -364,7 +361,8 @@ private fun DayOfWeekDistributionCard(report: ActivityHeatmapStatsReport) {
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = if (isFavorite) FontWeight.Bold else FontWeight.Normal,
                             color = if (isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.width(85.dp),
+                            // Room for the longest weekday name ("Wednesday", "Miércoles") plus a gap.
+                            modifier = Modifier.width(108.dp),
                         )
 
                         LinearProgressIndicator(

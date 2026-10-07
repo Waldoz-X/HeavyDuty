@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.stats.presentation.informemensual
 
+import com.example.heavyduty.core.ui.components.HdCardsSkeleton
 import kotlin.math.roundToInt
 import androidx.compose.ui.platform.LocalConfiguration
 import com.example.heavyduty.core.common.R
@@ -53,7 +54,6 @@ import com.example.heavyduty.core.common.extensions.formatCompact
 import com.example.heavyduty.core.ui.components.HdBarChart
 import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdEmptyState
-import com.example.heavyduty.core.ui.components.HdLoadingIndicator
 import com.example.heavyduty.core.ui.components.HdStatCard
 import com.example.heavyduty.core.ui.nameResId
 import com.example.heavyduty.feature.stats.domain.model.MuscleVolumeContribution
@@ -100,10 +100,7 @@ fun InformeMensualScreen(
             )
 
             if (uiState.isLoading) {
-                HdLoadingIndicator(
-                    modifier = Modifier.fillMaxSize(),
-                    message = stringResource(R.string.monthly_loading),
-                )
+                HdCardsSkeleton(modifier = Modifier.fillMaxSize().padding(16.dp), heights = listOf(56.dp, 120.dp, 120.dp, 220.dp))
                 return@Scaffold
             }
 

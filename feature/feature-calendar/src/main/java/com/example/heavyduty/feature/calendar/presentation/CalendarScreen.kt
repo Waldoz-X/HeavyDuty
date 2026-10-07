@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.calendar.presentation
 
+import com.example.heavyduty.core.ui.components.HdCardsSkeleton
 import kotlinx.coroutines.launch
 import java.time.format.TextStyle
 import java.time.DayOfWeek
@@ -51,7 +52,6 @@ import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdEmptyState
 import com.example.heavyduty.core.ui.nameResId
 import androidx.compose.ui.res.stringResource
-import com.example.heavyduty.core.ui.components.HdLoadingIndicator
 import com.example.heavyduty.core.ui.components.HdTonalButton
 
 /** Weekday name in the app's language; [day] is 1 = Monday … 7 = Sunday. */
@@ -98,7 +98,7 @@ fun CalendarScreen(
 
         when {
             uiState.isLoading -> {
-                HdLoadingIndicator(message = stringResource(R.string.calendar_loading))
+                HdCardsSkeleton(modifier = Modifier.padding(16.dp), heights = listOf(56.dp, 96.dp, 96.dp))
             }
             else -> {
                 // Week day selector
@@ -166,7 +166,11 @@ fun CalendarScreen(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            text = stringResource(R.string.calendar_schedule_for, dayName(selectedDay, TextStyle.FULL)),
+                            text = stringResource(
+                                R.string.calendar_schedule_for,
+                                // As the language writes it mid-sentence: "miércoles" / "Wednesday".
+                                DayOfWeek.of(selectedDay).getDisplayName(TextStyle.FULL, LocalConfiguration.current.locales[0]),
+                            ),
                             style = MaterialTheme.typography.titleSmall,
                             color = MaterialTheme.colorScheme.onSurface,
                         )

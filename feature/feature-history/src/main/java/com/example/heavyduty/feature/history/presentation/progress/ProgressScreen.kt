@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.history.presentation.progress
 
+import com.example.heavyduty.core.ui.components.HdCardsSkeleton
 import com.example.heavyduty.core.common.R
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -38,7 +39,6 @@ import com.example.heavyduty.core.domain.model.WeightUnit
 import com.example.heavyduty.core.domain.model.kgTo
 import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdEmptyState
-import com.example.heavyduty.core.ui.components.HdLoadingIndicator
 import com.example.heavyduty.feature.history.domain.model.ExercisePersonalRecords
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.axis.HorizontalAxis
@@ -93,10 +93,7 @@ fun ProgressScreen(
     ) { innerPadding ->
         when {
             uiState.isLoading -> {
-                HdLoadingIndicator(
-                    modifier = Modifier.padding(innerPadding),
-                    message = stringResource(R.string.progress_loading),
-                )
+                HdCardsSkeleton(modifier = Modifier.padding(innerPadding).padding(16.dp), heights = listOf(240.dp, 240.dp, 140.dp))
             }
             uiState.sets.isEmpty() -> {
                 HdEmptyState(

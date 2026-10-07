@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.stats.presentation.principales
 
+import com.example.heavyduty.core.ui.components.HdCardListSkeleton
 import com.example.heavyduty.core.common.R
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -41,7 +42,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdEmptyState
-import com.example.heavyduty.core.ui.components.HdLoadingIndicator
 import com.example.heavyduty.feature.stats.domain.model.ExerciseFrequency
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -67,7 +67,7 @@ fun EjerciciosPrincipalesScreen(
         modifier = modifier.fillMaxSize(),
     ) { innerPadding ->
         when {
-            uiState.isLoading -> HdLoadingIndicator(modifier = Modifier.padding(innerPadding), message = stringResource(R.string.state_loading))
+            uiState.isLoading -> HdCardListSkeleton(modifier = Modifier.padding(innerPadding).padding(16.dp), rows = 6, thumbnailSize = 40.dp)
             uiState.exercises.isEmpty() -> HdEmptyState(
                 icon = Icons.Default.EmojiEvents,
                 title = stringResource(R.string.stats_top_empty_title),

@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.stats.presentation.series
 
+import com.example.heavyduty.core.ui.components.HdCardsSkeleton
 import com.example.heavyduty.core.common.R
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -27,7 +28,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.heavyduty.core.ui.components.HdBarChart
 import com.example.heavyduty.core.ui.components.HdEmptyState
-import com.example.heavyduty.core.ui.components.HdLoadingIndicator
 import com.example.heavyduty.core.ui.nameResId
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -53,7 +53,7 @@ fun SeriesPorMusculoScreen(
         modifier = modifier.fillMaxSize(),
     ) { innerPadding ->
         if (uiState.isLoading) {
-            HdLoadingIndicator(modifier = Modifier.padding(innerPadding), message = stringResource(R.string.state_loading))
+            HdCardsSkeleton(modifier = Modifier.padding(innerPadding).padding(16.dp), heights = listOf(48.dp, 64.dp, 280.dp))
             return@Scaffold
         }
         Column(

@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.stats.presentation.pesocorporal
 
+import com.example.heavyduty.core.ui.components.HdCardsSkeleton
 import com.example.heavyduty.core.common.R
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -62,7 +63,6 @@ import com.example.heavyduty.core.common.extensions.toWeightString
 import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdEmptyState
 import com.example.heavyduty.core.ui.components.HdLineChart
-import com.example.heavyduty.core.ui.components.HdLoadingIndicator
 import com.example.heavyduty.feature.stats.domain.usecase.BodyWeightHistoryItem
 import com.example.heavyduty.feature.stats.domain.usecase.BodyWeightStatsReport
 import com.example.heavyduty.core.domain.model.label
@@ -120,10 +120,7 @@ fun BodyWeightStatsScreen(
         modifier = modifier.fillMaxSize(),
     ) { innerPadding ->
         if (uiState.isLoading) {
-            HdLoadingIndicator(
-                modifier = Modifier.padding(innerPadding),
-                message = stringResource(R.string.bw_loading),
-            )
+            HdCardsSkeleton(modifier = Modifier.padding(innerPadding).padding(16.dp), heights = listOf(160.dp, 240.dp, 200.dp))
             return@Scaffold
         }
 

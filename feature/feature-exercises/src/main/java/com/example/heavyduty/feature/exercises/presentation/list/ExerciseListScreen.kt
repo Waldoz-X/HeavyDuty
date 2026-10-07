@@ -337,22 +337,17 @@ private fun ExerciseListItem(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .shadow(
-                elevation = 6.dp,
-                shape = MaterialTheme.shapes.large,
-                ambientColor = accent.copy(alpha = 0.35f),
-                spotColor = accent.copy(alpha = 0.35f),
-            )
             .clip(MaterialTheme.shapes.large)
             .background(
                 if (isSelected) accent.copy(alpha = 0.18f) else MaterialTheme.colorScheme.surfaceContainerHigh,
             )
-            .then(
-                if (isSelected) {
-                    Modifier.border(2.dp, accent, MaterialTheme.shapes.large)
-                } else {
-                    Modifier
-                },
+            // A thin accent outline instead of a colored drop shadow: on the dark theme the
+            // shadow was barely visible, yet each card drew its own shadow layer, one of the
+            // most expensive parts of scrolling this 1,300-item list.
+            .border(
+                width = if (isSelected) 2.dp else 1.dp,
+                color = if (isSelected) accent else accent.copy(alpha = 0.25f),
+                shape = MaterialTheme.shapes.large,
             )
             .clickable(onClick = onClick)
             .padding(12.dp),
