@@ -31,7 +31,7 @@
     <!-- Active workout: session -->
     <string name="workout_default_name">Entrenamiento</string>
     <string name="workout_finish">Finalizar</string>
-    <string name="workout_sets_progress">%1$d/%2$d series</string>
+    <string name="workout_sets_progress" tools:ignore="PluralsCandidate">%1$d/%2$d series</string>
     <plurals name="workout_sets_logged">
         <item quantity="one">%d serie</item>
         <item quantity="many">%d series</item>
@@ -63,14 +63,18 @@
     <string name="workout_suggestion">Sugerido: %1$s</string>
     <string name="workout_suggestion_use">Usar</string>
     <string name="workout_deload">Descarga</string>
-    <string name="workout_per_side">%1$d por lado</string>
+    <string name="workout_per_side" tools:ignore="PluralsCandidate">%1$d por lado</string>
     <string name="workout_hold_start">Iniciar cronómetro</string>
     <string name="workout_hold_stop">Detener cronómetro</string>
     <string name="workout_done">Completado</string>
 
     <!-- Active workout: finish dialog -->
     <string name="workout_finish_dialog_title">¿Finalizar entrenamiento?</string>
-    <string name="workout_finish_dialog_incomplete">Llevas %1$d de %2$d series planificadas. Las que faltan quedarán sin registrar.</string>
+    <plurals name="workout_finish_dialog_incomplete">
+        <item quantity="one">Te falta %3$d serie planificada (llevas %1$d de %2$d). Quedará sin registrar.</item>
+        <item quantity="other">Te faltan %3$d series planificadas (llevas %1$d de %2$d). Quedarán sin registrar.</item>
+        <item quantity="many">Te faltan %3$d series planificadas (llevas %1$d de %2$d). Quedarán sin registrar.</item>
+    </plurals>
     <string name="workout_finish_dialog_logged">Series registradas: %1$d</string>
     <string name="workout_cancel">Cancelar</string>
 

@@ -193,7 +193,8 @@ private fun RoutineListItem(
                     add(stringResource(routine.type.nameResId))
                     if (routine.exercises.isNotEmpty()) {
                         add(pluralStringResource(R.plurals.workout_exercise_count, routine.exercises.size, routine.exercises.size))
-                        add(stringResource(R.string.routine_summary, routine.exercises.sumOf { it.targetSets }, estimatedMinutes(routine)))
+                        val totalSets = routine.exercises.sumOf { it.targetSets }
+                        add(pluralStringResource(R.plurals.routine_summary, totalSets, totalSets, estimatedMinutes(routine)))
                     }
                 }
                 Text(

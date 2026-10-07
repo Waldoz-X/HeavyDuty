@@ -14,7 +14,10 @@
     <string name="routine_type">Type</string>
     <string name="routine_volume_history">Volume per session</string>
     <string name="routine_exercises_header">Exercises</string>
-    <string name="routine_summary">%1$d sets · ~%2$d min</string>
+    <plurals name="routine_summary">
+        <item quantity="one">%1$d set · ~%2$d min</item>
+        <item quantity="other">%1$d sets · ~%2$d min</item>
+    </plurals>
     <string name="routine_add_exercises">Add exercises</string>
     <string name="routine_empty_title">Your routine is empty</string>
     <string name="routine_empty_description">Add exercises; you can then set each one\'s sets, reps, weight and rest.</string>

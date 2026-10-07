@@ -435,7 +435,7 @@ private fun EditorContent(
                 )
                 if (uiState.exercises.isNotEmpty()) {
                     Text(
-                        text = stringResource(R.string.routine_summary, uiState.totalSets, uiState.estimatedMinutes),
+                        text = pluralStringResource(R.plurals.routine_summary, uiState.totalSets, uiState.totalSets, uiState.estimatedMinutes),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

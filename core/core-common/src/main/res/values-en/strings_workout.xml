@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Active workout: messages -->
     <string name="workout_already_active">A workout is already in progress</string>
     <string name="workout_routine_not_found">Routine not found</string>
@@ -30,7 +30,7 @@
     <!-- Active workout: session -->
     <string name="workout_default_name">Workout</string>
     <string name="workout_finish">Finish</string>
-    <string name="workout_sets_progress">%1$d/%2$d sets</string>
+    <string name="workout_sets_progress" tools:ignore="PluralsCandidate">%1$d/%2$d sets</string>
     <plurals name="workout_sets_logged">
         <item quantity="one">%d set</item>
         <item quantity="other">%d sets</item>
@@ -61,14 +61,17 @@
     <string name="workout_suggestion">Suggested: %1$s</string>
     <string name="workout_suggestion_use">Use</string>
     <string name="workout_deload">Deload</string>
-    <string name="workout_per_side">%1$d per side</string>
+    <string name="workout_per_side" tools:ignore="PluralsCandidate">%1$d per side</string>
     <string name="workout_hold_start">Start timer</string>
     <string name="workout_hold_stop">Stop timer</string>
     <string name="workout_done">Completed</string>
 
     <!-- Active workout: finish dialog -->
     <string name="workout_finish_dialog_title">Finish workout?</string>
-    <string name="workout_finish_dialog_incomplete">You\'ve done %1$d of %2$d planned sets. The missing ones won\'t be logged.</string>
+    <plurals name="workout_finish_dialog_incomplete">
+        <item quantity="one">You have %3$d planned set left (%1$d of %2$d done). It won\'t be logged.</item>
+        <item quantity="other">You have %3$d planned sets left (%1$d of %2$d done). They won\'t be logged.</item>
+    </plurals>
     <string name="workout_finish_dialog_logged">Sets logged: %1$d</string>
     <string name="workout_cancel">Cancel</string>
 

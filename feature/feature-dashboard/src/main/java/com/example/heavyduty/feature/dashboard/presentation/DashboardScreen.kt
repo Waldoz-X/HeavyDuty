@@ -326,7 +326,7 @@ private fun relativeDayLabel(timeMillis: Long): String =
     when (val days = calendarDaysBetween(timeMillis, System.currentTimeMillis())) {
         0 -> stringResource(R.string.time_today)
         1 -> stringResource(R.string.time_yesterday)
-        else -> stringResource(R.string.time_days_ago, days)
+        else -> pluralStringResource(R.plurals.time_days_ago, days, days)
     }
 
 @Composable

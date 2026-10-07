@@ -14,7 +14,11 @@
     <string name="routine_type">Tipo</string>
     <string name="routine_volume_history">Volumen por sesión</string>
     <string name="routine_exercises_header">Ejercicios</string>
-    <string name="routine_summary">%1$d series · ~%2$d min</string>
+    <plurals name="routine_summary">
+        <item quantity="one">%1$d serie · ~%2$d min</item>
+        <item quantity="other">%1$d series · ~%2$d min</item>
+        <item quantity="many">%1$d series · ~%2$d min</item>
+    </plurals>
     <string name="routine_add_exercises">Agregar ejercicios</string>
     <string name="routine_empty_title">Tu rutina está vacía</string>
     <string name="routine_empty_description">Agrega ejercicios; podrás ajustar series, repeticiones, peso y descanso de cada uno.</string>

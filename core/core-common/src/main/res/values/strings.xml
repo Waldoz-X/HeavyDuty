@@ -54,12 +54,24 @@
     <string name="sets_lowercase">series</string>
 
     <!-- Relative Time -->
-    <string name="time_ago_days">hace %1$d días</string>
-    <string name="time_ago_hours">hace %1$d horas</string>
+    <plurals name="time_ago_days">
+        <item quantity="one">hace %1$d día</item>
+        <item quantity="other">hace %1$d días</item>
+        <item quantity="many">hace %1$d días</item>
+    </plurals>
+    <plurals name="time_ago_hours">
+        <item quantity="one">hace %1$d hora</item>
+        <item quantity="other">hace %1$d horas</item>
+        <item quantity="many">hace %1$d horas</item>
+    </plurals>
     <string name="time_ago_just_now">hace un momento</string>
     <string name="time_today">Hoy</string>
     <string name="time_yesterday">Ayer</string>
-    <string name="time_days_ago">Hace %1$d días</string>
+    <plurals name="time_days_ago">
+        <item quantity="one">Hace %1$d día</item>
+        <item quantity="other">Hace %1$d días</item>
+        <item quantity="many">Hace %1$d días</item>
+    </plurals>
     <string name="dashboard_recent_workout_default">Entrenamiento</string>
 
     <!-- Backup Messages -->
@@ -68,8 +80,12 @@
     <string name="backup_import_error_invalid">Archivo de respaldo inválido</string>
     <string name="backup_import_error_read">No se pudo leer el archivo</string>
     <string name="backup_export_error_open">No se pudo abrir el archivo</string>
-    <string name="backup_imported_stats">Importado: %1$d rutinas, %2$d sesiones, %3$d pesos, %4$d ejercicios</string>
-    <string name="backup_imported_skipped"> (%1$d referencias omitidas por ejercicios no encontrados)</string>
+    <string name="backup_imported_stats">Importado · Rutinas: %1$d · Sesiones: %2$d · Registros de peso: %3$d · Ejercicios propios: %4$d</string>
+    <plurals name="backup_imported_skipped">
+        <item quantity="one"> (%1$d referencia omitida por ejercicios no encontrados)</item>
+        <item quantity="other"> (%1$d referencias omitidas por ejercicios no encontrados)</item>
+        <item quantity="many"> (%1$d referencias omitidas por ejercicios no encontrados)</item>
+    </plurals>
 
     <!-- Dashboard -->
     <string name="dashboard_welcome_title">¡Bienvenido de nuevo, Atleta!</string>
@@ -102,7 +118,7 @@
     <string name="dashboard_log_weight_title">Registrar peso</string>
     <string name="dashboard_weight_field">Peso (%1$s)</string>
     <string name="dashboard_save">Guardar</string>
-    <string name="dashboard_planned_progress">%1$d/%2$d esta semana</string>
+    <string name="dashboard_planned_progress" tools:ignore="PluralsCandidate">%1$d/%2$d esta semana</string>
     <plurals name="dashboard_weeks_ago">
         <item quantity="one">Hace %d semana</item>
         <item quantity="many">Hace %d semanas</item>

@@ -229,8 +229,8 @@ class ProfileViewModel @Inject constructor(
         val hours = diff / (1000 * 60 * 60)
         val days = hours / 24
         return when {
-            days > 0 -> appContext.getString(R.string.time_ago_days, days)
-            hours > 0 -> appContext.getString(R.string.time_ago_hours, hours)
+            days > 0 -> appContext.resources.getQuantityString(R.plurals.time_ago_days, days.toInt(), days)
+            hours > 0 -> appContext.resources.getQuantityString(R.plurals.time_ago_hours, hours.toInt(), hours)
             else -> appContext.getString(R.string.time_ago_just_now)
         }
     }
@@ -292,7 +292,7 @@ class ProfileViewModel @Inject constructor(
                 val message = buildString {
                     append(appContext.getString(R.string.backup_imported_stats, result.routinesImported, result.sessionsImported, result.bodyWeightEntriesImported, result.customExercisesImported))
                     if (result.skippedReferences > 0) {
-                        append(appContext.getString(R.string.backup_imported_skipped, result.skippedReferences))
+                        append(appContext.resources.getQuantityString(R.plurals.backup_imported_skipped, result.skippedReferences, result.skippedReferences))
                     }
                 }
                 _uiState.update { it.copy(isImportingData = false, backupMessage = message) }
