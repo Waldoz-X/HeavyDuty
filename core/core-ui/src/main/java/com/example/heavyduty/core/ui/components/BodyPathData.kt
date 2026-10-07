@@ -3,6 +3,7 @@ package com.example.heavyduty.core.ui.components
 import android.content.Context
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.vector.PathParser
+import com.example.heavyduty.core.domain.model.MuscleGroup
 import org.json.JSONObject
 
 /**
@@ -17,38 +18,36 @@ internal data class BodyView(
     val viewBoxWidth: Float,
     val viewBoxHeight: Float,
     val inertPaths: List<Path>,
-    val musclePaths: Map<String, List<Path>>,
+    val musclePaths: Map<MuscleGroup, List<Path>>,
 )
 
 // Parts that are drawn as silhouette only — they carry no training load.
 private val INERT_KEYS = setOf("head", "hair", "neck", "hands", "feet", "knees", "ankles")
 
-// MuscleMap's 18 muscle keys collapsed onto HeavyDuty's MuscleGroup display names.
-// A few keys HeavyDuty doesn't model separately (serratus, adductors, hip-flexors,
-// tibialis) fold onto their nearest neighbor rather than being dropped or invented.
-private val MUSCLE_LABEL: Map<String, String> = mapOf(
-    "chest" to "Pecho",
-    "abs" to "Abdominales",
-    "biceps" to "Bíceps",
-    "triceps" to "Tríceps",
-    "deltoids" to "Hombros",
-    "obliques" to "Oblicuos",
-    "quadriceps" to "Cuádriceps",
-    "calves" to "Pantorrillas",
-    "adductors" to "Cuádriceps",
-    "trapezius" to "Trapecios",
-    "forearm" to "Antebrazos",
-    "tibialis" to "Pantorrillas",
-    "serratus" to "Pecho",
-    "hip-flexors" to "Cuádriceps",
-    "upper-back" to "Dorsales",
-    "lower-back" to "Espalda",
-    "gluteal" to "Glúteos",
-    "hamstring" to "Isquiotibiales",
+// MuscleMap's 18 muscle keys collapsed onto HeavyDuty's muscle groups. A few keys HeavyDuty
+// doesn't model separately (serratus, adductors, hip-flexors, tibialis) fold onto their nearest
+// neighbor rather than being dropped or invented. Keyed by the enum, not a display name, so the
+// map shades the same muscles in any app language.
+private val MUSCLE_GROUP: Map<String, MuscleGroup> = mapOf(
+    "chest" to MuscleGroup.CHEST,
+    "abs" to MuscleGroup.ABS,
+    "biceps" to MuscleGroup.BICEPS,
+    "triceps" to MuscleGroup.TRICEPS,
+    "deltoids" to MuscleGroup.SHOULDERS,
+    "obliques" to MuscleGroup.OBLIQUES,
+    "quadriceps" to MuscleGroup.QUADRICEPS,
+    "calves" to MuscleGroup.CALVES,
+    "adductors" to MuscleGroup.QUADRICEPS,
+    "trapezius" to MuscleGroup.TRAPS,
+    "forearm" to MuscleGroup.FOREARMS,
+    "tibialis" to MuscleGroup.CALVES,
+    "serratus" to MuscleGroup.CHEST,
+    "hip-flexors" to MuscleGroup.QUADRICEPS,
+    "upper-back" to MuscleGroup.LATS,
+    "lower-back" to MuscleGroup.BACK,
+    "gluteal" to MuscleGroup.GLUTES,
+    "hamstring" to MuscleGroup.HAMSTRINGS,
 )
-
-/** Full set of muscle group display-name labels [HdBodyDiagram] can shade. */
-val BODY_REGION_LABELS: Set<String> = MUSCLE_LABEL.values.toSet()
 
 /** Which body figure [HdBodyDiagram] draws — a user-facing preference, not an assumption. */
 enum class BodyGender(val storageValue: String) {
@@ -73,7 +72,7 @@ private fun parseView(viewJson: JSONObject): BodyView {
     val parser = PathParser()
 
     val inert = mutableListOf<Path>()
-    val muscles = mutableMapOf<String, MutableList<Path>>()
+    val muscles = mutableMapOf<MuscleGroup, MutableList<Path>>()
 
     for (key in pathsJson.keys()) {
         val dArray = pathsJson.getJSONArray(key)
@@ -83,8 +82,8 @@ private fun parseView(viewJson: JSONObject): BodyView {
         if (key in INERT_KEYS) {
             inert.addAll(paths)
         } else {
-            val label = MUSCLE_LABEL[key] ?: continue
-            muscles.getOrPut(label) { mutableListOf() }.addAll(paths)
+            val muscle = MUSCLE_GROUP[key] ?: continue
+            muscles.getOrPut(muscle) { mutableListOf() }.addAll(paths)
         }
     }
 

@@ -20,16 +20,18 @@ import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.heavyduty.core.common.R
+import com.example.heavyduty.core.domain.model.MuscleGroup
 
 /**
  * A front + back humanoid silhouette used to visualize how much volume was trained per
  * muscle group. Geometry is real anatomical outlines (see [loadBodyPaths] / NOTICE.md),
  * not hand-drawn shapes — this component only shades and fits them.
  *
- * Keys in [muscleValues] are muscle group display names (e.g. "Pecho", "Espalda",
- * "Hombros" — see [BODY_REGION_LABELS] for the full recognized set). Unrecognized keys
- * (like whole-body or cardio categories) are simply not drawn.
+ * [muscleValues] is keyed by muscle group. Groups without a body region (full body, cardio)
+ * are simply not drawn.
  *
  * By default each muscle is shaded on a [baseColor]→[highlightColor] gradient scaled by
  * its value in [muscleValues] (e.g. volume). Pass [categoryColors] to shade by discrete
@@ -38,14 +40,14 @@ import androidx.compose.ui.unit.dp
  */
 @Composable
 fun HdBodyDiagram(
-    muscleValues: Map<String, Float>,
+    muscleValues: Map<MuscleGroup, Float>,
     modifier: Modifier = Modifier,
     gender: BodyGender = BodyGender.MALE,
     baseColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
     highlightColor: Color = MaterialTheme.colorScheme.primary,
-    categoryColors: Map<String, Color>? = null,
-    frontLabel: String = "Frontal",
-    backLabel: String = "Posterior",
+    categoryColors: Map<MuscleGroup, Color>? = null,
+    frontLabel: String = stringResource(R.string.body_front),
+    backLabel: String = stringResource(R.string.body_back),
 ) {
     val context = LocalContext.current
     val (front, back) = remember(gender) { loadBodyPaths(context, gender) }
@@ -93,11 +95,11 @@ fun HdBodyDiagram(
 
 private fun DrawScope.drawBodyView(
     view: BodyView,
-    muscleValues: Map<String, Float>,
+    muscleValues: Map<MuscleGroup, Float>,
     maxValue: Float,
     baseColor: Color,
     highlightColor: Color,
-    categoryColors: Map<String, Color>?,
+    categoryColors: Map<MuscleGroup, Color>?,
 ) {
     // Fit the SVG viewBox into the available canvas, preserving aspect ratio and centered.
     val fitScale = minOf(size.width / view.viewBoxWidth, size.height / view.viewBoxHeight)
@@ -110,9 +112,9 @@ private fun DrawScope.drawBodyView(
         scale(scale = fitScale, pivot = Offset.Zero) {
             translate(left = -view.viewBoxMinX, top = -view.viewBoxMinY) {
                 view.inertPaths.forEach { path -> drawPath(path, color = baseColor) }
-                view.musclePaths.forEach { (label, paths) ->
-                    val color = categoryColors?.get(label) ?: run {
-                        val value = muscleValues[label] ?: 0f
+                view.musclePaths.forEach { (muscle, paths) ->
+                    val color = categoryColors?.get(muscle) ?: run {
+                        val value = muscleValues[muscle] ?: 0f
                         val intensity = (value / maxValue).coerceIn(0f, 1f)
                         lerp(baseColor, highlightColor, intensity)
                     }

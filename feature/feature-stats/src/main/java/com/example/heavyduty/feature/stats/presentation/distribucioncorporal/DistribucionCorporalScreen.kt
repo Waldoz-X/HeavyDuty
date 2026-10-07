@@ -1,5 +1,8 @@
 package com.example.heavyduty.feature.stats.presentation.distribucioncorporal
 
+import androidx.compose.ui.platform.LocalResources
+import com.example.heavyduty.core.common.R
+import com.example.heavyduty.core.domain.model.MuscleGroup
 import androidx.compose.foundation.background
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -58,10 +61,10 @@ fun DistribucionCorporalScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Distribución corporal") },
+                title = { Text(stringResource(R.string.stats_body_screen_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
                 },
             )
@@ -69,7 +72,7 @@ fun DistribucionCorporalScreen(
         modifier = modifier.fillMaxSize(),
     ) { innerPadding ->
         if (uiState.isLoading) {
-            HdLoadingIndicator(modifier = Modifier.padding(innerPadding), message = "Cargando...")
+            HdLoadingIndicator(modifier = Modifier.padding(innerPadding), message = stringResource(R.string.state_loading))
             return@Scaffold
         }
 
@@ -77,15 +80,15 @@ fun DistribucionCorporalScreen(
         val fatiguedColor = MaterialTheme.colorScheme.error
         val strongColor = MaterialTheme.colorScheme.tertiary
 
-        val categoryColors: Map<String, Color>? = when (uiState.mode) {
+        val categoryColors: Map<MuscleGroup, Color>? = when (uiState.mode) {
             BodyMapMode.FATIGUE -> uiState.fatigueByMuscle.entries.associate { (muscle, level) ->
-                stringResource(muscle.nameResId) to lerp(baseColor, fatiguedColor, level.coerceIn(0f, 1f))
+                muscle to lerp(baseColor, fatiguedColor, level.coerceIn(0f, 1f))
             }
             BodyMapMode.STRENGTH -> uiState.strengthByMuscle.entries.associate { (muscle, retention) ->
                 // Retention floors at 0.5 (see strengthRetention), so normalize that range to
                 // 0..1 before interpolating — otherwise the floor would never read as "base."
                 val fraction = ((retention - 0.5f) / 0.5f).coerceIn(0f, 1f)
-                stringResource(muscle.nameResId) to lerp(baseColor, strongColor, fraction)
+                muscle to lerp(baseColor, strongColor, fraction)
             }
             BodyMapMode.VOLUME -> null
         }
@@ -104,17 +107,17 @@ fun DistribucionCorporalScreen(
             Spacer(modifier = Modifier.height(12.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 HdChip(
-                    text = "Volumen",
+                    text = stringResource(R.string.metric_volume),
                     isSelected = uiState.mode == BodyMapMode.VOLUME,
                     onClick = { viewModel.onEvent(DistribucionCorporalUiEvent.OnModeChange(BodyMapMode.VOLUME)) },
                 )
                 HdChip(
-                    text = "Fatiga",
+                    text = stringResource(R.string.stats_fatigue),
                     isSelected = uiState.mode == BodyMapMode.FATIGUE,
                     onClick = { viewModel.onEvent(DistribucionCorporalUiEvent.OnModeChange(BodyMapMode.FATIGUE)) },
                 )
                 HdChip(
-                    text = "Fuerza",
+                    text = stringResource(R.string.metric_strength),
                     isSelected = uiState.mode == BodyMapMode.STRENGTH,
                     onClick = { viewModel.onEvent(DistribucionCorporalUiEvent.OnModeChange(BodyMapMode.STRENGTH)) },
                 )
@@ -123,18 +126,18 @@ fun DistribucionCorporalScreen(
 
             when (uiState.mode) {
                 BodyMapMode.FATIGUE -> {
-                    GradientLegend(startColor = baseColor, endColor = fatiguedColor, startLabel = "Fresco", endLabel = "Fatigado")
+                    GradientLegend(startColor = baseColor, endColor = fatiguedColor, startLabel = stringResource(R.string.stats_fresh), endLabel = stringResource(R.string.stats_fatigued))
                     Spacer(modifier = Modifier.height(12.dp))
                 }
                 BodyMapMode.STRENGTH -> {
-                    GradientLegend(startColor = baseColor, endColor = strongColor, startLabel = "Hace tiempo", endLabel = "Recién entrenado")
+                    GradientLegend(startColor = baseColor, endColor = strongColor, startLabel = stringResource(R.string.stats_long_ago), endLabel = stringResource(R.string.stats_recently_trained))
                     Spacer(modifier = Modifier.height(12.dp))
                 }
                 BodyMapMode.VOLUME -> Unit
             }
 
             HdBodyDiagram(
-                muscleValues = uiState.volumeByMuscle.mapKeys { (muscle, _) -> stringResource(muscle.nameResId) },
+                muscleValues = uiState.volumeByMuscle,
                 gender = uiState.gender,
                 baseColor = baseColor,
                 categoryColors = categoryColors,
@@ -151,16 +154,17 @@ fun DistribucionCorporalScreen(
 /** Workouts / duration / volume / sets tiles, each with a delta vs. the previous period. */
 @Composable
 private fun BodyPeriodTotals(summary: PeriodSummary) {
+    val resources = LocalResources.current
     fun deltaText(delta: Int): String {
         val sign = if (delta >= 0) "+" else ""
-        return "$sign$delta vs. anterior"
+        return resources.getString(R.string.stats_vs_previous, "$sign$delta")
     }
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             HdStatCard(
                 icon = Icons.Default.CalendarMonth,
-                label = "Entrenamientos",
+                label = stringResource(R.string.stats_workouts),
                 value = "${summary.workouts}",
                 deltaText = deltaText(summary.workoutsDelta),
                 isPositive = summary.workoutsDelta >= 0,
@@ -168,11 +172,11 @@ private fun BodyPeriodTotals(summary: PeriodSummary) {
             )
             HdStatCard(
                 icon = Icons.Default.Timer,
-                label = "Duración",
+                label = stringResource(R.string.metric_duration),
                 value = run {
                     val h = summary.durationMinutes / 60
                     val m = summary.durationMinutes % 60
-                    if (h > 0) "${h}h ${m}min" else "${m}min"
+                    if (h > 0) stringResource(R.string.duration_hours_minutes, h, m) else stringResource(R.string.duration_minutes, m)
                 },
                 subtext = null,
                 modifier = Modifier.weight(1f),
@@ -181,18 +185,18 @@ private fun BodyPeriodTotals(summary: PeriodSummary) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             HdStatCard(
                 icon = Icons.Default.FitnessCenter,
-                label = "Volumen",
+                label = stringResource(R.string.metric_volume),
                 value = summary.volumeKg.formatTotalWeight(),
                 deltaText = run {
                     val sign = if (summary.volumeKgDelta >= 0) "+" else "-"
-                    "$sign${kotlin.math.abs(summary.volumeKgDelta).formatTotalWeight()} vs. anterior"
+                    stringResource(R.string.stats_vs_previous, "$sign${kotlin.math.abs(summary.volumeKgDelta).formatTotalWeight()}")
                 },
                 isPositive = summary.volumeKgDelta >= 0,
                 modifier = Modifier.weight(1f),
             )
             HdStatCard(
                 icon = Icons.Default.Repeat,
-                label = "Series",
+                label = stringResource(R.string.stats_sets),
                 value = "${summary.sets}",
                 deltaText = deltaText(summary.setsDelta),
                 isPositive = summary.setsDelta >= 0,
