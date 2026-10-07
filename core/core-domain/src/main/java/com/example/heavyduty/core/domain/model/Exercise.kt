@@ -12,6 +12,8 @@ data class Exercise(
     val nameEn: String = "",
     val description: String = "",
     val instructions: String = "",
+    /** The catalog's English instructions; empty for custom exercises. */
+    val instructionsEn: String = "",
     val imageUrl: String = "",
     val gifUrl: String = "",
     /** The single "primary" muscle — still what every badge, filter, and accent color uses. */
@@ -102,6 +104,10 @@ val Exercise.displayName: String
     } else {
         name
     }
+
+/** Instructions in the app's language, like [displayName]: English when available and the app isn't in Spanish. */
+val Exercise.displayInstructions: String
+    get() = if (instructionsEn.isNotBlank() && Locale.getDefault().language != "es") instructionsEn else instructions
 
 val Exercise.equipmentDisplayName: String
     get() = equipmentLabelFor(equipment)

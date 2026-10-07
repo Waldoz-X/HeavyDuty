@@ -18,4 +18,12 @@ val MIGRATION_15_16 = object : Migration(15, 16) {
     }
 }
 
-val ALL_MIGRATIONS = arrayOf(MIGRATION_15_16)
+val MIGRATION_16_17 = object : Migration(16, 17) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        // English instructions, shown when the app is in English. Filled from the catalog on
+        // the next open (see SeedData.localizeExerciseInstructions).
+        db.execSQL("ALTER TABLE exercises ADD COLUMN instructionsEn TEXT NOT NULL DEFAULT ''")
+    }
+}
+
+val ALL_MIGRATIONS = arrayOf(MIGRATION_15_16, MIGRATION_16_17)

@@ -14,6 +14,9 @@ data class ExerciseEntity(
     val nameEn: String = "",
     val description: String = "",
     val instructions: String = "",
+    /** The catalog's English instructions (one step per line); empty for custom exercises. */
+    @ColumnInfo(defaultValue = "")
+    val instructionsEn: String = "",
     val imageUrl: String = "",
     val gifUrl: String = "",
     val muscleGroup: String,

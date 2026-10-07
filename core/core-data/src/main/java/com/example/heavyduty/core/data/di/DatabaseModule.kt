@@ -53,10 +53,12 @@ object DatabaseModule {
 
                 override fun onOpen(db: SupportSQLiteDatabase) {
                     super.onOpen(db)
-                    // Existing installs seeded with English names get the Spanish ones; a no-op
-                    // once every catalog exercise has been localized.
+                    // Existing installs get what later versions added to the catalog: Spanish
+                    // names, then English instructions (matched on the English name, so the
+                    // names go first). Each is a single COUNT once done.
                     applicationScope.launch {
                         SeedData.localizeExerciseNames(context, exerciseDaoProvider.get())
+                        SeedData.localizeExerciseInstructions(context, exerciseDaoProvider.get())
                     }
                 }
 

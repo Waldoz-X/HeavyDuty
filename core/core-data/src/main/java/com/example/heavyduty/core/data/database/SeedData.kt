@@ -137,15 +137,45 @@ object SeedData {
         }
     }
 
+    /**
+     * Gives installs seeded before English instructions existed (DB < 17) their English
+     * instructions. Runs on every open; a single COUNT once everything is filled.
+     */
+    suspend fun localizeExerciseInstructions(context: Context, exerciseDao: ExerciseDao) {
+        try {
+            if (exerciseDao.countExercisesWithoutEnglishInstructions() == 0) return
+            val entries = loadCatalog(context).mapNotNull { dto ->
+                val nameEn = dto.name ?: return@mapNotNull null
+                val english = dto.instructionsIn("en").takeIf { it.isNotBlank() } ?: return@mapNotNull null
+                Triple(nameEn, dto.instructionsIn("es"), english)
+            }
+            exerciseDao.setEnglishInstructions(entries)
+        } catch (e: Exception) {
+            Log.e("SeedData", "Error adding English instructions", e)
+        }
+    }
+
+    /**
+     * Instructions in [language], one step per line: the step-by-step breakdown when there is
+     * one (the detail screen numbers the lines), else the flat paragraph.
+     */
+    private fun ExerciseDto.instructionsIn(language: String): String {
+        val steps = instruction_steps?.get(language)
+        return if (!steps.isNullOrEmpty()) steps.joinToString("\n") else instructions?.get(language).orEmpty()
+    }
+
+    private fun loadCatalog(context: Context): List<ExerciseDto> =
+        context.assets.open("exercises.json").use { stream ->
+            val listType = object : TypeToken<List<ExerciseDto>>() {}.type
+            Gson().fromJson(InputStreamReader(stream), listType)
+        }
+
     suspend fun populateExercises(context: Context, exerciseDao: ExerciseDao) {
         if (exerciseDao.getExerciseCount() > 0) return
         val spanishNames = loadSpanishNames(context)
 
         try {
-            val inputStream = context.assets.open("exercises.json")
-            val reader = InputStreamReader(inputStream)
-            val listType = object : TypeToken<List<ExerciseDto>>() {}.type
-            val exercisesDto: List<ExerciseDto> = Gson().fromJson(reader, listType)
+            val exercisesDto: List<ExerciseDto> = loadCatalog(context)
 
             val exerciseEntities = exercisesDto.map { dto ->
                 // The dataset's `category` field mirrors `body_part` for strength exercises and
@@ -201,16 +231,10 @@ object SeedData {
                     ""
                 }
 
-                // Prefer the step-by-step breakdown (one step per line) over the flat paragraph
-                // so the detail screen can render a numbered list. The dataset ships a real,
-                // human-translated "es" key for both fields (verified: all 1,324 entries have
-                // one) — it was reading "en" before, showing English instructions everywhere.
-                val instructionSteps = dto.instruction_steps?.get("es")
-                val instructionsEs = if (!instructionSteps.isNullOrEmpty()) {
-                    instructionSteps.joinToString("\n")
-                } else {
-                    dto.instructions?.get("es") ?: ""
-                }
+                // The dataset ships real, human-translated "es" and "en" instructions (verified:
+                // all 1,324 entries have both); Spanish is the default, English shown in English.
+                val instructionsEs = dto.instructionsIn("es")
+                val instructionsEn = dto.instructionsIn("en")
 
                 // Stays the raw (title-cased English) catalog value — this is what gets stored
                 // as ExerciseEntity.equipment, and Exercise.isBodyweight plus the exercise-list
@@ -249,6 +273,7 @@ object SeedData {
                     equipment = equipmentLabel,
                     description = "Ejercicio con $equipmentLabelEs enfocado en $targetLabelEs.",
                     instructions = instructionsEs,
+                    instructionsEn = instructionsEn,
                     imageUrl = imageUrl,
                     gifUrl = gifUrl,
                     isCustom = false,

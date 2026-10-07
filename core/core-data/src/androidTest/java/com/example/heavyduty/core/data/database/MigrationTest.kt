@@ -93,6 +93,51 @@ class MigrationTest {
         }
     }
 
+    @Test
+    fun migrate16To17_addsEmptyEnglishInstructionsAndKeepsRows() {
+        helper.createDatabase(TEST_DB, 15).apply {
+            insertV15Data()
+            close()
+        }
+        helper.runMigrationsAndValidate(TEST_DB, 16, true, MIGRATION_15_16).close()
+
+        val db = helper.runMigrationsAndValidate(TEST_DB, 17, true, MIGRATION_16_17)
+
+        db.query("SELECT COUNT(*) FROM exercises").use { it.moveToFirst(); assertEquals(2, it.getInt(0)) }
+        db.query("SELECT instructionsEn FROM exercises WHERE id = 1").use { it.moveToFirst(); assertEquals("", it.getString(0)) }
+        db.close()
+    }
+
+    @Test
+    fun englishInstructions_matchEachRowEvenWhenNamesRepeat() = runTest {
+        val database = Room.inMemoryDatabaseBuilder(context, HeavyDutyDatabase::class.java).build()
+        try {
+            val dao = database.exerciseDao()
+            fun row(spanish: String) = com.example.heavyduty.core.data.database.entity.ExerciseEntity(
+                name = "Elevación de talones", nameEn = "smith reverse calf raises", instructions = spanish,
+                muscleGroup = "CALVES", exerciseType = "STRENGTH",
+            )
+            val a = dao.insertExercise(row("Paso A"))
+            val b = dao.insertExercise(row("Paso B"))
+            val custom = dao.insertExercise(row("Mío").copy(nameEn = "", isCustom = true))
+
+            dao.setEnglishInstructions(
+                listOf(
+                    Triple("smith reverse calf raises", "Paso A", "Step A"),
+                    Triple("smith reverse calf raises", "Paso B", "Step B"),
+                ),
+            )
+
+            val byId = dao.getAllExercises().first().associateBy { it.id }
+            assertEquals("Step A", byId.getValue(a).instructionsEn)
+            assertEquals("Step B", byId.getValue(b).instructionsEn)
+            assertEquals("", byId.getValue(custom).instructionsEn)
+            assertEquals(0, dao.countExercisesWithoutEnglishInstructions())
+        } finally {
+            database.close()
+        }
+    }
+
     private fun androidx.sqlite.db.SupportSQLiteDatabase.insertV15Data() {
         execSQL(
             """INSERT INTO exercises (id, name, description, instructions, imageUrl, gifUrl, muscleGroup,

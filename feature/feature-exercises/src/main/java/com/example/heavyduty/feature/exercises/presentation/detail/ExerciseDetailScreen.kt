@@ -1,5 +1,7 @@
 package com.example.heavyduty.feature.exercises.presentation.detail
 
+import com.example.heavyduty.core.domain.model.displayInstructions
+import androidx.compose.ui.platform.LocalConfiguration
 import com.example.heavyduty.core.domain.model.displayName
 import com.example.heavyduty.core.common.R
 import androidx.compose.foundation.background
@@ -343,20 +345,31 @@ private fun ExerciseDetailContent(
                     modifier = Modifier.fillMaxWidth(),
                 )
 
-                if (exercise.description.isNotBlank()) {
+                // The catalog's stored summary is Spanish (built at seed time from its more
+                // detailed target muscle); in other languages it's rebuilt from the same parts.
+                val summary = if (!exercise.isCustom && LocalConfiguration.current.locales[0].language != "es") {
+                    stringResource(
+                        R.string.exercise_detail_catalog_summary,
+                        equipmentLabel(exercise.equipment),
+                        stringResource(exercise.muscleGroup.nameResId).lowercase(),
+                    )
+                } else {
+                    exercise.description
+                }
+                if (summary.isNotBlank()) {
                     Spacer(modifier = Modifier.height(24.dp))
                     SectionHeader(title = stringResource(R.string.exercise_detail_summary), accent = accent)
                     Spacer(modifier = Modifier.height(8.dp))
                     HdCard {
                         Text(
-                            text = exercise.description,
+                            text = summary,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurface,
                         )
                     }
                 }
 
-                val steps = exercise.instructions
+                val steps = exercise.displayInstructions
                     .split("\n")
                     .map { it.trim() }
                     .filter { it.isNotEmpty() }

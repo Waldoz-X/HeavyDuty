@@ -58,4 +58,5 @@
     <string name="equipment_weighted">Weighted</string>
     <string name="equipment_wheel_roller">Wheel roller</string>
     <string name="equipment_none">No equipment</string>
+    <string name="exercise_detail_catalog_summary">%1$s exercise targeting the %2$s.</string>
 </resources>

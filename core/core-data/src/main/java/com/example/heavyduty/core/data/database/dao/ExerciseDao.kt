@@ -46,6 +46,27 @@ interface ExerciseDao {
     @Query("SELECT COUNT(*) FROM exercises WHERE isCustom = 0 AND nameEn = ''")
     suspend fun countUnlocalizedExercises(): Int
 
+    @Query("SELECT COUNT(*) FROM exercises WHERE isCustom = 0 AND instructionsEn = '' AND instructions != ''")
+    suspend fun countExercisesWithoutEnglishInstructions(): Int
+
+    /**
+     * Matched on English name AND Spanish instructions: a few catalog names repeat with
+     * different instructions, and the stored row has no other link to its catalog entry.
+     */
+    @Query("UPDATE exercises SET instructionsEn = :english WHERE isCustom = 0 AND instructionsEn = '' AND nameEn = :nameEn AND instructions = :spanish")
+    suspend fun setEnglishInstructions(nameEn: String, spanish: String, english: String)
+
+    /** Catalog rows the catalog couldn't match keep their current instructions, so the fill runs once. */
+    @Query("UPDATE exercises SET instructionsEn = instructions WHERE isCustom = 0 AND instructionsEn = ''")
+    suspend fun markRemainingInstructionsLocalized()
+
+    /** Fills [setEnglishInstructions] for every catalog entry (nameEn, spanish, english), all or nothing. */
+    @Transaction
+    suspend fun setEnglishInstructions(entries: List<Triple<String, String, String>>) {
+        entries.forEach { (nameEn, spanish, english) -> setEnglishInstructions(nameEn, spanish, english) }
+        markRemainingInstructionsLocalized()
+    }
+
     @Query("UPDATE exercises SET name = :spanish, nameEn = :english WHERE isCustom = 0 AND nameEn = '' AND name = :english")
     suspend fun localizeExerciseName(english: String, spanish: String)
 
