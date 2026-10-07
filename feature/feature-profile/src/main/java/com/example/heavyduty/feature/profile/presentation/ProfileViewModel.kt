@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.profile.presentation
 
+import com.example.heavyduty.core.domain.model.displayName
 import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
@@ -106,7 +107,7 @@ class ProfileViewModel @Inject constructor(
                 val exerciseCounts = sessionSets.groupBy { it.exerciseId }
                 val setsStr = appContext.getString(R.string.sets_lowercase)
                 val exerciseStrings = exerciseCounts.mapNotNull { (exId, exSets) ->
-                    exerciseMap[exId]?.let { ex -> "${exSets.size} $setsStr ${ex.name}" }
+                    exerciseMap[exId]?.let { ex -> "${exSets.size} $setsStr ${ex.displayName}" }
                 }
 
                 WorkoutFeedItem(

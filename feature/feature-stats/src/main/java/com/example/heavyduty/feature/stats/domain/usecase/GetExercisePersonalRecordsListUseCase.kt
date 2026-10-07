@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.stats.domain.usecase
 
+import com.example.heavyduty.core.domain.model.displayName
 import com.example.heavyduty.core.domain.model.estimatedOneRepMax
 import com.example.heavyduty.core.domain.model.excludeWarmups
 import com.example.heavyduty.core.domain.repository.ExerciseRepository
@@ -41,7 +42,7 @@ class GetExercisePersonalRecordsListUseCase @Inject constructor(
                         ?: return@mapNotNull null
                     ExerciseRanking(
                         exerciseId = exerciseId,
-                        exerciseName = exercise.name,
+                        exerciseName = exercise.displayName,
                         estimatedOneRepMaxKg = oneRepMax,
                         sourceWeightKg = set.weight ?: 0f,
                         sourceReps = set.reps ?: 0,

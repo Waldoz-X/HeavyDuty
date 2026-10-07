@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.workout.presentation
 
+import com.example.heavyduty.core.domain.model.displayName
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.layout.layout
@@ -593,7 +594,7 @@ internal fun ActiveWorkoutContent(
                 }
                 nextExerciseIndex(uiState)?.let { nextIndex ->
                     item(key = "next") {
-                        val nextName = uiState.routineExercises[nextIndex].exercise?.name.orEmpty()
+                        val nextName = uiState.routineExercises[nextIndex].exercise?.displayName.orEmpty()
                         HdTonalButton(
                             text = stringResource(R.string.workout_next_exercise, nextName),
                             onClick = { onEvent(ActiveWorkoutUiEvent.OnSelectExercise(nextIndex)) },
@@ -867,7 +868,7 @@ private fun ExerciseStrip(uiState: ActiveWorkoutUiState, onSelect: (Int) -> Unit
             ) {
                 Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
                     Text(
-                        text = exercise.exercise?.name.orEmpty(),
+                        text = exercise.exercise?.displayName.orEmpty(),
                         style = MaterialTheme.typography.labelLarge,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -924,7 +925,7 @@ private fun CurrentExerciseHeader(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                text = exercise?.name.orEmpty(),
+                text = exercise?.displayName.orEmpty(),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,
@@ -1565,7 +1566,7 @@ private fun ExercisePicker(
                     Spacer(modifier = Modifier.width(12.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = exercise.name.replaceFirstChar { it.uppercase() },
+                            text = exercise.displayName.replaceFirstChar { it.uppercase() },
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurface,
                             maxLines = 1,

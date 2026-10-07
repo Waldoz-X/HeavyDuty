@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.exercises.presentation.detail
 
+import com.example.heavyduty.core.domain.model.displayName
 import com.example.heavyduty.core.common.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -218,7 +219,7 @@ private fun ExerciseDetailContent(
                         }
                         AsyncImage(
                             model = heroRequest,
-                            contentDescription = exercise.name,
+                            contentDescription = exercise.displayName,
                             contentScale = ContentScale.Fit,
                             modifier = Modifier.fillMaxSize(),
                         )
@@ -275,7 +276,7 @@ private fun ExerciseDetailContent(
                         .padding(horizontal = 20.dp, vertical = 16.dp),
                 ) {
                     Text(
-                        text = exercise.name,
+                        text = exercise.displayName,
                         style = MaterialTheme.typography.headlineSmall,
                         color = Color.White,
                     )

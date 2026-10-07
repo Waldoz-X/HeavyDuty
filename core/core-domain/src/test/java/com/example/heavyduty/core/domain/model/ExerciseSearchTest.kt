@@ -16,8 +16,8 @@ class ExerciseSearchTest {
     private fun search(query: String) = catalog.searchExercises(query).map { it.id }
 
     @Test
-    fun `empty query returns everything`() {
-        assertEquals(catalog.map { it.id }, search("  "))
+    fun `empty query returns everything, alphabetically by the name shown`() {
+        assertEquals(catalog.sortedBy { it.displayName.lowercase() }.map { it.id }, search("  "))
     }
 
     @Test

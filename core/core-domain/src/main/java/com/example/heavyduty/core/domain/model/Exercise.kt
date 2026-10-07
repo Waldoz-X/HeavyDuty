@@ -1,5 +1,7 @@
 package com.example.heavyduty.core.domain.model
 
+import java.util.Locale
+
 /**
  * Domain model representing an exercise in the catalog.
  */
@@ -88,6 +90,18 @@ private val EQUIPMENT_DISPLAY_NAMES = mapOf(
 /** Translates a raw catalog equipment value (e.g. "body weight") to its Spanish display label. */
 fun equipmentLabelFor(rawEquipment: String): String =
     EQUIPMENT_DISPLAY_NAMES[rawEquipment.trim().lowercase()] ?: rawEquipment.ifBlank { "Sin equipo" }
+
+/**
+ * The exercise's name in the app's language: the catalog's English name when the app isn't in
+ * Spanish, else the stored (Spanish) [Exercise.name]. Custom exercises have no English name and
+ * always show what the user typed. For display only — [Exercise.name] stays what's stored.
+ */
+val Exercise.displayName: String
+    get() = if (nameEn.isNotBlank() && Locale.getDefault().language != "es") {
+        nameEn.replaceFirstChar { it.titlecase(Locale.getDefault()) }
+    } else {
+        name
+    }
 
 val Exercise.equipmentDisplayName: String
     get() = equipmentLabelFor(equipment)

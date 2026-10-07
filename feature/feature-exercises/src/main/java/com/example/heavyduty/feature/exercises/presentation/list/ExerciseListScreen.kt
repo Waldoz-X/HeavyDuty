@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.exercises.presentation.list
 
+import com.example.heavyduty.core.domain.model.displayName
 import com.example.heavyduty.core.common.R
 import androidx.compose.ui.res.pluralStringResource
 import com.example.heavyduty.core.ui.components.HdTonalButton
@@ -371,7 +372,7 @@ private fun ExerciseListItem(
                 if (exercise.imageUrl.isNotBlank()) {
                     AsyncImage(
                         model = exercise.imageUrl,
-                        contentDescription = exercise.name,
+                        contentDescription = exercise.displayName,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize(),
                     )
@@ -412,7 +413,7 @@ private fun ExerciseListItem(
                 modifier = Modifier.weight(1f),
             ) {
                 Text(
-                    text = exercise.name,
+                    text = exercise.displayName,
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 2,
@@ -484,7 +485,7 @@ private fun SelectableExerciseRow(
         Spacer(modifier = Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = exercise.name.replaceFirstChar { it.uppercase() },
+                text = exercise.displayName.replaceFirstChar { it.uppercase() },
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 2,
@@ -542,7 +543,7 @@ private fun ExercisePreviewDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = exercise.name.replaceFirstChar { it.uppercase() },
+                text = exercise.displayName.replaceFirstChar { it.uppercase() },
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )

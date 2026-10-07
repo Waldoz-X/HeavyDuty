@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.stats.domain.usecase
 
+import com.example.heavyduty.core.domain.model.displayName
 import com.example.heavyduty.core.domain.model.excludeWarmups
 import com.example.heavyduty.core.domain.repository.ExerciseRepository
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
@@ -30,7 +31,7 @@ class GetTopExercisesByFrequencyUseCase @Inject constructor(
                     val exercise = exerciseById[exerciseId] ?: return@mapNotNull null
                     ExerciseFrequency(
                         exerciseId = exerciseId,
-                        exerciseName = exercise.name,
+                        exerciseName = exercise.displayName,
                         setCount = setsForExercise.size,
                         imageUrl = exercise.imageUrl,
                     )

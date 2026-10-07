@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.routines.presentation.editor
 
+import com.example.heavyduty.core.domain.model.displayName
 import com.example.heavyduty.core.ui.components.HdCardListSkeleton
 import androidx.compose.ui.platform.LocalResources
 import androidx.activity.compose.BackHandler
@@ -567,7 +568,7 @@ private fun sh.calvin.reorderable.ReorderableCollectionItemScope.ExerciseRow(
                     .padding(vertical = 10.dp),
             ) {
                 Text(
-                    text = "$position. ${exercise?.name.orEmpty().capitalized()}",
+                    text = "$position. ${exercise?.displayName.orEmpty().capitalized()}",
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 2,
@@ -679,7 +680,7 @@ private fun ExerciseSettingsSheet(
                 Spacer(modifier = Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = exercise?.name.orEmpty().capitalized(),
+                        text = exercise?.displayName.orEmpty().capitalized(),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         maxLines = 2,

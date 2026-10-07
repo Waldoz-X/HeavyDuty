@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.routines.presentation.editor
 
+import com.example.heavyduty.core.domain.model.displayName
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -140,7 +141,7 @@ class RoutineEditorViewModel @Inject constructor(
             )
         }
         viewModelScope.launch {
-            _uiEffect.emit(RoutineEditorUiEffect.ShowUndoRemove(removed.exercise?.name.orEmpty()))
+            _uiEffect.emit(RoutineEditorUiEffect.ShowUndoRemove(removed.exercise?.displayName.orEmpty()))
         }
     }
 

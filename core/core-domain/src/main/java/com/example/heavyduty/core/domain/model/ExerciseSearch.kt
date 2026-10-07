@@ -1,5 +1,6 @@
 package com.example.heavyduty.core.domain.model
 
+import java.text.Collator
 import java.text.Normalizer
 import java.util.Locale
 
@@ -11,12 +12,17 @@ import java.util.Locale
  */
 fun List<Exercise>.searchExercises(query: String): List<Exercise> {
     val terms = parseQuery(query)
-    if (terms.isEmpty()) return this
+    // Alphabetical by the name shown, in the app's language: the database orders by the stored
+    // (Spanish) name, which in English read as random, and puts accented letters after "z".
+    val collator = Collator.getInstance().apply { strength = Collator.PRIMARY }
+    if (terms.isEmpty()) return sortedWith(compareBy(collator) { it.displayName })
     return mapNotNull { exercise ->
         val haystack = exercise.searchText()
         if (terms.all { alternatives -> alternatives.any { it in haystack } }) exercise to exercise.rank(terms) else null
-    }.sortedWith(compareBy({ it.second }, { it.first.name.length }, { it.first.name }))
-        .map { it.first }
+    }.sortedWith(
+        compareBy<Pair<Exercise, Int>>({ it.second }, { it.first.displayName.length })
+            .thenBy(collator) { it.first.displayName },
+    ).map { it.first }
 }
 
 /** Each query word becomes the set of strings any of which counts as a match for it. */

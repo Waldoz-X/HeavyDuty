@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.stats.domain.usecase
 
+import com.example.heavyduty.core.domain.model.displayName
 import com.example.heavyduty.core.domain.model.MuscleGroup
 import com.example.heavyduty.core.domain.model.WorkoutStatus
 import com.example.heavyduty.core.domain.model.excludeWarmups
@@ -139,7 +140,7 @@ class GetMonthlyReportUseCase @Inject constructor(
                     val maxWeight = exSets.maxOfOrNull { it.weight ?: 0f } ?: 0f
                     com.example.heavyduty.feature.stats.domain.model.TopExerciseMonthly(
                         exerciseId = exerciseId,
-                        exerciseName = exercise.name,
+                        exerciseName = exercise.displayName,
                         muscleGroup = exercise.muscleGroup,
                         totalSets = exSets.size,
                         totalVolumeKg = exVolume,

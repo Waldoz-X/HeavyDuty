@@ -1,5 +1,6 @@
 package com.example.heavyduty.core.ui.components
 
+import com.example.heavyduty.core.domain.model.displayName
 import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -49,7 +50,7 @@ fun HdExerciseThumbnail(
         if (url.isNotBlank()) {
             AsyncImage(
                 model = url,
-                contentDescription = exercise?.name,
+                contentDescription = exercise?.displayName,
                 contentScale = ContentScale.Fit,
                 modifier = Modifier.fillMaxSize(),
             )
@@ -90,7 +91,7 @@ fun HdExerciseAnimation(
         if (url.isNotBlank()) {
             AsyncImage(
                 model = request,
-                contentDescription = exercise.name,
+                contentDescription = exercise.displayName,
                 contentScale = ContentScale.Fit,
                 modifier = Modifier.fillMaxSize(),
             )

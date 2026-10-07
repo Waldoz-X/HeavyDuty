@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.workout.presentation
 
+import com.example.heavyduty.core.domain.model.displayName
 import com.example.heavyduty.core.common.extensions.formatOneDecimal
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -570,7 +571,7 @@ class ActiveWorkoutViewModel @Inject constructor(
         if (estimate > previousBest + PR_MIN_GAIN_KG) {
             _uiEffect.emit(
                 ActiveWorkoutUiEffect.PersonalRecord(
-                    exerciseName = set.exercise?.name.orEmpty(),
+                    exerciseName = set.exercise?.displayName.orEmpty(),
                     estimatedOneRepMaxKg = estimate,
                     unit = unit,
                 ),
