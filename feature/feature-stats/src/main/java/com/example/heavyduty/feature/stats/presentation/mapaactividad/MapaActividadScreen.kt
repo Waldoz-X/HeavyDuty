@@ -1,5 +1,11 @@
 package com.example.heavyduty.feature.stats.presentation.mapaactividad
 
+import com.example.heavyduty.feature.stats.domain.usecase.TimeSlot
+import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.ui.platform.LocalConfiguration
+import com.example.heavyduty.core.common.R
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import kotlin.math.roundToInt
 import com.example.heavyduty.core.common.extensions.formatOneDecimal
 import androidx.compose.foundation.background
@@ -62,12 +68,12 @@ fun MapaActividadScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Mapa de actividad") },
+                title = { Text(stringResource(R.string.stats_activity_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Volver",
+                            contentDescription = stringResource(R.string.action_back),
                         )
                     }
                 },
@@ -78,7 +84,7 @@ fun MapaActividadScreen(
         if (uiState.isLoading) {
             HdLoadingIndicator(
                 modifier = Modifier.padding(innerPadding),
-                message = "Cargando actividad...",
+                message = stringResource(R.string.activity_loading),
             )
             return@Scaffold
         }
@@ -140,7 +146,7 @@ private fun StreaksHeroCard(report: ActivityHeatmapStatsReport) {
                     modifier = Modifier.size(24.dp),
                 )
                 Text(
-                    text = "Rachas y Constancia",
+                    text = stringResource(R.string.activity_streaks),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -153,18 +159,18 @@ private fun StreaksHeroCard(report: ActivityHeatmapStatsReport) {
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Racha Actual",
+                        text = stringResource(R.string.activity_current_streak),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Text(
-                        text = "${report.currentStreakDays} ${if (report.currentStreakDays == 1) "día" else "días"}",
+                        text = pluralStringResource(R.plurals.activity_days, report.currentStreakDays, report.currentStreakDays),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
                     )
                     Text(
-                        text = "Récord: ${report.longestStreakDays} días",
+                        text = pluralStringResource(R.plurals.activity_record_days, report.longestStreakDays, report.longestStreakDays),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -172,18 +178,18 @@ private fun StreaksHeroCard(report: ActivityHeatmapStatsReport) {
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Semanas Activas",
+                        text = stringResource(R.string.activity_active_weeks),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Text(
-                        text = "${report.currentStreakWeeks} ${if (report.currentStreakWeeks == 1) "semana" else "semanas"}",
+                        text = pluralStringResource(R.plurals.activity_weeks, report.currentStreakWeeks, report.currentStreakWeeks),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.secondary,
                     )
                     Text(
-                        text = "Récord: ${report.longestStreakWeeks} semanas",
+                        text = pluralStringResource(R.plurals.activity_record_weeks, report.longestStreakWeeks, report.longestStreakWeeks),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -201,12 +207,12 @@ private fun StreaksHeroCard(report: ActivityHeatmapStatsReport) {
             ) {
                 Column {
                     Text(
-                        text = "Días entrenados",
+                        text = stringResource(R.string.activity_days_trained),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Text(
-                        text = "${report.totalDaysTrained} días",
+                        text = pluralStringResource(R.plurals.activity_days, report.totalDaysTrained, report.totalDaysTrained),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
                     )
@@ -214,7 +220,7 @@ private fun StreaksHeroCard(report: ActivityHeatmapStatsReport) {
 
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        text = "Constancia anual",
+                        text = stringResource(R.string.activity_yearly_consistency),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -242,13 +248,13 @@ private fun HeatmapCard(report: ActivityHeatmapStatsReport) {
                 .padding(16.dp),
         ) {
             Text(
-                text = "Frecuencia de Entrenamientos",
+                text = stringResource(R.string.activity_frequency),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,
             )
             Text(
-                text = "${report.totalSessions} entrenamientos completados en el último año",
+                text = pluralStringResource(R.plurals.activity_sessions_last_year, report.totalSessions, report.totalSessions),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -271,7 +277,7 @@ private fun HeatmapCard(report: ActivityHeatmapStatsReport) {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = "Menos",
+                    text = stringResource(R.string.activity_less),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -289,7 +295,7 @@ private fun HeatmapCard(report: ActivityHeatmapStatsReport) {
 
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = "Más",
+                    text = stringResource(R.string.activity_more),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -323,13 +329,13 @@ private fun DayOfWeekDistributionCard(report: ActivityHeatmapStatsReport) {
                         modifier = Modifier.size(20.dp),
                     )
                     Text(
-                        text = "Distribución Semanal",
+                        text = stringResource(R.string.activity_weekly_distribution),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                     )
                 }
 
-                report.favoriteDayName?.let { favorite ->
+                report.favoriteDayOfWeek?.let { favoriteDay ->
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(8.dp))
@@ -337,7 +343,7 @@ private fun DayOfWeekDistributionCard(report: ActivityHeatmapStatsReport) {
                             .padding(horizontal = 8.dp, vertical = 4.dp),
                     ) {
                         Text(
-                            text = "Favorito: $favorite",
+                            text = stringResource(R.string.activity_favorite, weekdayName(favoriteDay)),
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -348,13 +354,13 @@ private fun DayOfWeekDistributionCard(report: ActivityHeatmapStatsReport) {
 
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 report.dayOfWeekDistribution.forEach { stat ->
-                    val isFavorite = stat.dayName == report.favoriteDayName
+                    val isFavorite = stat.dayOfWeek == report.favoriteDayOfWeek
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            text = stat.dayName,
+                            text = weekdayName(stat.dayOfWeek),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = if (isFavorite) FontWeight.Bold else FontWeight.Normal,
                             color = if (isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
@@ -412,13 +418,13 @@ private fun TimeSlotDistributionCard(report: ActivityHeatmapStatsReport) {
                         modifier = Modifier.size(20.dp),
                     )
                     Text(
-                        text = "Horarios de Entrenamiento",
+                        text = stringResource(R.string.activity_time_slots),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                     )
                 }
 
-                report.favoriteTimeSlotName?.let { favorite ->
+                report.favoriteTimeSlot?.let { favorite ->
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(8.dp))
@@ -426,7 +432,7 @@ private fun TimeSlotDistributionCard(report: ActivityHeatmapStatsReport) {
                             .padding(horizontal = 8.dp, vertical = 4.dp),
                     ) {
                         Text(
-                            text = "Habitual: $favorite",
+                            text = stringResource(R.string.activity_usual, stringResource(favorite.nameRes)),
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onSecondaryContainer,
@@ -437,20 +443,20 @@ private fun TimeSlotDistributionCard(report: ActivityHeatmapStatsReport) {
 
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 report.timeSlotDistribution.forEach { slot ->
-                    val isFavorite = slot.slotName == report.favoriteTimeSlotName
+                    val isFavorite = slot.slot == report.favoriteTimeSlot
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Column(modifier = Modifier.width(115.dp)) {
                             Text(
-                                text = slot.slotName,
+                                text = stringResource(slot.slot.nameRes),
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = if (isFavorite) FontWeight.Bold else FontWeight.Normal,
                                 color = if (isFavorite) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurface,
                             )
                             Text(
-                                text = slot.timeRange,
+                                text = "%02d:00 - %02d:00".format(slot.slot.startHour, slot.slot.endHour),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -508,7 +514,7 @@ private fun OverviewMetricsCard(report: ActivityHeatmapStatsReport) {
                     fontWeight = FontWeight.Bold,
                 )
                 Text(
-                    text = "Horas totales",
+                    text = stringResource(R.string.activity_total_hours),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -525,12 +531,12 @@ private fun OverviewMetricsCard(report: ActivityHeatmapStatsReport) {
                     modifier = Modifier.size(22.dp),
                 )
                 Text(
-                    text = "${report.avgMinutesPerSession} min",
+                    text = stringResource(R.string.duration_minutes, report.avgMinutesPerSession),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                 )
                 Text(
-                    text = "Promedio sesión",
+                    text = stringResource(R.string.activity_avg_session),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -552,7 +558,7 @@ private fun OverviewMetricsCard(report: ActivityHeatmapStatsReport) {
                     fontWeight = FontWeight.Bold,
                 )
                 Text(
-                    text = "Semanas activas",
+                    text = stringResource(R.string.activity_active_weeks),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -560,3 +566,22 @@ private fun OverviewMetricsCard(report: ActivityHeatmapStatsReport) {
         }
     }
 }
+
+/** Full weekday name in the app's language for a java.util.Calendar day (SUNDAY = 1). */
+@Composable
+@ReadOnlyComposable
+private fun weekdayName(calendarDay: Int): String {
+    val isoDay = if (calendarDay == java.util.Calendar.SUNDAY) 7 else calendarDay - 1
+    val locale = LocalConfiguration.current.locales[0]
+    return java.time.DayOfWeek.of(isoDay)
+        .getDisplayName(java.time.format.TextStyle.FULL, locale)
+        .replaceFirstChar { it.titlecase(locale) }
+}
+
+private val TimeSlot.nameRes: Int
+    get() = when (this) {
+        TimeSlot.MORNING -> R.string.slot_morning
+        TimeSlot.AFTERNOON -> R.string.slot_afternoon
+        TimeSlot.EVENING -> R.string.slot_evening
+        TimeSlot.NIGHT -> R.string.slot_night
+    }

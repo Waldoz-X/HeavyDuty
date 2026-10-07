@@ -1,5 +1,7 @@
 package com.example.heavyduty.feature.timer.presentation
 
+import androidx.compose.ui.platform.LocalResources
+import com.example.heavyduty.core.common.R
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
@@ -65,6 +67,7 @@ fun TimerScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
+    val resources = LocalResources.current
     val context = LocalContext.current
 
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
@@ -77,7 +80,7 @@ fun TimerScreen(
             when (effect) {
                 TimerUiEffect.TimerFinished -> {
                     coroutineScope.launch {
-                        snackbarHostState.showSnackbar("¡Temporizador terminado!")
+                        snackbarHostState.showSnackbar(resources.getString(R.string.timer_finished))
                     }
                 }
                 is TimerUiEffect.ShowMessage -> {
@@ -103,7 +106,7 @@ fun TimerScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "Temporizador",
+            text = stringResource(R.string.timer_title),
             style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.fillMaxWidth(),
@@ -202,7 +205,7 @@ fun TimerScreen(
                 )
                 if (uiState.rounds > 1) {
                     Text(
-                        text = "Ronda ${uiState.currentRound}/${uiState.rounds}",
+                        text = stringResource(R.string.timer_round, uiState.currentRound, uiState.rounds),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.primary,
                     )
@@ -247,7 +250,7 @@ fun TimerScreen(
             ) {
                 Icon(
                     imageVector = Icons.Default.RestartAlt,
-                    contentDescription = "Reiniciar",
+                    contentDescription = stringResource(R.string.timer_reset),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(28.dp),
                 )
@@ -275,7 +278,7 @@ fun TimerScreen(
             ) {
                 Icon(
                     imageVector = if (uiState.isRunning) Icons.Default.Pause else Icons.Default.PlayArrow,
-                    contentDescription = if (uiState.isRunning) "Pausar" else "Iniciar",
+                    contentDescription = stringResource(if (uiState.isRunning) R.string.timer_pause else R.string.timer_start),
                     modifier = Modifier.size(36.dp),
                 )
             }

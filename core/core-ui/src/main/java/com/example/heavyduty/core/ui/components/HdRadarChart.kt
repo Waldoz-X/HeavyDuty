@@ -1,5 +1,7 @@
 package com.example.heavyduty.core.ui.components
 
+import com.example.heavyduty.core.common.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -46,7 +48,7 @@ fun HdRadarChart(
 ) {
     if (data.isEmpty() || data.size < 3) {
         Box(modifier = modifier.aspectRatio(1f), contentAlignment = Alignment.Center) {
-            androidx.compose.material3.Text("No hay suficientes datos", color = textColor)
+            androidx.compose.material3.Text(stringResource(R.string.state_not_enough_data), color = textColor)
         }
         return
     }

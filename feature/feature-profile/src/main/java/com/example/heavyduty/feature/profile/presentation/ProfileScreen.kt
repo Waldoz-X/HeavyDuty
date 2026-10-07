@@ -1,5 +1,7 @@
 package com.example.heavyduty.feature.profile.presentation
 
+import com.example.heavyduty.core.common.R
+import androidx.compose.ui.res.stringResource
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -67,7 +69,7 @@ fun ProfileScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     if (uiState.isLoading) {
-        HdLoadingIndicator(modifier = modifier, message = "Cargando perfil...")
+        HdLoadingIndicator(modifier = modifier, message = stringResource(R.string.profile_loading))
         return
     }
 
@@ -111,7 +113,7 @@ private fun ProfileContent(
 
         item {
             Text(
-                text = "Perfil",
+                text = stringResource(R.string.profile_title),
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.onSurface,
             )
@@ -126,7 +128,7 @@ private fun ProfileContent(
                 HdCard(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
-                            text = "Horas entrenadas",
+                            text = stringResource(R.string.profile_hours_trained),
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onSurface
                         )
@@ -142,7 +144,7 @@ private fun ProfileContent(
 
         item {
             Text(
-                text = "Estadísticas Globales",
+                text = stringResource(R.string.profile_global_stats),
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.primary,
             )
@@ -150,20 +152,20 @@ private fun ProfileContent(
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 StatCard(
                     icon = Icons.Default.FitnessCenter,
-                    label = "Entrenamientos",
+                    label = stringResource(R.string.profile_workouts),
                     value = uiState.stats.totalWorkouts.toString(),
                     modifier = Modifier.weight(1f),
                 )
                 StatCard(
                     icon = Icons.Default.MonitorWeight,
-                    label = "Volumen",
+                    label = stringResource(R.string.metric_volume),
                     value = uiState.stats.totalVolumeKg.formatTotalWeight(),
                     modifier = Modifier.weight(1f),
                 )
                 StatCard(
                     icon = Icons.Default.LocalFireDepartment,
-                    label = "Racha actual",
-                    value = "${uiState.currentStreakDays}d",
+                    label = stringResource(R.string.profile_current_streak),
+                    value = stringResource(R.string.profile_streak_days, uiState.currentStreakDays),
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -179,7 +181,7 @@ private fun ProfileContent(
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = "Ver estadísticas",
+                        text = stringResource(R.string.profile_view_stats),
                         style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.weight(1f),
@@ -196,24 +198,24 @@ private fun ProfileContent(
         item {
             HdCard(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = "Figura corporal",
+                    text = stringResource(R.string.profile_body_figure),
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
-                    text = "Usada en los mapas musculares de Estadísticas",
+                    text = stringResource(R.string.profile_body_figure_hint),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     HdChip(
-                        text = "Hombre",
+                        text = stringResource(R.string.profile_body_male),
                         isSelected = uiState.bodyDiagramGender == "male",
                         onClick = { onEvent(ProfileUiEvent.OnBodyDiagramGenderChange("male")) },
                     )
                     HdChip(
-                        text = "Mujer",
+                        text = stringResource(R.string.profile_body_female),
                         isSelected = uiState.bodyDiagramGender == "female",
                         onClick = { onEvent(ProfileUiEvent.OnBodyDiagramGenderChange("female")) },
                     )
@@ -224,24 +226,24 @@ private fun ProfileContent(
         item {
             HdCard(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = "Esfuerzo percibido",
+                    text = stringResource(R.string.profile_effort),
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
-                    text = "Registra RIR o RPE al terminar una serie. Desactivado por defecto.",
+                    text = stringResource(R.string.profile_effort_hint),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     HdChip(
-                        text = "Desactivado",
+                        text = stringResource(R.string.profile_off),
                         isSelected = !uiState.effortTrackingEnabled,
                         onClick = { onEvent(ProfileUiEvent.OnEffortTrackingEnabledChange(false)) },
                     )
                     HdChip(
-                        text = "Activado",
+                        text = stringResource(R.string.profile_on),
                         isSelected = uiState.effortTrackingEnabled,
                         onClick = { onEvent(ProfileUiEvent.OnEffortTrackingEnabledChange(true)) },
                     )
@@ -267,25 +269,24 @@ private fun ProfileContent(
         item {
             HdCard(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = "Unidad de peso para totales",
+                    text = stringResource(R.string.profile_weight_unit),
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
-                    text = "Volumen, récords y peso corporal se muestran en esta unidad. Cada serie " +
-                        "conserva la unidad de la máquina con que la registraste (kg o lb).",
+                    text = stringResource(R.string.profile_weight_unit_hint),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     HdChip(
-                        text = "Kilos (kg)",
+                        text = stringResource(R.string.profile_unit_kg),
                         isSelected = uiState.preferredWeightUnit == WeightUnit.KG,
                         onClick = { onEvent(ProfileUiEvent.OnPreferredWeightUnitChange(WeightUnit.KG)) },
                     )
                     HdChip(
-                        text = "Libras (lb)",
+                        text = stringResource(R.string.profile_unit_lb),
                         isSelected = uiState.preferredWeightUnit == WeightUnit.LB,
                         onClick = { onEvent(ProfileUiEvent.OnPreferredWeightUnitChange(WeightUnit.LB)) },
                     )
@@ -296,26 +297,25 @@ private fun ProfileContent(
         item {
             HdCard(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = "Tus datos",
+                    text = stringResource(R.string.profile_your_data),
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
-                    text = "Exporta o importa tus rutinas, entrenamientos y peso corporal como un " +
-                        "archivo JSON que vos controlás. Importar nunca borra nada existente.",
+                    text = stringResource(R.string.profile_your_data_hint),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     HdTonalButton(
-                        text = "Exportar",
+                        text = stringResource(R.string.profile_export),
                         onClick = onExportClick,
                         icon = Icons.Default.FileDownload,
                         enabled = !uiState.isExportingData && !uiState.isImportingData,
                     )
                     HdTonalButton(
-                        text = "Importar",
+                        text = stringResource(R.string.profile_import),
                         onClick = onImportClick,
                         icon = Icons.Default.FileUpload,
                         enabled = !uiState.isExportingData && !uiState.isImportingData,
@@ -324,7 +324,7 @@ private fun ProfileContent(
                 if (uiState.isExportingData || uiState.isImportingData) {
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Procesando...",
+                        text = stringResource(R.string.profile_processing),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -344,7 +344,7 @@ private fun ProfileContent(
         item {
             Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = "Entrenamientos",
+                text = stringResource(R.string.profile_workouts),
                 style = MaterialTheme.typography.headlineSmall,
                 color = MaterialTheme.colorScheme.onSurface,
             )
@@ -387,7 +387,7 @@ private fun ProfileHeader(
                     OutlinedTextField(
                         value = uiState.nameInput,
                         onValueChange = { onEvent(ProfileUiEvent.OnNameInputChange(it)) },
-                        placeholder = { Text("Tu nombre") },
+                        placeholder = { Text(stringResource(R.string.profile_name_placeholder)) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                         colors = OutlinedTextFieldDefaults.colors(
@@ -397,12 +397,12 @@ private fun ProfileHeader(
                     Spacer(modifier = Modifier.height(8.dp))
                     Row {
                         HdButton(
-                            text = "Guardar",
+                            text = stringResource(R.string.action_save),
                             onClick = { onEvent(ProfileUiEvent.OnSaveName) },
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         HdTextButton(
-                            text = "Cancelar",
+                            text = stringResource(R.string.action_cancel),
                             onClick = { onEvent(ProfileUiEvent.OnCancelEditingName) },
                         )
                     }
@@ -410,12 +410,12 @@ private fun ProfileHeader(
             } else {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = uiState.displayName.ifBlank { "Agrega tu nombre" },
+                        text = uiState.displayName.ifBlank { stringResource(R.string.profile_add_name) },
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onSurface,
                     )
                     Text(
-                        text = "Toca el lápiz para editar",
+                        text = stringResource(R.string.profile_tap_to_edit),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -423,7 +423,7 @@ private fun ProfileHeader(
                 IconButton(onClick = { onEvent(ProfileUiEvent.OnStartEditingName) }) {
                     Icon(
                         imageVector = Icons.Default.Edit,
-                        contentDescription = "Editar nombre",
+                        contentDescription = stringResource(R.string.profile_edit_name),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }

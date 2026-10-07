@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.calendar.presentation
 
+import androidx.annotation.StringRes
 import com.example.heavyduty.core.domain.model.CalendarEntry
 import com.example.heavyduty.core.domain.model.Routine
 
@@ -22,5 +23,5 @@ sealed interface CalendarUiEvent {
 
 sealed interface CalendarUiEffect {
     data class NavigateToRoutine(val routineId: Long) : CalendarUiEffect
-    data class ShowMessage(val message: String) : CalendarUiEffect
+    data class ShowMessage(@param:StringRes val messageResId: Int) : CalendarUiEffect
 }

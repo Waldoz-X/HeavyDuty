@@ -1,5 +1,7 @@
 package com.example.heavyduty.feature.stats.presentation.distribucionmuscular
 
+import androidx.compose.ui.platform.LocalResources
+import com.example.heavyduty.core.common.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -60,10 +62,10 @@ fun DistribucionMuscularScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Distribución muscular") },
+                title = { Text(stringResource(R.string.stats_radar_screen_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
                 },
             )
@@ -71,11 +73,11 @@ fun DistribucionMuscularScreen(
         modifier = modifier.fillMaxSize(),
     ) { innerPadding ->
         when {
-            uiState.isLoading -> HdLoadingIndicator(modifier = Modifier.padding(innerPadding), message = "Cargando...")
+            uiState.isLoading -> HdLoadingIndicator(modifier = Modifier.padding(innerPadding), message = stringResource(R.string.state_loading))
             uiState.currentWeek.size < 3 -> HdEmptyState(
                 icon = Icons.Default.PieChart,
-                title = "Datos insuficientes",
-                description = "Entrena al menos 3 grupos musculares distintos para ver la comparación.",
+                title = stringResource(R.string.stats_insufficient_data),
+                description = stringResource(R.string.stats_radar_need_three),
                 modifier = Modifier.padding(innerPadding),
             )
             else -> Column(
@@ -91,8 +93,8 @@ fun DistribucionMuscularScreen(
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    LegendDot(color = MaterialTheme.colorScheme.primary, label = "Actual")
-                    LegendDot(color = MaterialTheme.colorScheme.secondary, label = "Anterior")
+                    LegendDot(color = MaterialTheme.colorScheme.primary, label = stringResource(R.string.stats_current))
+                    LegendDot(color = MaterialTheme.colorScheme.secondary, label = stringResource(R.string.stats_previous))
                 }
                 HdRadarChart(
                     data = uiState.currentWeek.mapKeys { (muscle, _) -> stringResource(muscle.nameResId) },
@@ -129,16 +131,17 @@ private fun LegendDot(color: Color, label: String) {
 /** Workouts / duration / volume / sets tiles, each with a delta vs. the previous period. */
 @Composable
 private fun PeriodTotals(summary: PeriodSummary) {
+    val resources = LocalResources.current
     fun <T : Number> deltaText(delta: T, suffix: String = ""): String {
         val sign = if (delta.toDouble() >= 0) "+" else ""
-        return "$sign$delta$suffix vs. anterior"
+        return resources.getString(R.string.stats_vs_previous, "$sign$delta$suffix")
     }
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             HdStatCard(
                 icon = Icons.Default.CalendarMonth,
-                label = "Entrenamientos",
+                label = stringResource(R.string.stats_workouts),
                 value = "${summary.workouts}",
                 deltaText = deltaText(summary.workoutsDelta),
                 isPositive = summary.workoutsDelta >= 0,
@@ -146,17 +149,20 @@ private fun PeriodTotals(summary: PeriodSummary) {
             )
             HdStatCard(
                 icon = Icons.Default.Timer,
-                label = "Duración",
+                label = stringResource(R.string.metric_duration),
                 value = run {
                     val h = summary.durationMinutes / 60
                     val m = summary.durationMinutes % 60
-                    if (h > 0) "${h}h ${m}min" else "${m}min"
+                    if (h > 0) stringResource(R.string.duration_hours_minutes, h, m) else stringResource(R.string.duration_minutes, m)
                 },
                 deltaText = run {
                     val h = kotlin.math.abs(summary.durationMinutesDelta) / 60
                     val m = kotlin.math.abs(summary.durationMinutesDelta) % 60
                     val sign = if (summary.durationMinutesDelta >= 0) "+" else "-"
-                    "$sign${if (h > 0) "${h}h " else ""}${m}min vs. anterior"
+                    stringResource(
+                        R.string.stats_vs_previous,
+                        sign + if (h > 0) stringResource(R.string.duration_hours_minutes, h, m) else stringResource(R.string.duration_minutes, m),
+                    )
                 },
                 isPositive = summary.durationMinutesDelta >= 0,
                 modifier = Modifier.weight(1f),
@@ -165,18 +171,18 @@ private fun PeriodTotals(summary: PeriodSummary) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             HdStatCard(
                 icon = Icons.Default.FitnessCenter,
-                label = "Volumen",
+                label = stringResource(R.string.metric_volume),
                 value = summary.volumeKg.formatTotalWeight(),
                 deltaText = run {
                     val sign = if (summary.volumeKgDelta >= 0) "+" else "-"
-                    "$sign${kotlin.math.abs(summary.volumeKgDelta).formatTotalWeight()} vs. anterior"
+                    stringResource(R.string.stats_vs_previous, "$sign${kotlin.math.abs(summary.volumeKgDelta).formatTotalWeight()}")
                 },
                 isPositive = summary.volumeKgDelta >= 0,
                 modifier = Modifier.weight(1f),
             )
             HdStatCard(
                 icon = Icons.Default.Repeat,
-                label = "Series",
+                label = stringResource(R.string.stats_sets),
                 value = "${summary.sets}",
                 deltaText = deltaText(summary.setsDelta),
                 isPositive = summary.setsDelta >= 0,

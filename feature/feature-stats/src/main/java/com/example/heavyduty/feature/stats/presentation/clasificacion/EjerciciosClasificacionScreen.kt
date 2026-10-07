@@ -1,5 +1,7 @@
 package com.example.heavyduty.feature.stats.presentation.clasificacion
 
+import com.example.heavyduty.core.common.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -43,10 +45,10 @@ fun EjerciciosClasificacionScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Ejercicios de clasificación") },
+                title = { Text(stringResource(R.string.stats_records_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
                 },
             )
@@ -54,11 +56,11 @@ fun EjerciciosClasificacionScreen(
         modifier = modifier.fillMaxSize(),
     ) { innerPadding ->
         when {
-            uiState.isLoading -> HdLoadingIndicator(modifier = Modifier.padding(innerPadding), message = "Cargando...")
+            uiState.isLoading -> HdLoadingIndicator(modifier = Modifier.padding(innerPadding), message = stringResource(R.string.state_loading))
             uiState.rankings.isEmpty() -> HdEmptyState(
                 icon = Icons.Default.Leaderboard,
-                title = "Sin récords todavía",
-                description = "Registra pesos en tus series para ver tus mejores marcas aquí.",
+                title = stringResource(R.string.stats_records_empty_title),
+                description = stringResource(R.string.stats_records_empty_desc),
                 modifier = Modifier.padding(innerPadding),
             )
             else -> LazyColumn(
@@ -89,8 +91,7 @@ private fun RankingRow(ranking: ExerciseRanking, modifier: Modifier = Modifier) 
                 color = MaterialTheme.colorScheme.onSurface,
             )
             Text(
-                text = "1RM est. ${ranking.estimatedOneRepMaxKg.formatWeight()} " +
-                    "(${ranking.sourceWeightKg.formatWeight()} × ${ranking.sourceReps})",
+                text = stringResource(R.string.stats_record_detail, ranking.estimatedOneRepMaxKg.formatWeight(), ranking.sourceWeightKg.formatWeight(), ranking.sourceReps),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

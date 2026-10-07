@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="exercises_title">Exercises</string>
+    <string name="exercises_pick_title">Choose exercises</string>
+    <plurals name="exercises_selected_count">
+        <item quantity="one">%1$d selected</item>
+        <item quantity="other">%1$d selected</item>
+    </plurals>
+    <plurals name="exercises_add_to_routine">
+        <item quantity="one">Add %1$d to the routine</item>
+        <item quantity="other">Add %1$d to the routine</item>
+    </plurals>
+    <string name="exercises_search_hint">Search: bench press, squat, row…</string>
+    <plurals name="exercises_count">
+        <item quantity="one">%1$d exercise</item>
+        <item quantity="other">%1$d exercises</item>
+    </plurals>
+    <string name="exercises_empty_title">No exercises found</string>
+    <string name="exercises_empty_search">Try another search term</string>
+    <string name="exercises_empty_default">Exercises will appear here</string>
+    <string name="exercises_clear_filters">Clear filters</string>
+    <string name="exercises_selected">Selected</string>
+    <string name="exercises_view">View exercise</string>
+    <string name="exercises_select">Select</string>
+    <string name="exercises_unselect">Remove</string>
+    <string name="action_close">Close</string>
+    <string name="exercise_detail_weight_unit">Weight unit</string>
+    <string name="exercise_detail_also_works">Also works: %1$s</string>
+    <string name="exercise_detail_view_progress">View progress and records</string>
+    <string name="exercise_detail_summary">Summary</string>
+    <string name="exercise_detail_instructions">Instructions</string>
+    <string name="equipment_assisted">Assisted</string>
+    <string name="equipment_band">Band</string>
+    <string name="equipment_barbell">Barbell</string>
+    <string name="equipment_body_weight">Body weight</string>
+    <string name="equipment_bosu_ball">Bosu ball</string>
+    <string name="equipment_cable">Cable</string>
+    <string name="equipment_dumbbell">Dumbbell</string>
+    <string name="equipment_elliptical_machine">Elliptical machine</string>
+    <string name="equipment_ez_barbell">Ez barbell</string>
+    <string name="equipment_hammer">Hammer</string>
+    <string name="equipment_kettlebell">Kettlebell</string>
+    <string name="equipment_leverage_machine">Leverage machine</string>
+    <string name="equipment_medicine_ball">Medicine ball</string>
+    <string name="equipment_olympic_barbell">Olympic barbell</string>
+    <string name="equipment_resistance_band">Resistance band</string>
+    <string name="equipment_roller">Roller</string>
+    <string name="equipment_rope">Rope</string>
+    <string name="equipment_skierg_machine">Skierg machine</string>
+    <string name="equipment_sled_machine">Sled machine</string>
+    <string name="equipment_smith_machine">Smith machine</string>
+    <string name="equipment_stability_ball">Stability ball</string>
+    <string name="equipment_stationary_bike">Stationary bike</string>
+    <string name="equipment_stepmill_machine">Stepmill machine</string>
+    <string name="equipment_tire">Tire</string>
+    <string name="equipment_trap_bar">Trap bar</string>
+    <string name="equipment_upper_body_ergometer">Upper body ergometer</string>
+    <string name="equipment_weighted">Weighted</string>
+    <string name="equipment_wheel_roller">Wheel roller</string>
+    <string name="equipment_none">No equipment</string>
+</resources>

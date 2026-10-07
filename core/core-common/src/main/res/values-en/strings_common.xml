@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_workout">Train</string>
+    <string name="nav_exercises">Exercises</string>
+    <string name="nav_timer">Timer</string>
+    <string name="nav_routines">Routines</string>
+    <string name="nav_history">History</string>
+    <string name="nav_calendar">Calendar</string>
+    <string name="nav_profile">Profile</string>
+    <string name="nav_open_menu">Open menu</string>
+
+    <!-- Actions -->
+    <string name="action_cancel">Cancel</string>
+    <string name="action_save">Save</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_back">Back</string>
+    <string name="action_register">Log</string>
+
+    <!-- States -->
+    <string name="state_loading">Loading…</string>
+    <string name="state_unknown_error">Unknown error</string>
+    <string name="state_no_data_yet">No data yet</string>
+
+    <!-- Metrics -->
+    <string name="metric_volume">Volume</string>
+    <string name="metric_strength">Strength</string>
+    <string name="metric_duration">Duration</string>
+    <string name="metric_body_weight">Body weight</string>
+    <string name="metric_min">Minimum</string>
+    <string name="metric_max">Maximum</string>
+
+    <!-- Periods -->
+    <string name="period_last_7_days">Last 7 days</string>
+    <string name="period_last_30_days">Last 30 days</string>
+    <string name="state_not_enough_data">Not enough data</string>
+    <string name="action_search">Search</string>
+    <string name="action_clear">Clear</string>
+    <string name="feed_more_exercises" tools:ignore="PluralsCandidate">+%1$d more</string>
+    <string name="duration_minutes">%1$d min</string>
+    <plurals name="feed_personal_records">
+        <item quantity="one">%1$d PR</item>
+        <item quantity="other">%1$d PRs</item>
+    </plurals>
+    <string name="body_front">Front</string>
+    <string name="body_back">Back</string>
+    <string name="hours_short">%1$s h</string>
+    <string name="duration_hours_minutes">%1$d h %2$d min</string>
+</resources>

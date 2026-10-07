@@ -1,5 +1,16 @@
 package com.example.heavyduty.feature.calendar.presentation
 
+import kotlinx.coroutines.launch
+import java.time.format.TextStyle
+import java.time.DayOfWeek
+import androidx.compose.runtime.remember
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalResources
+import com.example.heavyduty.core.common.R
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -43,7 +54,12 @@ import androidx.compose.ui.res.stringResource
 import com.example.heavyduty.core.ui.components.HdLoadingIndicator
 import com.example.heavyduty.core.ui.components.HdTonalButton
 
-private val dayNames = listOf("Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom")
+/** Weekday name in the app's language; [day] is 1 = Monday … 7 = Sunday. */
+@Composable
+@ReadOnlyComposable
+private fun dayName(day: Int, style: TextStyle = TextStyle.SHORT): String =
+    DayOfWeek.of(day).getDisplayName(style, LocalConfiguration.current.locales[0])
+        .replaceFirstChar { it.titlecase(LocalConfiguration.current.locales[0]) }
 
 @Composable
 fun CalendarScreen(
@@ -52,25 +68,28 @@ fun CalendarScreen(
     viewModel: CalendarViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val resources = LocalResources.current
 
     LaunchedEffect(Unit) {
         viewModel.uiEffect.collect { effect ->
             when (effect) {
                 is CalendarUiEffect.NavigateToRoutine -> onRoutineClick(effect.routineId)
-                is CalendarUiEffect.ShowMessage -> { /* Could show snackbar */ }
+                is CalendarUiEffect.ShowMessage -> launch { snackbarHostState.showSnackbar(resources.getString(effect.messageResId)) }
             }
         }
     }
 
+    Box(modifier = modifier.fillMaxSize()) {
     Column(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp),
     ) {
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "Calendario",
+            text = stringResource(R.string.calendar_title),
             style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.onSurface,
         )
@@ -79,7 +98,7 @@ fun CalendarScreen(
 
         when {
             uiState.isLoading -> {
-                HdLoadingIndicator(message = "Cargando horario...")
+                HdLoadingIndicator(message = stringResource(R.string.calendar_loading))
             }
             else -> {
                 // Week day selector
@@ -106,7 +125,7 @@ fun CalendarScreen(
                                 .padding(horizontal = 12.dp, vertical = 12.dp),
                         ) {
                             Text(
-                                text = dayNames[day - 1],
+                                text = dayName(day),
                                 style = MaterialTheme.typography.labelMedium,
                                 color = if (isSelected) {
                                     MaterialTheme.colorScheme.onPrimary
@@ -147,12 +166,12 @@ fun CalendarScreen(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            text = "Horario del ${dayNames[selectedDay - 1]}",
+                            text = stringResource(R.string.calendar_schedule_for, dayName(selectedDay, TextStyle.FULL)),
                             style = MaterialTheme.typography.titleSmall,
                             color = MaterialTheme.colorScheme.onSurface,
                         )
                         HdTonalButton(
-                            text = "Asignar Rutina",
+                            text = stringResource(R.string.calendar_assign_routine),
                             onClick = { viewModel.onEvent(CalendarUiEvent.OnToggleRoutinePicker) },
                             icon = Icons.Default.Add,
                         )
@@ -172,8 +191,8 @@ fun CalendarScreen(
                     if (entries.isEmpty()) {
                         HdEmptyState(
                             icon = Icons.Default.CalendarMonth,
-                            title = "Día de descanso",
-                            description = "Asigna una rutina para planear este día",
+                            title = stringResource(R.string.calendar_rest_day),
+                            description = stringResource(R.string.calendar_rest_day_hint),
                         )
                     } else {
                         LazyColumn(
@@ -182,7 +201,7 @@ fun CalendarScreen(
                         ) {
                             items(entries, key = { it.id }) { entry ->
                                 CalendarEntryItem(
-                                    routineName = uiState.routines.find { it.id == entry.routineId }?.name ?: "Rutina #${entry.routineId}",
+                                    routineName = uiState.routines.find { it.id == entry.routineId }?.name ?: stringResource(R.string.calendar_routine_fallback, entry.routineId.toInt()),
                                     onClick = { viewModel.onEvent(CalendarUiEvent.OnRoutineClick(entry.routineId)) },
                                     onRemove = { viewModel.onEvent(CalendarUiEvent.OnRemoveEntry(entry)) },
                                 )
@@ -204,13 +223,13 @@ fun CalendarScreen(
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
                                     Text(
-                                        text = dayNames[day - 1],
+                                        text = dayName(day),
                                         style = MaterialTheme.typography.titleMedium,
                                         color = MaterialTheme.colorScheme.onSurface,
                                         fontWeight = FontWeight.Bold,
                                     )
                                     Text(
-                                        text = if (entries.isEmpty()) "Día de descanso" else "${entries.size} rutina(s)",
+                                        text = if (entries.isEmpty()) stringResource(R.string.calendar_rest_day) else pluralStringResource(R.plurals.calendar_routine_count, entries.size, entries.size),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = if (entries.isEmpty()) {
                                             MaterialTheme.colorScheme.onSurfaceVariant
@@ -222,7 +241,7 @@ fun CalendarScreen(
                                 entries.forEach { entry ->
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
-                                        text = "• ${uiState.routines.find { it.id == entry.routineId }?.name ?: "Rutina"}",
+                                        text = "• ${uiState.routines.find { it.id == entry.routineId }?.name ?: stringResource(R.string.calendar_routine_generic)}",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
@@ -233,6 +252,8 @@ fun CalendarScreen(
                 }
             }
         }
+    }
+    SnackbarHost(hostState = snackbarHostState, modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp))
     }
 }
 
@@ -264,7 +285,7 @@ private fun CalendarEntryItem(
             ) {
                 androidx.compose.material3.Icon(
                     imageVector = Icons.Default.Close,
-                    contentDescription = "Quitar",
+                    contentDescription = stringResource(R.string.calendar_remove),
                     tint = MaterialTheme.colorScheme.error,
                 )
             }
@@ -280,14 +301,14 @@ private fun RoutinePicker(
 ) {
     HdCard(modifier = modifier.fillMaxWidth()) {
         Text(
-            text = "Elige una Rutina",
+            text = stringResource(R.string.calendar_pick_routine),
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.primary,
         )
         Spacer(modifier = Modifier.height(8.dp))
         if (routines.isEmpty()) {
             Text(
-                text = "Aún no tienes rutinas creadas",
+                text = stringResource(R.string.calendar_no_routines),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

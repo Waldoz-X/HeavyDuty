@@ -1,5 +1,7 @@
 package com.example.heavyduty.core.ui.components
 
+import com.example.heavyduty.core.common.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -38,7 +40,7 @@ fun HdSearchBar(
         leadingIcon = {
             Icon(
                 imageVector = Icons.Default.Search,
-                contentDescription = "Buscar",
+                contentDescription = stringResource(R.string.action_search),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         },
@@ -47,7 +49,7 @@ fun HdSearchBar(
                 IconButton(onClick = { onQueryChange("") }) {
                     Icon(
                         imageVector = Icons.Default.Close,
-                        contentDescription = "Limpiar",
+                        contentDescription = stringResource(R.string.action_clear),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }

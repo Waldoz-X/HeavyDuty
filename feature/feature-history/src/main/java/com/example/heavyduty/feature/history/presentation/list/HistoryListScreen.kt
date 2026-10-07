@@ -1,5 +1,8 @@
 package com.example.heavyduty.feature.history.presentation.list
 
+import androidx.compose.ui.platform.LocalConfiguration
+import com.example.heavyduty.core.common.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.material.icons.filled.PlayArrow
 import com.example.heavyduty.core.ui.components.HdButton
 import androidx.compose.foundation.layout.Arrangement
@@ -63,7 +66,7 @@ fun HistoryListScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "Historial",
+            text = stringResource(R.string.history_title),
             style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.onSurface,
         )
@@ -76,7 +79,7 @@ fun HistoryListScreen(
                 gradientColors = listOf(GradientLimeStart, GradientLimeEnd),
             ) {
                 Text(
-                    text = "Tus Estadísticas",
+                    text = stringResource(R.string.history_your_stats),
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.tertiary,
                 )
@@ -85,9 +88,9 @@ fun HistoryListScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
-                    StatItem(label = "Sesiones", value = "${uiState.stats.completedSessions}")
-                    StatItem(label = "Tiempo Total", value = "${uiState.stats.totalDurationMinutes}min")
-                    StatItem(label = "Duración Prom.", value = "${uiState.stats.averageDurationMinutes}min")
+                    StatItem(label = stringResource(R.string.history_sessions), value = "${uiState.stats.completedSessions}")
+                    StatItem(label = stringResource(R.string.history_total_time), value = stringResource(R.string.duration_minutes, uiState.stats.totalDurationMinutes))
+                    StatItem(label = stringResource(R.string.history_avg_duration), value = stringResource(R.string.duration_minutes, uiState.stats.averageDurationMinutes))
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
@@ -102,10 +105,10 @@ fun HistoryListScreen(
             uiState.sessions.isEmpty() -> {
                 HdEmptyState(
                     icon = Icons.Default.History,
-                    title = "Aún no hay entrenamientos",
-                    description = "Completa un entrenamiento para ver tu historial",
+                    title = stringResource(R.string.history_empty_title),
+                    description = stringResource(R.string.history_empty_description),
                     action = {
-                        HdButton(text = "Empezar a entrenar", onClick = onStartWorkout, icon = Icons.Default.PlayArrow)
+                        HdButton(text = stringResource(R.string.history_start_training), onClick = onStartWorkout, icon = Icons.Default.PlayArrow)
                     },
                 )
             }
@@ -138,13 +141,13 @@ private fun HistorySessionItem(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = session.sessionName.ifBlank { "Entrenamiento" },
+                    text = session.sessionName.ifBlank { stringResource(R.string.history_workout_default) },
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = formatDate(session.startTime),
+                    text = formatDate(session.startTime, LocalConfiguration.current.locales[0]),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -152,9 +155,9 @@ private fun HistorySessionItem(
             Column(horizontalAlignment = androidx.compose.ui.Alignment.End) {
                 HdChip(
                     text = when (session.status) {
-                        WorkoutStatus.COMPLETED -> "Completado"
-                        WorkoutStatus.IN_PROGRESS -> "En Progreso"
-                        WorkoutStatus.CANCELLED -> "Cancelado"
+                        WorkoutStatus.COMPLETED -> stringResource(R.string.status_completed)
+                        WorkoutStatus.IN_PROGRESS -> stringResource(R.string.status_in_progress)
+                        WorkoutStatus.CANCELLED -> stringResource(R.string.status_cancelled)
                     },
                     isSelected = session.status == WorkoutStatus.COMPLETED,
                     onClick = { },
@@ -162,7 +165,7 @@ private fun HistorySessionItem(
                 if (session.totalDurationSecs > 0) {
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "${session.totalDurationSecs / 60}min",
+                        text = stringResource(R.string.duration_minutes, session.totalDurationSecs / 60),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -192,7 +195,7 @@ private fun StatItem(
     }
 }
 
-private fun formatDate(timestamp: Long): String {
-    val sdf = SimpleDateFormat("dd MMM yyyy · HH:mm", Locale("es", "ES"))
+private fun formatDate(timestamp: Long, locale: Locale): String {
+    val sdf = SimpleDateFormat("dd MMM yyyy · HH:mm", locale)
     return sdf.format(Date(timestamp))
 }

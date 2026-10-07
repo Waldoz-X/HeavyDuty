@@ -1,5 +1,8 @@
 package com.example.heavyduty.core.ui.components
 
+import com.example.heavyduty.core.common.extensions.formatOneDecimal
+import com.example.heavyduty.core.common.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -39,7 +42,7 @@ fun HdBarChart(
     trackColor: Color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
     labelColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
     valueColor: Color = MaterialTheme.colorScheme.onSurface,
-    valueFormatter: (Float) -> String = { value -> "%.1fh".format(value) },
+    valueFormatter: (Float) -> String = { value -> "${value.formatOneDecimal()} h" },
 ) {
     if (data.isEmpty()) {
         Box(
@@ -49,7 +52,7 @@ fun HdBarChart(
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                text = "Sin datos todavía",
+                text = stringResource(R.string.state_no_data_yet),
                 style = MaterialTheme.typography.bodyMedium,
                 color = labelColor,
             )

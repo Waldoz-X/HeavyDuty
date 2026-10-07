@@ -12,9 +12,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.Dispatchers
-import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Locale
 import javax.inject.Inject
 
 /**
@@ -34,8 +32,6 @@ class GetMonthlyReportUseCase @Inject constructor(
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
         }
-        val monthLabel = SimpleDateFormat("MMMM yyyy", Locale.Builder().setLanguage("es").setRegion("ES").build())
-            .format(calendar.time)
         val monthStart = calendar.timeInMillis
         val maxWeek = calendar.getActualMaximum(Calendar.WEEK_OF_MONTH)
         calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH))
@@ -170,7 +166,7 @@ class GetMonthlyReportUseCase @Inject constructor(
             val avgPerWeek = if (maxWeek > 0) completedSessions.size.toFloat() / maxWeek.toFloat() else 0f
 
             MonthlyReport(
-                monthLabel = monthLabel.replaceFirstChar { it.uppercase() },
+                monthStartMillis = monthStart,
                 referenceMillis = referenceMillis,
                 totalWorkouts = completedSessions.size,
                 totalSets = completedSets.size,

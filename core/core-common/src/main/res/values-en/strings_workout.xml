@@ -104,4 +104,15 @@
     <string name="rest_finished_channel">Rest finished</string>
     <string name="rest_finished_channel_description">Alerts you when the rest between sets ends</string>
     <string name="timer_notification_round">Round %1$d/%2$d</string>
+    <string name="timer_title">Timer</string>
+    <string name="timer_finished">Timer finished!</string>
+    <string name="timer_round">Round %1$d/%2$d</string>
+    <string name="timer_reset">Reset</string>
+    <string name="timer_start">Start</string>
+    <string name="timer_pause">Pause</string>
+    <string name="timer_resume">Resume</string>
+    <string name="timer_stop">Stop</string>
+    <string name="timer_channel_name">Workout timer</string>
+    <string name="timer_channel_description">Shows the running rest/AMRAP/EMOM/Tabata timer</string>
+    <string name="exercise_load_error">Couldn\'t load the exercise</string>
 </resources>

@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.calendar.presentation
 
+import com.example.heavyduty.core.common.R
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.heavyduty.core.domain.repository.CalendarRepository
@@ -55,12 +56,12 @@ class CalendarViewModel @Inject constructor(
                     try {
                         assignRoutineToDayUseCase(event.routineId, event.dayOfWeek)
                         _uiState.update { it.copy(isPickingRoutine = false) }
-                        _uiEffect.emit(CalendarUiEffect.ShowMessage("Rutina asignada"))
+                        _uiEffect.emit(CalendarUiEffect.ShowMessage(R.string.calendar_routine_assigned))
                     } catch (e: Exception) {
                         if (e.message == "DuplicateRoutine") {
-                            _uiEffect.emit(CalendarUiEffect.ShowMessage("La rutina ya está asignada a este día"))
+                            _uiEffect.emit(CalendarUiEffect.ShowMessage(R.string.calendar_already_assigned))
                         } else {
-                            _uiEffect.emit(CalendarUiEffect.ShowMessage("Error al asignar la rutina"))
+                            _uiEffect.emit(CalendarUiEffect.ShowMessage(R.string.calendar_assign_error))
                         }
                     }
                 }
@@ -70,7 +71,7 @@ class CalendarViewModel @Inject constructor(
                     try {
                         calendarRepository.deleteEntry(event.entry)
                     } catch (e: Exception) {
-                        _uiEffect.emit(CalendarUiEffect.ShowMessage("Error al quitar"))
+                        _uiEffect.emit(CalendarUiEffect.ShowMessage(R.string.calendar_remove_error))
                     }
                 }
             }

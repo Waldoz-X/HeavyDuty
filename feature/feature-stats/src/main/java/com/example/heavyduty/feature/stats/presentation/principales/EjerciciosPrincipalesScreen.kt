@@ -1,5 +1,8 @@
 package com.example.heavyduty.feature.stats.presentation.principales
 
+import com.example.heavyduty.core.common.R
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -53,10 +56,10 @@ fun EjerciciosPrincipalesScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Ejercicios principales") },
+                title = { Text(stringResource(R.string.stats_top_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
                 },
             )
@@ -64,11 +67,11 @@ fun EjerciciosPrincipalesScreen(
         modifier = modifier.fillMaxSize(),
     ) { innerPadding ->
         when {
-            uiState.isLoading -> HdLoadingIndicator(modifier = Modifier.padding(innerPadding), message = "Cargando...")
+            uiState.isLoading -> HdLoadingIndicator(modifier = Modifier.padding(innerPadding), message = stringResource(R.string.state_loading))
             uiState.exercises.isEmpty() -> HdEmptyState(
                 icon = Icons.Default.EmojiEvents,
-                title = "Aún no hay ejercicios registrados",
-                description = "Completa entrenamientos para ver tus ejercicios más frecuentes.",
+                title = stringResource(R.string.stats_top_empty_title),
+                description = stringResource(R.string.stats_top_empty_desc),
                 modifier = Modifier.padding(innerPadding),
             )
             else -> LazyColumn(
@@ -134,7 +137,7 @@ private fun RankedExerciseRow(rank: Int, exercise: ExerciseFrequency, modifier: 
                     overflow = TextOverflow.Ellipsis,
                 )
                 Text(
-                    text = "${exercise.setCount} series",
+                    text = pluralStringResource(R.plurals.stats_set_count, exercise.setCount, exercise.setCount),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

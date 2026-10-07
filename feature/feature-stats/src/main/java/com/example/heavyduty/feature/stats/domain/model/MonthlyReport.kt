@@ -21,7 +21,8 @@ data class TopExerciseMonthly(
  * Aggregated training summary for a single calendar month.
  */
 data class MonthlyReport(
-    val monthLabel: String = "",
+    /** First instant of the reported month; the UI formats its name in the app's language. */
+    val monthStartMillis: Long = 0L,
     val referenceMillis: Long = 0L,
     val totalWorkouts: Int = 0,
     val totalSets: Int = 0,

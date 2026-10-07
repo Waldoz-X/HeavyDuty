@@ -1,5 +1,7 @@
 package com.example.heavyduty.feature.exercises.presentation.list
 
+import com.example.heavyduty.core.common.R
+import androidx.compose.ui.res.pluralStringResource
 import com.example.heavyduty.core.ui.components.HdTonalButton
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -60,7 +62,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.heavyduty.core.domain.model.Exercise
 import com.example.heavyduty.core.domain.model.MuscleGroup
-import com.example.heavyduty.core.domain.model.equipmentLabelFor
+import com.example.heavyduty.core.ui.equipmentLabel
 import com.example.heavyduty.core.ui.components.HdButton
 import com.example.heavyduty.core.ui.components.HdChip
 import com.example.heavyduty.core.ui.components.HdEmptyState
@@ -112,10 +114,10 @@ fun ExerciseListScreen(
                     title = {
                         Text(
                             text = if (uiState.selectedIds.isEmpty()) {
-                                "Elegir ejercicios"
+                                stringResource(R.string.exercises_pick_title)
                             } else {
                                 val count = uiState.selectedIds.size
-                                if (count == 1) "1 seleccionado" else "$count seleccionados"
+                                pluralStringResource(R.plurals.exercises_selected_count, count, count)
                             },
                         )
                     },
@@ -123,7 +125,7 @@ fun ExerciseListScreen(
                         IconButton(onClick = onCancelSelection) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Cancelar",
+                                contentDescription = stringResource(R.string.action_cancel),
                             )
                         }
                     },
@@ -133,7 +135,7 @@ fun ExerciseListScreen(
                 if (uiState.selectedIds.isNotEmpty()) {
                     Surface(shadowElevation = 8.dp) {
                         HdButton(
-                            text = "Agregar ${uiState.selectedIds.size} a la rutina",
+                            text = pluralStringResource(R.plurals.exercises_add_to_routine, uiState.selectedIds.size, uiState.selectedIds.size),
                             onClick = { onConfirmSelection(uiState.selectedIds.toList()) },
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -176,7 +178,7 @@ private fun ExerciseListContent(
 
         if (!selectionMode) {
             Text(
-                text = "Ejercicios",
+                text = stringResource(R.string.exercises_title),
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.onSurface,
             )
@@ -186,7 +188,7 @@ private fun ExerciseListContent(
         HdSearchBar(
             query = uiState.searchQuery,
             onQueryChange = { onEvent(ExerciseListUiEvent.OnSearchQueryChange(it)) },
-            placeholder = "Buscar: press banca, sentadilla, remo…",
+            placeholder = stringResource(R.string.exercises_search_hint),
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -213,7 +215,7 @@ private fun ExerciseListContent(
             ) {
                 items(uiState.availableEquipment) { equipment ->
                     HdChip(
-                        text = equipmentLabelFor(equipment),
+                        text = equipmentLabel(equipment),
                         isSelected = uiState.selectedEquipment == equipment,
                         onClick = { onEvent(ExerciseListUiEvent.OnEquipmentFilterSelect(equipment)) },
                     )
@@ -224,7 +226,7 @@ private fun ExerciseListContent(
         Spacer(modifier = Modifier.height(8.dp))
         if (!uiState.isLoading) {
             Text(
-                text = "${uiState.exercises.size} ejercicios",
+                text = pluralStringResource(R.plurals.exercises_count, uiState.exercises.size, uiState.exercises.size),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -245,17 +247,17 @@ private fun ExerciseListContent(
                     uiState.selectedFilter != null || uiState.selectedEquipment != null
                 HdEmptyState(
                     icon = Icons.Default.FitnessCenter,
-                    title = "No se encontraron ejercicios",
+                    title = stringResource(R.string.exercises_empty_title),
                     description = if (uiState.searchQuery.isNotBlank()) {
-                        "Prueba con otro término de búsqueda"
+                        stringResource(R.string.exercises_empty_search)
                     } else {
-                        "Los ejercicios aparecerán aquí"
+                        stringResource(R.string.exercises_empty_default)
                     },
                     modifier = Modifier.weight(1f),
                     action = if (hasActiveFilters) {
                         {
                             HdTonalButton(
-                                text = "Quitar filtros",
+                                text = stringResource(R.string.exercises_clear_filters),
                                 onClick = {
                                     onEvent(ExerciseListUiEvent.OnSearchQueryChange(""))
                                     onEvent(ExerciseListUiEvent.OnFilterSelect(null))
@@ -399,7 +401,7 @@ private fun ExerciseListItem(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Check,
-                            contentDescription = "Seleccionado",
+                            contentDescription = stringResource(R.string.exercises_selected),
                             tint = MaterialTheme.colorScheme.onPrimary,
                             modifier = Modifier
                                 .fillMaxSize()
@@ -447,7 +449,7 @@ private fun ExerciseListItem(
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = equipmentLabelFor(exercise.equipment),
+                            text = equipmentLabel(exercise.equipment),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 1,
@@ -497,7 +499,7 @@ private fun SelectableExerciseRow(
             Text(
                 text = listOfNotNull(
                     stringResource(exercise.muscleGroup.nameResId),
-                    exercise.equipment.takeIf { it.isNotBlank() }?.let { equipmentLabelFor(it) },
+                    exercise.equipment.takeIf { it.isNotBlank() }?.let { equipmentLabel(it) },
                 ).joinToString(" · "),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -508,7 +510,7 @@ private fun SelectableExerciseRow(
         IconButton(onClick = onPreview) {
             Icon(
                 imageVector = Icons.Outlined.Info,
-                contentDescription = "Ver ejercicio",
+                contentDescription = stringResource(R.string.exercises_view),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
@@ -562,7 +564,7 @@ private fun ExercisePreviewDialog(
                 Text(
                     text = listOfNotNull(
                         stringResource(exercise.muscleGroup.nameResId),
-                        exercise.equipment.takeIf { it.isNotBlank() }?.let { equipmentLabelFor(it) },
+                        exercise.equipment.takeIf { it.isNotBlank() }?.let { equipmentLabel(it) },
                     ).joinToString(" · "),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -576,13 +578,13 @@ private fun ExercisePreviewDialog(
                         onToggleSelection()
                         onDismiss()
                     },
-                ) { Text(if (isSelected) "Quitar" else "Seleccionar") }
+                ) { Text(stringResource(if (isSelected) R.string.exercises_unselect else R.string.exercises_select)) }
             } else {
-                TextButton(onClick = onDismiss) { Text("Cerrar") }
+                TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_close)) }
             }
         },
         dismissButton = if (selectionMode) {
-            { TextButton(onClick = onDismiss) { Text("Cerrar") } }
+            { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_close)) } }
         } else {
             null
         },

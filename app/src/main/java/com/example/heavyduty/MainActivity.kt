@@ -1,5 +1,7 @@
 package com.example.heavyduty
 
+import com.example.heavyduty.core.common.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.sp
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.foundation.text.TextAutoSize
@@ -192,7 +194,7 @@ private fun HeavyDutyMainScreen(
 
                     NavigationDrawerItem(
                         icon = { Icon(imageVector = destination.icon, contentDescription = null) },
-                        label = { Text(text = destination.label) },
+                        label = { Text(text = stringResource(destination.labelRes)) },
                         selected = selected,
                         onClick = {
                             coroutineScope.launch { drawerState.close() }
@@ -215,7 +217,7 @@ private fun HeavyDutyMainScreen(
                             IconButton(onClick = { coroutineScope.launch { drawerState.open() } }) {
                                 Icon(
                                     imageVector = Icons.Default.Menu,
-                                    contentDescription = "Abrir menú",
+                                    contentDescription = stringResource(R.string.nav_open_menu),
                                     modifier = Modifier.size(24.dp),
                                 )
                             }
@@ -269,10 +271,10 @@ private fun HeavyDutyMainScreen(
                                         } else {
                                             destination.unselectedIcon
                                         },
-                                        contentDescription = destination.label,
+                                        contentDescription = stringResource(destination.labelRes),
                                     )
                                 },
-                                label = { NavBarLabel(destination.label) },
+                                label = { NavBarLabel(stringResource(destination.labelRes)) },
                             )
                         }
                     }

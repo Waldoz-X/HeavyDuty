@@ -60,7 +60,7 @@ class ExerciseDetailViewModel @Inject constructor(
             getExerciseDetailUseCase(exerciseId)
                 .catch { e ->
                     _uiState.update {
-                        it.copy(isLoading = false, error = e.message ?: "Error al cargar el ejercicio")
+                        it.copy(isLoading = false, error = e.message.orEmpty())
                     }
                 }
                 .collect { exercise ->

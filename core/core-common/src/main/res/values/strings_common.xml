@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Shared labels and actions used across screens. -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:locale="es">
+    <!-- Navigation -->
+    <string name="nav_home">Inicio</string>
+    <string name="nav_workout">Entrenar</string>
+    <string name="nav_exercises">Ejercicios</string>
+    <string name="nav_timer">Temporizador</string>
+    <string name="nav_routines">Rutinas</string>
+    <string name="nav_history">Historial</string>
+    <string name="nav_calendar">Calendario</string>
+    <string name="nav_profile">Perfil</string>
+    <string name="nav_open_menu">Abrir menú</string>
+
+    <!-- Actions -->
+    <string name="action_cancel">Cancelar</string>
+    <string name="action_save">Guardar</string>
+    <string name="action_delete">Eliminar</string>
+    <string name="action_back">Atrás</string>
+    <string name="action_register">Registrar</string>
+
+    <!-- States -->
+    <string name="state_loading">Cargando…</string>
+    <string name="state_unknown_error">Error desconocido</string>
+    <string name="state_no_data_yet">Sin datos todavía</string>
+
+    <!-- Metrics -->
+    <string name="metric_volume">Volumen</string>
+    <string name="metric_strength">Fuerza</string>
+    <string name="metric_duration">Duración</string>
+    <string name="metric_body_weight">Peso corporal</string>
+    <string name="metric_min">Mínimo</string>
+    <string name="metric_max">Máximo</string>
+
+    <!-- Periods -->
+    <string name="period_last_7_days">Últimos 7 días</string>
+    <string name="period_last_30_days">Últimos 30 días</string>
+    <string name="state_not_enough_data">No hay suficientes datos</string>
+    <string name="action_search">Buscar</string>
+    <string name="action_clear">Limpiar</string>
+    <string name="feed_more_exercises" tools:ignore="PluralsCandidate">+%1$d más</string>
+    <string name="duration_minutes">%1$d min</string>
+    <plurals name="feed_personal_records">
+        <item quantity="one">%1$d PR</item>
+        <item quantity="other">%1$d PR</item>
+        <item quantity="many">%1$d PR</item>
+    </plurals>
+    <string name="body_front">Frontal</string>
+    <string name="body_back">Posterior</string>
+    <string name="hours_short">%1$s h</string>
+    <string name="duration_hours_minutes">%1$d h %2$d min</string>
+</resources>

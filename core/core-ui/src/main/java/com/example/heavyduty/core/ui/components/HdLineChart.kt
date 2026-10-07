@@ -1,5 +1,7 @@
 package com.example.heavyduty.core.ui.components
 
+import com.example.heavyduty.core.common.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -59,7 +61,7 @@ fun HdLineChart(
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                text = "Sin datos todavía",
+                text = stringResource(R.string.state_no_data_yet),
                 style = MaterialTheme.typography.bodyMedium,
                 color = labelColor,
             )

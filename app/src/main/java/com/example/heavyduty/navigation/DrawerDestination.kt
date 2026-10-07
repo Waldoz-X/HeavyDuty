@@ -5,34 +5,36 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.ListAlt
+import androidx.annotation.StringRes
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.example.heavyduty.core.common.R
 
 /**
  * Secondary destinations reachable from the hamburger menu drawer.
  */
 enum class DrawerDestination(
     val icon: ImageVector,
-    val label: String,
+    @param:StringRes val labelRes: Int,
     val route: String,
 ) {
     ROUTINES(
         icon = Icons.Default.ListAlt,
-        label = "Rutinas",
+        labelRes = R.string.nav_routines,
         route = "routines_graph",
     ),
     HISTORY(
         icon = Icons.Default.History,
-        label = "Historial",
+        labelRes = R.string.nav_history,
         route = "history_graph",
     ),
     CALENDAR(
         icon = Icons.Default.CalendarMonth,
-        label = "Calendario",
+        labelRes = R.string.nav_calendar,
         route = "calendar_graph",
     ),
     PROFILE(
         icon = Icons.Default.AccountCircle,
-        label = "Perfil",
+        labelRes = R.string.nav_profile,
         route = "profile_graph",
     ),
 }

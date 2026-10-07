@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.stats.presentation.series
 
+import com.example.heavyduty.core.common.R
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -41,10 +42,10 @@ fun SeriesPorMusculoScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Series por músculo") },
+                title = { Text(stringResource(R.string.stats_series_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
                 },
             )
@@ -52,7 +53,7 @@ fun SeriesPorMusculoScreen(
         modifier = modifier.fillMaxSize(),
     ) { innerPadding ->
         if (uiState.isLoading) {
-            HdLoadingIndicator(modifier = Modifier.padding(innerPadding), message = "Cargando...")
+            HdLoadingIndicator(modifier = Modifier.padding(innerPadding), message = stringResource(R.string.state_loading))
             return@Scaffold
         }
         Column(
@@ -66,8 +67,7 @@ fun SeriesPorMusculoScreen(
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Series efectivas (sin calentamiento) de entrenamientos terminados. Un ejercicio " +
-                    "compuesto reparte su serie entre los músculos que trabaja.",
+                text = stringResource(R.string.stats_series_explainer),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -75,8 +75,8 @@ fun SeriesPorMusculoScreen(
             if (uiState.data.isEmpty()) {
                 HdEmptyState(
                     icon = Icons.Default.Timeline,
-                    title = "Sin series en este periodo",
-                    description = "Termina un entrenamiento para ver el recuento por grupo muscular.",
+                    title = stringResource(R.string.stats_series_empty_title),
+                    description = stringResource(R.string.stats_series_empty_desc),
                 )
             } else {
                 val data = uiState.data.map { (muscle, value) -> stringResource(muscle.nameResId) to value }

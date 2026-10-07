@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.exercises.presentation.detail
 
+import com.example.heavyduty.core.common.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -51,7 +52,7 @@ import com.example.heavyduty.core.ui.hdSharedBounds
 import com.example.heavyduty.feature.exercises.presentation.exerciseImageKey
 import com.example.heavyduty.core.domain.model.Exercise
 import com.example.heavyduty.core.domain.model.WeightUnit
-import com.example.heavyduty.core.domain.model.equipmentLabelFor
+import com.example.heavyduty.core.ui.equipmentLabel
 import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdChip
 import com.example.heavyduty.core.ui.components.HdSkeletonLine
@@ -104,7 +105,7 @@ fun ExerciseDetailScreen(
                         .padding(16.dp),
                 ) {
                     Text(
-                        text = uiState.error ?: "Error desconocido",
+                        text = stringResource(R.string.exercise_load_error),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.error,
                     )
@@ -263,7 +264,7 @@ private fun ExerciseDetailContent(
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Atrás",
+                            contentDescription = stringResource(R.string.action_back),
                         )
                     }
                 }
@@ -281,7 +282,7 @@ private fun ExerciseDetailContent(
                     if (exercise.equipment.isNotBlank()) {
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = equipmentLabelFor(exercise.equipment),
+                            text = equipmentLabel(exercise.equipment),
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color.White.copy(alpha = 0.85f),
                         )
@@ -306,7 +307,7 @@ private fun ExerciseDetailContent(
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-                SectionHeader(title = "Unidad de peso", accent = accent)
+                SectionHeader(title = stringResource(R.string.exercise_detail_weight_unit), accent = accent)
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     HdChip(
@@ -326,7 +327,7 @@ private fun ExerciseDetailContent(
                     Spacer(modifier = Modifier.height(8.dp))
                     val secondaryNames = secondaryMuscles.map { stringResource(it.nameResId) }.joinToString(", ")
                     Text(
-                        text = "También trabaja: $secondaryNames",
+                        text = stringResource(R.string.exercise_detail_also_works, secondaryNames),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -335,7 +336,7 @@ private fun ExerciseDetailContent(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 HdTonalButton(
-                    text = "Ver Progreso y Récords",
+                    text = stringResource(R.string.exercise_detail_view_progress),
                     onClick = { onViewProgress(exercise.id) },
                     icon = Icons.AutoMirrored.Filled.ShowChart,
                     modifier = Modifier.fillMaxWidth(),
@@ -343,7 +344,7 @@ private fun ExerciseDetailContent(
 
                 if (exercise.description.isNotBlank()) {
                     Spacer(modifier = Modifier.height(24.dp))
-                    SectionHeader(title = "Resumen", accent = accent)
+                    SectionHeader(title = stringResource(R.string.exercise_detail_summary), accent = accent)
                     Spacer(modifier = Modifier.height(8.dp))
                     HdCard {
                         Text(
@@ -361,7 +362,7 @@ private fun ExerciseDetailContent(
 
                 if (steps.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(24.dp))
-                    SectionHeader(title = "Instrucciones", accent = accent)
+                    SectionHeader(title = stringResource(R.string.exercise_detail_instructions), accent = accent)
                     Spacer(modifier = Modifier.height(8.dp))
                     HdCard {
                         steps.forEachIndexed { index, step ->

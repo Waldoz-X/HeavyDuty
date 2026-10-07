@@ -1,5 +1,6 @@
 package com.example.heavyduty.core.ui.components
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
@@ -44,7 +45,7 @@ fun HdPeriodSelector(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = selected.label,
+            text = stringResource(selected.labelRes),
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurface,
         )
@@ -56,7 +57,7 @@ fun HdPeriodSelector(
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             options.forEach { option ->
                 DropdownMenuItem(
-                    text = { Text(option.label) },
+                    text = { Text(stringResource(option.labelRes)) },
                     onClick = {
                         expanded = false
                         onSelect(option)

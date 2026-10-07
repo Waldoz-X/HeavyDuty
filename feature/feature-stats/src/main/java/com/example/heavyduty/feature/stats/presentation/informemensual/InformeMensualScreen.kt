@@ -1,5 +1,9 @@
 package com.example.heavyduty.feature.stats.presentation.informemensual
 
+import kotlin.math.roundToInt
+import androidx.compose.ui.platform.LocalConfiguration
+import com.example.heavyduty.core.common.R
+import androidx.compose.ui.res.pluralStringResource
 import com.example.heavyduty.core.common.extensions.formatOneDecimal
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -72,10 +76,10 @@ fun InformeMensualScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Informe Mensual") },
+                title = { Text(stringResource(R.string.stats_monthly_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
                 },
             )
@@ -89,7 +93,7 @@ fun InformeMensualScreen(
         ) {
             // Cabecera interactiva con selector de meses (< Mes Año >)
             MonthSelectorHeader(
-                monthLabel = uiState.report.monthLabel,
+                monthLabel = monthName(uiState.report.monthStartMillis),
                 hasNextMonth = uiState.hasNextMonth,
                 onPreviousMonth = { viewModel.selectPreviousMonth() },
                 onNextMonth = { viewModel.selectNextMonth() },
@@ -98,7 +102,7 @@ fun InformeMensualScreen(
             if (uiState.isLoading) {
                 HdLoadingIndicator(
                     modifier = Modifier.fillMaxSize(),
-                    message = "Calculando métricas del mes...",
+                    message = stringResource(R.string.monthly_loading),
                 )
                 return@Scaffold
             }
@@ -114,8 +118,8 @@ fun InformeMensualScreen(
                 ) {
                     HdEmptyState(
                         icon = Icons.Default.FitnessCenter,
-                        title = "Sin entrenamientos",
-                        description = "No se registraron entrenamientos completados en ${report.monthLabel.lowercase()}.",
+                        title = stringResource(R.string.monthly_empty_title),
+                        description = stringResource(R.string.monthly_empty_desc, monthName(report.monthStartMillis).lowercase()),
                     )
                 }
             } else {
@@ -133,22 +137,22 @@ fun InformeMensualScreen(
                             ) {
                                 HdStatCard(
                                     icon = Icons.Default.FitnessCenter,
-                                    label = "Volumen Total",
+                                    label = stringResource(R.string.monthly_total_volume),
                                     value = report.totalVolumeKg.formatTotalWeight(),
                                     deltaText = report.prevMonthVolumeDeltaPercent?.let {
                                         val sign = if (it >= 0) "+" else ""
-                                        "$sign${it.formatOneDecimal()}% vs mes ant."
+                                        stringResource(R.string.monthly_vs_last_month, "$sign${it.formatOneDecimal()}%")
                                     },
                                     isPositive = (report.prevMonthVolumeDeltaPercent ?: 0f) >= 0,
                                     modifier = Modifier.weight(1f),
                                 )
                                 HdStatCard(
                                     icon = Icons.Default.CalendarMonth,
-                                    label = "Entrenamientos",
+                                    label = stringResource(R.string.stats_workouts),
                                     value = "${report.totalWorkouts}",
                                     deltaText = report.prevMonthWorkoutsDelta?.let {
                                         val sign = if (it >= 0) "+" else ""
-                                        "$sign$it vs mes ant."
+                                        stringResource(R.string.monthly_vs_last_month, "$sign$it")
                                     },
                                     isPositive = (report.prevMonthWorkoutsDelta ?: 0) >= 0,
                                     modifier = Modifier.weight(1f),
@@ -161,20 +165,20 @@ fun InformeMensualScreen(
                             ) {
                                 val hours = report.totalDurationMinutes / 60
                                 val mins = report.totalDurationMinutes % 60
-                                val durationStr = if (hours > 0) "${hours}h ${mins}m" else "${mins}m"
+                                val durationStr = if (hours > 0) stringResource(R.string.duration_hours_minutes, hours, mins) else stringResource(R.string.duration_minutes, mins)
 
                                 HdStatCard(
                                     icon = Icons.Default.Timer,
-                                    label = "Tiempo Total",
+                                    label = stringResource(R.string.monthly_total_time),
                                     value = durationStr,
-                                    subtext = "Promedio: ${report.avgSessionDurationMinutes} min/sesión",
+                                    subtext = stringResource(R.string.monthly_avg_session, report.avgSessionDurationMinutes),
                                     modifier = Modifier.weight(1f),
                                 )
                                 HdStatCard(
                                     icon = Icons.Default.Repeat,
-                                    label = "Series Efectivas",
+                                    label = stringResource(R.string.monthly_effective_sets),
                                     value = "${report.totalSets}",
-                                    subtext = "${report.workoutsPerWeekAverage.formatOneDecimal()} sesiones / sem",
+                                    subtext = stringResource(R.string.monthly_sessions_per_week, report.workoutsPerWeekAverage.formatOneDecimal()),
                                     modifier = Modifier.weight(1f),
                                 )
                             }
@@ -203,7 +207,7 @@ fun InformeMensualScreen(
                         item {
                             HdCard(modifier = Modifier.fillMaxWidth()) {
                                 Text(
-                                    text = "Entrenamientos por Semana",
+                                    text = stringResource(R.string.monthly_workouts_per_week),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.SemiBold,
                                     color = MaterialTheme.colorScheme.onSurface,
@@ -224,7 +228,7 @@ fun InformeMensualScreen(
                         item {
                             HdCard(modifier = Modifier.fillMaxWidth()) {
                                 Text(
-                                    text = "Volumen por semana (${weightUnitLabel()})",
+                                    text = stringResource(R.string.monthly_volume_per_week, weightUnitLabel()),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.SemiBold,
                                     color = MaterialTheme.colorScheme.onSurface,
@@ -264,7 +268,7 @@ private fun MonthSelectorHeader(
         IconButton(onClick = onPreviousMonth) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                contentDescription = "Mes anterior",
+                contentDescription = stringResource(R.string.monthly_prev_month),
                 tint = MaterialTheme.colorScheme.primary,
             )
         }
@@ -282,7 +286,7 @@ private fun MonthSelectorHeader(
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = "Mes siguiente",
+                contentDescription = stringResource(R.string.monthly_next_month),
                 tint = if (hasNextMonth) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
             )
         }
@@ -302,14 +306,14 @@ private fun MuscleDistributionCard(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = "Distribución Muscular",
+                text = stringResource(R.string.monthly_muscle_distribution),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,
             )
             if (topMuscle != null) {
                 Text(
-                    text = "Top: ${stringResource(topMuscle.nameResId)}",
+                    text = stringResource(R.string.monthly_top_muscle, stringResource(topMuscle.nameResId)),
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.primary,
@@ -333,7 +337,7 @@ private fun MuscleDistributionCard(
                             color = MaterialTheme.colorScheme.onSurface,
                         )
                         Text(
-                            text = "${item.volumeKg.formatTotalWeight()} (${"%.0f".format(item.percentage)}%)",
+                            text = "${item.volumeKg.formatTotalWeight()} (${item.percentage.roundToInt()}%)",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -372,7 +376,7 @@ private fun TopExercisesCard(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "Top Ejercicios del Mes",
+                text = stringResource(R.string.monthly_top_exercises),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,
@@ -424,7 +428,7 @@ private fun TopExercisesCard(
                             color = MaterialTheme.colorScheme.onSurface,
                         )
                         Text(
-                            text = "${exercise.totalSets} series · Peso máx: ${exercise.maxWeightKg.formatWeight()}",
+                            text = stringResource(R.string.monthly_exercise_detail, pluralStringResource(R.plurals.stats_set_count, exercise.totalSets, exercise.totalSets), exercise.maxWeightKg.formatWeight()),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -438,7 +442,7 @@ private fun TopExercisesCard(
                             color = MaterialTheme.colorScheme.primary,
                         )
                         Text(
-                            text = "volumen",
+                            text = stringResource(R.string.monthly_volume_lower),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -447,4 +451,13 @@ private fun TopExercisesCard(
             }
         }
     }
+}
+
+/** "Octubre 2026" / "October 2026", in the app's language. */
+@Composable
+private fun monthName(monthStartMillis: Long): String {
+    val locale = LocalConfiguration.current.locales[0]
+    return java.text.SimpleDateFormat("LLLL yyyy", locale)
+        .format(java.util.Date(monthStartMillis))
+        .replaceFirstChar { it.titlecase(locale) }
 }

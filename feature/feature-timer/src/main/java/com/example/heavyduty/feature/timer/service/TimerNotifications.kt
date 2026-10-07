@@ -39,8 +39,8 @@ class TimerNotifications @Inject constructor(
         manager.createNotificationChannelsCompat(
             listOf(
                 NotificationChannelCompat.Builder(ONGOING_CHANNEL_ID, NotificationManagerCompat.IMPORTANCE_LOW)
-                    .setName("Temporizador de entrenamiento")
-                    .setDescription("Muestra el temporizador de descanso/AMRAP/EMOM/Tabata en curso")
+                    .setName(context.getString(R.string.timer_channel_name))
+                    .setDescription(context.getString(R.string.timer_channel_description))
                     .setShowBadge(false)
                     .build(),
                 NotificationChannelCompat.Builder(REST_FINISHED_CHANNEL_ID, NotificationManagerCompat.IMPORTANCE_HIGH)
@@ -89,10 +89,10 @@ class TimerNotifications @Inject constructor(
         } else {
             builder.addAction(
                 if (content.isRunning) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play,
-                if (content.isRunning) "Pausar" else "Reanudar",
+                context.getString(if (content.isRunning) R.string.timer_pause else R.string.timer_resume),
                 serviceAction(TimerService.ACTION_TOGGLE),
             )
-            builder.addAction(android.R.drawable.ic_menu_close_clear_cancel, "Detener", serviceAction(TimerService.ACTION_STOP))
+            builder.addAction(android.R.drawable.ic_menu_close_clear_cancel, context.getString(R.string.timer_stop), serviceAction(TimerService.ACTION_STOP))
         }
         return builder.build()
     }

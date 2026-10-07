@@ -105,16 +105,16 @@ class GetTrainingActivityHeatmapUseCaseTest {
         assertEquals(1.5f, report.totalHoursTrained, 0.05f)
         assertEquals(45, report.avgMinutesPerSession)
 
-        // Time slots: both sessions at 10am -> Mañana
-        val mananaSlot = report.timeSlotDistribution.find { it.slotName == "Mañana" }
+        // Time slots: both sessions at 10am -> morning
+        val mananaSlot = report.timeSlotDistribution.find { it.slot == TimeSlot.MORNING }
         assertNotNull(mananaSlot)
         assertEquals(2, mananaSlot?.count)
         assertEquals(100f, mananaSlot?.percentage ?: 0f, 0.1f)
-        assertEquals("Mañana", report.favoriteTimeSlotName)
+        assertEquals(TimeSlot.MORNING, report.favoriteTimeSlot)
 
         // Day of week distribution has 7 items
         assertEquals(7, report.dayOfWeekDistribution.size)
-        assertTrue(report.favoriteDayName != null)
+        assertTrue(report.favoriteDayOfWeek != null)
     }
 
     @Test

@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.stats.presentation.main
 
+import com.example.heavyduty.core.common.R
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -69,10 +70,10 @@ fun EstadisticasScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Estadísticas") },
+                title = { Text(stringResource(R.string.stats_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
                 },
             )
@@ -92,50 +93,50 @@ fun EstadisticasScreen(
         val advancedStats = listOf(
             AdvancedStatRow(
                 icon = Icons.Default.Timeline,
-                title = "Series por músculo",
-                description = "Cuántas series efectivas hiciste por grupo muscular.",
+                title = stringResource(R.string.stats_series_title),
+                description = stringResource(R.string.stats_series_desc),
                 onClick = onNavigateToSeries,
             ),
             AdvancedStatRow(
                 icon = Icons.Default.PieChart,
-                title = "Distribución muscular (radar)",
-                description = "Volumen por músculo comparado con el periodo anterior.",
+                title = stringResource(R.string.stats_radar_title),
+                description = stringResource(R.string.stats_radar_desc),
                 onClick = onNavigateToDistribucionRadar,
             ),
             AdvancedStatRow(
                 icon = Icons.Default.Accessibility,
-                title = "Mapa corporal",
-                description = "Volumen, fatiga y fuerza por músculo sobre el cuerpo.",
+                title = stringResource(R.string.stats_body_title),
+                description = stringResource(R.string.stats_body_desc),
                 onClick = onNavigateToDistribucionCuerpo,
             ),
             AdvancedStatRow(
                 icon = Icons.Default.EmojiEvents,
-                title = "Ejercicios más frecuentes",
-                description = "Los ejercicios que más series acumulan.",
+                title = stringResource(R.string.stats_top_title),
+                description = stringResource(R.string.stats_top_desc),
                 onClick = onNavigateToPrincipales,
             ),
             AdvancedStatRow(
                 icon = Icons.Default.Leaderboard,
-                title = "Récords personales (1RM)",
-                description = "Tu mejor 1RM estimado en cada ejercicio.",
+                title = stringResource(R.string.stats_records_title),
+                description = stringResource(R.string.stats_records_desc),
                 onClick = onNavigateToClasificacion,
             ),
             AdvancedStatRow(
                 icon = Icons.Default.CalendarMonth,
-                title = "Informe mensual",
-                description = "Resumen de tus entrenamientos y estadísticas mensuales.",
+                title = stringResource(R.string.stats_monthly_title),
+                description = stringResource(R.string.stats_monthly_desc),
                 onClick = onNavigateToInformeMensual,
             ),
             AdvancedStatRow(
                 icon = Icons.Default.DateRange,
-                title = "Mapa de actividad",
-                description = "Vista de un año de entrenamientos, estilo GitHub.",
+                title = stringResource(R.string.stats_activity_title),
+                description = stringResource(R.string.stats_activity_desc),
                 onClick = onNavigateToMapaActividad,
             ),
             AdvancedStatRow(
                 icon = Icons.Default.Timeline,
-                title = "Peso corporal",
-                description = "Gráfico y análisis de tu progreso de peso.",
+                title = stringResource(R.string.stats_bodyweight_title),
+                description = stringResource(R.string.stats_bodyweight_desc),
                 onClick = onNavigateToPesoCorporal,
             ),
         )
@@ -154,7 +155,7 @@ fun EstadisticasScreen(
 
             item {
                 Text(
-                    text = "Músculos trabajados por día",
+                    text = stringResource(R.string.stats_muscles_by_day),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
@@ -185,7 +186,6 @@ fun EstadisticasScreen(
 
             item {
                 val volumeByMuscle = uiState.selectedDayVolumeByMuscle
-                    .mapKeys { (muscle, _) -> stringResource(muscle.nameResId) }
                 HdBodyDiagram(
                     muscleValues = volumeByMuscle,
                     gender = uiState.gender,
@@ -193,7 +193,7 @@ fun EstadisticasScreen(
                 )
                 if (volumeByMuscle.isEmpty()) {
                     Text(
-                        text = "Sin entrenamiento terminado este día.",
+                        text = stringResource(R.string.stats_no_workout_day),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.fillMaxWidth(),
@@ -204,7 +204,7 @@ fun EstadisticasScreen(
 
             item {
                 Text(
-                    text = "Estadísticas avanzadas",
+                    text = stringResource(R.string.stats_advanced),
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.primary,
                 )
@@ -262,17 +262,17 @@ private fun AdvancedStatCard(stat: AdvancedStatRow, modifier: Modifier = Modifie
 private fun SummaryCard(summary: PeriodSummary) {
     HdCard {
         Text(
-            text = "Últimos 30 días",
+            text = stringResource(R.string.period_last_30_days),
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.primary,
         )
         Spacer(modifier = Modifier.height(12.dp))
         Row(modifier = Modifier.fillMaxWidth()) {
-            SummaryFigure("Entrenamientos", summary.workouts.toString(), signed(summary.workoutsDelta), summary.workoutsDelta >= 0, Modifier.weight(1f))
-            SummaryFigure("Series", summary.sets.toString(), signed(summary.setsDelta), summary.setsDelta >= 0, Modifier.weight(1f))
+            SummaryFigure(stringResource(R.string.stats_workouts), summary.workouts.toString(), signed(summary.workoutsDelta), summary.workoutsDelta >= 0, Modifier.weight(1f))
+            SummaryFigure(stringResource(R.string.stats_sets), summary.sets.toString(), signed(summary.setsDelta), summary.setsDelta >= 0, Modifier.weight(1f))
             val volumeDelta = summary.volumeKgDelta
             SummaryFigure(
-                label = "Volumen",
+                label = stringResource(R.string.metric_volume),
                 value = summary.volumeKg.formatTotalWeight(),
                 delta = (if (volumeDelta >= 0) "+" else "−") + kotlin.math.abs(volumeDelta).formatTotalWeight(),
                 isPositive = volumeDelta >= 0,

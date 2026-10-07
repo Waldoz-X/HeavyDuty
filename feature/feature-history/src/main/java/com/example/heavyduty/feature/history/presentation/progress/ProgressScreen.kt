@@ -1,5 +1,8 @@
 package com.example.heavyduty.feature.history.presentation.progress
 
+import com.example.heavyduty.core.common.R
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -69,7 +72,7 @@ fun ProgressScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Progreso del Ejercicio",
+                        text = stringResource(R.string.progress_title),
                         style = MaterialTheme.typography.titleLarge,
                     )
                 },
@@ -77,7 +80,7 @@ fun ProgressScreen(
                     IconButton(onClick = { viewModel.onEvent(ProgressUiEvent.OnNavigateBack) }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Atrás",
+                            contentDescription = stringResource(R.string.action_back),
                         )
                     }
                 },
@@ -92,14 +95,14 @@ fun ProgressScreen(
             uiState.isLoading -> {
                 HdLoadingIndicator(
                     modifier = Modifier.padding(innerPadding),
-                    message = "Cargando progreso...",
+                    message = stringResource(R.string.progress_loading),
                 )
             }
             uiState.sets.isEmpty() -> {
                 HdEmptyState(
                     icon = Icons.AutoMirrored.Filled.ShowChart,
-                    title = "Aún no hay datos",
-                    description = "Completa series de este ejercicio para ver tu progreso",
+                    title = stringResource(R.string.progress_empty_title),
+                    description = stringResource(R.string.progress_empty_description),
                     modifier = Modifier.padding(innerPadding),
                 )
             }
@@ -125,7 +128,7 @@ fun ProgressScreen(
                     if (chronologicalWeights.size >= 2) {
                         HdCard {
                             Text(
-                                text = "Peso a lo Largo del Tiempo",
+                                text = stringResource(R.string.progress_weight_over_time),
                                 style = MaterialTheme.typography.titleSmall,
                                 color = MaterialTheme.colorScheme.primary,
                             )
@@ -143,7 +146,7 @@ fun ProgressScreen(
                     // Weight progress summary
                     HdCard {
                         Text(
-                            text = "Progreso de Peso",
+                            text = stringResource(R.string.progress_weight),
                             style = MaterialTheme.typography.titleSmall,
                             color = MaterialTheme.colorScheme.primary,
                         )
@@ -154,18 +157,18 @@ fun ProgressScreen(
                             val maxWeight = weightSets.maxOf { it.weight ?: 0f }.kgTo(uiState.weightUnit)
                             val latestWeight = (weightSets.first().weight ?: 0f).kgTo(uiState.weightUnit)
                             Text(
-                                text = "Máx: ${maxWeight.formatDecimal()}$unitLabel · Último: ${latestWeight.formatDecimal()}$unitLabel",
+                                text = stringResource(R.string.progress_max_latest, "${maxWeight.formatDecimal()} $unitLabel", "${latestWeight.formatDecimal()} $unitLabel"),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurface,
                             )
                             Text(
-                                text = "${weightSets.size} series registradas",
+                                text = pluralStringResource(R.plurals.progress_sets_logged, weightSets.size, weightSets.size),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         } else {
                             Text(
-                                text = "No hay datos de peso disponibles",
+                                text = stringResource(R.string.progress_no_weight_data),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -177,7 +180,7 @@ fun ProgressScreen(
                     // Volume progress summary
                     HdCard {
                         Text(
-                            text = "Progreso de Volumen",
+                            text = stringResource(R.string.progress_volume),
                             style = MaterialTheme.typography.titleSmall,
                             color = MaterialTheme.colorScheme.secondary,
                         )
@@ -190,13 +193,13 @@ fun ProgressScreen(
                                 .toFloat()
                                 .kgTo(uiState.weightUnit)
                             Text(
-                                text = "Repeticiones Totales: $totalReps · Volumen: ${totalVolume.formatDecimal()}$unitLabel",
+                                text = stringResource(R.string.progress_reps_volume, totalReps, "${totalVolume.formatDecimal()} $unitLabel"),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurface,
                             )
                         } else {
                             Text(
-                                text = "No hay datos de repeticiones disponibles",
+                                text = stringResource(R.string.progress_no_reps_data),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -224,7 +227,7 @@ private fun PersonalRecordsCard(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "Récords Personales",
+                text = stringResource(R.string.progress_records),
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.tertiary,
             )
@@ -236,17 +239,17 @@ private fun PersonalRecordsCard(
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             PersonalRecordItem(
-                label = "Peso Máximo",
-                value = records.maxWeight?.let { "${it.kgTo(weightUnit).formatDecimal()}$unitLabel" } ?: "—",
-                detail = records.maxWeightReps?.let { "× $it reps" },
+                label = stringResource(R.string.progress_max_weight),
+                value = records.maxWeight?.let { "${it.kgTo(weightUnit).formatDecimal()} $unitLabel" } ?: "—",
+                detail = records.maxWeightReps?.let { pluralStringResource(R.plurals.progress_times_reps, it, it) },
             )
             PersonalRecordItem(
-                label = "Más Repeticiones",
+                label = stringResource(R.string.progress_most_reps),
                 value = records.maxReps?.toString() ?: "—",
                 detail = records.maxRepsWeight?.let { "@ ${it.kgTo(weightUnit).formatDecimal()}$unitLabel" },
             )
             PersonalRecordItem(
-                label = "1RM Estimado",
+                label = stringResource(R.string.progress_estimated_1rm),
                 value = records.estimatedOneRepMax?.let { "${it.kgTo(weightUnit).formatDecimal()}$unitLabel" } ?: "—",
                 detail = null,
             )

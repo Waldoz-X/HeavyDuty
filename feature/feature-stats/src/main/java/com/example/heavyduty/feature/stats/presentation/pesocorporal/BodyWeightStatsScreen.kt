@@ -1,5 +1,8 @@
 package com.example.heavyduty.feature.stats.presentation.pesocorporal
 
+import com.example.heavyduty.core.common.R
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import com.example.heavyduty.core.common.extensions.formatOneDecimal
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -85,12 +88,12 @@ fun BodyWeightStatsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Peso Corporal") },
+                title = { Text(stringResource(R.string.stats_bodyweight_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Volver",
+                            contentDescription = stringResource(R.string.action_back),
                         )
                     }
                 },
@@ -98,7 +101,7 @@ fun BodyWeightStatsScreen(
                     IconButton(onClick = { showGoalDialog = true }) {
                         Icon(
                             imageVector = Icons.Default.Flag,
-                            contentDescription = "Definir Meta",
+                            contentDescription = stringResource(R.string.bw_set_goal),
                             tint = MaterialTheme.colorScheme.primary,
                         )
                     }
@@ -109,7 +112,7 @@ fun BodyWeightStatsScreen(
             ExtendedFloatingActionButton(
                 onClick = { showAddWeightDialog = true },
                 icon = { Icon(Icons.Default.Add, contentDescription = null) },
-                text = { Text("Registrar peso") },
+                text = { Text(stringResource(R.string.bw_log_weight)) },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
             )
@@ -119,7 +122,7 @@ fun BodyWeightStatsScreen(
         if (uiState.isLoading) {
             HdLoadingIndicator(
                 modifier = Modifier.padding(innerPadding),
-                message = "Cargando historial...",
+                message = stringResource(R.string.bw_loading),
             )
             return@Scaffold
         }
@@ -137,20 +140,20 @@ fun BodyWeightStatsScreen(
             ) {
                 HdEmptyState(
                     icon = Icons.Default.MonitorWeight,
-                    title = "Sin registros de peso",
-                    description = "Comienza a registrar tu peso diario o semanal para monitorear tu progreso y alcanzar tu meta.",
+                    title = stringResource(R.string.bw_empty_title),
+                    description = stringResource(R.string.bw_empty_desc),
                 )
                 Spacer(modifier = Modifier.height(24.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Button(onClick = { showAddWeightDialog = true }) {
                         Icon(Icons.Default.Add, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Registrar primer peso")
+                        Text(stringResource(R.string.bw_log_first))
                     }
                     OutlinedButton(onClick = { showGoalDialog = true }) {
                         Icon(Icons.Default.Flag, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Fijar meta")
+                        Text(stringResource(R.string.bw_fix_goal))
                     }
                 }
             }
@@ -179,14 +182,14 @@ fun BodyWeightStatsScreen(
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Text(
-                                text = "Evolución en el Tiempo",
+                                text = stringResource(R.string.bw_over_time),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.onSurface,
                             )
                             if (report.goalWeightKg != null) {
                                 Text(
-                                    text = "Meta: ${report.goalWeightKg.formatWeight()}",
+                                    text = stringResource(R.string.bw_goal_value, report.goalWeightKg.formatWeight()),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.primary,
                                 )
@@ -209,17 +212,17 @@ fun BodyWeightStatsScreen(
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         MetricCard(
-                            title = "Mínimo",
+                            title = stringResource(R.string.metric_min),
                             value = report.minWeightKg,
                             modifier = Modifier.weight(1f),
                         )
                         MetricCard(
-                            title = "Máximo",
+                            title = stringResource(R.string.metric_max),
                             value = report.maxWeightKg,
                             modifier = Modifier.weight(1f),
                         )
                         MetricCard(
-                            title = "Promedio",
+                            title = stringResource(R.string.bw_average),
                             value = report.avgWeightKg,
                             modifier = Modifier.weight(1f),
                         )
@@ -234,13 +237,13 @@ fun BodyWeightStatsScreen(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            text = "Historial de Registros",
+                            text = stringResource(R.string.bw_history),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface,
                         )
                         Text(
-                            text = "${report.history.size} registros",
+                            text = pluralStringResource(R.plurals.bw_entries, report.history.size, report.history.size),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -287,8 +290,8 @@ fun BodyWeightStatsScreen(
     if (entryToDelete != null) {
         AlertDialog(
             onDismissRequest = { entryToDelete = null },
-            title = { Text("Eliminar registro") },
-            text = { Text("¿Deseas eliminar el registro de ${entryToDelete?.weightKg?.formatWeight()} del ${entryToDelete?.loggedAt?.toFormattedDateTime()}?") },
+            title = { Text(stringResource(R.string.bw_delete_title)) },
+            text = { Text(stringResource(R.string.bw_delete_message, entryToDelete?.weightKg?.formatWeight().orEmpty(), entryToDelete?.loggedAt?.toFormattedDateTime().orEmpty())) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -296,12 +299,12 @@ fun BodyWeightStatsScreen(
                         entryToDelete = null
                     }
                 ) {
-                    Text("Eliminar", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { entryToDelete = null }) {
-                    Text("Cancelar")
+                    Text(stringResource(R.string.action_cancel))
                 }
             }
         )
@@ -329,7 +332,7 @@ private fun WeightGoalHeroCard(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Meta de Peso Corporal",
+                    text = stringResource(R.string.bw_goal_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -338,7 +341,7 @@ private fun WeightGoalHeroCard(
             IconButton(onClick = onEditGoal) {
                 Icon(
                     imageVector = Icons.Default.Edit,
-                    contentDescription = "Modificar meta",
+                    contentDescription = stringResource(R.string.bw_edit_goal),
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(18.dp),
                 )
@@ -358,7 +361,7 @@ private fun WeightGoalHeroCard(
             ) {
                 Column {
                     Text(
-                        text = "Peso Actual",
+                        text = stringResource(R.string.bw_current),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -380,7 +383,7 @@ private fun WeightGoalHeroCard(
 
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        text = "Objetivo",
+                        text = stringResource(R.string.bw_target),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -410,11 +413,11 @@ private fun WeightGoalHeroCard(
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     val statusText = if (kotlin.math.abs(remaining) <= 0.2f) {
-                        "¡Meta cumplida! 🎉"
+                        stringResource(R.string.bw_goal_reached)
                     } else if (remaining > 0) {
-                        "Faltan ${remaining.formatWeight()}"
+                        stringResource(R.string.bw_remaining, remaining.formatWeight())
                     } else {
-                        "Exceso: ${(-remaining).formatWeight()}"
+                        stringResource(R.string.bw_over, (-remaining).formatWeight())
                     }
 
                     Text(
@@ -451,14 +454,14 @@ private fun WeightGoalHeroCard(
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     Text(
-                        text = "Inicio: ${report.startWeightKg.formatWeight()}",
+                        text = stringResource(R.string.bw_start, report.startWeightKg.formatWeight()),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     val totalChange = report.currentWeightKg - report.startWeightKg
                     val sign = if (totalChange > 0) "+" else ""
                     Text(
-                        text = "Cambio total: $sign${totalChange.formatWeight()}",
+                        text = stringResource(R.string.bw_total_change, "$sign${totalChange.formatWeight()}"),
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.Medium,
                         color = if (totalChange <= 0) Color(0xFF4CAF50) else MaterialTheme.colorScheme.primary,
@@ -472,7 +475,7 @@ private fun WeightGoalHeroCard(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
-                    text = "Aún no has definido un peso meta.",
+                    text = stringResource(R.string.bw_no_goal),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -480,7 +483,7 @@ private fun WeightGoalHeroCard(
                 Button(onClick = onEditGoal) {
                     Icon(Icons.Default.Flag, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Definir Meta de Peso")
+                    Text(stringResource(R.string.bw_define_goal))
                 }
             }
         }
@@ -552,7 +555,7 @@ private fun HistoryEntryCard(
                 IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) {
                     Icon(
                         imageVector = Icons.Default.Delete,
-                        contentDescription = "Eliminar",
+                        contentDescription = stringResource(R.string.action_delete),
                         tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
                         modifier = Modifier.size(18.dp),
                     )
@@ -611,11 +614,11 @@ private fun GoalWeightDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         icon = { Icon(Icons.Default.Flag, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
-        title = { Text("Meta de Peso Corporal") },
+        title = { Text(stringResource(R.string.bw_goal_title)) },
         text = {
             Column {
                 Text(
-                    text = "Ingresa tu peso objetivo (${unit.label}) para calcular tu barra de progreso y trazar la meta en la gráfica.",
+                    text = stringResource(R.string.bw_goal_hint, unit.label),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -623,8 +626,8 @@ private fun GoalWeightDialog(
                 OutlinedTextField(
                     value = textValue,
                     onValueChange = { textValue = it },
-                    label = { Text("Peso meta (${unit.label})") },
-                    placeholder = { Text("ej. 75.0") },
+                    label = { Text(stringResource(R.string.bw_goal_label, unit.label)) },
+                    placeholder = { Text(stringResource(R.string.bw_goal_placeholder)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
@@ -638,18 +641,18 @@ private fun GoalWeightDialog(
                     onSave(parsed?.toKgFrom(unit))
                 }
             ) {
-                Text("Guardar")
+                Text(stringResource(R.string.action_save))
             }
         },
         dismissButton = {
             Row {
                 if (currentGoal != null) {
                     TextButton(onClick = { onSave(null) }) {
-                        Text("Quitar meta", color = MaterialTheme.colorScheme.error)
+                        Text(stringResource(R.string.bw_remove_goal), color = MaterialTheme.colorScheme.error)
                     }
                 }
                 TextButton(onClick = onDismiss) {
-                    Text("Cancelar")
+                    Text(stringResource(R.string.action_cancel))
                 }
             }
         }
@@ -669,11 +672,11 @@ private fun AddWeightDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         icon = { Icon(Icons.Default.MonitorWeight, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
-        title = { Text("Registrar Peso") },
+        title = { Text(stringResource(R.string.bw_log_title)) },
         text = {
             Column {
                 Text(
-                    text = "Ingresa tu peso medido (${unit.label}):",
+                    text = stringResource(R.string.bw_log_hint, unit.label),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -684,10 +687,10 @@ private fun AddWeightDialog(
                         textValue = it
                         isError = false
                     },
-                    label = { Text("Peso corporal (${unit.label})") },
-                    placeholder = { Text("ej. 80.5") },
+                    label = { Text(stringResource(R.string.bw_weight_label, unit.label)) },
+                    placeholder = { Text(stringResource(R.string.bw_weight_placeholder)) },
                     isError = isError,
-                    supportingText = if (isError) { { Text("Ingresa un peso numérico válido") } } else null,
+                    supportingText = if (isError) { { Text(stringResource(R.string.bw_invalid)) } } else null,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
@@ -705,12 +708,12 @@ private fun AddWeightDialog(
                     }
                 }
             ) {
-                Text("Registrar")
+                Text(stringResource(R.string.action_register))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancelar")
+                Text(stringResource(R.string.action_cancel))
             }
         }
     )

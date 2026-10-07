@@ -10,17 +10,33 @@ import kotlinx.coroutines.Dispatchers
 import java.util.Calendar
 import javax.inject.Inject
 
+/** [dayOfWeek] is a java.util.Calendar day (SUNDAY = 1 … SATURDAY = 7); the UI names it. */
 data class DayOfWeekStat(
     val dayOfWeek: Int,
-    val dayName: String,
-    val shortName: String,
     val count: Int,
     val percentage: Float,
 )
 
+/** Part of the day a workout started in; the UI names it in the app's language. */
+enum class TimeSlot(val startHour: Int, val endHour: Int) {
+    MORNING(5, 12),
+    AFTERNOON(12, 18),
+    EVENING(18, 24),
+    NIGHT(0, 5),
+    ;
+
+    companion object {
+        fun ofHour(hour: Int): TimeSlot = when (hour) {
+            in 5..11 -> MORNING
+            in 12..17 -> AFTERNOON
+            in 18..23 -> EVENING
+            else -> NIGHT
+        }
+    }
+}
+
 data class TimeSlotStat(
-    val slotName: String,
-    val timeRange: String,
+    val slot: TimeSlot,
     val count: Int,
     val percentage: Float,
 )
@@ -39,9 +55,10 @@ data class ActivityHeatmapStatsReport(
     val currentStreakWeeks: Int = 0,
     val longestStreakWeeks: Int = 0,
     val dayOfWeekDistribution: List<DayOfWeekStat> = emptyList(),
-    val favoriteDayName: String? = null,
+    /** Calendar day of the week with the most workouts, if any. */
+    val favoriteDayOfWeek: Int? = null,
     val timeSlotDistribution: List<TimeSlotStat> = emptyList(),
-    val favoriteTimeSlotName: String? = null,
+    val favoriteTimeSlot: TimeSlot? = null,
 )
 
 private const val HEATMAP_WEEKS = 53
@@ -78,7 +95,7 @@ class GetTrainingActivityHeatmapUseCase @Inject constructor(
 
             val minutesByDay = mutableMapOf<Long, Float>()
             val sessionsByDayOfWeek = mutableMapOf<Int, Int>()
-            val sessionsByTimeSlot = mutableMapOf<String, Int>()
+            val sessionsByTimeSlot = mutableMapOf<TimeSlot, Int>()
 
             var totalDurationSecs = 0
 
@@ -98,12 +115,7 @@ class GetTrainingActivityHeatmapUseCase @Inject constructor(
                 sessionsByDayOfWeek[dow] = (sessionsByDayOfWeek[dow] ?: 0) + 1
 
                 val hour = calendar.get(Calendar.HOUR_OF_DAY)
-                val slot = when (hour) {
-                    in 5..11 -> "Mañana"
-                    in 12..17 -> "Tarde"
-                    in 18..23 -> "Noche"
-                    else -> "Madrugada"
-                }
+                val slot = TimeSlot.ofHour(hour)
                 sessionsByTimeSlot[slot] = (sessionsByTimeSlot[slot] ?: 0) + 1
             }
 
@@ -201,47 +213,33 @@ class GetTrainingActivityHeatmapUseCase @Inject constructor(
 
             // Patrón por día de la semana
             val dayOrder = listOf(
-                Calendar.MONDAY to ("Lunes" to "Lun"),
-                Calendar.TUESDAY to ("Martes" to "Mar"),
-                Calendar.WEDNESDAY to ("Miércoles" to "Mié"),
-                Calendar.THURSDAY to ("Jueves" to "Jue"),
-                Calendar.FRIDAY to ("Viernes" to "Vie"),
-                Calendar.SATURDAY to ("Sábado" to "Sáb"),
-                Calendar.SUNDAY to ("Domingo" to "Dom"),
+                Calendar.MONDAY, Calendar.TUESDAY, Calendar.WEDNESDAY, Calendar.THURSDAY,
+                Calendar.FRIDAY, Calendar.SATURDAY, Calendar.SUNDAY,
             )
 
             val totalSessions = completedSessions.size
-            val dayStats = dayOrder.map { (calDay, names) ->
+            val dayStats = dayOrder.map { calDay ->
                 val count = sessionsByDayOfWeek[calDay] ?: 0
                 val pct = if (totalSessions > 0) (count.toFloat() / totalSessions.toFloat() * 100f) else 0f
                 DayOfWeekStat(
                     dayOfWeek = calDay,
-                    dayName = names.first,
-                    shortName = names.second,
                     count = count,
                     percentage = pct,
                 )
             }
-            val favoriteDay = dayStats.maxByOrNull { it.count }?.takeIf { it.count > 0 }?.dayName
+            val favoriteDay = dayStats.maxByOrNull { it.count }?.takeIf { it.count > 0 }?.dayOfWeek
 
             // Patrón por franja horaria
-            val slotOrder = listOf(
-                "Mañana" to "05:00 - 12:00",
-                "Tarde" to "12:00 - 18:00",
-                "Noche" to "18:00 - 24:00",
-                "Madrugada" to "00:00 - 05:00",
-            )
-            val slotStats = slotOrder.map { (slotName, range) ->
-                val count = sessionsByTimeSlot[slotName] ?: 0
+            val slotStats = TimeSlot.entries.map { slot ->
+                val count = sessionsByTimeSlot[slot] ?: 0
                 val pct = if (totalSessions > 0) (count.toFloat() / totalSessions.toFloat() * 100f) else 0f
                 TimeSlotStat(
-                    slotName = slotName,
-                    timeRange = range,
+                    slot = slot,
                     count = count,
                     percentage = pct,
                 )
             }
-            val favoriteSlot = slotStats.maxByOrNull { it.count }?.takeIf { it.count > 0 }?.slotName
+            val favoriteSlot = slotStats.maxByOrNull { it.count }?.takeIf { it.count > 0 }?.slot
 
             val totalHours = totalDurationSecs / 3600f
             val avgDurationMins = if (totalSessions > 0) totalDurationSecs / totalSessions / 60 else 0
@@ -261,9 +259,9 @@ class GetTrainingActivityHeatmapUseCase @Inject constructor(
                 currentStreakWeeks = currentWeeklyStreak,
                 longestStreakWeeks = maxWeeklyStreak,
                 dayOfWeekDistribution = dayStats,
-                favoriteDayName = favoriteDay,
+                favoriteDayOfWeek = favoriteDay,
                 timeSlotDistribution = slotStats,
-                favoriteTimeSlotName = favoriteSlot,
+                favoriteTimeSlot = favoriteSlot,
             )
         }.distinctUntilChanged().flowOn(Dispatchers.Default)
 }

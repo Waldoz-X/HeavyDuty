@@ -1,5 +1,8 @@
 package com.example.heavyduty.core.ui.components
 
+import androidx.compose.ui.res.pluralStringResource
+import com.example.heavyduty.core.common.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -83,12 +86,12 @@ fun WorkoutFeedCard(
 
         // Key metrics
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            FeedMetric(icon = Icons.Default.Timer, text = "${item.durationMinutes} min")
+            FeedMetric(icon = Icons.Default.Timer, text = stringResource(R.string.duration_minutes, item.durationMinutes))
             FeedMetric(icon = Icons.Default.MonitorWeight, text = item.volumeKg.formatTotalWeight())
             if (item.personalRecords > 0) {
                 FeedMetric(
                     icon = Icons.Default.EmojiEvents,
-                    text = "${item.personalRecords} PR${if (item.personalRecords > 1) "s" else ""}",
+                    text = pluralStringResource(R.plurals.feed_personal_records, item.personalRecords, item.personalRecords),
                     tint = MaterialTheme.colorScheme.primary,
                 )
             }
@@ -107,7 +110,7 @@ fun WorkoutFeedCard(
                 val remaining = item.exercises.size - MAX_VISIBLE_EXERCISES
                 if (remaining > 0) {
                     Text(
-                        text = "+$remaining más",
+                        text = stringResource(R.string.feed_more_exercises, remaining),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.primary,
                     )

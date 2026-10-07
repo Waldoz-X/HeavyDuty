@@ -1,13 +1,16 @@
 package com.example.heavyduty.core.ui.components
 
+import androidx.annotation.StringRes
+import com.example.heavyduty.core.common.R
+
 /**
  * A rolling date-range option for stats screens ("last 7 days", "last 30 days", …), shared so
  * every screen with a period dropdown ([HdPeriodSelector]) computes the same windows the same
  * way — including the "previous period" used for trend deltas.
  */
-enum class StatsPeriod(val days: Int, val label: String) {
-    LAST_7_DAYS(7, "Últimos 7 días"),
-    LAST_30_DAYS(30, "Últimos 30 días"),
+enum class StatsPeriod(val days: Int, @param:StringRes val labelRes: Int) {
+    LAST_7_DAYS(7, R.string.period_last_7_days),
+    LAST_30_DAYS(30, R.string.period_last_30_days),
 }
 
 /**

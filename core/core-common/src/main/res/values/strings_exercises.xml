@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:locale="es">
+    <string name="exercises_title">Ejercicios</string>
+    <string name="exercises_pick_title">Elegir ejercicios</string>
+    <plurals name="exercises_selected_count">
+        <item quantity="one">%1$d seleccionado</item>
+        <item quantity="other">%1$d seleccionados</item>
+        <item quantity="many">%1$d seleccionados</item>
+    </plurals>
+    <plurals name="exercises_add_to_routine">
+        <item quantity="one">Agregar %1$d a la rutina</item>
+        <item quantity="other">Agregar %1$d a la rutina</item>
+        <item quantity="many">Agregar %1$d a la rutina</item>
+    </plurals>
+    <string name="exercises_search_hint">Buscar: press banca, sentadilla, remo…</string>
+    <plurals name="exercises_count">
+        <item quantity="one">%1$d ejercicio</item>
+        <item quantity="other">%1$d ejercicios</item>
+        <item quantity="many">%1$d ejercicios</item>
+    </plurals>
+    <string name="exercises_empty_title">No se encontraron ejercicios</string>
+    <string name="exercises_empty_search">Prueba con otro término de búsqueda</string>
+    <string name="exercises_empty_default">Los ejercicios aparecerán aquí</string>
+    <string name="exercises_clear_filters">Quitar filtros</string>
+    <string name="exercises_selected">Seleccionado</string>
+    <string name="exercises_view">Ver ejercicio</string>
+    <string name="exercises_select">Seleccionar</string>
+    <string name="exercises_unselect">Quitar</string>
+    <string name="action_close">Cerrar</string>
+    <string name="exercise_detail_weight_unit">Unidad de peso</string>
+    <string name="exercise_detail_also_works">También trabaja: %1$s</string>
+    <string name="exercise_detail_view_progress">Ver progreso y récords</string>
+    <string name="exercise_detail_summary">Resumen</string>
+    <string name="exercise_detail_instructions">Instrucciones</string>
+    <string name="equipment_assisted">Asistido</string>
+    <string name="equipment_band">Banda</string>
+    <string name="equipment_barbell">Barra</string>
+    <string name="equipment_body_weight">Peso corporal</string>
+    <string name="equipment_bosu_ball">Bosu</string>
+    <string name="equipment_cable">Polea</string>
+    <string name="equipment_dumbbell">Mancuerna</string>
+    <string name="equipment_elliptical_machine">Elíptica</string>
+    <string name="equipment_ez_barbell">Barra Z</string>
+    <string name="equipment_hammer">Martillo</string>
+    <string name="equipment_kettlebell">Pesa rusa</string>
+    <string name="equipment_leverage_machine">Máquina de palanca</string>
+    <string name="equipment_medicine_ball">Balón medicinal</string>
+    <string name="equipment_olympic_barbell">Barra olímpica</string>
+    <string name="equipment_resistance_band">Banda de resistencia</string>
+    <string name="equipment_roller">Rodillo</string>
+    <string name="equipment_rope">Cuerda</string>
+    <string name="equipment_skierg_machine">Máquina SkiErg</string>
+    <string name="equipment_sled_machine">Trineo</string>
+    <string name="equipment_smith_machine">Máquina Smith</string>
+    <string name="equipment_stability_ball">Balón de estabilidad</string>
+    <string name="equipment_stationary_bike">Bicicleta estática</string>
+    <string name="equipment_stepmill_machine">Escaladora</string>
+    <string name="equipment_tire">Llanta</string>
+    <string name="equipment_trap_bar">Barra hexagonal</string>
+    <string name="equipment_upper_body_ergometer">Ergómetro de brazos</string>
+    <string name="equipment_weighted">Con peso</string>
+    <string name="equipment_wheel_roller">Rueda abdominal</string>
+    <string name="equipment_none">Sin equipo</string>
+</resources>
