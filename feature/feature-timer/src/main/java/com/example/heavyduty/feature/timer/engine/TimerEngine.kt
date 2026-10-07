@@ -68,6 +68,13 @@ class TimerEngine @Inject constructor(
 
     private var tickJob: Job? = null
 
+    /**
+     * The timer tab's own setup, put aside while a workout rest borrows the engine: when that
+     * rest ends or is skipped the tab gets it back, instead of keeping the rest's duration
+     * (+15 s adjustments included — it used to come back as 1:15 and lose e.g. a Tabata setup).
+     */
+    private var setupBeforeWorkoutRest: TimerUiState? = null
+
     fun onEvent(event: TimerUiEvent) {
         when (event) {
             is TimerUiEvent.OnModeSelect -> selectMode(event.mode)
@@ -92,6 +99,8 @@ class TimerEngine @Inject constructor(
     override fun startRest(seconds: Int) {
         tickJob?.cancel()
         notifications.cancelRestFinished()
+        // Rests can follow each other; keep the setup from before the first one.
+        if (setupBeforeWorkoutRest == null) setupBeforeWorkoutRest = _state.value.asIdleSetup()
         _state.update {
             TimerUiState(
                 mode = TimerMode.REST,
@@ -120,8 +129,17 @@ class TimerEngine @Inject constructor(
         reset()
     }
 
+    /** Gives the timer tab its own setup back once a workout rest is over (see [setupBeforeWorkoutRest]). */
+    private fun restoreSetupAfterWorkoutRest() {
+        val setup = setupBeforeWorkoutRest ?: return
+        setupBeforeWorkoutRest = null
+        _state.value = setup
+    }
+
     private fun selectMode(mode: TimerMode) {
         tickJob?.cancel()
+        // Picking a mode on the timer tab is a new setup: nothing to give back after the rest.
+        setupBeforeWorkoutRest = null
         val defaultSeconds = when (mode) {
             TimerMode.REST -> 60
             TimerMode.STOPWATCH -> 0
@@ -189,6 +207,7 @@ class TimerEngine @Inject constructor(
                     _effects.emit(TimerUiEffect.TimerFinished)
                     // Only a rest that ran out — skipping one means the lifter is already on it.
                     if (current.mode == TimerMode.REST) notifications.notifyRestFinished()
+                    restoreSetupAfterWorkoutRest()
                     stopService()
                 }
             }
@@ -207,17 +226,19 @@ class TimerEngine @Inject constructor(
 
     private fun reset() {
         tickJob?.cancel()
-        _state.update {
-            it.copy(
-                remainingSeconds = it.totalSeconds,
-                elapsedSeconds = 0,
-                isRunning = false,
-                isPaused = false,
-                currentRound = 1,
-            )
-        }
+        _state.update { it.asIdleSetup() }
+        restoreSetupAfterWorkoutRest()
         stopService()
     }
+
+    /** The same timer, stopped and back at its start (full duration, round 1). */
+    private fun TimerUiState.asIdleSetup(): TimerUiState = copy(
+        remainingSeconds = totalSeconds,
+        elapsedSeconds = 0,
+        isRunning = false,
+        isPaused = false,
+        currentRound = 1,
+    )
 
     private fun startService() {
         runCatching {

@@ -134,4 +134,49 @@ class TimerEngineTest {
         verify(exactly = 1) { notifications.notifyRestFinished() }
         verify(exactly = 2) { notifications.cancelRestFinished() }
     }
+
+    @Test
+    fun `a skipped workout rest gives the timer tab its own setup back`() = runTest {
+        val engine = TimerEngine(context, StandardTestDispatcher(testScheduler), notifications)
+        engine.onEvent(TimerUiEvent.OnModeSelect(TimerMode.TABATA))
+
+        engine.startRest(60)
+        engine.adjustRest(15)
+        runCurrent()
+        engine.skipRest()
+
+        val state = engine.state.value
+        assertEquals(TimerMode.TABATA, state.mode)
+        assertEquals(20, state.totalSeconds)
+        assertEquals(20, state.remainingSeconds)
+        assertEquals(8, state.rounds)
+        assertFalse(state.isRunning)
+    }
+
+    @Test
+    fun `a workout rest that runs out also gives the setup back`() = runTest {
+        val engine = TimerEngine(context, StandardTestDispatcher(testScheduler), notifications)
+        engine.onEvent(TimerUiEvent.OnModeSelect(TimerMode.AMRAP))
+
+        engine.startRest(2)
+        engine.startRest(3) // back-to-back rests keep the setup from before the first one
+        advanceUntilIdle()
+
+        assertEquals(TimerMode.AMRAP, engine.state.value.mode)
+        assertEquals(600, engine.state.value.totalSeconds)
+        assertFalse(engine.state.value.isRunning)
+    }
+
+    @Test
+    fun `picking a mode during a workout rest keeps that choice`() = runTest {
+        val engine = TimerEngine(context, StandardTestDispatcher(testScheduler), notifications)
+        engine.onEvent(TimerUiEvent.OnModeSelect(TimerMode.TABATA))
+        engine.startRest(60)
+
+        engine.onEvent(TimerUiEvent.OnModeSelect(TimerMode.EMOM))
+        engine.onEvent(TimerUiEvent.OnReset)
+
+        assertEquals(TimerMode.EMOM, engine.state.value.mode)
+        assertEquals(60, engine.state.value.totalSeconds)
+    }
 }
