@@ -1,5 +1,9 @@
 package com.example.heavyduty
 
+import androidx.compose.ui.unit.sp
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.foundation.text.TextAutoSize
+import androidx.compose.foundation.text.BasicText
 import android.app.LocaleManager
 import android.content.Context
 import android.content.Intent
@@ -268,7 +272,7 @@ private fun HeavyDutyMainScreen(
                                         contentDescription = destination.label,
                                     )
                                 },
-                                label = { Text(text = destination.label) },
+                                label = { NavBarLabel(destination.label) },
                             )
                         }
                     }
@@ -283,4 +287,22 @@ private fun HeavyDutyMainScreen(
             }
         }
     }
+}
+
+/**
+ * Bottom-bar label kept on one line: with a large system font, "Temporizador" used to wrap into
+ * "Temporizado / r". It shrinks only as much as needed to fit, and only when it doesn't.
+ */
+@Composable
+private fun NavBarLabel(text: String) {
+    val style = MaterialTheme.typography.labelMedium
+    BasicText(
+        text = text,
+        style = style.copy(color = LocalContentColor.current),
+        maxLines = 1,
+        autoSize = TextAutoSize.StepBased(minFontSize = 8.sp, maxFontSize = style.fontSize),
+        // A little room at the sides: the last tab sits at the screen edge, and a label exactly
+        // as wide as its tab had its last letter clipped there.
+        modifier = Modifier.padding(horizontal = 4.dp),
+    )
 }

@@ -1,5 +1,8 @@
 package com.example.heavyduty.feature.workout.presentation
 
+import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalResources
 import android.Manifest
 import android.content.pm.PackageManager
@@ -474,16 +477,25 @@ private fun RoutineStartCard(routine: Routine, onStart: () -> Unit) {
 
 // ============================================================== active workout
 
+/** Internal (not private) so UI tests can drive it with a plain state, no ViewModel or Hilt. */
 @Composable
-private fun ActiveWorkoutContent(
+internal fun ActiveWorkoutContent(
     uiState: ActiveWorkoutUiState,
     onEvent: (ActiveWorkoutUiEvent) -> Unit,
 ) {
     var showFinishDialog by rememberSaveable { mutableStateOf(false) }
     val currentExercise = uiState.currentExercise
 
+    // A phone on its side is too short to pin the header and the exercise strip above the
+    // list (only a sliver of the set table was left), so there they scroll with it. The rest
+    // banner stays pinned either way: it's brief and the one thing worth seeing at a glance.
+    val compactHeight = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.height.toDp() } < COMPACT_HEIGHT
+    val showExerciseStrip = uiState.routineExercises.isNotEmpty()
+
     Column(modifier = Modifier.fillMaxSize()) {
-        WorkoutHeader(uiState = uiState, onFinish = { showFinishDialog = true })
+        if (!compactHeight) {
+            WorkoutHeader(uiState = uiState, onFinish = { showFinishDialog = true })
+        }
 
         // Keeps drawing the last rest state while the banner animates out.
         var lastRest by remember { mutableStateOf(uiState.restTimer) }
@@ -502,7 +514,7 @@ private fun ActiveWorkoutContent(
             }
         }
 
-        if (uiState.routineExercises.isNotEmpty()) {
+        if (!compactHeight && showExerciseStrip) {
             ExerciseStrip(uiState = uiState, onSelect = { onEvent(ActiveWorkoutUiEvent.OnSelectExercise(it)) })
         }
 
@@ -513,6 +525,20 @@ private fun ActiveWorkoutContent(
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            if (compactHeight) {
+                item(key = "workoutHeader") {
+                    Box(modifier = Modifier.bleedHorizontally(16.dp)) {
+                        WorkoutHeader(uiState = uiState, onFinish = { showFinishDialog = true })
+                    }
+                }
+                if (showExerciseStrip) {
+                    item(key = "exerciseStrip") {
+                        Box(modifier = Modifier.bleedHorizontally(16.dp)) {
+                            ExerciseStrip(uiState = uiState, onSelect = { onEvent(ActiveWorkoutUiEvent.OnSelectExercise(it)) })
+                        }
+                    }
+                }
+            }
             if (currentExercise != null) {
                 // The exercise's own items are keyed by it, so switching exercises fades the old
                 // ones out and the new ones in (animateItem) instead of swapping them abruptly.
@@ -625,6 +651,17 @@ private fun ActiveWorkoutContent(
 
 /** The next exercise still short of its planned sets, once the current one has all of them. */
 private const val EXERCISE_SWITCH_MS = 260
+
+/** Below this window height (a phone in landscape) the header scrolls with the list. */
+private val COMPACT_HEIGHT = 480.dp
+
+/** Lets a list item span the list's side padding, edge to edge like the pinned version. */
+private fun Modifier.bleedHorizontally(padding: Dp): Modifier = layout { measurable, constraints ->
+    val extra = padding.roundToPx() * 2
+    val width = constraints.maxWidth + extra
+    val placeable = measurable.measure(constraints.copy(minWidth = width, maxWidth = width))
+    layout(constraints.maxWidth, placeable.height) { placeable.place(-extra / 2, 0) }
+}
 private const val DELETE_ROLLBACK_MS = 1_500L
 
 private fun nextExerciseIndex(uiState: ActiveWorkoutUiState): Int? {
@@ -1472,7 +1509,9 @@ private fun FinishWorkoutDialog(
     val planned = uiState.plannedSetCount
     val done = uiState.completedPlannedSetCount
     val message = if (planned > 0 && done < planned) {
-        stringResource(R.string.workout_finish_dialog_incomplete, done, planned)
+        // Keyed on what's missing: "Te falta 1 serie… Quedará" / "Te faltan 3 series… Quedarán".
+        val missing = planned - done
+        pluralStringResource(R.plurals.workout_finish_dialog_incomplete, missing, done, planned, missing)
     } else {
         stringResource(R.string.workout_finish_dialog_logged, uiState.completedSets.count { !it.isWarmup })
     }
