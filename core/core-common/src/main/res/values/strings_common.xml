@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Shared labels and actions used across screens. -->
-<resources xmlns:tools="http://schemas.android.com/tools" tools:locale="es">
+<!-- Spanish plurals keep "many": Android 14+ uses it for millions (1 000 000 de series), while
+     Android Studio's older plural table doesn't know it yet and flags it as unused. -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:locale="es" tools:ignore="UnusedQuantity">
     <!-- Navigation -->
     <string name="nav_home">Inicio</string>
     <string name="nav_workout">Entrenar</string>

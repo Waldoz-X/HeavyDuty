@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools" tools:locale="es">
+<!-- Spanish plurals keep "many": Android 14+ uses it for millions (1 000 000 de series), while
+     Android Studio's older plural table doesn't know it yet and flags it as unused. -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:locale="es" tools:ignore="UnusedQuantity">
     <string name="stats_title">Estadísticas</string>
     <string name="stats_series_title">Series por músculo</string>
     <string name="stats_series_desc">Cuántas series efectivas hiciste por grupo muscular.</string>

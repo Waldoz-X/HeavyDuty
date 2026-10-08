@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools" tools:locale="es">
+<!-- Spanish plurals keep "many": Android 14+ uses it for millions (1 000 000 de series), while
+     Android Studio's older plural table doesn't know it yet and flags it as unused. -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:locale="es" tools:ignore="UnusedQuantity">
     <!-- Active workout: messages -->
     <string name="workout_already_active">Ya hay un entrenamiento en curso</string>
     <string name="workout_routine_not_found">No se encontró la rutina</string>
