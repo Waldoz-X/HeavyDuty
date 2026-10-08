@@ -96,6 +96,7 @@
     <string name="monthly_sessions_per_week">%1$s sessions/wk</string>
     <string name="monthly_workouts_per_week">Workouts per week</string>
     <string name="monthly_volume_per_week">Volume per week (%1$s)</string>
+    <string name="monthly_week_label">Week %1$d</string>
     <string name="monthly_prev_month">Previous month</string>
     <string name="monthly_next_month">Next month</string>
     <string name="monthly_muscle_distribution">Muscle distribution</string>

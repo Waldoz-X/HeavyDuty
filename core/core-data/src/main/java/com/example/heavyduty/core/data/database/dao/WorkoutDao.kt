@@ -61,9 +61,15 @@ interface WorkoutDao {
     )
     fun getAllCompletedSets(): Flow<List<WorkoutSetEntity>>
 
+    /**
+     * Sets of finished workouts that *started* in the range, matching [getSessionsByDateRange]: a
+     * workout that runs past midnight at the end of a period counts whole in the period it began,
+     * instead of its workout landing in one period and its later sets in the next (where they
+     * were then dropped for not belonging to any of that period's workouts).
+     */
     @Query(
         "SELECT s.* FROM workout_sets s INNER JOIN workout_sessions w ON s.sessionId = w.id " +
-            "WHERE s.isCompleted = 1 AND w.status = 'COMPLETED' AND s.completedAt BETWEEN :startTime AND :endTime",
+            "WHERE s.isCompleted = 1 AND w.status = 'COMPLETED' AND w.startTime BETWEEN :startTime AND :endTime",
     )
     fun getCompletedSetsByDateRange(startTime: Long, endTime: Long): Flow<List<WorkoutSetEntity>>
 

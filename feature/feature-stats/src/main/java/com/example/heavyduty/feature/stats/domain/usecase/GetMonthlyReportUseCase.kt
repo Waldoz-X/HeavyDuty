@@ -35,11 +35,9 @@ class GetMonthlyReportUseCase @Inject constructor(
         }
         val monthStart = calendar.timeInMillis
         val maxWeek = calendar.getActualMaximum(Calendar.WEEK_OF_MONTH)
-        calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH))
-        calendar.set(Calendar.HOUR_OF_DAY, 23)
-        calendar.set(Calendar.MINUTE, 59)
-        calendar.set(Calendar.SECOND, 59)
-        val monthEnd = calendar.timeInMillis
+        // The month's last millisecond — "23:59:59" alone would drop its final second.
+        calendar.add(Calendar.MONTH, 1)
+        val monthEnd = calendar.timeInMillis - 1
 
         // Mes anterior para métricas comparativas
         val prevCal = Calendar.getInstance().apply {
@@ -52,11 +50,7 @@ class GetMonthlyReportUseCase @Inject constructor(
             set(Calendar.MILLISECOND, 0)
         }
         val prevMonthStart = prevCal.timeInMillis
-        prevCal.set(Calendar.DAY_OF_MONTH, prevCal.getActualMaximum(Calendar.DAY_OF_MONTH))
-        prevCal.set(Calendar.HOUR_OF_DAY, 23)
-        prevCal.set(Calendar.MINUTE, 59)
-        prevCal.set(Calendar.SECOND, 59)
-        val prevMonthEnd = prevCal.timeInMillis
+        val prevMonthEnd = monthStart - 1
 
         return combine(
             workoutRepository.getSessionsByDateRange(monthStart, monthEnd),
@@ -111,10 +105,10 @@ class GetMonthlyReportUseCase @Inject constructor(
             }
 
             val workoutsPerWeek = (1..maxWeek).map { week ->
-                "Semana $week" to (workoutsPerWeekMap[week] ?: 0)
+                week to (workoutsPerWeekMap[week] ?: 0)
             }
             val volumePerWeek = (1..maxWeek).map { week ->
-                "Semana $week" to (volumePerWeekMap[week] ?: 0f)
+                week to (volumePerWeekMap[week] ?: 0f)
             }
 
             // Desglose de contribución por músculo

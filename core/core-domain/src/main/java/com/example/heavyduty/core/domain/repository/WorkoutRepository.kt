@@ -16,6 +16,7 @@ interface WorkoutRepository {
     fun getCompletedSessionsByRoutineId(routineId: Long): Flow<List<WorkoutSession>>
     fun getSetsByExerciseId(exerciseId: Long): Flow<List<WorkoutSet>>
     fun getAllCompletedSets(): Flow<List<WorkoutSet>>
+    /** Working and warm-up sets of finished workouts that started in the range (like [getSessionsByDateRange]). */
     fun getCompletedSetsByDateRange(startTime: Long, endTime: Long): Flow<List<WorkoutSet>>
     fun getActiveSession(): Flow<WorkoutSession?>
     suspend fun insertSession(session: WorkoutSession): Long

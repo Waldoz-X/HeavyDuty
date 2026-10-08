@@ -211,7 +211,9 @@ fun InformeMensualScreen(
                                 )
                                 Spacer(modifier = Modifier.height(16.dp))
                                 HdBarChart(
-                                    data = report.workoutsPerWeek.map { it.first to it.second.toFloat() },
+                                    data = report.workoutsPerWeek.map { (week, count) ->
+                                        stringResource(R.string.monthly_week_label, week) to count.toFloat()
+                                    },
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .height(180.dp),
@@ -233,7 +235,9 @@ fun InformeMensualScreen(
                                 Spacer(modifier = Modifier.height(16.dp))
                                 val unit = LocalWeightUnit.current
                                 HdBarChart(
-                                    data = report.volumePerWeek.map { (week, kg) -> week to kg.kgTo(unit) },
+                                    data = report.volumePerWeek.map { (week, kg) ->
+                                        stringResource(R.string.monthly_week_label, week) to kg.kgTo(unit)
+                                    },
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .height(180.dp),

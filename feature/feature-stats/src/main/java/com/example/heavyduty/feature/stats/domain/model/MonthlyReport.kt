@@ -43,7 +43,7 @@ data class MonthlyReport(
     // Top ejercicios del mes
     val topExercises: List<TopExerciseMonthly> = emptyList(),
 
-    // Desglose semanal
-    val workoutsPerWeek: List<Pair<String, Int>> = emptyList(),
-    val volumePerWeek: List<Pair<String, Float>> = emptyList(),
+    // Desglose semanal, por número de semana del mes (1, 2, …); la UI pone la etiqueta.
+    val workoutsPerWeek: List<Pair<Int, Int>> = emptyList(),
+    val volumePerWeek: List<Pair<Int, Float>> = emptyList(),
 )
