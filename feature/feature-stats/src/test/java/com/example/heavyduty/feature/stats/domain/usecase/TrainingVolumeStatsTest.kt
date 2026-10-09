@@ -5,6 +5,8 @@ import com.example.heavyduty.core.domain.model.ExerciseType
 import com.example.heavyduty.core.domain.model.MuscleGroup
 import com.example.heavyduty.core.domain.model.WeightUnit
 import com.example.heavyduty.core.domain.model.WorkoutStatus
+import com.example.heavyduty.core.testing.FakeExerciseRepository
+import com.example.heavyduty.core.testing.FakeWorkoutRepository
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -50,7 +52,7 @@ class TrainingVolumeStatsTest {
     )
 
     private val workouts = FakeWorkoutRepository(sessions, sets)
-    private val exercises = FakeExerciseRepository()
+    private val exercises = FakeExerciseRepository(EXERCISES)
 
     @Test
     fun `period summary counts only finished workouts and their working sets`() = runBlocking {

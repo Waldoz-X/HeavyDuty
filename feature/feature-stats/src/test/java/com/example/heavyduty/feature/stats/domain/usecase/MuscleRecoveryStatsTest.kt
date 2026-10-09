@@ -2,6 +2,8 @@ package com.example.heavyduty.feature.stats.domain.usecase
 
 import com.example.heavyduty.core.domain.model.MuscleGroup
 import com.example.heavyduty.core.domain.model.WorkoutStatus
+import com.example.heavyduty.core.testing.FakeExerciseRepository
+import com.example.heavyduty.core.testing.FakeWorkoutRepository
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -14,7 +16,7 @@ import kotlin.math.pow
 class MuscleRecoveryStatsTest {
 
     private val now = System.currentTimeMillis()
-    private val exercises = FakeExerciseRepository()
+    private val exercises = FakeExerciseRepository(EXERCISES)
 
     private fun fatigue(vararg sets: com.example.heavyduty.core.domain.model.WorkoutSet, status: WorkoutStatus = WorkoutStatus.COMPLETED) =
         runBlocking {

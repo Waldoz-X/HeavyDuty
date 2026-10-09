@@ -96,10 +96,10 @@ class ActiveWorkoutViewModel @Inject constructor(
 
     fun onEvent(event: ActiveWorkoutUiEvent) {
         when (event) {
-            is ActiveWorkoutUiEvent.OnRepsChange -> _uiState.update { it.copy(repsInput = event.reps) }
-            is ActiveWorkoutUiEvent.OnWeightChange -> _uiState.update { it.copy(weightInput = event.weight) }
+            is ActiveWorkoutUiEvent.OnRepsChange -> updateInputs { it.copy(repsInput = event.reps) }
+            is ActiveWorkoutUiEvent.OnWeightChange -> updateInputs { it.copy(weightInput = event.weight) }
             ActiveWorkoutUiEvent.OnToggleWarmupInput -> _uiState.update { it.copy(isWarmupInput = !it.isWarmupInput) }
-            is ActiveWorkoutUiEvent.OnEffortInputChange -> _uiState.update { it.copy(effortInput = event.value) }
+            is ActiveWorkoutUiEvent.OnEffortInputChange -> updateInputs { it.copy(effortInput = event.value) }
             ActiveWorkoutUiEvent.OnToggleTimedInput -> toggleTimedInput()
             ActiveWorkoutUiEvent.OnToggleWorkTimer -> toggleWorkTimer()
             is ActiveWorkoutUiEvent.OnSelectExercise -> selectExercise(event.index)
@@ -203,8 +203,8 @@ class ActiveWorkoutViewModel @Inject constructor(
         if (session.id != loadedSessionId) {
             loadedSessionId = session.id
             val exercises = mergeLoggedExercises(loadSessionExercises(session, sets), sets)
-            val savedIndex = savedStateHandle.get<Int>(KEY_EXERCISE_INDEX)
-                .takeIf { savedStateHandle.get<Long>(KEY_SESSION_ID) == session.id }
+            val sameSession = savedStateHandle.get<Long>(KEY_SESSION_ID) == session.id
+            val savedIndex = savedStateHandle.get<Int>(KEY_EXERCISE_INDEX).takeIf { sameSession }
             val index = (savedIndex ?: resumeExerciseIndex(exercises, sets))
                 .coerceIn(0, (exercises.size - 1).coerceAtLeast(0))
             savedStateHandle[KEY_SESSION_ID] = session.id
@@ -220,6 +220,10 @@ class ActiveWorkoutViewModel @Inject constructor(
                     routineExercises = exercises,
                     completedSets = sets,
                     currentExerciseIndex = index,
+                    // What was typed but not logged yet, if Android closed the app meanwhile.
+                    repsInput = savedStateHandle.get<String>(KEY_REPS_INPUT).takeIf { sameSession }.orEmpty(),
+                    weightInput = savedStateHandle.get<String>(KEY_WEIGHT_INPUT).takeIf { sameSession }.orEmpty(),
+                    effortInput = savedStateHandle.get<String>(KEY_EFFORT_INPUT).takeIf { sameSession }.orEmpty(),
                 )
             }
             startClock(session.startTime)
@@ -296,7 +300,7 @@ class ActiveWorkoutViewModel @Inject constructor(
         val state = _uiState.value
         if (index == state.currentExerciseIndex || index !in state.routineExercises.indices) return
         savedStateHandle[KEY_EXERCISE_INDEX] = index
-        _uiState.update {
+        updateInputs {
             it.copy(
                 currentExerciseIndex = index,
                 repsInput = "",
@@ -341,12 +345,24 @@ class ActiveWorkoutViewModel @Inject constructor(
         val state = _uiState.value
         val suggestion = state.suggestedPrescription ?: return
         val unit = state.currentUnit
-        _uiState.update {
+        updateInputs {
             it.copy(
                 repsInput = suggestion.reps?.toString() ?: it.repsInput,
                 weightInput = suggestion.weightKg?.takeIf { kg -> kg > 0f }?.kgToRounded(unit)?.let(::formatInput) ?: it.weightInput,
             )
         }
+    }
+
+    /**
+     * Changes the state and remembers the typed-but-not-logged reps, weight and effort in
+     * [savedStateHandle], so they survive Android closing the app in the background mid-set.
+     */
+    private inline fun updateInputs(change: (ActiveWorkoutUiState) -> ActiveWorkoutUiState) {
+        _uiState.update(change)
+        val state = _uiState.value
+        savedStateHandle[KEY_REPS_INPUT] = state.repsInput
+        savedStateHandle[KEY_WEIGHT_INPUT] = state.weightInput
+        savedStateHandle[KEY_EFFORT_INPUT] = state.effortInput
     }
 
     /** This exercise's logged sets from every OTHER session — excludes today's own sets. */
@@ -367,7 +383,7 @@ class ActiveWorkoutViewModel @Inject constructor(
         val routineExercise = state.currentExercise ?: return
         val newUnit = routineExercise.displayUnit.other()
         val updated = routineExercise.copy(weightUnit = newUnit)
-        _uiState.update {
+        updateInputs {
             it.copy(
                 routineExercises = it.routineExercises.mapIndexed { i, entry -> if (i == index) updated else entry },
                 // What was typed was in the old unit; clear it rather than silently reinterpret it.
@@ -535,7 +551,7 @@ class ActiveWorkoutViewModel @Inject constructor(
                 )
                 resetWorkTimer()
                 // Shown right away; the database emission that follows carries the same set.
-                _uiState.update {
+                updateInputs {
                     it.copy(
                         completedSets = it.completedSets.filter { set -> set.id != setId } + loggedSet,
                         repsInput = "",
@@ -681,6 +697,9 @@ class ActiveWorkoutViewModel @Inject constructor(
         const val KEY_SESSION_ID = "loadedSessionId"
         const val KEY_EXERCISE_INDEX = "currentExerciseIndex"
         const val KEY_ADDED_EXERCISE_IDS = "addedExerciseIds"
+        const val KEY_REPS_INPUT = "repsInput"
+        const val KEY_WEIGHT_INPUT = "weightInput"
+        const val KEY_EFFORT_INPUT = "effortInput"
         const val FREE_WORKOUT_NAME = "Entrenamiento libre"
         const val PICKER_RESULTS = 50
 

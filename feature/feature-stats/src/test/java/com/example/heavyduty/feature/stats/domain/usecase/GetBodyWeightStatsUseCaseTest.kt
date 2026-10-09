@@ -1,6 +1,8 @@
 package com.example.heavyduty.feature.stats.domain.usecase
 
 import com.example.heavyduty.core.domain.model.BodyWeightEntry
+import com.example.heavyduty.core.testing.FakeBodyWeightRepository
+import com.example.heavyduty.core.testing.FakeUserPreferencesRepository
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals

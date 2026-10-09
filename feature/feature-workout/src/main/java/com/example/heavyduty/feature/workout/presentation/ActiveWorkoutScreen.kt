@@ -104,6 +104,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -1593,7 +1594,7 @@ private fun ExercisePicker(
 @Composable
 private fun PlateCalculatorDialog(unit: WeightUnit, initialWeight: String, onDismiss: () -> Unit) {
     var targetInput by remember { mutableStateOf(initialWeight) }
-    var barWeight by remember { mutableStateOf(unit.barPresets().first()) }
+    var barWeight by remember { mutableFloatStateOf(unit.barPresets().first()) }
 
     Dialog(onDismissRequest = onDismiss) {
         HdCard(modifier = Modifier.fillMaxWidth()) {

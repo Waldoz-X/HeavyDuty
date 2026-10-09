@@ -60,6 +60,7 @@ dependencies {
 
     // Testing
     testImplementation(libs.junit)
+    testImplementation(project(":core:core-testing"))
 }
 
 kotlin {

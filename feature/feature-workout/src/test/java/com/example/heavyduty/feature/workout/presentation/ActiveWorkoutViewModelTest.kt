@@ -61,7 +61,10 @@ class ActiveWorkoutViewModelTest {
     private val workoutRepository = FakeWorkoutRepository()
     private val restTimer = FakeRestTimerController()
 
-    private fun createViewModel(routineId: Long? = null): ActiveWorkoutViewModel {
+    private fun createViewModel(
+        routineId: Long? = null,
+        savedState: SavedStateHandle = SavedStateHandle(routineId?.let { mapOf("routineId" to it) } ?: emptyMap()),
+    ): ActiveWorkoutViewModel {
         val preferences = mockk<UserPreferencesRepository> {
             every { effortTrackingEnabled } returns flowOf(false)
             every { preferredEffortScale } returns flowOf("RIR")
@@ -75,7 +78,7 @@ class ActiveWorkoutViewModelTest {
             exerciseRepository = FakeExerciseRepository(listOf(bench, row)),
             userPreferencesRepository = preferences,
             restTimerController = restTimer,
-            savedStateHandle = SavedStateHandle(routineId?.let { mapOf("routineId" to it) } ?: emptyMap()),
+            savedStateHandle = savedState,
         )
     }
 
@@ -151,6 +154,38 @@ class ActiveWorkoutViewModelTest {
         assertEquals(1, state.currentExerciseIndex)
         assertEquals(2, state.setsFor(row.id).size)
         assertEquals(3, state.currentSetNumber)
+    }
+
+    @Test
+    fun `what was typed but not logged comes back after Android closes the app`() {
+        // The same SavedStateHandle contents are what Android restores after killing the process.
+        val savedState = SavedStateHandle()
+        val before = createViewModel(savedState = savedState)
+        before.onEvent(ActiveWorkoutUiEvent.OnStartRoutine(routine.id))
+        before.logSet("8")
+        before.onEvent(ActiveWorkoutUiEvent.OnSelectExercise(1))
+        before.onEvent(ActiveWorkoutUiEvent.OnRepsChange("7"))
+        before.onEvent(ActiveWorkoutUiEvent.OnWeightChange("55"))
+
+        val after = createViewModel(savedState = savedState).uiState.value
+
+        assertEquals(1, after.currentExerciseIndex)
+        assertEquals("7", after.repsInput)
+        assertEquals("55", after.weightInput)
+        assertEquals(1, after.setsFor(bench.id).size)
+    }
+
+    @Test
+    fun `a logged set doesn't come back as typed text`() {
+        val savedState = SavedStateHandle()
+        val before = createViewModel(savedState = savedState)
+        before.onEvent(ActiveWorkoutUiEvent.OnStartRoutine(routine.id))
+        before.logSet("8", weight = "70")
+
+        val after = createViewModel(savedState = savedState).uiState.value
+
+        assertEquals("", after.repsInput)
+        assertEquals("", after.weightInput)
     }
 
     @Test

@@ -6,6 +6,9 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.heavyduty.feature.profile.domain.model.ProfileStats
+import com.example.heavyduty.feature.profile.domain.model.personalRecordSetIds
+import com.example.heavyduty.feature.profile.domain.model.weeklyTrainingHours
+import com.example.heavyduty.core.domain.model.currentStreakDays
 import com.example.heavyduty.feature.profile.domain.usecase.ExportBackupUseCase
 import com.example.heavyduty.feature.profile.domain.usecase.GetBodyDiagramGenderUseCase
 import com.example.heavyduty.feature.profile.domain.usecase.GetDisplayNameUseCase
@@ -36,7 +39,6 @@ import com.example.heavyduty.core.domain.repository.ExerciseRepository
 import com.example.heavyduty.core.domain.repository.UserPreferencesRepository
 import com.example.heavyduty.core.ui.components.WorkoutFeedItem
 import com.example.heavyduty.core.common.R
-import java.util.Calendar
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -75,23 +77,7 @@ class ProfileViewModel @Inject constructor(
 
             // A set counts as a PR the first time it beats the heaviest weight ever
             // lifted for that exercise, walking through history chronologically.
-            val personalRecordSetIds = run {
-                val bestWeightByExercise = mutableMapOf<Long, Float>()
-                sets
-                    .filter { it.weight != null && it.completedAt != null }
-                    .sortedBy { it.completedAt }
-                    .mapNotNull { set ->
-                        val weight = set.weight ?: return@mapNotNull null
-                        val currentBest = bestWeightByExercise[set.exerciseId] ?: 0f
-                        if (weight > currentBest) {
-                            bestWeightByExercise[set.exerciseId] = weight
-                            set.id
-                        } else {
-                            null
-                        }
-                    }
-                    .toSet()
-            }
+            val personalRecordSetIds = personalRecordSetIds(sets)
 
             // Group sets by session for O(N) lookup
             val setsBySession = sets.groupBy { it.sessionId }
@@ -123,27 +109,17 @@ class ProfileViewModel @Inject constructor(
                 )
             }
 
-            // Process Chart Data (Last 4 weeks hours)
-            val chartData = mutableListOf<Pair<String, Float>>()
-            val cal = Calendar.getInstance()
+            // Hours per week over the last 4 weeks, oldest first, labeled by each week's start.
             val format = SimpleDateFormat("dd MMM", Locale.getDefault())
-
-            repeat(4) { _ ->
-                val end = cal.timeInMillis
-                cal.add(Calendar.DAY_OF_YEAR, -7)
-                val start = cal.timeInMillis
-                
-                val weekSessions = sortedSessions.filter { it.startTime in start..end }
-                val weekHours = weekSessions.sumOf { it.totalDurationSecs } / 3600f
-                chartData.add(Pair(format.format(cal.time), weekHours))
-            }
+            val chartData = weeklyTrainingHours(sessions, now = System.currentTimeMillis())
+                .map { (weekStart, hours) -> format.format(java.util.Date(weekStart)) to hours }
 
             ProfileFlowData(
                 name = name,
                 stats = stats,
                 feedItems = feedItems,
                 chartData = chartData,
-                streak = calculateCurrentStreakDays(sessions),
+                streak = currentStreakDays(sessions),
             )
         }.flowOn(Dispatchers.Default)
 
@@ -190,40 +166,6 @@ class ProfileViewModel @Inject constructor(
         val preferredEffortScale: String,
         val preferredWeightUnit: WeightUnit,
     )
-
-    /**
-     * Consecutive days (ending today) with at least one completed workout.
-     * A missed "today" doesn't break a streak that was active as of yesterday.
-     */
-    private fun calculateCurrentStreakDays(sessions: List<com.example.heavyduty.core.domain.model.WorkoutSession>): Int {
-        val trainedDays = sessions
-            .filter { it.endTime != null }
-            .map { dayStartMillis(it.startTime) }
-            .toSet()
-        if (trainedDays.isEmpty()) return 0
-
-        val cursor = Calendar.getInstance()
-        if (!trainedDays.contains(dayStartMillis(cursor.timeInMillis))) {
-            cursor.add(Calendar.DAY_OF_YEAR, -1)
-        }
-
-        var streak = 0
-        while (trainedDays.contains(dayStartMillis(cursor.timeInMillis))) {
-            streak++
-            cursor.add(Calendar.DAY_OF_YEAR, -1)
-        }
-        return streak
-    }
-
-    private fun dayStartMillis(timestamp: Long): Long {
-        val cal = Calendar.getInstance()
-        cal.timeInMillis = timestamp
-        cal.set(Calendar.HOUR_OF_DAY, 0)
-        cal.set(Calendar.MINUTE, 0)
-        cal.set(Calendar.SECOND, 0)
-        cal.set(Calendar.MILLISECOND, 0)
-        return cal.timeInMillis
-    }
 
     private fun formatRelativeTime(timestamp: Long): String {
         val diff = System.currentTimeMillis() - timestamp

@@ -19,6 +19,7 @@ android {
 }
 
 dependencies {
+    api(project(":core:core-domain"))
     api(libs.junit)
     api(libs.kotlinx.coroutines.core)
     api(libs.kotlinx.coroutines.test)

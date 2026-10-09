@@ -27,15 +27,16 @@ class GetWeeklyScheduleOverviewUseCase @Inject constructor(
     private val routineRepository: RoutineRepository,
     private val workoutRepository: WorkoutRepository,
 ) {
-    operator fun invoke(weekOffset: Int = 0): Flow<List<DayPlanUi>> =
+    /** [today] is read on every update (so the plan rolls over at midnight); tests pin it. */
+    operator fun invoke(weekOffset: Int = 0, today: () -> LocalDate = { LocalDate.now() }): Flow<List<DayPlanUi>> =
         combine(
             calendarRepository.getWeekSchedule(),
             routineRepository.getAllRoutines(),
             workoutRepository.getAllSessions(),
         ) { schedule, routines, sessions ->
             val routineById = routines.associateBy { it.id }
-            val monday = LocalDate.now().with(DayOfWeek.MONDAY).plusWeeks(weekOffset.toLong())
-            val today = LocalDate.now()
+            val todayDate = today()
+            val monday = todayDate.with(DayOfWeek.MONDAY).plusWeeks(weekOffset.toLong())
 
             (1..7).map { day ->
                 val date = monday.plusDays((day - 1).toLong())
@@ -59,8 +60,8 @@ class GetWeeklyScheduleOverviewUseCase @Inject constructor(
                     plannedRoutines.isEmpty() && completedSessionsToday.isEmpty() -> DayStatus.REST
                     plannedRoutines.isEmpty() -> DayStatus.COMPLETED // trained anyway on a rest day
                     plannedRoutines.all { it.isCompleted } -> DayStatus.COMPLETED
-                    date.isBefore(today) -> DayStatus.MISSED
-                    date.isEqual(today) -> DayStatus.TODAY_PENDING
+                    date.isBefore(todayDate) -> DayStatus.MISSED
+                    date.isEqual(todayDate) -> DayStatus.TODAY_PENDING
                     else -> DayStatus.UPCOMING
                 }
 
@@ -69,7 +70,7 @@ class GetWeeklyScheduleOverviewUseCase @Inject constructor(
                     dayLetter = dayLetter(date.dayOfWeek),
                     dayNumber = date.dayOfMonth,
                     routines = plannedRoutines,
-                    isToday = date.isEqual(today),
+                    isToday = date.isEqual(todayDate),
                     status = status,
                 )
             }

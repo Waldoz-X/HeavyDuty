@@ -44,7 +44,7 @@ class BackupRoundTripTest {
         target.close()
     }
 
-    private fun HeavyDutyDatabase.backups() = BackupRepositoryImpl(exerciseDao(), routineDao(), workoutDao(), bodyWeightDao())
+    private fun HeavyDutyDatabase.backups() = BackupRepositoryImpl(this, exerciseDao(), routineDao(), workoutDao(), bodyWeightDao())
 
     @Test
     fun exportThenImport_restoresEverythingOnAnotherInstall() = runTest {
