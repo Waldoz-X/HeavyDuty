@@ -36,7 +36,8 @@
     </plurals>
     <string name="stats_records_empty_title">Sin récords todavía</string>
     <string name="stats_records_empty_desc">Registra pesos en tus series para ver tus mejores marcas aquí.</string>
-    <string name="stats_record_detail">1RM est. %1$s (%2$s × %3$d)</string>
+    <string name="stats_record_one_rep_max_label">1RM est.</string>
+    <string name="stats_record_source">Mejor serie: %1$s × %2$d</string>
     <string name="stats_vs_previous">%1$s vs. anterior</string>
     <string name="stats_body_screen_title">Mapa corporal</string>
     <string name="stats_fatigue">Fatiga</string>
