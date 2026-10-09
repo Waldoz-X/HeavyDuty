@@ -25,10 +25,24 @@ import com.example.heavyduty.core.domain.model.WeightUnit
 import com.example.heavyduty.core.domain.model.WorkoutStatus
 import com.example.heavyduty.core.domain.model.WorkoutType
 
+/*
+ * Enums are stored by name. Reading one the app doesn't know — a value written by a newer
+ * version, a bad import, a hand-edited database — falls back to a safe default instead of
+ * throwing, which would crash every screen that lists that row, every time.
+ */
+internal inline fun <reified E : Enum<E>> String.toEnumOr(default: E): E =
+    enumValues<E>().firstOrNull { it.name == this } ?: default
+
+/**
+ * An unknown workout status reads as cancelled: never counted in the stats as finished training,
+ * and never taken for the running workout that the workout screen resumes.
+ */
+internal val UNKNOWN_STATUS_FALLBACK = WorkoutStatus.CANCELLED
+
 // ============ Exercise Mappers ============
 
 fun ExerciseEntity.toDomain(): Exercise {
-    val primary = MuscleGroup.valueOf(muscleGroup)
+    val primary = muscleGroup.toEnumOr(MuscleGroup.FULL_BODY)
     return Exercise(
         id = id,
         name = name,
@@ -39,10 +53,10 @@ fun ExerciseEntity.toDomain(): Exercise {
         imageUrl = imageUrl,
         gifUrl = gifUrl,
         muscleGroup = primary,
-        exerciseType = ExerciseType.valueOf(exerciseType),
+        exerciseType = exerciseType.toEnumOr(ExerciseType.STRENGTH),
         equipment = equipment,
         isCustom = isCustom,
-        weightUnit = runCatching { WeightUnit.valueOf(weightUnit) }.getOrDefault(WeightUnit.KG),
+        weightUnit = weightUnit.toEnumOr(WeightUnit.KG),
         muscleWeights = decodeMuscleWeights(muscleWeightsJson, primary),
     )
 }
@@ -73,7 +87,7 @@ private fun decodeMuscleWeights(json: String, primary: MuscleGroup): Map<MuscleG
     return try {
         val raw: Map<String, Float>? = muscleWeightsGson.fromJson(json, muscleWeightsMapType)
         raw.orEmpty()
-            .mapNotNull { (key, weight) -> runCatching { MuscleGroup.valueOf(key) }.getOrNull()?.let { it to weight } }
+            .mapNotNull { (key, weight) -> MuscleGroup.entries.firstOrNull { it.name == key }?.let { it to weight } }
             .toMap()
             .ifEmpty { mapOf(primary to 1f) }
     } catch (_: Exception) {
@@ -90,7 +104,7 @@ fun RoutineEntity.toDomain(): Routine = Routine(
     id = id,
     name = name,
     description = description,
-    type = WorkoutType.valueOf(type),
+    type = type.toEnumOr(WorkoutType.GYM),
     createdAt = createdAt,
     updatedAt = updatedAt,
 )
@@ -115,7 +129,7 @@ fun RoutineExerciseEntity.toDomain(): RoutineExercise = RoutineExercise(
     targetDurationSecs = targetDurationSecs,
     restBetweenSetsSecs = restBetweenSetsSecs,
     notes = notes,
-    progressionPolicy = ProgressionPolicy.valueOf(progressionPolicy),
+    progressionPolicy = progressionPolicy.toEnumOr(ProgressionPolicy.OFF),
     repRangeLow = repRangeLow,
     repRangeHigh = repRangeHigh,
     stallThreshold = stallThreshold,
@@ -150,7 +164,7 @@ fun RoutineWithExercises.toDomain(): Routine = Routine(
     id = routine.id,
     name = routine.name,
     description = routine.description,
-    type = WorkoutType.valueOf(routine.type),
+    type = routine.type.toEnumOr(WorkoutType.GYM),
     createdAt = routine.createdAt,
     updatedAt = routine.updatedAt,
     // Room returns @Relation rows in storage order, not the user's order — sort explicitly.
@@ -166,9 +180,9 @@ fun WorkoutSessionEntity.toDomain(): WorkoutSession = WorkoutSession(
     startTime = startTime,
     endTime = endTime,
     totalDurationSecs = totalDurationSecs,
-    status = WorkoutStatus.valueOf(status),
+    status = status.toEnumOr(UNKNOWN_STATUS_FALLBACK),
     notes = notes,
-    type = WorkoutType.valueOf(type),
+    type = type.toEnumOr(WorkoutType.GYM),
 )
 
 fun WorkoutSession.toEntity(): WorkoutSessionEntity = WorkoutSessionEntity(
@@ -226,7 +240,7 @@ fun WorkoutSet.toEntity(): WorkoutSetEntity = WorkoutSetEntity(
     weightUnit = weightUnit?.name,
 )
 
-private fun String?.toWeightUnit(): WeightUnit? = this?.let { runCatching { WeightUnit.valueOf(it) }.getOrNull() }
+private fun String?.toWeightUnit(): WeightUnit? = this?.let { name -> WeightUnit.entries.firstOrNull { it.name == name } }
 
 private fun effortToDomain(type: String?, value: Float?): Effort? {
     if (type == null || value == null) return null
@@ -247,9 +261,9 @@ fun SessionWithSets.toDomain(): WorkoutSession = WorkoutSession(
     startTime = session.startTime,
     endTime = session.endTime,
     totalDurationSecs = session.totalDurationSecs,
-    status = WorkoutStatus.valueOf(session.status),
+    status = session.status.toEnumOr(UNKNOWN_STATUS_FALLBACK),
     notes = session.notes,
-    type = WorkoutType.valueOf(session.type),
+    type = session.type.toEnumOr(WorkoutType.GYM),
     sets = sets.map { it.toDomain() },
 )
 
@@ -259,7 +273,7 @@ fun CalendarEntryEntity.toDomain(): CalendarEntry = CalendarEntry(
     id = id,
     routineId = routineId,
     dayOfWeek = dayOfWeek,
-    recurrence = Recurrence.valueOf(recurrence),
+    recurrence = recurrence.toEnumOr(Recurrence.WEEKLY),
     isActive = isActive,
 )
 
