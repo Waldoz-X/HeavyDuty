@@ -5,5 +5,5 @@ import com.example.heavyduty.feature.stats.domain.usecase.BodyWeightStatsReport
 data class BodyWeightStatsUiState(
     val isLoading: Boolean = true,
     val report: BodyWeightStatsReport? = null,
-    val error: String? = null,
+    val loadFailed: Boolean = false,
 )

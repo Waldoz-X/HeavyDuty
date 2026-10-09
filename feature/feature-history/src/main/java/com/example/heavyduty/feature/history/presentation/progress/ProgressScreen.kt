@@ -39,6 +39,7 @@ import com.example.heavyduty.core.domain.model.WeightUnit
 import com.example.heavyduty.core.domain.model.kgTo
 import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdEmptyState
+import com.example.heavyduty.core.ui.components.HdErrorState
 import com.example.heavyduty.feature.history.domain.model.ExercisePersonalRecords
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.axis.HorizontalAxis
@@ -95,6 +96,7 @@ fun ProgressScreen(
             uiState.isLoading -> {
                 HdCardsSkeleton(modifier = Modifier.padding(innerPadding).padding(16.dp), heights = listOf(240.dp, 240.dp, 140.dp))
             }
+            uiState.loadFailed -> HdErrorState(modifier = Modifier.padding(innerPadding))
             uiState.sets.isEmpty() -> {
                 HdEmptyState(
                     icon = Icons.AutoMirrored.Filled.ShowChart,

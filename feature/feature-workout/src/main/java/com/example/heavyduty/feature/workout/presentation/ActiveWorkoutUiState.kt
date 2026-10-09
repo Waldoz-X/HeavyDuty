@@ -45,7 +45,6 @@ data class ActiveWorkoutUiState(
     val isPickingExercise: Boolean = false,
     val exercisePickerQuery: String = "",
     val exercisePickerResults: List<Exercise> = emptyList(),
-    val error: String? = null,
     /** Suggested weight/reps for the current exercise's next set, from prior sessions only. */
     val suggestedPrescription: Prescription? = null,
     /** The current exercise's sets from its last previous session, by set number. */

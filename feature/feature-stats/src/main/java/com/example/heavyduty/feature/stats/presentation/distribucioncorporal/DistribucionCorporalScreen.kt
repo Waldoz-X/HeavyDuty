@@ -43,6 +43,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.heavyduty.core.common.extensions.formatCompact
 import com.example.heavyduty.core.ui.components.HdBodyDiagram
 import com.example.heavyduty.core.ui.components.HdChip
+import com.example.heavyduty.core.ui.components.HdErrorState
 import com.example.heavyduty.core.ui.components.HdPeriodSelector
 import com.example.heavyduty.core.ui.components.HdStatCard
 import com.example.heavyduty.core.ui.nameResId
@@ -73,6 +74,10 @@ fun DistribucionCorporalScreen(
     ) { innerPadding ->
         if (uiState.isLoading) {
             HdCardsSkeleton(modifier = Modifier.padding(innerPadding).padding(16.dp), heights = listOf(48.dp, 400.dp, 120.dp))
+            return@Scaffold
+        }
+        if (uiState.loadFailed) {
+            HdErrorState(modifier = Modifier.padding(innerPadding))
             return@Scaffold
         }
 

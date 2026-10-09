@@ -10,7 +10,7 @@ data class ProgressUiState(
     val personalRecords: ExercisePersonalRecords = ExercisePersonalRecords(),
     val weightUnit: WeightUnit = WeightUnit.KG,
     val isLoading: Boolean = true,
-    val error: String? = null,
+    val loadFailed: Boolean = false,
 )
 
 sealed interface ProgressUiEvent {

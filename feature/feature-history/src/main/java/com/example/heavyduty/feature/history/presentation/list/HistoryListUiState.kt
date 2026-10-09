@@ -7,7 +7,7 @@ data class HistoryListUiState(
     val sessions: List<WorkoutSession> = emptyList(),
     val stats: WorkoutStats = WorkoutStats(),
     val isLoading: Boolean = true,
-    val error: String? = null,
+    val loadFailed: Boolean = false,
 )
 
 sealed interface HistoryListUiEvent {

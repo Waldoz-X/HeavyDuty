@@ -13,6 +13,7 @@ import com.example.heavyduty.feature.stats.domain.usecase.GetPeriodSummaryUseCas
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
@@ -53,13 +54,16 @@ class EstadisticasViewModel @Inject constructor(
                         )
                     }
                 }
+                .catch { _uiState.update { it.copy(isLoading = false, loadFailed = true) } }
                 .collect { }
         }
         launch {
             val (current, previous) = StatsPeriod.LAST_30_DAYS.currentAndPreviousRange(clock.nowMillis())
-            getPeriodSummary(current, previous).collect { summary ->
-                _uiState.update { it.copy(summary = summary) }
-            }
+            getPeriodSummary(current, previous)
+                .catch { _uiState.update { it.copy(isLoading = false, loadFailed = true) } }
+                .collect { summary ->
+                    _uiState.update { it.copy(summary = summary) }
+                }
         }
     }
 

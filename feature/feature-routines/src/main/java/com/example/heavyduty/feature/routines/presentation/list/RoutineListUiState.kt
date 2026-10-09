@@ -9,7 +9,7 @@ import com.example.heavyduty.core.domain.model.Routine
 data class RoutineListUiState(
     val routines: List<Routine> = emptyList(),
     val isLoading: Boolean = true,
-    val error: String? = null,
+    val loadFailed: Boolean = false,
 )
 
 /**

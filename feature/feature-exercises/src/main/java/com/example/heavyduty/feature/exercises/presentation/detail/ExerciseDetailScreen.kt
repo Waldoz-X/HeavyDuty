@@ -51,6 +51,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
+import com.example.heavyduty.core.ui.components.HdErrorState
 import com.example.heavyduty.core.ui.hdSharedBounds
 import com.example.heavyduty.feature.exercises.presentation.exerciseImageKey
 import com.example.heavyduty.core.domain.model.Exercise
@@ -100,20 +101,8 @@ fun ExerciseDetailScreen(
                     modifier = Modifier.padding(top = innerPadding.calculateTopPadding()),
                 )
             }
-            uiState.error != null -> {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding)
-                        .padding(16.dp),
-                ) {
-                    Text(
-                        text = stringResource(R.string.exercise_load_error),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.error,
-                    )
-                }
-            }
+            // Couldn't be read — or no longer exists.
+            else -> HdErrorState(modifier = Modifier.padding(innerPadding))
         }
     }
 }

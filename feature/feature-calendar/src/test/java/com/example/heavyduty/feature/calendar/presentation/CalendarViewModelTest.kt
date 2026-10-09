@@ -4,12 +4,16 @@ import com.example.heavyduty.core.common.R
 import com.example.heavyduty.core.domain.model.CalendarEntry
 import com.example.heavyduty.core.domain.model.Recurrence
 import com.example.heavyduty.core.domain.model.Routine
+import com.example.heavyduty.core.domain.repository.CalendarRepository
 import com.example.heavyduty.core.testing.FakeCalendarRepository
 import com.example.heavyduty.core.testing.FakeRoutineRepository
 import com.example.heavyduty.core.testing.MainDispatcherRule
 import com.example.heavyduty.feature.calendar.domain.usecase.AssignRoutineToDayUseCase
 import com.example.heavyduty.feature.calendar.domain.usecase.GetWeekScheduleUseCase
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
@@ -19,6 +23,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import java.io.IOException
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class CalendarViewModelTest {
@@ -99,6 +104,28 @@ class CalendarViewModelTest {
         vm.onEvent(CalendarUiEvent.OnRemoveEntry(vm.uiState.value.weekSchedule.getValue(monday).first()))
 
         assertEquals(listOf(11L), vm.uiState.value.weekSchedule.getValue(monday).map { it.routineId })
+    }
+
+    @Test
+    fun `a schedule that can't be read shows the error, not an empty week`() {
+        val broken = object : CalendarRepository by calendar {
+            override fun getWeekSchedule(): Flow<Map<Int, List<CalendarEntry>>> = flow { throw IOException("disk") }
+        }
+        val vm = CalendarViewModel(GetWeekScheduleUseCase(broken), AssignRoutineToDayUseCase(broken), broken, routines)
+
+        val state = vm.uiState.value
+        assertTrue(state.loadFailed)
+        assertFalse(state.isLoading)
+    }
+
+    @Test
+    fun `a message sent while the screen isn't listening is still delivered`() = runTest(UnconfinedTestDispatcher()) {
+        val vm = viewModel()
+
+        // Nobody collects yet — e.g. mid-rotation. A plain SharedFlow would drop this.
+        vm.onEvent(CalendarUiEvent.OnAssignRoutine(routineId = 10, dayOfWeek = monday))
+
+        assertEquals(CalendarUiEffect.ShowMessage(R.string.calendar_already_assigned), vm.uiEffect.first())
     }
 
     @Test

@@ -11,6 +11,8 @@ data class EstadisticasUiState(
     /** Last 30 days vs the 30 before, for the summary at the top. */
     val summary: PeriodSummary = PeriodSummary(),
     val isLoading: Boolean = true,
+    /** The data couldn't be read; the screen shows an error instead of looking empty. */
+    val loadFailed: Boolean = false,
 )
 
 data class DayChipUi(

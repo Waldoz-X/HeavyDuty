@@ -1,6 +1,7 @@
 package com.example.heavyduty.feature.calendar.presentation
 
 import com.example.heavyduty.core.ui.components.HdCardsSkeleton
+import com.example.heavyduty.core.ui.components.HdErrorState
 import kotlinx.coroutines.launch
 import java.time.format.TextStyle
 import java.time.DayOfWeek
@@ -100,6 +101,7 @@ fun CalendarScreen(
             uiState.isLoading -> {
                 HdCardsSkeleton(modifier = Modifier.padding(16.dp), heights = listOf(56.dp, 96.dp, 96.dp))
             }
+            uiState.loadFailed -> HdErrorState()
             else -> {
                 // Week day selector
                 Row(

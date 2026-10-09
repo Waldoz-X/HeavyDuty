@@ -47,4 +47,6 @@
     <string name="body_back">Back</string>
     <string name="hours_short">%1$s h</string>
     <string name="duration_hours_minutes">%1$d h %2$d min</string>
+    <string name="error_load_title">Couldn\'t load your data</string>
+    <string name="error_load_desc">Your data is still saved. Leave this screen and come back.</string>
 </resources>

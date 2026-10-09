@@ -6,14 +6,17 @@ import androidx.lifecycle.viewModelScope
 import com.example.heavyduty.core.domain.repository.CalendarRepository
 import com.example.heavyduty.core.domain.repository.RoutineRepository
 import com.example.heavyduty.feature.calendar.domain.usecase.AssignRoutineToDayUseCase
+import com.example.heavyduty.feature.calendar.domain.usecase.DuplicateCalendarEntryException
 import com.example.heavyduty.feature.calendar.domain.usecase.GetWeekScheduleUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -29,8 +32,10 @@ class CalendarViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(CalendarUiState())
     val uiState: StateFlow<CalendarUiState> = _uiState.asStateFlow()
 
-    private val _uiEffect = MutableSharedFlow<CalendarUiEffect>()
-    val uiEffect = _uiEffect.asSharedFlow()
+    // A Channel, not a SharedFlow: an effect sent while the screen isn't collecting (rotation,
+    // background) waits for it instead of being dropped, and is delivered exactly once.
+    private val _uiEffect = Channel<CalendarUiEffect>(Channel.BUFFERED)
+    val uiEffect: Flow<CalendarUiEffect> = _uiEffect.receiveAsFlow()
 
     init {
         observeSchedule()
@@ -45,7 +50,7 @@ class CalendarViewModel @Inject constructor(
             }
             is CalendarUiEvent.OnRoutineClick -> {
                 viewModelScope.launch {
-                    _uiEffect.emit(CalendarUiEffect.NavigateToRoutine(event.routineId))
+                    _uiEffect.send(CalendarUiEffect.NavigateToRoutine(event.routineId))
                 }
             }
             CalendarUiEvent.OnToggleRoutinePicker -> {
@@ -56,13 +61,13 @@ class CalendarViewModel @Inject constructor(
                     try {
                         assignRoutineToDayUseCase(event.routineId, event.dayOfWeek)
                         _uiState.update { it.copy(isPickingRoutine = false) }
-                        _uiEffect.emit(CalendarUiEffect.ShowMessage(R.string.calendar_routine_assigned))
-                    } catch (e: Exception) {
-                        if (e.message == "DuplicateRoutine") {
-                            _uiEffect.emit(CalendarUiEffect.ShowMessage(R.string.calendar_already_assigned))
-                        } else {
-                            _uiEffect.emit(CalendarUiEffect.ShowMessage(R.string.calendar_assign_error))
-                        }
+                        _uiEffect.send(CalendarUiEffect.ShowMessage(R.string.calendar_routine_assigned))
+                    } catch (_: DuplicateCalendarEntryException) {
+                        _uiEffect.send(CalendarUiEffect.ShowMessage(R.string.calendar_already_assigned))
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (_: Exception) {
+                        _uiEffect.send(CalendarUiEffect.ShowMessage(R.string.calendar_assign_error))
                     }
                 }
             }
@@ -70,8 +75,10 @@ class CalendarViewModel @Inject constructor(
                 viewModelScope.launch {
                     try {
                         calendarRepository.deleteEntry(event.entry)
+                    } catch (e: CancellationException) {
+                        throw e
                     } catch (e: Exception) {
-                        _uiEffect.emit(CalendarUiEffect.ShowMessage(R.string.calendar_remove_error))
+                        _uiEffect.send(CalendarUiEffect.ShowMessage(R.string.calendar_remove_error))
                     }
                 }
             }
@@ -81,8 +88,8 @@ class CalendarViewModel @Inject constructor(
     private fun observeSchedule() {
         viewModelScope.launch {
             getWeekScheduleUseCase()
-                .catch { e ->
-                    _uiState.update { it.copy(isLoading = false, error = e.message) }
+                .catch {
+                    _uiState.update { it.copy(isLoading = false, loadFailed = true) }
                 }
                 .collect { schedule ->
                     _uiState.update { it.copy(weekSchedule = schedule, isLoading = false) }
@@ -93,7 +100,7 @@ class CalendarViewModel @Inject constructor(
     private fun observeRoutines() {
         viewModelScope.launch {
             routineRepository.getAllRoutines()
-                .catch { /* silently fail */ }
+                .catch { _uiState.update { it.copy(loadFailed = true) } }
                 .collect { routines ->
                     _uiState.update { it.copy(routines = routines) }
                 }

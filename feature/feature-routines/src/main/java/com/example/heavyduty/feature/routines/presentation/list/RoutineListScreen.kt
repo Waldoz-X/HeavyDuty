@@ -55,6 +55,7 @@ import com.example.heavyduty.core.domain.model.Routine
 import com.example.heavyduty.core.ui.components.HdButton
 import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdEmptyState
+import com.example.heavyduty.core.ui.components.HdErrorState
 import com.example.heavyduty.core.ui.components.HdExerciseThumbnail
 import com.example.heavyduty.core.ui.components.HdSkeletonCard
 import com.example.heavyduty.core.ui.nameResId
@@ -124,6 +125,7 @@ fun RoutineListScreen(
                         items(3) { HdSkeletonCard() }
                     }
                 }
+                uiState.loadFailed -> HdErrorState()
                 uiState.routines.isEmpty() -> {
                     HdEmptyState(
                         icon = Icons.AutoMirrored.Filled.ListAlt,

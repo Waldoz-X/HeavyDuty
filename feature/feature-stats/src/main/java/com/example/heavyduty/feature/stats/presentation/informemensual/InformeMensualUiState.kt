@@ -7,4 +7,6 @@ data class InformeMensualUiState(
     val currentReferenceMillis: Long = System.currentTimeMillis(),
     val hasNextMonth: Boolean = false,
     val isLoading: Boolean = true,
+    /** The data couldn't be read; the screen shows an error instead of looking empty. */
+    val loadFailed: Boolean = false,
 )

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.MaterialTheme
 import com.example.heavyduty.core.common.extensions.formatDecimal
+import com.example.heavyduty.core.ui.components.HdErrorState
 import com.example.heavyduty.core.ui.components.HdPeriodSelector
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -54,6 +55,10 @@ fun SeriesPorMusculoScreen(
     ) { innerPadding ->
         if (uiState.isLoading) {
             HdCardsSkeleton(modifier = Modifier.padding(innerPadding).padding(16.dp), heights = listOf(48.dp, 64.dp, 280.dp))
+            return@Scaffold
+        }
+        if (uiState.loadFailed) {
+            HdErrorState(modifier = Modifier.padding(innerPadding))
             return@Scaffold
         }
         Column(

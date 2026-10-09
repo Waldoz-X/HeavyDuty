@@ -121,6 +121,7 @@ import com.example.heavyduty.core.domain.model.toKgFrom
 import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdChip
 import com.example.heavyduty.core.ui.components.HdEmptyState
+import com.example.heavyduty.core.ui.components.HdErrorState
 import com.example.heavyduty.core.ui.components.HdExerciseThumbnail
 import com.example.heavyduty.core.ui.components.HdLineChart
 import com.example.heavyduty.core.ui.components.HdTonalButton
@@ -251,6 +252,8 @@ fun RoutineEditorScreen(
     ) { innerPadding ->
         if (uiState.isLoading) {
             HdCardListSkeleton(modifier = Modifier.padding(innerPadding).padding(16.dp), rows = 6, thumbnailSize = 48.dp)
+        } else if (uiState.loadFailed) {
+            HdErrorState(modifier = Modifier.padding(innerPadding))
         } else {
             EditorContent(
                 uiState = uiState,

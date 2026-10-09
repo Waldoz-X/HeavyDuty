@@ -42,6 +42,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdEmptyState
+import com.example.heavyduty.core.ui.components.HdErrorState
 import com.example.heavyduty.feature.stats.domain.model.ExerciseFrequency
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -68,6 +69,7 @@ fun EjerciciosPrincipalesScreen(
     ) { innerPadding ->
         when {
             uiState.isLoading -> HdCardListSkeleton(modifier = Modifier.padding(innerPadding).padding(16.dp), rows = 6, thumbnailSize = 40.dp)
+            uiState.loadFailed -> HdErrorState(modifier = Modifier.padding(innerPadding))
             uiState.exercises.isEmpty() -> HdEmptyState(
                 icon = Icons.Default.EmojiEvents,
                 title = stringResource(R.string.stats_top_empty_title),

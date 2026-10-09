@@ -61,6 +61,7 @@ import com.example.heavyduty.core.common.R
 import com.example.heavyduty.core.common.extensions.formatCompact
 import com.example.heavyduty.core.ui.components.HdButton
 import com.example.heavyduty.core.ui.components.HdCard
+import com.example.heavyduty.core.ui.components.HdErrorState
 import com.example.heavyduty.core.ui.components.HdLineChart
 import com.example.heavyduty.core.ui.components.HdTextButton
 import com.example.heavyduty.core.ui.components.HdTonalButton
@@ -96,16 +97,19 @@ fun DashboardScreen(
                 is DashboardUiEffect.NavigateToActiveWorkout -> onNavigateToActiveWorkout()
                 is DashboardUiEffect.NavigateToRoutines -> onNavigateToRoutines()
                 is DashboardUiEffect.NavigateToRoutine -> onStartRoutine(effect.routineId)
-                is DashboardUiEffect.ShowError -> { /* Handle Error */ }
             }
         }
     }
 
-    DashboardContent(
-        uiState = uiState,
-        onEvent = viewModel::onEvent,
-        modifier = modifier
-    )
+    if (uiState.loadFailed) {
+        HdErrorState(modifier = modifier)
+    } else {
+        DashboardContent(
+            uiState = uiState,
+            onEvent = viewModel::onEvent,
+            modifier = modifier
+        )
+    }
 }
 
 @Composable

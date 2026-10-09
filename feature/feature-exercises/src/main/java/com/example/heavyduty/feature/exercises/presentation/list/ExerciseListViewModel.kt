@@ -9,14 +9,15 @@ import com.example.heavyduty.feature.exercises.domain.usecase.GetExercisesUseCas
 import dagger.hilt.android.lifecycle.HiltViewModel
 import com.example.heavyduty.core.common.dispatchers.DefaultDispatcher
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -35,8 +36,10 @@ class ExerciseListViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(ExerciseListUiState())
     val uiState: StateFlow<ExerciseListUiState> = _uiState.asStateFlow()
 
-    private val _uiEffect = MutableSharedFlow<ExerciseListUiEffect>()
-    val uiEffect = _uiEffect.asSharedFlow()
+    // A Channel, not a SharedFlow: an effect sent while the screen isn't collecting (rotation,
+    // background) waits for it instead of being dropped, and is delivered exactly once.
+    private val _uiEffect = Channel<ExerciseListUiEffect>(Channel.BUFFERED)
+    val uiEffect: Flow<ExerciseListUiEffect> = _uiEffect.receiveAsFlow()
 
     private val filters = MutableStateFlow(Filters())
 
@@ -62,7 +65,7 @@ class ExerciseListViewModel @Inject constructor(
             }
             is ExerciseListUiEvent.OnExerciseClick -> {
                 viewModelScope.launch {
-                    _uiEffect.emit(ExerciseListUiEffect.NavigateToDetail(event.exerciseId))
+                    _uiEffect.send(ExerciseListUiEffect.NavigateToDetail(event.exerciseId))
                 }
             }
             is ExerciseListUiEvent.OnToggleSelection -> {
@@ -88,8 +91,8 @@ class ExerciseListViewModel @Inject constructor(
         viewModelScope.launch {
             combine(getExercisesUseCase(), filters) { all, filters -> filter(all, filters) }
                 .flowOn(defaultDispatcher)
-                .catch { e ->
-                    _uiState.update { it.copy(isLoading = false, error = e.message) }
+                .catch {
+                    _uiState.update { it.copy(isLoading = false, loadFailed = true) }
                 }
                 .collect { (exercises, availableEquipment) ->
                     _uiState.update {
@@ -97,7 +100,7 @@ class ExerciseListViewModel @Inject constructor(
                             exercises = exercises,
                             availableEquipment = availableEquipment,
                             isLoading = false,
-                            error = null,
+                            loadFailed = false,
                         )
                     }
                 }

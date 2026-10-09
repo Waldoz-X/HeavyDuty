@@ -10,6 +10,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import com.example.heavyduty.core.ui.components.HdBarChart
+import com.example.heavyduty.core.ui.components.HdErrorState
 import com.example.heavyduty.core.ui.components.WorkoutFeedCard
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -70,6 +71,10 @@ fun ProfileScreen(
 
     if (uiState.isLoading) {
         HdCardsSkeleton(modifier = modifier.padding(16.dp), heights = listOf(120.dp, 160.dp, 140.dp, 140.dp))
+        return
+    }
+    if (uiState.loadFailed) {
+        HdErrorState(modifier = modifier)
         return
     }
 

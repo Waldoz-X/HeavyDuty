@@ -7,6 +7,7 @@ import com.example.heavyduty.feature.stats.domain.usecase.GetTrainingActivityHea
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -20,11 +21,13 @@ class MapaActividadViewModel @Inject constructor(
     /** Loads only while the screen is watching — see [whileSubscribed]. */
     val uiState: StateFlow<MapaActividadUiState> = _uiState.whileSubscribed(viewModelScope) {
         launch {
-            getTrainingActivityHeatmap().collect { report ->
-                _uiState.update {
-                    it.copy(report = report, isLoading = false)
+            getTrainingActivityHeatmap()
+                .catch { _uiState.update { it.copy(isLoading = false, loadFailed = true) } }
+                .collect { report ->
+                    _uiState.update {
+                        it.copy(report = report, isLoading = false)
+                    }
                 }
-            }
         }
     }
 

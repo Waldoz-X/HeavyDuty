@@ -3,6 +3,7 @@ package com.example.heavyduty.feature.exercises.presentation.list
 import com.example.heavyduty.core.domain.model.displayName
 import com.example.heavyduty.core.common.R
 import androidx.compose.ui.res.pluralStringResource
+import com.example.heavyduty.core.ui.components.HdErrorState
 import com.example.heavyduty.core.ui.components.HdTonalButton
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -243,6 +244,7 @@ private fun ExerciseListContent(
                     thumbnailSize = if (selectionMode) 64.dp else 88.dp,
                 )
             }
+            uiState.loadFailed -> HdErrorState(modifier = Modifier.weight(1f))
             uiState.exercises.isEmpty() -> {
                 val hasActiveFilters = uiState.searchQuery.isNotBlank() ||
                     uiState.selectedFilter != null || uiState.selectedEquipment != null

@@ -18,6 +18,8 @@ data class DistribucionCorporalUiState(
     val selectedPeriod: StatsPeriod = StatsPeriod.LAST_30_DAYS,
     val summary: PeriodSummary = PeriodSummary(),
     val isLoading: Boolean = true,
+    /** The data couldn't be read; the screen shows an error instead of looking empty. */
+    val loadFailed: Boolean = false,
 )
 
 sealed interface DistribucionCorporalUiEvent {

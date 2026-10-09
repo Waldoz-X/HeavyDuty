@@ -25,9 +25,11 @@ import com.example.heavyduty.feature.profile.domain.usecase.SetEffortTrackingEna
 import com.example.heavyduty.feature.profile.domain.usecase.SetPreferredEffortScaleUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
@@ -176,7 +178,8 @@ class ProfileViewModel @Inject constructor(
                         isLoading = false,
                     )
                 }
-            }.collect { }
+            }.catch { _uiState.update { it.copy(isLoading = false, loadFailed = true) } }
+                .collect { }
         }
     }
 
@@ -247,6 +250,8 @@ class ProfileViewModel @Inject constructor(
                     stream.write(json.toByteArray())
                 } ?: throw IllegalStateException(appContext.getString(R.string.backup_export_error_open))
                 _uiState.update { it.copy(isExportingData = false, backupMessage = appContext.getString(R.string.backup_exported)) }
+            } catch (e: CancellationException) {
+                throw e
             } catch (_: Exception) {
                 _uiState.update { it.copy(isExportingData = false, backupMessage = appContext.getString(R.string.backup_export_error)) }
             }
@@ -270,6 +275,8 @@ class ProfileViewModel @Inject constructor(
                     }
                 }
                 _uiState.update { it.copy(isImportingData = false, backupMessage = message) }
+            } catch (e: CancellationException) {
+                throw e
             } catch (_: Exception) {
                 _uiState.update { it.copy(isImportingData = false, backupMessage = appContext.getString(R.string.backup_import_error_invalid)) }
             }

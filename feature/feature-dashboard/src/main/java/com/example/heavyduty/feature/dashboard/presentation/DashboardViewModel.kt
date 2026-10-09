@@ -15,13 +15,14 @@ import com.example.heavyduty.feature.dashboard.domain.usecase.GetWeeklyScheduleO
 import com.example.heavyduty.feature.dashboard.domain.usecase.GetWeeklySummaryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -46,8 +47,10 @@ class DashboardViewModel @Inject constructor(
         loadWeekPlan()
     }
 
-    private val _uiEffect = MutableSharedFlow<DashboardUiEffect>()
-    val uiEffect = _uiEffect.asSharedFlow()
+    // A Channel, not a SharedFlow: an effect sent while the screen isn't collecting (rotation,
+    // background) waits for it instead of being dropped, and is delivered exactly once.
+    private val _uiEffect = Channel<DashboardUiEffect>(Channel.BUFFERED)
+    val uiEffect: Flow<DashboardUiEffect> = _uiEffect.receiveAsFlow()
 
     private val weekOffset = MutableStateFlow(0)
 
@@ -55,19 +58,19 @@ class DashboardViewModel @Inject constructor(
         when (event) {
             is DashboardUiEvent.OnStartFreeWorkout -> {
                 viewModelScope.launch {
-                    _uiEffect.emit(DashboardUiEffect.NavigateToActiveWorkout)
+                    _uiEffect.send(DashboardUiEffect.NavigateToActiveWorkout)
                 }
             }
             is DashboardUiEvent.OnChooseRoutine -> {
                 viewModelScope.launch {
-                    _uiEffect.emit(DashboardUiEffect.NavigateToRoutines)
+                    _uiEffect.send(DashboardUiEffect.NavigateToRoutines)
                 }
             }
             is DashboardUiEvent.OnWeekPrev -> changeWeekOffset(-1)
             is DashboardUiEvent.OnWeekNext -> changeWeekOffset(1)
             is DashboardUiEvent.OnStartTodayRoutine -> {
                 viewModelScope.launch {
-                    _uiEffect.emit(DashboardUiEffect.NavigateToRoutine(event.routineId))
+                    _uiEffect.send(DashboardUiEffect.NavigateToRoutine(event.routineId))
                 }
             }
             is DashboardUiEvent.OnOpenLogWeight -> {
@@ -104,8 +107,8 @@ class DashboardViewModel @Inject constructor(
                         )
                     }
                 }
-                .catch { e ->
-                    _uiState.update { it.copy(error = e.message) }
+                .catch {
+                    _uiState.update { it.copy(loadFailed = true) }
                 }
                 .collect { }
         }
@@ -142,8 +145,8 @@ class DashboardViewModel @Inject constructor(
                     )
                 }
             }
-                .catch { e ->
-                    _uiState.update { it.copy(isLoading = false, error = e.message) }
+                .catch {
+                    _uiState.update { it.copy(isLoading = false, loadFailed = true) }
                 }
                 .collect { }
         }

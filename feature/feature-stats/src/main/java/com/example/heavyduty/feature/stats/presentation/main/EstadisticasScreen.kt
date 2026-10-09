@@ -44,6 +44,7 @@ import com.example.heavyduty.core.ui.components.HdBodyDiagram
 import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdChip
 import com.example.heavyduty.core.ui.components.HdCardsSkeleton
+import com.example.heavyduty.core.ui.components.HdErrorState
 import com.example.heavyduty.core.ui.nameResId
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.font.FontWeight
@@ -87,6 +88,10 @@ fun EstadisticasScreen(
                     .padding(16.dp),
                 heights = listOf(140.dp, 220.dp, 120.dp, 120.dp),
             )
+            return@Scaffold
+        }
+        if (uiState.loadFailed) {
+            HdErrorState(modifier = Modifier.padding(innerPadding))
             return@Scaffold
         }
 

@@ -10,12 +10,13 @@ import com.example.heavyduty.feature.history.domain.usecase.GetExercisePersonalR
 import com.example.heavyduty.feature.history.domain.usecase.GetExerciseProgressUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -36,13 +37,15 @@ class ProgressViewModel @Inject constructor(
         loadProgress()
     }
 
-    private val _uiEffect = MutableSharedFlow<ProgressUiEffect>()
-    val uiEffect = _uiEffect.asSharedFlow()
+    // A Channel, not a SharedFlow: an effect sent while the screen isn't collecting (rotation,
+    // background) waits for it instead of being dropped, and is delivered exactly once.
+    private val _uiEffect = Channel<ProgressUiEffect>(Channel.BUFFERED)
+    val uiEffect: Flow<ProgressUiEffect> = _uiEffect.receiveAsFlow()
 
     fun onEvent(event: ProgressUiEvent) {
         when (event) {
             ProgressUiEvent.OnNavigateBack -> {
-                viewModelScope.launch { _uiEffect.emit(ProgressUiEffect.NavigateBack) }
+                viewModelScope.launch { _uiEffect.send(ProgressUiEffect.NavigateBack) }
             }
         }
     }
@@ -54,8 +57,8 @@ class ProgressViewModel @Inject constructor(
                 getExercisePersonalRecordsUseCase(exerciseId),
                 exerciseRepository.getExerciseById(exerciseId),
             ) { sets, records, exercise -> Triple(sets, records, exercise?.weightUnit ?: WeightUnit.KG) }
-                .catch { e ->
-                    _uiState.update { it.copy(isLoading = false, error = e.message) }
+                .catch {
+                    _uiState.update { it.copy(isLoading = false, loadFailed = true) }
                 }
                 .collect { (sets, records, weightUnit) ->
                     _uiState.update {

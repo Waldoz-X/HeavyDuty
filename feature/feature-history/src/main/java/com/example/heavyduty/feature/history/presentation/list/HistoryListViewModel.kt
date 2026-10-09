@@ -7,11 +7,12 @@ import com.example.heavyduty.feature.history.domain.usecase.GetStatsUseCase
 import com.example.heavyduty.feature.history.domain.usecase.GetWorkoutHistoryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -29,15 +30,17 @@ class HistoryListViewModel @Inject constructor(
         observeStats()
     }
 
-    private val _uiEffect = MutableSharedFlow<HistoryListUiEffect>()
-    val uiEffect = _uiEffect.asSharedFlow()
+    // A Channel, not a SharedFlow: an effect sent while the screen isn't collecting (rotation,
+    // background) waits for it instead of being dropped, and is delivered exactly once.
+    private val _uiEffect = Channel<HistoryListUiEffect>(Channel.BUFFERED)
+    val uiEffect: Flow<HistoryListUiEffect> = _uiEffect.receiveAsFlow()
 
     fun onEvent(event: HistoryListUiEvent) {
         when (event) {
             is HistoryListUiEvent.OnSessionClick -> { /* future detail */ }
             is HistoryListUiEvent.OnExerciseProgressClick -> {
                 viewModelScope.launch {
-                    _uiEffect.emit(HistoryListUiEffect.NavigateToProgress(event.exerciseId))
+                    _uiEffect.send(HistoryListUiEffect.NavigateToProgress(event.exerciseId))
                 }
             }
         }
@@ -46,8 +49,8 @@ class HistoryListViewModel @Inject constructor(
     private fun CoroutineScope.observeHistory() {
         launch {
             getWorkoutHistoryUseCase()
-                .catch { e ->
-                    _uiState.update { it.copy(isLoading = false, error = e.message) }
+                .catch {
+                    _uiState.update { it.copy(isLoading = false, loadFailed = true) }
                 }
                 .collect { sessions ->
                     _uiState.update { it.copy(sessions = sessions, isLoading = false) }
@@ -58,7 +61,7 @@ class HistoryListViewModel @Inject constructor(
     private fun CoroutineScope.observeStats() {
         launch {
             getStatsUseCase()
-                .catch { /* silently fail stats */ }
+                .catch { _uiState.update { it.copy(loadFailed = true) } }
                 .collect { stats ->
                     _uiState.update { it.copy(stats = stats) }
                 }

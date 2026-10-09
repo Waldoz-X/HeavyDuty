@@ -33,15 +33,15 @@ class BodyWeightStatsViewModel @Inject constructor(
     private fun CoroutineScope.loadStats() {
         launch {
             getBodyWeightStatsUseCase()
-                .catch { e ->
-                    _uiState.update { it.copy(isLoading = false, error = e.message) }
+                .catch {
+                    _uiState.update { it.copy(isLoading = false, loadFailed = true) }
                 }
                 .collect { report ->
                     _uiState.update {
                         it.copy(
                             isLoading = false,
                             report = report,
-                            error = null,
+                            loadFailed = false,
                         )
                     }
                 }

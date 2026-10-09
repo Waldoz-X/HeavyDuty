@@ -9,6 +9,7 @@ import com.example.heavyduty.core.domain.model.equipmentLabelFor
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.io.InputStreamReader
+import kotlinx.coroutines.CancellationException
 
 /**
  * Seed data with 1,324 exercises parsed from JSON dataset.
@@ -132,6 +133,8 @@ object SeedData {
             val names = loadSpanishNames(context)
             if (names.isEmpty()) return
             exerciseDao.localizeExerciseNames(names)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Log.e("SeedData", "Error localizing exercise names", e)
         }
@@ -150,6 +153,8 @@ object SeedData {
                 Triple(nameEn, dto.instructionsIn("es"), english)
             }
             exerciseDao.setEnglishInstructions(entries)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Log.e("SeedData", "Error adding English instructions", e)
         }
@@ -283,6 +288,8 @@ object SeedData {
 
             exerciseDao.insertAllExercises(exerciseEntities)
             Log.d("SeedData", "Successfully inserted ${exerciseEntities.size} exercises from JSON.")
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Log.e("SeedData", "Error parsing exercises.json", e)
         }

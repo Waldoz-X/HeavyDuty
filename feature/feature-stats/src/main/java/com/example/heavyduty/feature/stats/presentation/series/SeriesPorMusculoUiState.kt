@@ -8,6 +8,8 @@ data class SeriesPorMusculoUiState(
     val data: List<Pair<MuscleGroup, Float>> = emptyList(),
     val selectedPeriod: StatsPeriod = StatsPeriod.LAST_7_DAYS,
     val isLoading: Boolean = true,
+    /** The data couldn't be read; the screen shows an error instead of looking empty. */
+    val loadFailed: Boolean = false,
 )
 
 sealed interface SeriesPorMusculoUiEvent {

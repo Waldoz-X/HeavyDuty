@@ -20,6 +20,8 @@ data class ProfileUiState(
     val preferredEffortScale: String = "RIR",
     val preferredWeightUnit: WeightUnit = WeightUnit.KG,
     val isLoading: Boolean = true,
+    /** The data couldn't be read; the screen shows an error instead of looking empty. */
+    val loadFailed: Boolean = false,
     val isExportingData: Boolean = false,
     val isImportingData: Boolean = false,
     val backupMessage: String? = null,

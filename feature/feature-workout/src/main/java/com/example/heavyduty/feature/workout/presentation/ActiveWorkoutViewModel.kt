@@ -32,19 +32,21 @@ import com.example.heavyduty.feature.workout.domain.usecase.CompleteWorkoutUseCa
 import com.example.heavyduty.feature.workout.domain.usecase.LogSetUseCase
 import com.example.heavyduty.feature.workout.domain.usecase.StartWorkoutUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -86,8 +88,10 @@ class ActiveWorkoutViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(ActiveWorkoutUiState())
     val uiState: StateFlow<ActiveWorkoutUiState> = _uiState.asStateFlow()
 
-    private val _uiEffect = MutableSharedFlow<ActiveWorkoutUiEffect>()
-    val uiEffect = _uiEffect.asSharedFlow()
+    // A Channel, not a SharedFlow: an effect sent while the screen isn't collecting (rotation,
+    // background) waits for it instead of being dropped, and is delivered exactly once.
+    private val _uiEffect = Channel<ActiveWorkoutUiEffect>(Channel.BUFFERED)
+    val uiEffect: Flow<ActiveWorkoutUiEffect> = _uiEffect.receiveAsFlow()
 
     init {
         observePreferences()
@@ -112,7 +116,7 @@ class ActiveWorkoutViewModel @Inject constructor(
             ActiveWorkoutUiEvent.OnStartFreeWorkout -> startFreeWorkout()
             is ActiveWorkoutUiEvent.OnStartRoutine -> startWorkoutFromRoutine(event.routineId)
             ActiveWorkoutUiEvent.OnNavigateToRoutines -> {
-                viewModelScope.launch { _uiEffect.emit(ActiveWorkoutUiEffect.NavigateToRoutines) }
+                viewModelScope.launch { _uiEffect.send(ActiveWorkoutUiEffect.NavigateToRoutines) }
             }
             ActiveWorkoutUiEvent.OnToggleExercisePicker -> toggleExercisePicker()
             is ActiveWorkoutUiEvent.OnExercisePickerQueryChange -> onExercisePickerQueryChange(event.query)
@@ -399,6 +403,8 @@ class ActiveWorkoutViewModel @Inject constructor(
                 } else {
                     routineExercise.exercise?.let { exerciseRepository.updateExercise(it.copy(weightUnit = newUnit)) }
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (_: Exception) {
                 // Only the remembered default failed; this session still uses the new unit.
             }
@@ -487,6 +493,8 @@ class ActiveWorkoutViewModel @Inject constructor(
     private suspend fun startSession(insert: suspend () -> Long) {
         try {
             insert()
+        } catch (e: CancellationException) {
+            throw e
         } catch (_: Exception) {
             isStartingSession = false
             _uiState.update { it.copy(isLoading = false) }
@@ -563,6 +571,8 @@ class ActiveWorkoutViewModel @Inject constructor(
                     )
                 }
                 checkPersonalRecord(loggedSet, earlierToday = state.setsFor(currentExercise.exerciseId), unit = unit)
+            } catch (e: CancellationException) {
+                throw e
             } catch (_: Exception) {
                 showMessage(R.string.workout_error_log_set)
             } finally {
@@ -582,12 +592,14 @@ class ActiveWorkoutViewModel @Inject constructor(
         // Only a bonus: if history can't be read, the set is still logged, just not celebrated.
         val history = try {
             historyExcludingCurrentSession(set.exerciseId)
+        } catch (e: CancellationException) {
+            throw e
         } catch (_: Exception) {
             return
         }
         val previousBest = (history + earlierToday).bestEstimatedOneRepMax() ?: return
         if (estimate > previousBest + PR_MIN_GAIN_KG) {
-            _uiEffect.emit(
+            _uiEffect.send(
                 ActiveWorkoutUiEffect.PersonalRecord(
                     exerciseName = set.exercise?.displayName.orEmpty(),
                     estimatedOneRepMaxKg = estimate,
@@ -602,7 +614,9 @@ class ActiveWorkoutViewModel @Inject constructor(
             try {
                 workoutRepository.deleteSet(set)
                 _uiState.update { it.copy(completedSets = it.completedSets.filter { s -> s.id != set.id }) }
-                _uiEffect.emit(ActiveWorkoutUiEffect.SetDeleted(set))
+                _uiEffect.send(ActiveWorkoutUiEffect.SetDeleted(set))
+            } catch (e: CancellationException) {
+                throw e
             } catch (_: Exception) {
                 showMessage(R.string.workout_error_delete_set)
             }
@@ -615,6 +629,8 @@ class ActiveWorkoutViewModel @Inject constructor(
             try {
                 workoutRepository.insertSet(set)
                 _uiState.update { it.copy(completedSets = it.completedSets.filter { s -> s.id != set.id } + set) }
+            } catch (e: CancellationException) {
+                throw e
             } catch (_: Exception) {
                 showMessage(R.string.workout_error_log_set)
             }
@@ -627,7 +643,9 @@ class ActiveWorkoutViewModel @Inject constructor(
             try {
                 completeWorkoutUseCase(sessionId)
                 restTimerController.skipRest()
-                _uiEffect.emit(ActiveWorkoutUiEffect.WorkoutCompleted)
+                _uiEffect.send(ActiveWorkoutUiEffect.WorkoutCompleted)
+            } catch (e: CancellationException) {
+                throw e
             } catch (_: Exception) {
                 showMessage(R.string.workout_error_finish)
             }
@@ -684,7 +702,7 @@ class ActiveWorkoutViewModel @Inject constructor(
     }
 
     private fun showMessage(messageResId: Int) {
-        viewModelScope.launch { _uiEffect.emit(ActiveWorkoutUiEffect.ShowMessage(messageResId)) }
+        viewModelScope.launch { _uiEffect.send(ActiveWorkoutUiEffect.ShowMessage(messageResId)) }
     }
 
     override fun onCleared() {

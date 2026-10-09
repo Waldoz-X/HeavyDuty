@@ -14,7 +14,7 @@ data class ExerciseListUiState(
     /** Equipment values present in the current muscle/search filter's results, for the chip row. */
     val availableEquipment: List<String> = emptyList(),
     val selectedEquipment: String? = null,
-    val error: String? = null,
+    val loadFailed: Boolean = false,
     /** Only used when the screen is opened in exercise-picker (selection) mode. In pick order. */
     val selectedIds: Set<Long> = emptySet(),
     /** Exercise shown in the animated preview dialog, if open. */

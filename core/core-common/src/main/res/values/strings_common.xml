@@ -51,4 +51,6 @@
     <string name="body_back">Posterior</string>
     <string name="hours_short">%1$s h</string>
     <string name="duration_hours_minutes">%1$d h %2$d min</string>
+    <string name="error_load_title">No se pudieron cargar los datos</string>
+    <string name="error_load_desc">Tus datos siguen guardados. Sal de esta pantalla y vuelve a entrar.</string>
 </resources>

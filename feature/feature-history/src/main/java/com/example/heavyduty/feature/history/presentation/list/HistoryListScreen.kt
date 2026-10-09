@@ -32,6 +32,7 @@ import com.example.heavyduty.core.domain.model.WorkoutStatus
 import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdChip
 import com.example.heavyduty.core.ui.components.HdEmptyState
+import com.example.heavyduty.core.ui.components.HdErrorState
 import com.example.heavyduty.core.ui.components.HdGradientCard
 import com.example.heavyduty.core.ui.components.HdSkeletonCard
 import com.example.heavyduty.core.ui.theme.GradientLimeEnd
@@ -102,6 +103,7 @@ fun HistoryListScreen(
                     repeat(5) { HdSkeletonCard() }
                 }
             }
+            uiState.loadFailed -> HdErrorState()
             uiState.sessions.isEmpty() -> {
                 HdEmptyState(
                     icon = Icons.Default.History,

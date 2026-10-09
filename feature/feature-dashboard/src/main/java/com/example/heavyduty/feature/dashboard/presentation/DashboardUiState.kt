@@ -22,7 +22,7 @@ data class DashboardUiState(
     val streakDays: Int = 0,
     val bodyWeightSummary: BodyWeightSummaryUi = BodyWeightSummaryUi(),
     val showLogWeightSheet: Boolean = false,
-    val error: String? = null,
+    val loadFailed: Boolean = false,
 )
 
 /**
@@ -46,5 +46,4 @@ sealed interface DashboardUiEffect {
     object NavigateToActiveWorkout : DashboardUiEffect
     object NavigateToRoutines : DashboardUiEffect
     data class NavigateToRoutine(val routineId: Long) : DashboardUiEffect
-    data class ShowError(val message: String) : DashboardUiEffect
 }

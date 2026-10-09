@@ -18,13 +18,15 @@ import com.example.heavyduty.feature.routines.domain.usecase.GetRoutineVolumeHis
 import com.example.heavyduty.feature.routines.domain.usecase.GetRoutineWithExercisesUseCase
 import com.example.heavyduty.feature.routines.domain.usecase.UpdateRoutineUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -54,8 +56,10 @@ class RoutineEditorViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(RoutineEditorUiState())
     val uiState: StateFlow<RoutineEditorUiState> = _uiState.asStateFlow()
 
-    private val _uiEffect = MutableSharedFlow<RoutineEditorUiEffect>()
-    val uiEffect = _uiEffect.asSharedFlow()
+    // A Channel, not a SharedFlow: an effect sent while the screen isn't collecting (rotation,
+    // background) waits for it instead of being dropped, and is delivered exactly once.
+    private val _uiEffect = Channel<RoutineEditorUiEffect>(Channel.BUFFERED)
+    val uiEffect: Flow<RoutineEditorUiEffect> = _uiEffect.receiveAsFlow()
 
     /** Last removed exercise and where it was, for "Deshacer". */
     private var lastRemoved: Pair<Int, RoutineExercise>? = null
@@ -102,7 +106,7 @@ class RoutineEditorViewModel @Inject constructor(
         _uiState.update { state ->
             state.copy(exercises = state.exercises + exercises.map { newRoutineExercise(it) })
         }
-        _uiEffect.emit(RoutineEditorUiEffect.ExercisesAdded(exercises.size))
+        _uiEffect.send(RoutineEditorUiEffect.ExercisesAdded(exercises.size))
     }
 
     /**
@@ -143,7 +147,7 @@ class RoutineEditorViewModel @Inject constructor(
             )
         }
         viewModelScope.launch {
-            _uiEffect.emit(RoutineEditorUiEffect.ShowUndoRemove(removed.exercise?.displayName.orEmpty()))
+            _uiEffect.send(RoutineEditorUiEffect.ShowUndoRemove(removed.exercise?.displayName.orEmpty()))
         }
     }
 
@@ -176,7 +180,7 @@ class RoutineEditorViewModel @Inject constructor(
         _uiState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
             getRoutineWithExercisesUseCase(id)
-                .catch { e -> _uiState.update { it.copy(isLoading = false, error = e.message) } }
+                .catch { _uiState.update { it.copy(isLoading = false, loadFailed = true) } }
                 .firstOrNull()?.let { routine ->
                     _uiState.update {
                         it.copy(
@@ -200,7 +204,7 @@ class RoutineEditorViewModel @Inject constructor(
         if (state.isSaving) return
         if (state.name.isBlank()) {
             _uiState.update { it.copy(showNameError = true) }
-            viewModelScope.launch { _uiEffect.emit(RoutineEditorUiEffect.ShowMessage(R.string.routine_error_name_required)) }
+            viewModelScope.launch { _uiEffect.send(RoutineEditorUiEffect.ShowMessage(R.string.routine_error_name_required)) }
             return
         }
 
@@ -226,10 +230,12 @@ class RoutineEditorViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(isSaving = false, savedSnapshot = EditorSnapshot(it.name, it.description, it.type, it.exercises))
                 }
-                _uiEffect.emit(RoutineEditorUiEffect.NavigateBack)
+                _uiEffect.send(RoutineEditorUiEffect.NavigateBack)
+            } catch (e: CancellationException) {
+                throw e
             } catch (_: Exception) {
                 _uiState.update { it.copy(isSaving = false) }
-                _uiEffect.emit(RoutineEditorUiEffect.ShowMessage(R.string.routine_error_save))
+                _uiEffect.send(RoutineEditorUiEffect.ShowMessage(R.string.routine_error_save))
             }
         }
     }

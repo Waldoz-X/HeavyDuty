@@ -114,5 +114,4 @@
     <string name="timer_stop">Stop</string>
     <string name="timer_channel_name">Workout timer</string>
     <string name="timer_channel_description">Shows the running rest/AMRAP/EMOM/Tabata timer</string>
-    <string name="exercise_load_error">Couldn\'t load the exercise</string>
 </resources>

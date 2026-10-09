@@ -5,4 +5,6 @@ import com.example.heavyduty.feature.stats.domain.usecase.ActivityHeatmapStatsRe
 data class MapaActividadUiState(
     val report: ActivityHeatmapStatsReport = ActivityHeatmapStatsReport(),
     val isLoading: Boolean = true,
+    /** The data couldn't be read; the screen shows an error instead of looking empty. */
+    val loadFailed: Boolean = false,
 )

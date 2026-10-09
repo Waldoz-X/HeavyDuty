@@ -1,6 +1,7 @@
 package com.example.heavyduty.feature.stats.presentation.mapaactividad
 
 import com.example.heavyduty.core.ui.components.HdCardsSkeleton
+import com.example.heavyduty.core.ui.components.HdErrorState
 import com.example.heavyduty.feature.stats.domain.usecase.TimeSlot
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.platform.LocalConfiguration
@@ -83,6 +84,10 @@ fun MapaActividadScreen(
     ) { innerPadding ->
         if (uiState.isLoading) {
             HdCardsSkeleton(modifier = Modifier.padding(innerPadding).padding(16.dp), heights = listOf(180.dp, 200.dp, 220.dp))
+            return@Scaffold
+        }
+        if (uiState.loadFailed) {
+            HdErrorState(modifier = Modifier.padding(innerPadding))
             return@Scaffold
         }
 

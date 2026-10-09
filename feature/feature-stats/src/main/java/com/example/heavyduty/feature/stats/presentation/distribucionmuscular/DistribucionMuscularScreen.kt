@@ -43,6 +43,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.heavyduty.core.common.extensions.formatCompact
 import com.example.heavyduty.core.ui.components.HdEmptyState
+import com.example.heavyduty.core.ui.components.HdErrorState
 import com.example.heavyduty.core.ui.components.HdPeriodSelector
 import com.example.heavyduty.core.ui.components.HdRadarChart
 import com.example.heavyduty.core.ui.components.HdStatCard
@@ -74,6 +75,7 @@ fun DistribucionMuscularScreen(
     ) { innerPadding ->
         when {
             uiState.isLoading -> HdCardsSkeleton(modifier = Modifier.padding(innerPadding).padding(16.dp), heights = listOf(48.dp, 320.dp, 120.dp, 120.dp))
+            uiState.loadFailed -> HdErrorState(modifier = Modifier.padding(innerPadding))
             uiState.currentWeek.size < 3 -> HdEmptyState(
                 icon = Icons.Default.PieChart,
                 title = stringResource(R.string.stats_insufficient_data),

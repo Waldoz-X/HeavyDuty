@@ -9,6 +9,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
@@ -32,6 +33,7 @@ class InformeMensualViewModel @Inject constructor(
             // Switching months drops the previous month's query (flatMapLatest).
             _currentMillis
                 .flatMapLatest { millis -> getMonthlyReport(millis).map { report -> millis to report } }
+                .catch { _uiState.update { it.copy(isLoading = false, loadFailed = true) } }
                 .collect { (millis, report) ->
                     _uiState.update {
                         it.copy(

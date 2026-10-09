@@ -12,6 +12,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.update
@@ -47,7 +48,8 @@ class DistribucionMuscularViewModel @Inject constructor(
                     val previousMap = topKeys.associateWith { previous[it] ?: 0f }
                     Triple(currentMap, previousMap, summary)
                 }
-            }.collect { (currentMap, previousMap, summary) ->
+            }.catch { _uiState.update { it.copy(isLoading = false, loadFailed = true) } }
+                .collect { (currentMap, previousMap, summary) ->
                 _uiState.update {
                     it.copy(
                         currentWeek = currentMap,

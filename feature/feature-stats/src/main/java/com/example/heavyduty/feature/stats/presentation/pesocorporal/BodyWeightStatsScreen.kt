@@ -62,6 +62,7 @@ import com.example.heavyduty.core.common.extensions.toFormattedDateTime
 import com.example.heavyduty.core.common.extensions.toWeightString
 import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdEmptyState
+import com.example.heavyduty.core.ui.components.HdErrorState
 import com.example.heavyduty.core.ui.components.HdLineChart
 import com.example.heavyduty.feature.stats.domain.usecase.BodyWeightHistoryItem
 import com.example.heavyduty.feature.stats.domain.usecase.BodyWeightStatsReport
@@ -121,6 +122,10 @@ fun BodyWeightStatsScreen(
     ) { innerPadding ->
         if (uiState.isLoading) {
             HdCardsSkeleton(modifier = Modifier.padding(innerPadding).padding(16.dp), heights = listOf(160.dp, 240.dp, 200.dp))
+            return@Scaffold
+        }
+        if (uiState.loadFailed) {
+            HdErrorState(modifier = Modifier.padding(innerPadding))
             return@Scaffold
         }
 

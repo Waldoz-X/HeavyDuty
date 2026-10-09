@@ -25,7 +25,7 @@ data class RoutineEditorUiState(
     val isLoading: Boolean = false,
     val isSaving: Boolean = false,
     val isEditMode: Boolean = false,
-    val error: String? = null,
+    val loadFailed: Boolean = false,
     /** Index of the exercise whose settings sheet is open. */
     val editingIndex: Int? = null,
     /** Set when saving was attempted without a name. */

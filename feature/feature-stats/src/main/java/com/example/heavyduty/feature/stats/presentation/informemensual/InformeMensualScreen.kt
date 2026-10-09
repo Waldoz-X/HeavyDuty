@@ -1,6 +1,7 @@
 package com.example.heavyduty.feature.stats.presentation.informemensual
 
 import com.example.heavyduty.core.ui.components.HdCardsSkeleton
+import com.example.heavyduty.core.ui.components.HdErrorState
 import kotlin.math.roundToInt
 import androidx.compose.ui.platform.LocalConfiguration
 import com.example.heavyduty.core.common.R
@@ -100,6 +101,10 @@ fun InformeMensualScreen(
 
             if (uiState.isLoading) {
                 HdCardsSkeleton(modifier = Modifier.fillMaxSize().padding(16.dp), heights = listOf(56.dp, 120.dp, 120.dp, 220.dp))
+                return@Scaffold
+            }
+            if (uiState.loadFailed) {
+                HdErrorState(modifier = Modifier.fillMaxSize())
                 return@Scaffold
             }
 
