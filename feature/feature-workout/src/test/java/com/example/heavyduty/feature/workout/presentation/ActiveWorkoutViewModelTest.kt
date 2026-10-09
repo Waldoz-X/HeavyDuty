@@ -16,6 +16,7 @@ import com.example.heavyduty.core.domain.repository.RestTimerState
 import com.example.heavyduty.core.domain.repository.RoutineRepository
 import com.example.heavyduty.core.domain.repository.UserPreferencesRepository
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
+import com.example.heavyduty.core.testing.FakeClock
 import com.example.heavyduty.core.testing.MainDispatcherRule
 import com.example.heavyduty.feature.workout.domain.usecase.CompleteWorkoutUseCase
 import com.example.heavyduty.feature.workout.domain.usecase.LogSetUseCase
@@ -60,6 +61,7 @@ class ActiveWorkoutViewModelTest {
 
     private val workoutRepository = FakeWorkoutRepository()
     private val restTimer = FakeRestTimerController()
+    private val clock = FakeClock(1_800_000_000_000)
 
     private fun createViewModel(
         routineId: Long? = null,
@@ -70,15 +72,16 @@ class ActiveWorkoutViewModelTest {
             every { preferredEffortScale } returns flowOf("RIR")
         }
         return ActiveWorkoutViewModel(
-            startWorkoutUseCase = StartWorkoutUseCase(workoutRepository),
-            logSetUseCase = LogSetUseCase(workoutRepository, restTimer),
-            completeWorkoutUseCase = CompleteWorkoutUseCase(workoutRepository),
+            startWorkoutUseCase = StartWorkoutUseCase(workoutRepository, clock),
+            logSetUseCase = LogSetUseCase(workoutRepository, restTimer, clock),
+            completeWorkoutUseCase = CompleteWorkoutUseCase(workoutRepository, clock),
             routineRepository = FakeRoutineRepository(listOf(routine)),
             workoutRepository = workoutRepository,
             exerciseRepository = FakeExerciseRepository(listOf(bench, row)),
             userPreferencesRepository = preferences,
             restTimerController = restTimer,
             savedStateHandle = savedState,
+            clock = clock,
         )
     }
 
@@ -220,6 +223,22 @@ class ActiveWorkoutViewModelTest {
         assertFalse(state.isActive)
         assertTrue(state.completedSets.isEmpty())
         assertEquals(WorkoutStatus.COMPLETED, workoutRepository.sessions.value.single().status)
+    }
+
+    @Test
+    fun `a workout lasts from its start to when it's finished`() {
+        val viewModel = createViewModel()
+        viewModel.onEvent(ActiveWorkoutUiEvent.OnStartRoutine(routine.id))
+        val start = workoutRepository.sessions.value.single().startTime
+        assertEquals(clock.now, start)
+
+        clock.advanceBy(45 * 60_000L)
+        viewModel.logSet("8")
+        viewModel.onEvent(ActiveWorkoutUiEvent.OnCompleteWorkout)
+
+        val session = workoutRepository.sessions.value.single()
+        assertEquals(start + 45 * 60_000L, session.endTime)
+        assertEquals(45 * 60, session.totalDurationSecs)
     }
 
     @Test

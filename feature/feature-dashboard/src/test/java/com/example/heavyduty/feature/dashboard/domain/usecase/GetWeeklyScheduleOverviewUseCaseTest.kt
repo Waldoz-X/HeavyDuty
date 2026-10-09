@@ -5,6 +5,7 @@ import com.example.heavyduty.core.domain.model.Routine
 import com.example.heavyduty.core.domain.model.WorkoutSession
 import com.example.heavyduty.core.domain.model.WorkoutStatus
 import com.example.heavyduty.core.testing.FakeCalendarRepository
+import com.example.heavyduty.core.testing.FakeClock
 import com.example.heavyduty.core.testing.FakeRoutineRepository
 import com.example.heavyduty.core.testing.FakeWorkoutRepository
 import com.example.heavyduty.feature.dashboard.domain.model.DayStatus
@@ -47,7 +48,7 @@ class GetWeeklyScheduleOverviewUseCaseTest {
     )
 
     private fun week(offset: Int = 0) = runBlocking {
-        GetWeeklyScheduleOverviewUseCase(schedule, FakeRoutineRepository(listOf(torso, legs)), workouts)(offset) { thursday }.first()
+        GetWeeklyScheduleOverviewUseCase(schedule, FakeRoutineRepository(listOf(torso, legs)), workouts, FakeClock(millis(thursday, hour = 12)))(offset).first()
     }
 
     @Test

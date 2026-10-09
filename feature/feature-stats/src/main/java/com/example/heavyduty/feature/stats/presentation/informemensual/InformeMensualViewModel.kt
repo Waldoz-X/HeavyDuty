@@ -3,6 +3,7 @@ package com.example.heavyduty.feature.stats.presentation.informemensual
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.heavyduty.core.common.flow.whileSubscribed
+import com.example.heavyduty.core.domain.model.Clock
 import com.example.heavyduty.feature.stats.domain.usecase.GetMonthlyReportUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -19,9 +20,10 @@ import javax.inject.Inject
 @HiltViewModel
 class InformeMensualViewModel @Inject constructor(
     private val getMonthlyReport: GetMonthlyReportUseCase,
+    private val clock: Clock,
 ) : ViewModel() {
 
-    private val _currentMillis = MutableStateFlow(System.currentTimeMillis())
+    private val _currentMillis = MutableStateFlow(clock.nowMillis())
     private val _uiState = MutableStateFlow(InformeMensualUiState())
 
     /** Loads only while the screen is watching — see [whileSubscribed]. */
@@ -76,7 +78,7 @@ class InformeMensualViewModel @Inject constructor(
 
     private fun canGoForward(millis: Long): Boolean {
         val currentMonthCal = Calendar.getInstance().apply {
-            timeInMillis = System.currentTimeMillis()
+            timeInMillis = clock.nowMillis()
         }
         val targetMonthCal = Calendar.getInstance().apply {
             timeInMillis = millis

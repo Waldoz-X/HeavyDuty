@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.stats.domain.usecase
 
+import com.example.heavyduty.core.domain.model.Clock
 import com.example.heavyduty.core.domain.model.MuscleGroup
 import com.example.heavyduty.core.domain.model.HARD_SET_INTENSITY
 import com.example.heavyduty.core.domain.model.strengthRetention
@@ -22,6 +23,7 @@ private const val DAY_MILLIS = 86_400_000f
 class GetMuscleGroupStrengthRetentionUseCase @Inject constructor(
     private val workoutRepository: WorkoutRepository,
     private val exerciseRepository: ExerciseRepository,
+    private val clock: Clock,
 ) {
     operator fun invoke(): Flow<Map<MuscleGroup, Float>> =
         combine(
@@ -42,7 +44,7 @@ class GetMuscleGroupStrengthRetentionUseCase @Inject constructor(
                 }
             }
 
-            val now = System.currentTimeMillis()
+            val now = clock.nowMillis()
             MuscleGroup.entries.associateWith { muscle ->
                 val daysSince = lastHardSetByMuscle[muscle]?.let { (now - it) / DAY_MILLIS }
                 strengthRetention(daysSince)

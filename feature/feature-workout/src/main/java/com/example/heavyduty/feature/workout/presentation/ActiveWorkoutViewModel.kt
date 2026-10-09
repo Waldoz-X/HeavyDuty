@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.workout.presentation
 
+import com.example.heavyduty.core.domain.model.Clock
 import com.example.heavyduty.core.domain.model.displayName
 import com.example.heavyduty.core.common.extensions.formatOneDecimal
 import androidx.lifecycle.SavedStateHandle
@@ -67,6 +68,7 @@ class ActiveWorkoutViewModel @Inject constructor(
     private val userPreferencesRepository: UserPreferencesRepository,
     private val restTimerController: RestTimerController,
     private val savedStateHandle: SavedStateHandle,
+    private val clock: Clock,
 ) : ViewModel() {
 
     private var cachedExercises: List<Exercise>? = null
@@ -436,7 +438,7 @@ class ActiveWorkoutViewModel @Inject constructor(
         clockJob?.cancel()
         clockJob = viewModelScope.launch {
             while (true) {
-                val elapsed = ((System.currentTimeMillis() - startTime) / 1000).toInt().coerceAtLeast(0)
+                val elapsed = ((clock.nowMillis() - startTime) / 1000).toInt().coerceAtLeast(0)
                 _uiState.update { it.copy(elapsedSeconds = elapsed) }
                 delay(1.seconds)
             }
@@ -466,7 +468,7 @@ class ActiveWorkoutViewModel @Inject constructor(
                     routineId = routineId,
                     sessionName = routine.name,
                     type = routine.type,
-                    startTime = System.currentTimeMillis(),
+                    startTime = clock.nowMillis(),
                 )
             }
         }
@@ -477,7 +479,7 @@ class ActiveWorkoutViewModel @Inject constructor(
         isStartingSession = true
         _uiState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
-            startSession { startWorkoutUseCase(sessionName = FREE_WORKOUT_NAME, startTime = System.currentTimeMillis()) }
+            startSession { startWorkoutUseCase(sessionName = FREE_WORKOUT_NAME, startTime = clock.nowMillis()) }
         }
     }
 
@@ -544,7 +546,7 @@ class ActiveWorkoutViewModel @Inject constructor(
                     weight = weight,
                     durationSecs = durationSecs,
                     isCompleted = true,
-                    completedAt = System.currentTimeMillis(),
+                    completedAt = clock.nowMillis(),
                     isWarmup = state.isWarmupInput,
                     effort = effort,
                     weightUnit = unit,

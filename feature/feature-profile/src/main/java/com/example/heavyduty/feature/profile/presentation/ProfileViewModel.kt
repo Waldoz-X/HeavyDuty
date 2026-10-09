@@ -1,6 +1,7 @@
 package com.example.heavyduty.feature.profile.presentation
 
 import com.example.heavyduty.core.common.flow.whileSubscribed
+import com.example.heavyduty.core.domain.model.Clock
 import com.example.heavyduty.core.domain.model.WorkoutSet
 import com.example.heavyduty.core.domain.model.displayName
 import android.content.Context
@@ -69,6 +70,7 @@ class ProfileViewModel @Inject constructor(
     exerciseRepository: ExerciseRepository,
     private val userPreferencesRepository: UserPreferencesRepository,
     @param:ApplicationContext private val appContext: Context,
+    private val clock: Clock,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileUiState())
@@ -137,7 +139,7 @@ class ProfileViewModel @Inject constructor(
 
             // Hours per week over the last 4 weeks, oldest first, labeled by each week's start.
             val format = SimpleDateFormat("dd MMM", Locale.getDefault())
-            val chartData = weeklyTrainingHours(sessions, now = System.currentTimeMillis())
+            val chartData = weeklyTrainingHours(sessions, now = clock.nowMillis())
                 .map { (weekStart, hours) -> format.format(java.util.Date(weekStart)) to hours }
 
             ProfileFlowData(
@@ -145,7 +147,7 @@ class ProfileViewModel @Inject constructor(
                 stats = stats,
                 feedItems = feedItems,
                 chartData = chartData,
-                streak = currentStreakDays(sessions),
+                streak = currentStreakDays(sessions, clock.nowMillis()),
             )
         }.flowOn(Dispatchers.Default)
 
@@ -194,7 +196,7 @@ class ProfileViewModel @Inject constructor(
     )
 
     private fun formatRelativeTime(timestamp: Long): String {
-        val diff = System.currentTimeMillis() - timestamp
+        val diff = clock.nowMillis() - timestamp
         val hours = diff / (1000 * 60 * 60)
         val days = hours / 24
         return when {

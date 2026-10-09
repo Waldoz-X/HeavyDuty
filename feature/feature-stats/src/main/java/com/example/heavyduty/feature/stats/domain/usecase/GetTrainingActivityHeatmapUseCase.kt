@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.stats.domain.usecase
 
+import com.example.heavyduty.core.domain.model.Clock
 import com.example.heavyduty.core.domain.model.WorkoutStatus
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
 import kotlinx.coroutines.flow.Flow
@@ -72,11 +73,11 @@ private const val HEATMAP_WEEKS = 53
  */
 class GetTrainingActivityHeatmapUseCase @Inject constructor(
     private val workoutRepository: WorkoutRepository,
+    private val clock: Clock,
 ) {
-    /** [now] is the clock the streaks are measured against; tests pin it to a fixed date. */
-    operator fun invoke(now: () -> Long = System::currentTimeMillis): Flow<ActivityHeatmapStatsReport> =
+    operator fun invoke(): Flow<ActivityHeatmapStatsReport> =
         workoutRepository.getAllSessions().map { sessions ->
-            val nowMillis = now()
+            val nowMillis = clock.nowMillis()
             val calendar = Calendar.getInstance()
 
             calendar.timeInMillis = nowMillis

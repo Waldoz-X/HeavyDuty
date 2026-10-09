@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.workout.domain.usecase
 
+import com.example.heavyduty.core.domain.model.Clock
 import com.example.heavyduty.core.domain.model.Effort
 import com.example.heavyduty.core.domain.model.WorkoutSet
 import com.example.heavyduty.core.domain.model.WeightUnit
@@ -13,6 +14,7 @@ import javax.inject.Inject
 class LogSetUseCase @Inject constructor(
     private val workoutRepository: WorkoutRepository,
     private val restTimerController: RestTimerController,
+    private val clock: Clock,
 ) {
     suspend operator fun invoke(
         sessionId: Long,
@@ -36,7 +38,7 @@ class LogSetUseCase @Inject constructor(
             durationSecs = durationSecs,
             distance = distance,
             isCompleted = true,
-            completedAt = System.currentTimeMillis(),
+            completedAt = clock.nowMillis(),
             isWarmup = isWarmup,
             effort = effort,
             weightUnit = weightUnit,

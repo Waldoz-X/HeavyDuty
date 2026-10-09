@@ -7,6 +7,7 @@ import com.example.heavyduty.core.data.database.HeavyDutyDatabase
 import com.example.heavyduty.core.data.database.entity.ExerciseEntity
 import com.example.heavyduty.core.data.database.entity.RoutineEntity
 import com.example.heavyduty.core.data.database.mapper.toDomain
+import com.example.heavyduty.core.domain.model.Clock
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -30,7 +31,7 @@ class BackupImportRobustnessTest {
     @Before
     fun setUp() = runTest {
         db = Room.inMemoryDatabaseBuilder(context, HeavyDutyDatabase::class.java).build()
-        backups = BackupRepositoryImpl(db, db.exerciseDao(), db.routineDao(), db.workoutDao(), db.bodyWeightDao())
+        backups = BackupRepositoryImpl(db, db.exerciseDao(), db.routineDao(), db.workoutDao(), db.bodyWeightDao(), Clock.System)
         // What the user already has; a refused import must leave exactly this.
         db.exerciseDao().insertExercise(
             ExerciseEntity(name = "Press de banca con barra", nameEn = "barbell bench press", muscleGroup = "CHEST", exerciseType = "STRENGTH"),

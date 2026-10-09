@@ -3,6 +3,7 @@ package com.example.heavyduty.feature.stats.presentation.distribucioncorporal
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.heavyduty.core.common.flow.whileSubscribed
+import com.example.heavyduty.core.domain.model.Clock
 import com.example.heavyduty.core.domain.repository.UserPreferencesRepository
 import com.example.heavyduty.core.ui.components.BodyGender
 import com.example.heavyduty.core.ui.components.StatsPeriod
@@ -29,6 +30,7 @@ class DistribucionCorporalViewModel @Inject constructor(
     private val getMuscleGroupStrengthRetention: GetMuscleGroupStrengthRetentionUseCase,
     private val getPeriodSummary: GetPeriodSummaryUseCase,
     private val userPreferencesRepository: UserPreferencesRepository,
+    private val clock: Clock,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DistribucionCorporalUiState())
@@ -36,7 +38,7 @@ class DistribucionCorporalViewModel @Inject constructor(
     val uiState: StateFlow<DistribucionCorporalUiState> = _uiState.whileSubscribed(viewModelScope) {
         launch {
             _selectedPeriod.flatMapLatest { period ->
-                val (currentRange, previousRange) = period.currentAndPreviousRange()
+                val (currentRange, previousRange) = period.currentAndPreviousRange(clock.nowMillis())
                 combine(
                     getMuscleGroupVolume(currentRange.first, currentRange.last),
                     getMuscleGroupFatigue(),

@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.stats.domain.usecase
 
+import com.example.heavyduty.core.domain.model.Clock
 import com.example.heavyduty.core.domain.model.displayName
 import com.example.heavyduty.core.domain.model.MuscleGroup
 import com.example.heavyduty.core.domain.model.WorkoutStatus
@@ -23,8 +24,9 @@ import javax.inject.Inject
 class GetMonthlyReportUseCase @Inject constructor(
     private val workoutRepository: WorkoutRepository,
     private val exerciseRepository: ExerciseRepository,
+    private val clock: Clock,
 ) {
-    operator fun invoke(referenceMillis: Long = System.currentTimeMillis()): Flow<MonthlyReport> {
+    operator fun invoke(referenceMillis: Long = clock.nowMillis()): Flow<MonthlyReport> {
         val calendar = Calendar.getInstance().apply {
             timeInMillis = referenceMillis
             set(Calendar.DAY_OF_MONTH, 1)

@@ -12,6 +12,7 @@ import com.example.heavyduty.core.data.database.entity.RoutineEntity
 import com.example.heavyduty.core.data.database.entity.RoutineExerciseEntity
 import com.example.heavyduty.core.data.database.entity.WorkoutSessionEntity
 import com.example.heavyduty.core.data.database.entity.WorkoutSetEntity
+import com.example.heavyduty.core.domain.model.Clock
 import com.example.heavyduty.core.domain.repository.BackupImportResult
 import com.example.heavyduty.core.domain.repository.BackupRepository
 import com.example.heavyduty.core.domain.model.ExerciseType
@@ -159,6 +160,7 @@ class BackupRepositoryImpl @Inject constructor(
     private val routineDao: RoutineDao,
     private val workoutDao: WorkoutDao,
     private val bodyWeightDao: BodyWeightDao,
+    private val clock: Clock,
 ) : BackupRepository {
 
     private val gson = Gson()
@@ -312,7 +314,7 @@ class BackupRepositoryImpl @Inject constructor(
 
         var routinesImported = 0
         for (routineDto in snapshot.routines.orEmpty()) {
-            val now = System.currentTimeMillis()
+            val now = clock.nowMillis()
             val createdAt = routineDto.createdAt ?: now
             if (!existingRoutines.add(routineDto.name!! to createdAt)) {
                 alreadyPresent++

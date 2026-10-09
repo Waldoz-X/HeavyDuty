@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.stats.domain.usecase
 
+import com.example.heavyduty.core.domain.model.Clock
 import com.example.heavyduty.core.domain.model.MuscleGroup
 import com.example.heavyduty.core.domain.model.decayedFatigue
 import com.example.heavyduty.core.domain.model.excludeWarmups
@@ -41,10 +42,11 @@ private const val FATIGUE_WINDOW_MILLIS = 14 * 24 * 60 * 60 * 1000L
 class GetMuscleGroupFatigueUseCase @Inject constructor(
     private val workoutRepository: WorkoutRepository,
     private val exerciseRepository: ExerciseRepository,
+    private val clock: Clock,
 ) {
     operator fun invoke(): Flow<Map<MuscleGroup, Float>> =
         combine(
-            workoutRepository.getCompletedSetsByDateRange(System.currentTimeMillis() - FATIGUE_WINDOW_MILLIS, Long.MAX_VALUE),
+            workoutRepository.getCompletedSetsByDateRange(clock.nowMillis() - FATIGUE_WINDOW_MILLIS, Long.MAX_VALUE),
             // Intensity is relative to the best estimated 1RM across all history, not the window.
             workoutRepository.getExerciseSetSummaries(),
             exerciseRepository.getAllExercises(),
@@ -69,7 +71,7 @@ class GetMuscleGroupFatigueUseCase @Inject constructor(
                 }
             }
 
-            val now = System.currentTimeMillis()
+            val now = clock.nowMillis()
             val fatigueByMuscle = stimulusByMuscle.mapValues { (_, entries) ->
                 accumulateFatigue(entries.sortedBy { it.first }, now)
             }

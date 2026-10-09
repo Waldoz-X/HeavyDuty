@@ -10,6 +10,7 @@ import com.example.heavyduty.core.data.database.entity.RoutineEntity
 import com.example.heavyduty.core.data.database.entity.RoutineExerciseEntity
 import com.example.heavyduty.core.data.database.entity.WorkoutSessionEntity
 import com.example.heavyduty.core.data.database.entity.WorkoutSetEntity
+import com.example.heavyduty.core.domain.model.Clock
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -44,7 +45,7 @@ class BackupRoundTripTest {
         target.close()
     }
 
-    private fun HeavyDutyDatabase.backups() = BackupRepositoryImpl(this, exerciseDao(), routineDao(), workoutDao(), bodyWeightDao())
+    private fun HeavyDutyDatabase.backups() = BackupRepositoryImpl(this, exerciseDao(), routineDao(), workoutDao(), bodyWeightDao(), Clock.System)
 
     @Test
     fun exportThenImport_restoresEverythingOnAnotherInstall() = runTest {

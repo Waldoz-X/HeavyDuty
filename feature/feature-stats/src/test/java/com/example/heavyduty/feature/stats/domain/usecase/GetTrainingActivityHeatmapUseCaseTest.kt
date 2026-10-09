@@ -4,6 +4,7 @@ import com.example.heavyduty.core.domain.model.WorkoutSession
 import com.example.heavyduty.core.domain.model.WorkoutSet
 import com.example.heavyduty.core.domain.model.WorkoutStatus
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
+import com.example.heavyduty.core.testing.FakeClock
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
@@ -39,7 +40,7 @@ class GetTrainingActivityHeatmapUseCaseTest {
     @Test
     fun `empty sessions returns default report`() = runBlocking {
         val repo = FakeWorkoutRepository(emptyList())
-        val useCase = GetTrainingActivityHeatmapUseCase(repo)
+        val useCase = GetTrainingActivityHeatmapUseCase(repo, FakeClock(System.currentTimeMillis()))
 
         val report = useCase().first()
 
@@ -92,9 +93,9 @@ class GetTrainingActivityHeatmapUseCaseTest {
         )
 
         val repo = FakeWorkoutRepository(sessions)
-        val useCase = GetTrainingActivityHeatmapUseCase(repo)
+        val useCase = GetTrainingActivityHeatmapUseCase(repo, FakeClock(now))
 
-        val report = useCase { now }.first()
+        val report = useCase().first()
 
         assertEquals(2, report.totalSessions)
         assertEquals(2, report.totalDaysTrained)
@@ -128,7 +129,7 @@ class GetTrainingActivityHeatmapUseCaseTest {
             WorkoutSession(id = i + 1L, startTime = start, totalDurationSecs = 1800, status = WorkoutStatus.COMPLETED)
         }
 
-        val report = GetTrainingActivityHeatmapUseCase(FakeWorkoutRepository(sessions)).invoke { at(2025, Calendar.DECEMBER, 31) }.first()
+        val report = GetTrainingActivityHeatmapUseCase(FakeWorkoutRepository(sessions), FakeClock(at(2025, Calendar.DECEMBER, 31)))().first()
 
         assertEquals(2, report.currentStreakWeeks)
         assertEquals(2, report.longestStreakWeeks)

@@ -3,6 +3,7 @@ package com.example.heavyduty.feature.stats.presentation.main
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.heavyduty.core.common.flow.whileSubscribed
+import com.example.heavyduty.core.domain.model.Clock
 import com.example.heavyduty.core.domain.repository.UserPreferencesRepository
 import com.example.heavyduty.core.ui.components.BodyGender
 import com.example.heavyduty.core.ui.components.StatsPeriod
@@ -27,9 +28,10 @@ class EstadisticasViewModel @Inject constructor(
     private val getMuscleGroupVolume: GetMuscleGroupVolumeUseCase,
     private val getPeriodSummary: GetPeriodSummaryUseCase,
     private val userPreferencesRepository: UserPreferencesRepository,
+    private val clock: Clock,
 ) : ViewModel() {
 
-    private val last7Days: List<Long> = buildLast7DaysStartMillis()
+    private val last7Days: List<Long> = buildLast7DaysStartMillis(clock.nowMillis())
     private val selectedDayMillis = MutableStateFlow(last7Days.last())
 
     private val _uiState = MutableStateFlow(EstadisticasUiState())
@@ -54,7 +56,7 @@ class EstadisticasViewModel @Inject constructor(
                 .collect { }
         }
         launch {
-            val (current, previous) = StatsPeriod.LAST_30_DAYS.currentAndPreviousRange()
+            val (current, previous) = StatsPeriod.LAST_30_DAYS.currentAndPreviousRange(clock.nowMillis())
             getPeriodSummary(current, previous).collect { summary ->
                 _uiState.update { it.copy(summary = summary) }
             }
@@ -68,8 +70,9 @@ class EstadisticasViewModel @Inject constructor(
     }
 }
 
-private fun buildLast7DaysStartMillis(): List<Long> {
+private fun buildLast7DaysStartMillis(now: Long): List<Long> {
     val calendar = Calendar.getInstance().apply {
+        timeInMillis = now
         set(Calendar.HOUR_OF_DAY, 0)
         set(Calendar.MINUTE, 0)
         set(Calendar.SECOND, 0)

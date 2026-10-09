@@ -3,6 +3,7 @@ package com.example.heavyduty.feature.stats.presentation.series
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.heavyduty.core.common.flow.whileSubscribed
+import com.example.heavyduty.core.domain.model.Clock
 import com.example.heavyduty.core.ui.components.StatsPeriod
 import com.example.heavyduty.core.ui.components.currentAndPreviousRange
 import com.example.heavyduty.feature.stats.domain.usecase.GetMuscleGroupSetCountUseCase
@@ -25,6 +26,7 @@ import javax.inject.Inject
 @HiltViewModel
 class SeriesPorMusculoViewModel @Inject constructor(
     private val getMuscleGroupSetCount: GetMuscleGroupSetCountUseCase,
+    private val clock: Clock,
 ) : ViewModel() {
 
     private val selectedPeriod = MutableStateFlow(StatsPeriod.LAST_7_DAYS)
@@ -35,7 +37,7 @@ class SeriesPorMusculoViewModel @Inject constructor(
         launch {
             selectedPeriod
                 .flatMapLatest { period ->
-                    val (range, _) = period.currentAndPreviousRange()
+                    val (range, _) = period.currentAndPreviousRange(clock.nowMillis())
                     getMuscleGroupSetCount(range.first, range.last).map { period to it }
                 }
                 .collect { (period, countByMuscle) ->

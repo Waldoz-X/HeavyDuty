@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.dashboard.domain.usecase
 
+import com.example.heavyduty.core.domain.model.Clock
 import com.example.heavyduty.core.domain.repository.BodyWeightRepository
 import com.example.heavyduty.core.domain.repository.UserPreferencesRepository
 import com.example.heavyduty.feature.dashboard.domain.model.BodyWeightSummaryUi
@@ -13,9 +14,10 @@ private const val CHART_WINDOW_DAYS = 90L
 class GetBodyWeightSummaryUseCase @Inject constructor(
     private val bodyWeightRepository: BodyWeightRepository,
     private val userPreferencesRepository: UserPreferencesRepository,
+    private val clock: Clock,
 ) {
     operator fun invoke(): Flow<BodyWeightSummaryUi> {
-        val now = System.currentTimeMillis()
+        val now = clock.nowMillis()
         val start = now - TimeUnit.DAYS.toMillis(CHART_WINDOW_DAYS)
 
         return combine(

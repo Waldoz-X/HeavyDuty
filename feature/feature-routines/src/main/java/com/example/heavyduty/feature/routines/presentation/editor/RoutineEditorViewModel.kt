@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.routines.presentation.editor
 
+import com.example.heavyduty.core.domain.model.Clock
 import com.example.heavyduty.core.domain.model.displayName
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -45,6 +46,7 @@ class RoutineEditorViewModel @Inject constructor(
     private val getRoutineVolumeHistoryUseCase: GetRoutineVolumeHistoryUseCase,
     private val exerciseRepository: ExerciseRepository,
     savedStateHandle: SavedStateHandle,
+    private val clock: Clock,
 ) : ViewModel() {
 
     private val routineId: Long? = savedStateHandle.get<Long>("routineId")
@@ -213,7 +215,7 @@ class RoutineEditorViewModel @Inject constructor(
                     description = state.description.trim(),
                     type = state.type,
                     exercises = exercises,
-                    updatedAt = System.currentTimeMillis(),
+                    updatedAt = clock.nowMillis(),
                 ) ?: Routine(
                     name = state.name.trim(),
                     description = state.description.trim(),

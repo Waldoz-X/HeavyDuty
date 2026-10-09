@@ -10,6 +10,7 @@ import com.example.heavyduty.core.domain.model.WeightUnit
 import com.example.heavyduty.core.domain.repository.ExerciseRepository
 import com.example.heavyduty.core.domain.repository.RoutineRepository
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
+import com.example.heavyduty.core.testing.FakeClock
 import com.example.heavyduty.core.testing.MainDispatcherRule
 import com.example.heavyduty.feature.routines.domain.usecase.CreateRoutineUseCase
 import com.example.heavyduty.feature.routines.domain.usecase.GetRoutineVolumeHistoryUseCase
@@ -53,6 +54,7 @@ class RoutineEditorViewModelTest {
             getRoutineVolumeHistoryUseCase = GetRoutineVolumeHistoryUseCase(workoutRepository),
             exerciseRepository = exerciseRepository,
             savedStateHandle = savedStateHandle,
+            clock = FakeClock(1_800_000_000_000),
         )
         return viewModel
     }

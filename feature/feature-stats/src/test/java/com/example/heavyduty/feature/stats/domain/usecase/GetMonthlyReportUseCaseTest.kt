@@ -2,6 +2,7 @@ package com.example.heavyduty.feature.stats.domain.usecase
 
 import com.example.heavyduty.core.domain.model.MuscleGroup
 import com.example.heavyduty.core.domain.model.WorkoutStatus
+import com.example.heavyduty.core.testing.FakeClock
 import com.example.heavyduty.core.testing.FakeExerciseRepository
 import com.example.heavyduty.core.testing.FakeWorkoutRepository
 import kotlinx.coroutines.flow.first
@@ -41,7 +42,7 @@ class GetMonthlyReportUseCaseTest {
 
     private fun report(reference: Long, sessions: List<com.example.heavyduty.core.domain.model.WorkoutSession> = this.sessions,
                        sets: List<com.example.heavyduty.core.domain.model.WorkoutSet> = this.sets) = runBlocking {
-        GetMonthlyReportUseCase(FakeWorkoutRepository(sessions, sets), FakeExerciseRepository(EXERCISES))(reference).first()
+        GetMonthlyReportUseCase(FakeWorkoutRepository(sessions, sets), FakeExerciseRepository(EXERCISES), FakeClock(reference))().first()
     }
 
     @Test

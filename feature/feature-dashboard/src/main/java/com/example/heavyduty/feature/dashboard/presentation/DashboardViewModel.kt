@@ -3,6 +3,7 @@ package com.example.heavyduty.feature.dashboard.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.heavyduty.core.common.flow.whileSubscribed
+import com.example.heavyduty.core.domain.model.Clock
 import com.example.heavyduty.core.domain.repository.BodyWeightRepository
 import com.example.heavyduty.core.domain.repository.CalendarRepository
 import com.example.heavyduty.feature.dashboard.domain.model.currentWeekRanges
@@ -35,6 +36,7 @@ class DashboardViewModel @Inject constructor(
     private val getRecentWorkout: GetRecentWorkoutUseCase,
     private val getBodyWeightSummary: GetBodyWeightSummaryUseCase,
     private val getCurrentStreak: GetCurrentStreakUseCase,
+    private val clock: Clock,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DashboardUiState())
@@ -113,7 +115,7 @@ class DashboardViewModel @Inject constructor(
         launch {
             // Queries cover the whole current week and move to the next one when it starts,
             // so workouts logged while the dashboard is kept alive in the back stack show up.
-            val weekly = currentWeekRanges().flatMapLatest { week ->
+            val weekly = currentWeekRanges(clock::nowMillis).flatMapLatest { week ->
                 combine(
                     getWeeklySummary(week),
                     getWeeklyMuscleVolume(week.first, week.last),

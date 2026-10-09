@@ -3,6 +3,7 @@ package com.example.heavyduty.feature.stats.presentation.distribucionmuscular
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.heavyduty.core.common.flow.whileSubscribed
+import com.example.heavyduty.core.domain.model.Clock
 import com.example.heavyduty.core.ui.components.StatsPeriod
 import com.example.heavyduty.core.ui.components.currentAndPreviousRange
 import com.example.heavyduty.feature.stats.domain.usecase.GetMuscleGroupVolumeUseCase
@@ -24,6 +25,7 @@ private const val MAX_AXES = 8
 class DistribucionMuscularViewModel @Inject constructor(
     private val getMuscleGroupVolume: GetMuscleGroupVolumeUseCase,
     private val getPeriodSummary: GetPeriodSummaryUseCase,
+    private val clock: Clock,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DistribucionMuscularUiState())
@@ -31,7 +33,7 @@ class DistribucionMuscularViewModel @Inject constructor(
     val uiState: StateFlow<DistribucionMuscularUiState> = _uiState.whileSubscribed(viewModelScope) {
         launch {
             _selectedPeriod.flatMapLatest { period ->
-                val (currentRange, previousRange) = period.currentAndPreviousRange()
+                val (currentRange, previousRange) = period.currentAndPreviousRange(clock.nowMillis())
                 combine(
                     getMuscleGroupVolume(currentRange.first, currentRange.last),
                     getMuscleGroupVolume(previousRange.first, previousRange.last),

@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.dashboard.domain.usecase
 
+import com.example.heavyduty.core.domain.model.Clock
 import com.example.heavyduty.core.domain.model.WorkoutStatus
 import com.example.heavyduty.core.domain.repository.CalendarRepository
 import com.example.heavyduty.core.domain.repository.RoutineRepository
@@ -10,6 +11,7 @@ import com.example.heavyduty.feature.dashboard.domain.model.PlannedRoutineUi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import java.time.DayOfWeek
+import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.TextStyle
@@ -26,16 +28,17 @@ class GetWeeklyScheduleOverviewUseCase @Inject constructor(
     private val calendarRepository: CalendarRepository,
     private val routineRepository: RoutineRepository,
     private val workoutRepository: WorkoutRepository,
+    private val clock: Clock,
 ) {
-    /** [today] is read on every update (so the plan rolls over at midnight); tests pin it. */
-    operator fun invoke(weekOffset: Int = 0, today: () -> LocalDate = { LocalDate.now() }): Flow<List<DayPlanUi>> =
+    operator fun invoke(weekOffset: Int = 0): Flow<List<DayPlanUi>> =
         combine(
             calendarRepository.getWeekSchedule(),
             routineRepository.getAllRoutines(),
             workoutRepository.getAllSessions(),
         ) { schedule, routines, sessions ->
             val routineById = routines.associateBy { it.id }
-            val todayDate = today()
+            // Read on every update, so the plan rolls over at midnight.
+            val todayDate = Instant.ofEpochMilli(clock.nowMillis()).atZone(ZoneId.systemDefault()).toLocalDate()
             val monday = todayDate.with(DayOfWeek.MONDAY).plusWeeks(weekOffset.toLong())
 
             (1..7).map { day ->
