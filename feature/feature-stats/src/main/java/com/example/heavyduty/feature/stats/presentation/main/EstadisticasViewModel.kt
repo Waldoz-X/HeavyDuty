@@ -2,6 +2,7 @@ package com.example.heavyduty.feature.stats.presentation.main
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.heavyduty.core.common.flow.whileSubscribed
 import com.example.heavyduty.core.domain.repository.UserPreferencesRepository
 import com.example.heavyduty.core.ui.components.BodyGender
 import com.example.heavyduty.core.ui.components.StatsPeriod
@@ -11,7 +12,6 @@ import com.example.heavyduty.feature.stats.domain.usecase.GetPeriodSummaryUseCas
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
@@ -21,7 +21,6 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 import javax.inject.Inject
-
 
 @HiltViewModel
 class EstadisticasViewModel @Inject constructor(
@@ -34,10 +33,9 @@ class EstadisticasViewModel @Inject constructor(
     private val selectedDayMillis = MutableStateFlow(last7Days.last())
 
     private val _uiState = MutableStateFlow(EstadisticasUiState())
-    val uiState: StateFlow<EstadisticasUiState> = _uiState.asStateFlow()
-
-    init {
-        viewModelScope.launch {
+    /** Loads only while the screen is watching — see [whileSubscribed]. */
+    val uiState: StateFlow<EstadisticasUiState> = _uiState.whileSubscribed(viewModelScope) {
+        launch {
             selectedDayMillis
                 .flatMapLatest { dayStart ->
                     getMuscleGroupVolume(dayStart, nextDayStart(dayStart) - 1)
@@ -55,7 +53,7 @@ class EstadisticasViewModel @Inject constructor(
                 }
                 .collect { }
         }
-        viewModelScope.launch {
+        launch {
             val (current, previous) = StatsPeriod.LAST_30_DAYS.currentAndPreviousRange()
             getPeriodSummary(current, previous).collect { summary ->
                 _uiState.update { it.copy(summary = summary) }

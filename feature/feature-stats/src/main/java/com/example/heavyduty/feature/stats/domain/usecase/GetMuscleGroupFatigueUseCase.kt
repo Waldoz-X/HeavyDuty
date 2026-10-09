@@ -2,7 +2,6 @@ package com.example.heavyduty.feature.stats.domain.usecase
 
 import com.example.heavyduty.core.domain.model.MuscleGroup
 import com.example.heavyduty.core.domain.model.decayedFatigue
-import com.example.heavyduty.core.domain.model.estimatedOneRepMax
 import com.example.heavyduty.core.domain.model.excludeWarmups
 import com.example.heavyduty.core.domain.model.fatigueLevel
 import com.example.heavyduty.core.domain.model.intensityWeightedTonnage
@@ -26,6 +25,13 @@ import javax.inject.Inject
 private const val FATIGUE_STIMULUS_DIVISOR = 400f
 
 /**
+ * Only sets from this far back are read: with a 36 h half-life a set's stimulus is down to
+ * 0.2 % after 14 days, so older history can't change the reading — and loading it all on every
+ * update would cost hundreds of milliseconds once there are years of sets.
+ */
+private const val FATIGUE_WINDOW_MILLIS = 14 * 24 * 60 * 60 * 1000L
+
+/**
  * Continuous 0 (fresh) .. 1 (maximally fatigued) reading per muscle group, weighted by how
  * intense each set was relative to the exercise's estimated 1RM and decayed smoothly over
  * time (36h half-life) — replaces a purely recency-based day-bucket estimate, which treated a
@@ -38,17 +44,14 @@ class GetMuscleGroupFatigueUseCase @Inject constructor(
 ) {
     operator fun invoke(): Flow<Map<MuscleGroup, Float>> =
         combine(
-            workoutRepository.getAllCompletedSets(),
+            workoutRepository.getCompletedSetsByDateRange(System.currentTimeMillis() - FATIGUE_WINDOW_MILLIS, Long.MAX_VALUE),
+            // Intensity is relative to the best estimated 1RM across all history, not the window.
+            workoutRepository.getExerciseSetSummaries(),
             exerciseRepository.getAllExercises(),
-        ) { sets, exercises ->
+        ) { sets, summaries, exercises ->
             val exerciseById = exercises.associateBy { it.id }
             val weightedSets = sets.excludeWarmups().filter { it.completedAt != null }
-
-            val oneRepMaxByExercise = weightedSets
-                .groupBy { it.exerciseId }
-                .mapValues { (_, exerciseSets) ->
-                    exerciseSets.mapNotNull { estimatedOneRepMax(it.weight ?: 0f, it.reps ?: 0) }.maxOrNull()
-                }
+            val oneRepMaxByExercise = summaries.associate { it.exerciseId to it.bestOneRepMaxKg }
 
             // Each set fans its stimulus out across every muscle it credits (see
             // Exercise.muscleCredits), not just its exercise's single primary muscle group.

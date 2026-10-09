@@ -18,14 +18,18 @@ class MuscleRecoveryStatsTest {
     private val now = System.currentTimeMillis()
     private val exercises = FakeExerciseRepository(EXERCISES)
 
+    /** One workout per session id, started when its first set was done. */
+    private fun sessionsOf(sets: List<com.example.heavyduty.core.domain.model.WorkoutSet>, status: WorkoutStatus = WorkoutStatus.COMPLETED) =
+        sets.groupBy { it.sessionId }.map { (id, its) -> session(id, start = its.minOf { it.completedAt!! } - 60_000, status = status) }
+
     private fun fatigue(vararg sets: com.example.heavyduty.core.domain.model.WorkoutSet, status: WorkoutStatus = WorkoutStatus.COMPLETED) =
         runBlocking {
-            val sessions = sets.map { it.sessionId }.distinct().map { session(it, start = 0, status = status) }
+            val sessions = sessionsOf(sets.toList(), status)
             GetMuscleGroupFatigueUseCase(FakeWorkoutRepository(sessions, sets.toList()), exercises)().first()
         }
 
     private fun retention(vararg sets: com.example.heavyduty.core.domain.model.WorkoutSet) = runBlocking {
-        val sessions = sets.map { it.sessionId }.distinct().map { session(it, start = 0) }
+        val sessions = sessionsOf(sets.toList())
         GetMuscleGroupStrengthRetentionUseCase(FakeWorkoutRepository(sessions, sets.toList()), exercises)().first()
     }
 
@@ -55,6 +59,9 @@ class MuscleRecoveryStatsTest {
         assertTrue("$recent > $twoDays", recent > twoDays)
         assertTrue("$twoDays > $month", twoDays > month)
         assertTrue("a month later it's practically gone: $month", month < 0.01f)
+        // The 14-day window only drops what had already faded: a 13-day-old set still counts a little.
+        val almostTwoWeeks = fatigue(set(1, SQUAT, reps = 5, weightKg = 120f, at = now - 13 * DAY)).getValue(MuscleGroup.QUADRICEPS)
+        assertTrue("$almostTwoWeeks", almostTwoWeeks > 0f && almostTwoWeeks < 0.01f)
     }
 
     @Test

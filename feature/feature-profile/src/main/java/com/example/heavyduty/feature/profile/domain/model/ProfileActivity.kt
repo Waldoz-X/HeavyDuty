@@ -8,10 +8,11 @@ private const val WEEK_MILLIS = 7 * 24 * 60 * 60 * 1000L
 
 /**
  * Ids of the working sets that, when lifted, beat the heaviest weight ever logged for their
- * exercise — walking the history in order, so the first set of an exercise counts too.
+ * exercise — walking [workingSets] in order, starting from [earlierBests] (the best weight per
+ * exercise before them), so an exercise's first set ever counts too.
  */
-fun personalRecordSetIds(workingSets: List<WorkoutSet>): Set<Long> {
-    val bestWeightByExercise = mutableMapOf<Long, Float>()
+fun personalRecordSetIds(workingSets: List<WorkoutSet>, earlierBests: Map<Long, Float> = emptyMap()): Set<Long> {
+    val bestWeightByExercise = earlierBests.toMutableMap()
     return workingSets
         .filter { it.weight != null && it.completedAt != null }
         .sortedBy { it.completedAt }

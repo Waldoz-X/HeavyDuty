@@ -2,6 +2,7 @@ package com.example.heavyduty.feature.stats.presentation.distribucionmuscular
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.heavyduty.core.common.flow.whileSubscribed
 import com.example.heavyduty.core.ui.components.StatsPeriod
 import com.example.heavyduty.core.ui.components.currentAndPreviousRange
 import com.example.heavyduty.feature.stats.domain.usecase.GetMuscleGroupVolumeUseCase
@@ -10,7 +11,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.update
@@ -27,12 +27,9 @@ class DistribucionMuscularViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DistribucionMuscularUiState())
-    val uiState: StateFlow<DistribucionMuscularUiState> = _uiState.asStateFlow()
-
-    private val _selectedPeriod = MutableStateFlow(StatsPeriod.LAST_30_DAYS)
-
-    init {
-        viewModelScope.launch {
+    /** Loads only while the screen is watching — see [whileSubscribed]. */
+    val uiState: StateFlow<DistribucionMuscularUiState> = _uiState.whileSubscribed(viewModelScope) {
+        launch {
             _selectedPeriod.flatMapLatest { period ->
                 val (currentRange, previousRange) = period.currentAndPreviousRange()
                 combine(
@@ -61,6 +58,8 @@ class DistribucionMuscularViewModel @Inject constructor(
             }
         }
     }
+
+    private val _selectedPeriod = MutableStateFlow(StatsPeriod.LAST_30_DAYS)
 
     fun onEvent(event: DistribucionMuscularUiEvent) {
         when (event) {

@@ -2,6 +2,7 @@ package com.example.heavyduty.feature.stats.presentation.distribucioncorporal
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.heavyduty.core.common.flow.whileSubscribed
 import com.example.heavyduty.core.domain.repository.UserPreferencesRepository
 import com.example.heavyduty.core.ui.components.BodyGender
 import com.example.heavyduty.core.ui.components.StatsPeriod
@@ -14,7 +15,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.update
@@ -32,12 +32,9 @@ class DistribucionCorporalViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DistribucionCorporalUiState())
-    val uiState: StateFlow<DistribucionCorporalUiState> = _uiState.asStateFlow()
-
-    private val _selectedPeriod = MutableStateFlow(StatsPeriod.LAST_30_DAYS)
-
-    init {
-        viewModelScope.launch {
+    /** Loads only while the screen is watching — see [whileSubscribed]. */
+    val uiState: StateFlow<DistribucionCorporalUiState> = _uiState.whileSubscribed(viewModelScope) {
+        launch {
             _selectedPeriod.flatMapLatest { period ->
                 val (currentRange, previousRange) = period.currentAndPreviousRange()
                 combine(
@@ -62,6 +59,8 @@ class DistribucionCorporalViewModel @Inject constructor(
             }.collect { }
         }
     }
+
+    private val _selectedPeriod = MutableStateFlow(StatsPeriod.LAST_30_DAYS)
 
     fun onEvent(event: DistribucionCorporalUiEvent) {
         when (event) {

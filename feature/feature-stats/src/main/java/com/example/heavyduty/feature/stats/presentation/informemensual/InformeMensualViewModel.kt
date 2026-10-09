@@ -2,17 +2,20 @@ package com.example.heavyduty.feature.stats.presentation.informemensual
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.heavyduty.core.common.flow.whileSubscribed
 import com.example.heavyduty.feature.stats.domain.usecase.GetMonthlyReportUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.Job
 import java.util.Calendar
 import javax.inject.Inject
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class InformeMensualViewModel @Inject constructor(
     private val getMonthlyReport: GetMonthlyReportUseCase,
@@ -20,33 +23,37 @@ class InformeMensualViewModel @Inject constructor(
 
     private val _currentMillis = MutableStateFlow(System.currentTimeMillis())
     private val _uiState = MutableStateFlow(InformeMensualUiState())
-    val uiState: StateFlow<InformeMensualUiState> = _uiState.asStateFlow()
 
-    private var reportJob: Job? = null
-
-    init {
-        loadReportForMillis(_currentMillis.value)
+    /** Loads only while the screen is watching — see [whileSubscribed]. */
+    val uiState: StateFlow<InformeMensualUiState> = _uiState.whileSubscribed(viewModelScope) {
+        launch {
+            // Switching months drops the previous month's query (flatMapLatest).
+            _currentMillis
+                .flatMapLatest { millis -> getMonthlyReport(millis).map { report -> millis to report } }
+                .collect { (millis, report) ->
+                    _uiState.update {
+                        it.copy(
+                            report = report,
+                            isLoading = false,
+                            hasNextMonth = canGoForward(millis),
+                        )
+                    }
+                }
+        }
     }
 
-    private fun loadReportForMillis(millis: Long) {
-        reportJob?.cancel()
+    init {
+        showMonth(_currentMillis.value)
+    }
+
+    private fun showMonth(millis: Long) {
+        _currentMillis.value = millis
         _uiState.update {
             it.copy(
                 isLoading = true,
                 currentReferenceMillis = millis,
                 hasNextMonth = canGoForward(millis),
             )
-        }
-        reportJob = viewModelScope.launch {
-            getMonthlyReport(millis).collect { report ->
-                _uiState.update {
-                    it.copy(
-                        report = report,
-                        isLoading = false,
-                        hasNextMonth = canGoForward(millis),
-                    )
-                }
-            }
         }
     }
 
@@ -55,8 +62,7 @@ class InformeMensualViewModel @Inject constructor(
             timeInMillis = _currentMillis.value
             add(Calendar.MONTH, -1)
         }
-        _currentMillis.value = cal.timeInMillis
-        loadReportForMillis(cal.timeInMillis)
+        showMonth(cal.timeInMillis)
     }
 
     fun selectNextMonth() {
@@ -65,8 +71,7 @@ class InformeMensualViewModel @Inject constructor(
             timeInMillis = _currentMillis.value
             add(Calendar.MONTH, 1)
         }
-        _currentMillis.value = cal.timeInMillis
-        loadReportForMillis(cal.timeInMillis)
+        showMonth(cal.timeInMillis)
     }
 
     private fun canGoForward(millis: Long): Boolean {

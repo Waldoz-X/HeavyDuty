@@ -1,5 +1,7 @@
 package com.example.heavyduty.feature.profile.presentation
 
+import com.example.heavyduty.core.common.flow.whileSubscribed
+import com.example.heavyduty.core.domain.model.WorkoutSet
 import com.example.heavyduty.core.domain.model.displayName
 import android.content.Context
 import android.net.Uri
@@ -22,10 +24,14 @@ import com.example.heavyduty.feature.profile.domain.usecase.SetEffortTrackingEna
 import com.example.heavyduty.feature.profile.domain.usecase.SetPreferredEffortScaleUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
@@ -42,6 +48,10 @@ import com.example.heavyduty.core.common.R
 import java.text.SimpleDateFormat
 import java.util.Locale
 
+/** Workouts shown in the profile's activity feed; the full list lives in the history screen. */
+private const val FEED_SIZE = 30
+
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     getDisplayNameUseCase: GetDisplayNameUseCase,
@@ -62,28 +72,44 @@ class ProfileViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileUiState())
-    val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
+    /** Loads only while the screen is watching — see [whileSubscribed]. */
+    val uiState: StateFlow<ProfileUiState> = _uiState.whileSubscribed(viewModelScope) {
+        val sessionsFlow = workoutRepository.getAllSessions()
+        // Only the latest workouts are shown, so only their sets are read — plus, per exercise,
+        // the heaviest weight lifted before them, which their sets must beat to be records.
+        val feedSetsFlow = sessionsFlow
+            .map { sessions -> sessions.sortedByDescending { it.startTime }.take(FEED_SIZE).minOfOrNull { it.startTime } }
+            .distinctUntilChanged()
+            .flatMapLatest { since ->
+                if (since == null) {
+                    flowOf(emptyList<WorkoutSet>() to emptyMap())
+                } else {
+                    combine(
+                        workoutRepository.getCompletedSetsByDateRange(since, Long.MAX_VALUE),
+                        workoutRepository.getBestWeightsBefore(since),
+                    ) { sets, earlierBests -> sets to earlierBests }
+                }
+            }
 
-    init {
         val profileDataFlow = combine(
             getDisplayNameUseCase(),
             getProfileStatsUseCase(),
-            workoutRepository.getAllSessions(),
-            workoutRepository.getAllCompletedSets(),
+            sessionsFlow,
+            feedSetsFlow,
             exerciseRepository.getAllExercises()
-        ) { name, stats, sessions, rawSets, exercises ->
+        ) { name, stats, sessions, (rawSets, earlierBests), exercises ->
             val sets = rawSets.excludeWarmups()
             val exerciseMap = exercises.associateBy { it.id }
 
             // A set counts as a PR the first time it beats the heaviest weight ever
             // lifted for that exercise, walking through history chronologically.
-            val personalRecordSetIds = personalRecordSetIds(sets)
+            val personalRecordSetIds = personalRecordSetIds(sets, earlierBests)
 
             // Group sets by session for O(N) lookup
             val setsBySession = sets.groupBy { it.sessionId }
 
             // Process Feed Items
-            val sortedSessions = sessions.sortedByDescending { it.startTime }
+            val sortedSessions = sessions.sortedByDescending { it.startTime }.take(FEED_SIZE)
             val feedItems = sortedSessions.map { session ->
                 val sessionSets = setsBySession[session.id] ?: emptyList()
                 val volume = sessionSets.map { (it.weight ?: 0f) * (it.reps ?: 0) }.sum()
@@ -132,7 +158,7 @@ class ProfileViewModel @Inject constructor(
             ProfileSettings(gender, effortEnabled, effortScale, weightUnit)
         }
 
-        viewModelScope.launch {
+        launch {
             combine(profileDataFlow, settingsFlow) { data, settings ->
                 _uiState.update {
                     it.copy(

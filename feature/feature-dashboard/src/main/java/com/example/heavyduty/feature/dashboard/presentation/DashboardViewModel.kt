@@ -2,6 +2,7 @@ package com.example.heavyduty.feature.dashboard.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.heavyduty.core.common.flow.whileSubscribed
 import com.example.heavyduty.core.domain.repository.BodyWeightRepository
 import com.example.heavyduty.core.domain.repository.CalendarRepository
 import com.example.heavyduty.feature.dashboard.domain.model.currentWeekRanges
@@ -12,11 +13,11 @@ import com.example.heavyduty.feature.dashboard.domain.usecase.GetWeeklyMuscleVol
 import com.example.heavyduty.feature.dashboard.domain.usecase.GetWeeklyScheduleOverviewUseCase
 import com.example.heavyduty.feature.dashboard.domain.usecase.GetWeeklySummaryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
@@ -37,17 +38,16 @@ class DashboardViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DashboardUiState())
-    val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
+    /** Loads only while the screen is watching — see [whileSubscribed]. */
+    val uiState: StateFlow<DashboardUiState> = _uiState.whileSubscribed(viewModelScope) {
+        loadDashboardData()
+        loadWeekPlan()
+    }
 
     private val _uiEffect = MutableSharedFlow<DashboardUiEffect>()
     val uiEffect = _uiEffect.asSharedFlow()
 
     private val weekOffset = MutableStateFlow(0)
-
-    init {
-        loadDashboardData()
-        loadWeekPlan()
-    }
 
     fun onEvent(event: DashboardUiEvent) {
         when (event) {
@@ -90,8 +90,8 @@ class DashboardViewModel @Inject constructor(
         }
     }
 
-    private fun loadWeekPlan() {
-        viewModelScope.launch {
+    private fun CoroutineScope.loadWeekPlan() {
+        launch {
             weekOffset
                 .flatMapLatest { offset -> getWeeklyScheduleOverview(offset) }
                 .combine(calendarRepository.getWeekSchedule()) { plan, schedule ->
@@ -109,8 +109,8 @@ class DashboardViewModel @Inject constructor(
         }
     }
 
-    private fun loadDashboardData() {
-        viewModelScope.launch {
+    private fun CoroutineScope.loadDashboardData() {
+        launch {
             // Queries cover the whole current week and move to the next one when it starts,
             // so workouts logged while the dashboard is kept alive in the back stack show up.
             val weekly = currentWeekRanges().flatMapLatest { week ->

@@ -35,6 +35,17 @@ class ProfileCalculationsTest {
     }
 
     @Test
+    fun `records in the latest workouts must beat what was lifted before them`() {
+        val sets = listOf(
+            set(1, exercise = 1, weight = 90f, at = 1), // bench was 100 before: not a record
+            set(2, exercise = 1, weight = 105f, at = 2), // beats 100
+            set(3, exercise = 2, weight = 60f, at = 3), // squat never done before
+        )
+
+        assertEquals(setOf(2L, 3L), personalRecordSetIds(sets, earlierBests = mapOf(1L to 100f)))
+    }
+
+    @Test
     fun `weekly hours are oldest first and only count finished workouts`() {
         val now = 100 * day
         val sessions = listOf(

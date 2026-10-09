@@ -2,14 +2,15 @@ package com.example.heavyduty.feature.history.presentation.list
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.heavyduty.core.common.flow.whileSubscribed
 import com.example.heavyduty.feature.history.domain.usecase.GetStatsUseCase
 import com.example.heavyduty.feature.history.domain.usecase.GetWorkoutHistoryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -22,15 +23,14 @@ class HistoryListViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HistoryListUiState())
-    val uiState: StateFlow<HistoryListUiState> = _uiState.asStateFlow()
-
-    private val _uiEffect = MutableSharedFlow<HistoryListUiEffect>()
-    val uiEffect = _uiEffect.asSharedFlow()
-
-    init {
+    /** Loads only while the screen is watching — see [whileSubscribed]. */
+    val uiState: StateFlow<HistoryListUiState> = _uiState.whileSubscribed(viewModelScope) {
         observeHistory()
         observeStats()
     }
+
+    private val _uiEffect = MutableSharedFlow<HistoryListUiEffect>()
+    val uiEffect = _uiEffect.asSharedFlow()
 
     fun onEvent(event: HistoryListUiEvent) {
         when (event) {
@@ -43,8 +43,8 @@ class HistoryListViewModel @Inject constructor(
         }
     }
 
-    private fun observeHistory() {
-        viewModelScope.launch {
+    private fun CoroutineScope.observeHistory() {
+        launch {
             getWorkoutHistoryUseCase()
                 .catch { e ->
                     _uiState.update { it.copy(isLoading = false, error = e.message) }
@@ -55,8 +55,8 @@ class HistoryListViewModel @Inject constructor(
         }
     }
 
-    private fun observeStats() {
-        viewModelScope.launch {
+    private fun CoroutineScope.observeStats() {
+        launch {
             getStatsUseCase()
                 .catch { /* silently fail stats */ }
                 .collect { stats ->

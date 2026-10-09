@@ -109,6 +109,23 @@ class MigrationTest {
     }
 
     @Test
+    fun migrate17To18_addsTheQueryIndicesAndKeepsRows() {
+        helper.createDatabase(TEST_DB, 15).apply {
+            insertV15Data()
+            close()
+        }
+        helper.runMigrationsAndValidate(TEST_DB, 16, true, MIGRATION_15_16).close()
+        helper.runMigrationsAndValidate(TEST_DB, 17, true, MIGRATION_16_17).close()
+
+        // Also checks the indices against schemas/18.json.
+        val db = helper.runMigrationsAndValidate(TEST_DB, 18, true, MIGRATION_17_18)
+
+        db.query("SELECT COUNT(*) FROM workout_sets").use { it.moveToFirst(); assertEquals(2, it.getInt(0)) }
+        db.query("SELECT COUNT(*) FROM workout_sessions").use { it.moveToFirst(); assertEquals(1, it.getInt(0)) }
+        db.close()
+    }
+
+    @Test
     fun englishInstructions_matchEachRowEvenWhenNamesRepeat() = runTest {
         val database = Room.inMemoryDatabaseBuilder(context, HeavyDutyDatabase::class.java).build()
         try {

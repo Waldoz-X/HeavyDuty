@@ -26,4 +26,13 @@ val MIGRATION_16_17 = object : Migration(16, 17) {
     }
 }
 
-val ALL_MIGRATIONS = arrayOf(MIGRATION_15_16, MIGRATION_16_17)
+val MIGRATION_17_18 = object : Migration(17, 18) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        // Indices only — no data changes. Names follow Room's index_<table>_<columns> scheme.
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_workout_sessions_startTime` ON `workout_sessions` (`startTime`)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_workout_sessions_status_startTime` ON `workout_sessions` (`status`, `startTime`)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_workout_sets_exerciseId_completedAt` ON `workout_sets` (`exerciseId`, `completedAt`)")
+    }
+}
+
+val ALL_MIGRATIONS = arrayOf(MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18)

@@ -15,7 +15,12 @@ import androidx.room.PrimaryKey
             onDelete = ForeignKey.SET_NULL,
         ),
     ],
-    indices = [Index(value = ["routineId"])],
+    indices = [
+        Index(value = ["routineId"]),
+        // Date-range queries (stats, dashboard, history) and "the running workout".
+        Index(value = ["startTime"]),
+        Index(value = ["status", "startTime"]),
+    ],
 )
 data class WorkoutSessionEntity(
     @PrimaryKey(autoGenerate = true)
@@ -49,6 +54,8 @@ data class WorkoutSessionEntity(
     indices = [
         Index(value = ["sessionId"]),
         Index(value = ["exerciseId"]),
+        // An exercise's history in date order (progress chart, last time's sets).
+        Index(value = ["exerciseId", "completedAt"]),
     ],
 )
 data class WorkoutSetEntity(
