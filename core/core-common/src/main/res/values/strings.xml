@@ -88,6 +88,11 @@
         <item quantity="other"> (%1$d referencias omitidas por ejercicios no encontrados)</item>
         <item quantity="many"> (%1$d referencias omitidas por ejercicios no encontrados)</item>
     </plurals>
+    <plurals name="backup_imported_already_present">
+        <item quantity="one"> · %1$d ya estaba en el teléfono</item>
+        <item quantity="other"> · %1$d ya estaban en el teléfono</item>
+        <item quantity="many"> · %1$d ya estaban en el teléfono</item>
+    </plurals>
 
     <!-- Dashboard -->
     <string name="dashboard_welcome_title">¡Bienvenido de nuevo, Atleta!</string>

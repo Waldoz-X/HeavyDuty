@@ -126,4 +126,66 @@ class BackupRoundTripTest {
         assertEquals(60, session.totalDurationSecs)
         assertEquals(1, target.workoutDao().getAllLoggedSets().first().size)
     }
+
+    private suspend fun seedSource() {
+        val bench = source.exerciseDao().insertExercise(
+            ExerciseEntity(name = "Press de banca con barra", nameEn = "barbell bench press", muscleGroup = "CHEST", exerciseType = "STRENGTH"),
+        )
+        source.exerciseDao().insertExercise(ExerciseEntity(name = "Mi press raro", muscleGroup = "CHEST", exerciseType = "STRENGTH", isCustom = true))
+        val routineId = source.routineDao().insertRoutine(RoutineEntity(name = "Torso", createdAt = 500))
+        source.routineDao().insertRoutineExercise(RoutineExerciseEntity(routineId = routineId, exerciseId = bench, orderIndex = 0))
+        val sessionId = source.workoutDao().insertSession(
+            WorkoutSessionEntity(sessionName = "Torso", startTime = 1_000, endTime = 5_000, totalDurationSecs = 4, status = "COMPLETED"),
+        )
+        source.workoutDao().insertSet(WorkoutSetEntity(sessionId = sessionId, exerciseId = bench, setNumber = 1, reps = 8, weight = 60f, isCompleted = true, completedAt = 2_000))
+        source.bodyWeightDao().insertEntry(BodyWeightEntity(weightKg = 82.5f, loggedAt = 1_000))
+    }
+
+    private suspend fun HeavyDutyDatabase.counts() = listOf(
+        exerciseDao().getAllExercises().first().size,
+        routineDao().getAllRoutines().first().size,
+        workoutDao().getAllSessions().first().size,
+        workoutDao().getAllLoggedSets().first().size,
+        bodyWeightDao().getAllEntries().first().size,
+    )
+
+    @Test
+    fun importingTheSameBackupTwiceAddsNothingTheSecondTime() = runTest {
+        seedSource()
+        target.exerciseDao().insertExercise(
+            ExerciseEntity(name = "Press de banca con barra", nameEn = "barbell bench press", muscleGroup = "CHEST", exerciseType = "STRENGTH"),
+        )
+        val backup = source.backups().exportSnapshot()
+
+        target.backups().importSnapshot(backup)
+        val afterFirst = target.counts()
+        val second = target.backups().importSnapshot(backup)
+
+        assertEquals(afterFirst, target.counts())
+        assertEquals(listOf(0, 0, 0, 0), listOf(second.customExercisesImported, second.routinesImported, second.sessionsImported, second.bodyWeightEntriesImported))
+        assertEquals(3, second.alreadyPresent) // the routine, the workout and the weigh-in
+    }
+
+    @Test
+    fun restoringABackupOntoThePhoneItCameFromDuplicatesNothing() = runTest {
+        seedSource()
+        val before = source.counts()
+
+        val result = source.backups().importSnapshot(source.backups().exportSnapshot())
+
+        assertEquals(before, source.counts())
+        assertEquals(3, result.alreadyPresent)
+    }
+
+    @Test
+    fun anExerciseWithLoggedSetsCantBeDeletedSoItsHistoryStays() = runTest {
+        seedSource()
+        val bench = source.exerciseDao().getAllExercises().first().first { it.nameEn == "barbell bench press" }
+
+        val deletion = runCatching { source.exerciseDao().deleteExercise(bench) }
+
+        assertTrue("deleting it must fail", deletion.isFailure)
+        assertEquals(1, source.workoutDao().getAllLoggedSets().first().size)
+        assertEquals(1, source.routineDao().getAllRoutines().first().single().routineExercises.size)
+    }
 }

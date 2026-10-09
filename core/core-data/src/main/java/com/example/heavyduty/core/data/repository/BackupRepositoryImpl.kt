@@ -274,6 +274,13 @@ class BackupRepositoryImpl @Inject constructor(
 
     private suspend fun write(snapshot: BackupSnapshotDto): BackupImportResult {
         var skipped = 0
+        // Importing a backup twice (or onto the phone it came from) must not duplicate anything:
+        // a routine is the same if it has the same name and creation time, a workout if it
+        // started at the same millisecond, a weigh-in if it's the same weight at the same time.
+        var alreadyPresent = 0
+        val existingRoutines = routineDao.getAllRoutines().first().mapTo(HashSet()) { it.routine.name to it.routine.createdAt }
+        val existingSessionStarts = workoutDao.getAllSessions().first().mapTo(HashSet()) { it.startTime }
+        val existingWeighIns = bodyWeightDao.getAllEntries().first().mapTo(HashSet()) { it.loggedAt to it.weightKg }
 
         val existingNames = exerciseDao.getAllExercises().first().map { it.name }.toMutableSet()
         var customExercisesImported = 0
@@ -305,6 +312,12 @@ class BackupRepositoryImpl @Inject constructor(
 
         var routinesImported = 0
         for (routineDto in snapshot.routines.orEmpty()) {
+            val now = System.currentTimeMillis()
+            val createdAt = routineDto.createdAt ?: now
+            if (!existingRoutines.add(routineDto.name!! to createdAt)) {
+                alreadyPresent++
+                continue
+            }
             val routineExercises = routineDto.exercises.orEmpty().mapNotNull { reDto ->
                 val exerciseId = exerciseIdByName[reDto.exerciseName]
                 if (exerciseId == null) {
@@ -329,13 +342,12 @@ class BackupRepositoryImpl @Inject constructor(
                     weightUnit = reDto.weightUnit,
                 )
             }
-            val now = System.currentTimeMillis()
             val routineId = routineDao.insertRoutine(
                 RoutineEntity(
                     name = routineDto.name!!,
                     description = routineDto.description.orEmpty(),
                     type = routineDto.type ?: "GYM",
-                    createdAt = routineDto.createdAt ?: now,
+                    createdAt = createdAt,
                     updatedAt = routineDto.updatedAt ?: now,
                 ),
             )
@@ -346,6 +358,10 @@ class BackupRepositoryImpl @Inject constructor(
         var sessionsImported = 0
         for (sessionDto in snapshot.sessions.orEmpty()) {
             val startTime = sessionDto.startTime!!
+            if (!existingSessionStarts.add(startTime)) {
+                alreadyPresent++
+                continue
+            }
             val sets = sessionDto.sets.orEmpty()
             // A workout still running when the backup was made comes back finished at its last
             // set: imported as running, it would take over the workout screen on this install.
@@ -401,6 +417,10 @@ class BackupRepositoryImpl @Inject constructor(
 
         var bodyWeightImported = 0
         snapshot.bodyWeightEntries.orEmpty().forEach { dto ->
+            if (!existingWeighIns.add(dto.loggedAt!! to dto.weightKg!!)) {
+                alreadyPresent++
+                return@forEach
+            }
             bodyWeightDao.insertEntry(BodyWeightEntity(weightKg = dto.weightKg!!, loggedAt = dto.loggedAt!!))
             bodyWeightImported++
         }
@@ -411,6 +431,7 @@ class BackupRepositoryImpl @Inject constructor(
             sessionsImported = sessionsImported,
             bodyWeightEntriesImported = bodyWeightImported,
             skippedReferences = skipped,
+            alreadyPresent = alreadyPresent,
         )
     }
 }

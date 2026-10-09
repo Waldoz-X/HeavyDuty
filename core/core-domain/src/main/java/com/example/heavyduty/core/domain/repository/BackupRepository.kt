@@ -21,4 +21,6 @@ data class BackupImportResult(
     val sessionsImported: Int,
     val bodyWeightEntriesImported: Int,
     val skippedReferences: Int,
+    /** Routines, workouts and weigh-ins already on this device (e.g. the same backup imported twice), left as they were. */
+    val alreadyPresent: Int = 0,
 )

@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -122,6 +123,37 @@ class MigrationTest {
 
         db.query("SELECT COUNT(*) FROM workout_sets").use { it.moveToFirst(); assertEquals(2, it.getInt(0)) }
         db.query("SELECT COUNT(*) FROM workout_sessions").use { it.moveToFirst(); assertEquals(1, it.getInt(0)) }
+        db.close()
+    }
+
+    @Test
+    fun migrate18To19_keepsEverySetAndNoLongerDeletesHistoryWithItsExercise() {
+        helper.createDatabase(TEST_DB, 15).apply {
+            insertV15Data()
+            close()
+        }
+        helper.runMigrationsAndValidate(TEST_DB, 16, true, MIGRATION_15_16).close()
+        helper.runMigrationsAndValidate(TEST_DB, 17, true, MIGRATION_16_17).close()
+        helper.runMigrationsAndValidate(TEST_DB, 18, true, MIGRATION_17_18).close()
+
+        val db = helper.runMigrationsAndValidate(TEST_DB, 19, true, MIGRATION_18_19)
+
+        db.query("SELECT id, reps, weight, effortType, completedAt FROM workout_sets ORDER BY id").use {
+            it.moveToFirst()
+            assertEquals(1, it.getInt(0)); assertEquals(8, it.getInt(1)); assertEquals(80f, it.getFloat(2)); assertEquals("RIR", it.getString(3)); assertEquals(2000L, it.getLong(4))
+            it.moveToNext()
+            assertEquals(2, it.getInt(0)); assertEquals(6, it.getInt(1))
+            assertFalse(it.moveToNext())
+        }
+        db.execSQL("PRAGMA foreign_keys = ON")
+        val refused = runCatching { db.execSQL("DELETE FROM exercises WHERE id = 1") }
+        assertTrue("an exercise with logged sets can't be deleted", refused.isFailure)
+        db.query("SELECT COUNT(*) FROM workout_sets").use { it.moveToFirst(); assertEquals(2, it.getInt(0)) }
+        // Without history it still can be, and leaves its routines too.
+        db.execSQL("DELETE FROM exercises WHERE id = 2")
+        // Deleting a workout still takes its sets with it.
+        db.execSQL("DELETE FROM workout_sessions WHERE id = 1")
+        db.query("SELECT COUNT(*) FROM workout_sets").use { it.moveToFirst(); assertEquals(0, it.getInt(0)) }
         db.close()
     }
 

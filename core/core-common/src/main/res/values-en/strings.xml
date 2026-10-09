@@ -82,6 +82,10 @@
         <item quantity="one"> (%1$d reference skipped due to a missing exercise)</item>
         <item quantity="other"> (%1$d references skipped due to missing exercises)</item>
     </plurals>
+    <plurals name="backup_imported_already_present">
+        <item quantity="one"> · %1$d was already on this phone</item>
+        <item quantity="other"> · %1$d were already on this phone</item>
+    </plurals>
 
     <!-- Dashboard -->
     <string name="dashboard_welcome_title">Welcome back, athlete!</string>

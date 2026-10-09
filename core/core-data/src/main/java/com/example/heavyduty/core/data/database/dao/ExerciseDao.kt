@@ -28,10 +28,12 @@ interface ExerciseDao {
     @Query("SELECT * FROM exercises WHERE name LIKE '%' || :query || '%' OR description LIKE '%' || :query || '%' ORDER BY name ASC")
     fun searchExercises(query: String): Flow<List<ExerciseEntity>>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    // ABORT, not REPLACE: REPLACE deletes the existing row first, which would take the
+    // exercise's routine entries with it (and is refused once it has logged sets).
+    @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertExercise(exercise: ExerciseEntity): Long
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertAllExercises(exercises: List<ExerciseEntity>)
 
     @Update

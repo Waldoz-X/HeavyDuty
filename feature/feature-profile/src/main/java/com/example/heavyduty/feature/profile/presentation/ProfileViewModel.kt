@@ -263,6 +263,9 @@ class ProfileViewModel @Inject constructor(
                     if (result.skippedReferences > 0) {
                         append(appContext.resources.getQuantityString(R.plurals.backup_imported_skipped, result.skippedReferences, result.skippedReferences))
                     }
+                    if (result.alreadyPresent > 0) {
+                        append(appContext.resources.getQuantityString(R.plurals.backup_imported_already_present, result.alreadyPresent, result.alreadyPresent))
+                    }
                 }
                 _uiState.update { it.copy(isImportingData = false, backupMessage = message) }
             } catch (_: Exception) {

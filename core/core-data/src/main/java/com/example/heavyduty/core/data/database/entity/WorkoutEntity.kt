@@ -44,11 +44,13 @@ data class WorkoutSessionEntity(
             childColumns = ["sessionId"],
             onDelete = ForeignKey.CASCADE,
         ),
+        // Logged history is never deleted with its exercise: deleting an exercise that has
+        // sets fails instead (it used to CASCADE, silently erasing every set of it).
         ForeignKey(
             entity = ExerciseEntity::class,
             parentColumns = ["id"],
             childColumns = ["exerciseId"],
-            onDelete = ForeignKey.CASCADE,
+            onDelete = ForeignKey.RESTRICT,
         ),
     ],
     indices = [
