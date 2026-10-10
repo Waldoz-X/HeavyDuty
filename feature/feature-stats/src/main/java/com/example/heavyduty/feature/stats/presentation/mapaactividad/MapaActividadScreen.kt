@@ -2,8 +2,8 @@ package com.example.heavyduty.feature.stats.presentation.mapaactividad
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -38,6 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -243,44 +245,13 @@ private fun DayOfWeekDistributionCard(report: ActivityHeatmapStatsReport) {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.CalendarMonth,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Text(
-                        text = stringResource(R.string.activity_weekly_distribution),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-                report.favoriteDayOfWeek?.let { favoriteDay ->
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f))
-                            .padding(horizontal = 8.dp, vertical = 4.dp)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.activity_favorite, weekdayName(favoriteDay)),
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    }
-                }
-            }
+            DistributionHeader(
+                icon = Icons.Default.CalendarMonth,
+                title = stringResource(R.string.activity_weekly_distribution),
+                badge = report.favoriteDayOfWeek?.let { stringResource(R.string.activity_favorite, weekdayName(it)) },
+                badgeColor = MaterialTheme.colorScheme.primaryContainer,
+                onBadgeColor = MaterialTheme.colorScheme.onPrimaryContainer
+            )
 
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 report.dayOfWeekDistribution.forEach { stat ->
@@ -321,11 +292,57 @@ private fun DayOfWeekDistributionCard(report: ActivityHeatmapStatsReport) {
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.End,
-                            modifier = Modifier.width(64.dp)
+                            maxLines = 1,
+                            // A minimum, not a fixed width: with large text "1 (100%)" broke over two lines.
+                            modifier = Modifier.widthIn(min = 64.dp)
                         )
                     }
                 }
             }
+        }
+    }
+}
+
+/**
+ * Icon + title, and a "favourite" badge that sits beside the title when it fits and wraps
+ * below it whole when it doesn't (large text squeezed it into a two-line block).
+ */
+@Composable
+private fun DistributionHeader(icon: ImageVector, title: String, badge: String?, badgeColor: Color, onBadgeColor: Color) {
+    FlowRow(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        itemVerticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(20.dp)
+            )
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+        }
+        if (badge != null) {
+            Text(
+                text = badge,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = onBadgeColor,
+                maxLines = 1,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(badgeColor.copy(alpha = 0.5f))
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
+            )
         }
     }
 }
@@ -339,44 +356,13 @@ private fun TimeSlotDistributionCard(report: ActivityHeatmapStatsReport) {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Schedule,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Text(
-                        text = stringResource(R.string.activity_time_slots),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-                report.favoriteTimeSlot?.let { favorite ->
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f))
-                            .padding(horizontal = 8.dp, vertical = 4.dp)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.activity_usual, stringResource(favorite.nameRes)),
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer
-                        )
-                    }
-                }
-            }
+            DistributionHeader(
+                icon = Icons.Default.Schedule,
+                title = stringResource(R.string.activity_time_slots),
+                badge = report.favoriteTimeSlot?.let { stringResource(R.string.activity_usual, stringResource(it.nameRes)) },
+                badgeColor = MaterialTheme.colorScheme.secondaryContainer,
+                onBadgeColor = MaterialTheme.colorScheme.onSecondaryContainer
+            )
 
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 report.timeSlotDistribution.forEach { slot ->
@@ -422,7 +408,9 @@ private fun TimeSlotDistributionCard(report: ActivityHeatmapStatsReport) {
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.End,
-                            modifier = Modifier.width(64.dp)
+                            maxLines = 1,
+                            // A minimum, not a fixed width: with large text "1 (100%)" broke over two lines.
+                            modifier = Modifier.widthIn(min = 64.dp)
                         )
                     }
                 }
