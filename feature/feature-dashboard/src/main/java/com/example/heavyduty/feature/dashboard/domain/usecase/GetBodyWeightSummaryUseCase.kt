@@ -17,11 +17,12 @@ class GetBodyWeightSummaryUseCase @Inject constructor(
     private val clock: Clock
 ) {
     operator fun invoke(): Flow<BodyWeightSummaryUi> {
-        val now = clock.nowMillis()
-        val start = now - TimeUnit.DAYS.toMillis(CHART_WINDOW_DAYS)
+        val start = clock.nowMillis() - TimeUnit.DAYS.toMillis(CHART_WINDOW_DAYS)
 
         return combine(
-            bodyWeightRepository.getEntriesByDateRange(start, now),
+            // Open-ended: closing the range at "now" (fixed when the card starts watching) left
+            // out a weigh-in logged afterwards — even from the dashboard's own sheet.
+            bodyWeightRepository.getEntriesByDateRange(start, Long.MAX_VALUE),
             userPreferencesRepository.goalWeightKg
         ) { entries, goalKg ->
             val sorted = entries.sortedBy { it.loggedAt }
