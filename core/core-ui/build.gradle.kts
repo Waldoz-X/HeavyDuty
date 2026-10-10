@@ -43,6 +43,9 @@ dependencies {
 
     api(project(":core:core-domain"))
     api(project(":core:core-common"))
+
+    // Testing
+    testImplementation(libs.junit)
 }
 
 kotlin {
