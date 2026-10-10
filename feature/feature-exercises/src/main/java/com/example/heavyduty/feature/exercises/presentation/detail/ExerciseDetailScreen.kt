@@ -1,9 +1,5 @@
 package com.example.heavyduty.feature.exercises.presentation.detail
 
-import com.example.heavyduty.core.domain.model.displayInstructions
-import androidx.compose.ui.platform.LocalConfiguration
-import com.example.heavyduty.core.domain.model.displayName
-import com.example.heavyduty.core.common.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -33,6 +29,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
@@ -43,26 +41,29 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalContext
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
-import com.example.heavyduty.core.ui.components.HdErrorState
-import com.example.heavyduty.core.ui.hdSharedBounds
-import com.example.heavyduty.feature.exercises.presentation.exerciseImageKey
+import com.example.heavyduty.core.common.R
 import com.example.heavyduty.core.domain.model.Exercise
 import com.example.heavyduty.core.domain.model.WeightUnit
-import com.example.heavyduty.core.ui.equipmentLabel
+import com.example.heavyduty.core.domain.model.displayInstructions
+import com.example.heavyduty.core.domain.model.displayName
 import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdChip
+import com.example.heavyduty.core.ui.components.HdErrorState
 import com.example.heavyduty.core.ui.components.HdSkeletonLine
 import com.example.heavyduty.core.ui.components.HdTonalButton
+import com.example.heavyduty.core.ui.equipmentLabel
+import com.example.heavyduty.core.ui.hdSharedBounds
 import com.example.heavyduty.core.ui.nameResId
 import com.example.heavyduty.feature.exercises.presentation.accentColor
+import com.example.heavyduty.feature.exercises.presentation.exerciseImageKey
 
 private val HeaderHeight = 320.dp
 
@@ -72,14 +73,15 @@ fun ExerciseDetailScreen(
     onNavigateBack: () -> Unit,
     onViewProgress: (Long) -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: ExerciseDetailViewModel = hiltViewModel(),
+    viewModel: ExerciseDetailViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    val currentOnNavigateBack by rememberUpdatedState(onNavigateBack)
     LaunchedEffect(Unit) {
         viewModel.uiEffect.collect { effect ->
             when (effect) {
-                ExerciseDetailUiEffect.NavigateBack -> onNavigateBack()
+                ExerciseDetailUiEffect.NavigateBack -> currentOnNavigateBack()
             }
         }
     }
@@ -89,18 +91,20 @@ fun ExerciseDetailScreen(
             uiState.isLoading -> {
                 ExerciseDetailLoading(
                     exerciseId = uiState.exerciseId,
-                    modifier = Modifier.padding(top = innerPadding.calculateTopPadding()),
+                    modifier = Modifier.padding(top = innerPadding.calculateTopPadding())
                 )
             }
+
             uiState.exercise != null -> {
                 ExerciseDetailContent(
                     exercise = uiState.exercise!!,
                     onNavigateBack = onNavigateBack,
                     onViewProgress = onViewProgress,
                     onWeightUnitChange = { viewModel.onEvent(ExerciseDetailUiEvent.OnWeightUnitChange(it)) },
-                    modifier = Modifier.padding(top = innerPadding.calculateTopPadding()),
+                    modifier = Modifier.padding(top = innerPadding.calculateTopPadding())
                 )
             }
+
             // Couldn't be read — or no longer exists.
             else -> HdErrorState(modifier = Modifier.padding(innerPadding))
         }
@@ -119,7 +123,7 @@ private fun ExerciseDetailLoading(exerciseId: Long, modifier: Modifier = Modifie
             modifier = Modifier
                 .fillMaxWidth()
                 .height(HeaderHeight),
-            contentAlignment = Alignment.Center,
+            contentAlignment = Alignment.Center
         ) {
             Box(
                 modifier = Modifier
@@ -127,12 +131,12 @@ private fun ExerciseDetailLoading(exerciseId: Long, modifier: Modifier = Modifie
                     .size(208.dp)
                     .hdSharedBounds(exerciseImageKey(exerciseId), RoundedCornerShape(20.dp))
                     .clip(RoundedCornerShape(20.dp))
-                    .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             )
         }
         Column(
             modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             HdSkeletonLine(modifier = Modifier.fillMaxWidth(0.6f), height = 28.dp)
             HdSkeletonLine(modifier = Modifier.fillMaxWidth(0.35f), height = 16.dp)
@@ -148,7 +152,7 @@ private fun ExerciseDetailContent(
     onNavigateBack: () -> Unit,
     onViewProgress: (Long) -> Unit,
     onWeightUnitChange: (WeightUnit) -> Unit,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
     val accent = exercise.muscleGroup.accentColor()
     val scrollState = rememberScrollState()
@@ -158,13 +162,13 @@ private fun ExerciseDetailContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(scrollState),
+                .verticalScroll(scrollState)
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(HeaderHeight)
-                    .clipToBounds(),
+                    .clipToBounds()
             ) {
                 if (heroImage.isNotBlank()) {
                     // The source media is a small 180x180 thumbnail — stretching it edge-to-edge
@@ -184,7 +188,7 @@ private fun ExerciseDetailContent(
                                 scaleX = scale * 1.15f
                                 scaleY = scale * 1.15f
                             }
-                            .blur(36.dp),
+                            .blur(36.dp)
                     )
                     Box(
                         modifier = Modifier
@@ -197,7 +201,7 @@ private fun ExerciseDetailContent(
                             }
                             .shadow(elevation = 12.dp, shape = RoundedCornerShape(20.dp))
                             .clip(RoundedCornerShape(20.dp))
-                            .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                     ) {
                         // While the demo loads, show the list's still image (already in memory)
                         // so the shared transition doesn't grow an empty box.
@@ -212,7 +216,7 @@ private fun ExerciseDetailContent(
                             model = heroRequest,
                             contentDescription = exercise.displayName,
                             contentScale = ContentScale.Fit,
-                            modifier = Modifier.fillMaxSize(),
+                            modifier = Modifier.fillMaxSize()
                         )
                     }
                 } else {
@@ -221,9 +225,9 @@ private fun ExerciseDetailContent(
                             .fillMaxSize()
                             .background(
                                 Brush.linearGradient(
-                                    listOf(accent.copy(alpha = 0.4f), accent.copy(alpha = 0.1f)),
-                                ),
-                            ),
+                                    listOf(accent.copy(alpha = 0.4f), accent.copy(alpha = 0.1f))
+                                )
+                            )
                     )
                 }
 
@@ -236,27 +240,27 @@ private fun ExerciseDetailContent(
                                 colors = listOf(
                                     MaterialTheme.colorScheme.scrim.copy(alpha = 0.15f),
                                     Color.Transparent,
-                                    MaterialTheme.colorScheme.scrim.copy(alpha = 0.75f),
-                                ),
-                            ),
-                        ),
+                                    MaterialTheme.colorScheme.scrim.copy(alpha = 0.75f)
+                                )
+                            )
+                        )
                 )
 
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
+                        .padding(16.dp)
                 ) {
                     IconButton(
                         onClick = onNavigateBack,
                         colors = IconButtonDefaults.iconButtonColors(
                             containerColor = MaterialTheme.colorScheme.scrim.copy(alpha = 0.35f),
-                            contentColor = Color.White,
-                        ),
+                            contentColor = Color.White
+                        )
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.action_back),
+                            contentDescription = stringResource(R.string.action_back)
                         )
                     }
                 }
@@ -264,19 +268,19 @@ private fun ExerciseDetailContent(
                 Column(
                     modifier = Modifier
                         .align(Alignment.BottomStart)
-                        .padding(horizontal = 20.dp, vertical = 16.dp),
+                        .padding(horizontal = 20.dp, vertical = 16.dp)
                 ) {
                     Text(
                         text = exercise.displayName,
                         style = MaterialTheme.typography.headlineSmall,
-                        color = Color.White,
+                        color = Color.White
                     )
                     if (exercise.equipment.isNotBlank()) {
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = equipmentLabel(exercise.equipment),
                             style = MaterialTheme.typography.bodyMedium,
-                            color = Color.White.copy(alpha = 0.85f),
+                            color = Color.White.copy(alpha = 0.85f)
                         )
                     }
                 }
@@ -285,7 +289,7 @@ private fun ExerciseDetailContent(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 16.dp),
+                    .padding(horizontal = 16.dp)
             ) {
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -294,7 +298,7 @@ private fun ExerciseDetailContent(
                     Spacer(modifier = Modifier.width(8.dp))
                     AccentChip(
                         text = stringResource(exercise.exerciseType.nameResId),
-                        color = MaterialTheme.colorScheme.secondary,
+                        color = MaterialTheme.colorScheme.secondary
                     )
                 }
 
@@ -305,12 +309,12 @@ private fun ExerciseDetailContent(
                     HdChip(
                         text = "kg",
                         isSelected = exercise.weightUnit == WeightUnit.KG,
-                        onClick = { onWeightUnitChange(WeightUnit.KG) },
+                        onClick = { onWeightUnitChange(WeightUnit.KG) }
                     )
                     HdChip(
                         text = "lb",
                         isSelected = exercise.weightUnit == WeightUnit.LB,
-                        onClick = { onWeightUnitChange(WeightUnit.LB) },
+                        onClick = { onWeightUnitChange(WeightUnit.LB) }
                     )
                 }
 
@@ -321,7 +325,7 @@ private fun ExerciseDetailContent(
                     Text(
                         text = stringResource(R.string.exercise_detail_also_works, secondaryNames),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
@@ -331,7 +335,7 @@ private fun ExerciseDetailContent(
                     text = stringResource(R.string.exercise_detail_view_progress),
                     onClick = { onViewProgress(exercise.id) },
                     icon = Icons.AutoMirrored.Filled.ShowChart,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth()
                 )
 
                 // The catalog's stored summary is Spanish (built at seed time from its more
@@ -340,7 +344,7 @@ private fun ExerciseDetailContent(
                     stringResource(
                         R.string.exercise_detail_catalog_summary,
                         equipmentLabel(exercise.equipment),
-                        stringResource(exercise.muscleGroup.nameResId).lowercase(),
+                        stringResource(exercise.muscleGroup.nameResId).lowercase()
                     )
                 } else {
                     exercise.description
@@ -353,7 +357,7 @@ private fun ExerciseDetailContent(
                         Text(
                             text = summary,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
@@ -382,44 +386,35 @@ private fun ExerciseDetailContent(
 }
 
 @Composable
-private fun AccentChip(
-    text: String,
-    color: Color,
-    modifier: Modifier = Modifier,
-) {
+private fun AccentChip(text: String, color: Color, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .clip(MaterialTheme.shapes.small)
             .background(color.copy(alpha = 0.16f))
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
         Text(
             text = text,
             style = MaterialTheme.typography.labelMedium,
-            color = color,
+            color = color
         )
     }
 }
 
 @Composable
-private fun InstructionStep(
-    number: Int,
-    text: String,
-    accent: Color,
-    modifier: Modifier = Modifier,
-) {
+private fun InstructionStep(number: Int, text: String, accent: Color, modifier: Modifier = Modifier) {
     Row(modifier = modifier.fillMaxWidth()) {
         Box(
             modifier = Modifier
                 .size(26.dp)
                 .clip(CircleShape)
                 .background(accent.copy(alpha = 0.18f)),
-            contentAlignment = Alignment.Center,
+            contentAlignment = Alignment.Center
         ) {
             Text(
                 text = number.toString(),
                 style = MaterialTheme.typography.labelMedium,
-                color = accent,
+                color = accent
             )
         }
         Spacer(modifier = Modifier.width(12.dp))
@@ -427,32 +422,28 @@ private fun InstructionStep(
             text = text,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f)
         )
     }
 }
 
 @Composable
-private fun SectionHeader(
-    title: String,
-    accent: Color,
-    modifier: Modifier = Modifier,
-) {
+private fun SectionHeader(title: String, accent: Color, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically,
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
                 .size(width = 4.dp, height = 16.dp)
                 .clip(RoundedCornerShape(2.dp))
-                .background(accent),
+                .background(accent)
         )
         Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = title,
             style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.onSurface,
+            color = MaterialTheme.colorScheme.onSurface
         )
     }
 }

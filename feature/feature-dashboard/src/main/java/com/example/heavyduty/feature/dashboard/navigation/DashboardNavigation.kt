@@ -6,22 +6,22 @@ import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
 import com.example.heavyduty.feature.dashboard.presentation.DashboardScreen
 
-const val dashboardRoute = "dashboard"
+const val DASHBOARD_ROUTE = "dashboard"
 
 fun NavController.navigateToDashboard(navOptions: NavOptions? = null) {
-    this.navigate(dashboardRoute, navOptions)
+    this.navigate(DASHBOARD_ROUTE, navOptions)
 }
 
 fun NavGraphBuilder.dashboardScreen(
     onNavigateToActiveWorkout: () -> Unit,
     onNavigateToRoutines: () -> Unit,
-    onStartRoutine: (Long) -> Unit,
+    onStartRoutine: (Long) -> Unit
 ) {
-    composable(route = dashboardRoute) {
+    composable(route = DASHBOARD_ROUTE) {
         DashboardScreen(
             onNavigateToActiveWorkout = onNavigateToActiveWorkout,
             onNavigateToRoutines = onNavigateToRoutines,
-            onStartRoutine = onStartRoutine,
+            onStartRoutine = onStartRoutine
         )
     }
 }

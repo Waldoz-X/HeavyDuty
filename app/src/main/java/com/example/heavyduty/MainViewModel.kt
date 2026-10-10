@@ -60,7 +60,7 @@ class MainViewModel @Inject constructor(
         if (section != null) _pendingSection.value = section
     }
 
-    fun onSectionOpened() {
+    fun onSectionOpen() {
         _pendingSection.value = null
     }
 

@@ -95,7 +95,7 @@ fun HeavyDutyNavHost(navController: NavHostController, modifier: Modifier = Modi
             onNavigateToRoutines = {
                 navController.navigateToTopLevel(DrawerDestination.ROUTINES.route)
             },
-            onWorkoutCompleted = {
+            onWorkoutComplete = {
                 navController.navigate(TopLevelDestination.DASHBOARD.route) {
                     popUpTo(navController.graph.id) {
                         inclusive = true

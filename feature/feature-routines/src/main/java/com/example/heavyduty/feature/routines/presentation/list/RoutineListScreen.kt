@@ -1,6 +1,5 @@
 package com.example.heavyduty.feature.routines.presentation.list
 
-import androidx.compose.ui.platform.LocalResources
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,9 +39,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -67,7 +68,7 @@ fun RoutineListScreen(
     onCreateRoutine: () -> Unit,
     onStartRoutine: (Long) -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: RoutineListViewModel = hiltViewModel(),
+    viewModel: RoutineListViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -75,16 +76,22 @@ fun RoutineListScreen(
     val resources = LocalResources.current
     var routineToDelete by remember { mutableStateOf<Routine?>(null) }
 
+    val currentOnCreateRoutine by rememberUpdatedState(onCreateRoutine)
+    val currentOnRoutineClick by rememberUpdatedState(onRoutineClick)
+    val currentOnStartRoutine by rememberUpdatedState(onStartRoutine)
     LaunchedEffect(Unit) {
         viewModel.uiEffect.collect { effect ->
             when (effect) {
                 is RoutineListUiEffect.NavigateToEditor -> {
-                    if (effect.routineId != null) onRoutineClick(effect.routineId) else onCreateRoutine()
+                    if (effect.routineId != null) currentOnRoutineClick(effect.routineId) else currentOnCreateRoutine()
                 }
-                is RoutineListUiEffect.StartRoutine -> onStartRoutine(effect.routineId)
+
+                is RoutineListUiEffect.StartRoutine -> currentOnStartRoutine(effect.routineId)
+
                 is RoutineListUiEffect.RoutineDeleted -> scope.launch {
                     snackbarHostState.showSnackbar(resources.getString(R.string.routine_deleted, effect.name))
                 }
+
                 is RoutineListUiEffect.ShowMessage -> scope.launch {
                     snackbarHostState.showSnackbar(resources.getString(effect.messageResId))
                 }
@@ -99,23 +106,23 @@ fun RoutineListScreen(
                 icon = { Icon(Icons.Default.Add, contentDescription = null) },
                 text = { Text(stringResource(R.string.routine_create)) },
                 containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        modifier = modifier,
+        modifier = modifier
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = 16.dp)
         ) {
             Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = stringResource(R.string.routine_list_title),
                 style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = MaterialTheme.colorScheme.onSurface
             )
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -125,25 +132,28 @@ fun RoutineListScreen(
                         items(3) { HdSkeletonCard() }
                     }
                 }
+
                 uiState.loadFailed -> HdErrorState()
+
                 uiState.routines.isEmpty() -> {
                     HdEmptyState(
                         icon = Icons.AutoMirrored.Filled.ListAlt,
                         title = stringResource(R.string.routine_list_empty_title),
-                        description = stringResource(R.string.routine_list_empty_description),
+                        description = stringResource(R.string.routine_list_empty_description)
                     )
                 }
+
                 else -> {
                     LazyColumn(
                         verticalArrangement = Arrangement.spacedBy(10.dp),
-                        contentPadding = PaddingValues(bottom = 96.dp),
+                        contentPadding = PaddingValues(bottom = 96.dp)
                     ) {
                         items(items = uiState.routines, key = { it.id }) { routine ->
                             RoutineListItem(
                                 routine = routine,
                                 onClick = { viewModel.onEvent(RoutineListUiEvent.OnRoutineClick(routine.id)) },
                                 onStart = { viewModel.onEvent(RoutineListUiEvent.OnStartRoutine(routine.id)) },
-                                onDelete = { routineToDelete = routine },
+                                onDelete = { routineToDelete = routine }
                             )
                         }
                     }
@@ -162,23 +172,18 @@ fun RoutineListScreen(
                     onClick = {
                         routineToDelete = null
                         viewModel.onEvent(RoutineListUiEvent.OnDeleteRoutine(routine))
-                    },
+                    }
                 ) { Text(stringResource(R.string.routine_delete), color = MaterialTheme.colorScheme.error) }
             },
             dismissButton = {
                 TextButton(onClick = { routineToDelete = null }) { Text(stringResource(R.string.routine_cancel)) }
-            },
+            }
         )
     }
 }
 
 @Composable
-private fun RoutineListItem(
-    routine: Routine,
-    onClick: () -> Unit,
-    onStart: () -> Unit,
-    onDelete: () -> Unit,
-) {
+private fun RoutineListItem(routine: Routine, onClick: () -> Unit, onStart: () -> Unit, onDelete: () -> Unit) {
     var showMenu by remember { mutableStateOf(false) }
     HdCard(onClick = onClick) {
         Row(verticalAlignment = Alignment.Top) {
@@ -189,7 +194,7 @@ private fun RoutineListItem(
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
+                    overflow = TextOverflow.Ellipsis
                 )
                 val details = buildList {
                     add(stringResource(routine.type.nameResId))
@@ -202,7 +207,7 @@ private fun RoutineListItem(
                 Text(
                     text = details.joinToString(" · "),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             Box {
@@ -213,12 +218,20 @@ private fun RoutineListItem(
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.routine_menu_edit)) },
                         leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null) },
-                        onClick = { showMenu = false; onClick() },
+                        onClick = {
+                            showMenu = false
+                            onClick()
+                        }
                     )
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.routine_delete), color = MaterialTheme.colorScheme.error) },
-                        leadingIcon = { Icon(Icons.Default.DeleteOutline, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
-                        onClick = { showMenu = false; onDelete() },
+                        leadingIcon = {
+                            Icon(Icons.Default.DeleteOutline, contentDescription = null, tint = MaterialTheme.colorScheme.error)
+                        },
+                        onClick = {
+                            showMenu = false
+                            onDelete()
+                        }
                     )
                 }
             }
@@ -235,7 +248,7 @@ private fun RoutineListItem(
                         text = "+$remaining",
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(start = 4.dp),
+                        modifier = Modifier.padding(start = 4.dp)
                     )
                 }
             }
@@ -248,7 +261,7 @@ private fun RoutineListItem(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
+                overflow = TextOverflow.Ellipsis
             )
         }
 
@@ -258,7 +271,7 @@ private fun RoutineListItem(
                 text = stringResource(R.string.routine_start),
                 onClick = onStart,
                 icon = Icons.Default.PlayArrow,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth()
             )
         }
     }
@@ -266,5 +279,4 @@ private fun RoutineListItem(
 
 private const val MAX_THUMBNAILS = 5
 
-private fun estimatedMinutes(routine: Routine): Int =
-    routine.exercises.sumOf { it.targetSets * (40 + it.restBetweenSetsSecs) } / 60
+private fun estimatedMinutes(routine: Routine): Int = routine.exercises.sumOf { it.targetSets * (40 + it.restBetweenSetsSecs) } / 60

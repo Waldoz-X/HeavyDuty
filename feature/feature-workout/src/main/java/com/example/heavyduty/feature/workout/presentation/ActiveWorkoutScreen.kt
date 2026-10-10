@@ -1,18 +1,12 @@
 package com.example.heavyduty.feature.workout.presentation
 
-import com.example.heavyduty.core.domain.model.displayName
-import androidx.compose.ui.platform.LocalWindowInfo
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.layout.layout
-import androidx.compose.ui.platform.LocalResources
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.ContextCompat
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
@@ -22,29 +16,17 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
-import androidx.compose.material.icons.filled.EmojiEvents
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarResult
-import androidx.compose.material3.SwipeToDismissBox
-import androidx.compose.material3.SwipeToDismissBoxValue
-import androidx.compose.material3.rememberSwipeToDismissBoxState
-import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.key
-import androidx.compose.ui.graphics.compositeOver
-import androidx.compose.ui.graphics.graphicsLayer
-import com.example.heavyduty.core.ui.components.HdRollingText
-import kotlinx.coroutines.delay
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -80,44 +62,59 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -129,6 +126,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.heavyduty.core.common.R
@@ -140,11 +138,12 @@ import com.example.heavyduty.core.domain.model.Routine
 import com.example.heavyduty.core.domain.model.RoutineExercise
 import com.example.heavyduty.core.domain.model.WeightUnit
 import com.example.heavyduty.core.domain.model.WorkoutSet
+import com.example.heavyduty.core.domain.model.barPresets
 import com.example.heavyduty.core.domain.model.calculatePlatesPerSide
+import com.example.heavyduty.core.domain.model.displayName
+import com.example.heavyduty.core.domain.model.displayUnit
 import com.example.heavyduty.core.domain.model.isBodyweight
 import com.example.heavyduty.core.domain.model.isPerSide
-import com.example.heavyduty.core.domain.model.barPresets
-import com.example.heavyduty.core.domain.model.displayUnit
 import com.example.heavyduty.core.domain.model.kgToRounded
 import com.example.heavyduty.core.domain.model.label
 import com.example.heavyduty.core.domain.model.standardPlates
@@ -155,18 +154,20 @@ import com.example.heavyduty.core.ui.components.HdChip
 import com.example.heavyduty.core.ui.components.HdEmptyState
 import com.example.heavyduty.core.ui.components.HdExerciseThumbnail
 import com.example.heavyduty.core.ui.components.HdLoadingIndicator
+import com.example.heavyduty.core.ui.components.HdRollingText
 import com.example.heavyduty.core.ui.components.HdSearchBar
 import com.example.heavyduty.core.ui.components.HdTextButton
 import com.example.heavyduty.core.ui.components.HdTonalButton
 import com.example.heavyduty.core.ui.nameResId
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
 fun ActiveWorkoutScreen(
     onNavigateToRoutines: () -> Unit,
-    onWorkoutCompleted: () -> Unit,
+    onWorkoutComplete: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: ActiveWorkoutViewModel = hiltViewModel(),
+    viewModel: ActiveWorkoutViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -176,27 +177,33 @@ fun ActiveWorkoutScreen(
     val haptic = LocalHapticFeedback.current
     var personalRecord by remember { mutableStateOf<ActiveWorkoutUiEffect.PersonalRecord?>(null) }
 
+    val currentOnNavigateToRoutines by rememberUpdatedState(onNavigateToRoutines)
+    val currentOnWorkoutComplete by rememberUpdatedState(onWorkoutComplete)
     LaunchedEffect(Unit) {
         viewModel.uiEffect.collect { effect ->
             when (effect) {
-                ActiveWorkoutUiEffect.NavigateToRoutines -> onNavigateToRoutines()
-                ActiveWorkoutUiEffect.WorkoutCompleted -> onWorkoutCompleted()
+                ActiveWorkoutUiEffect.NavigateToRoutines -> currentOnNavigateToRoutines()
+
+                ActiveWorkoutUiEffect.WorkoutCompleted -> currentOnWorkoutComplete()
+
                 // Shown in its own coroutine so a visible snackbar never holds up navigation.
                 is ActiveWorkoutUiEffect.ShowMessage -> scope.launch {
                     snackbarHostState.showSnackbar(resources.getString(effect.messageResId))
                 }
+
                 is ActiveWorkoutUiEffect.SetDeleted -> scope.launch {
                     snackbarHostState.currentSnackbarData?.dismiss()
                     val result = snackbarHostState.showSnackbar(
                         message = resources.getString(R.string.workout_set_deleted),
                         actionLabel = resources.getString(R.string.workout_undo),
                         // Long enough to notice a mistaken swipe mid-workout and reach the button.
-                        duration = SnackbarDuration.Long,
+                        duration = SnackbarDuration.Long
                     )
                     if (result == SnackbarResult.ActionPerformed) {
                         viewModel.onEvent(ActiveWorkoutUiEvent.OnUndoDeleteSet(effect.set))
                     }
                 }
+
                 is ActiveWorkoutUiEffect.PersonalRecord -> {
                     personalRecord = effect
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -238,13 +245,13 @@ fun ActiveWorkoutScreen(
             onDismiss = { personalRecord = null },
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .padding(horizontal = 16.dp, vertical = 8.dp)
         )
         SnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(16.dp),
+                .padding(16.dp)
         )
     }
 }
@@ -254,18 +261,15 @@ fun ActiveWorkoutScreen(
  * tap). It overlays the screen instead of pushing it down, so the set table doesn't jump.
  */
 @Composable
-private fun PersonalRecordBanner(
-    record: ActiveWorkoutUiEffect.PersonalRecord?,
-    onDismiss: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+private fun PersonalRecordBanner(record: ActiveWorkoutUiEffect.PersonalRecord?, onDismiss: () -> Unit, modifier: Modifier = Modifier) {
     // Keeps drawing the last record while the banner animates out.
     var shown by remember { mutableStateOf(record) }
     if (record != null) shown = record
+    val currentOnDismiss by rememberUpdatedState(onDismiss)
     LaunchedEffect(record) {
         if (record != null) {
             delay(PR_BANNER_MS)
-            onDismiss()
+            currentOnDismiss()
         }
     }
     AnimatedVisibility(
@@ -273,7 +277,7 @@ private fun PersonalRecordBanner(
         modifier = modifier,
         enter = slideInVertically(spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMediumLow)) { -it } +
             fadeIn(),
-        exit = slideOutVertically { -it } + fadeOut(),
+        exit = slideOutVertically { -it } + fadeOut()
     ) {
         val pr = shown ?: return@AnimatedVisibility
         Surface(
@@ -281,13 +285,13 @@ private fun PersonalRecordBanner(
             shape = MaterialTheme.shapes.large,
             color = MaterialTheme.colorScheme.tertiaryContainer,
             contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-            shadowElevation = 6.dp,
+            shadowElevation = 6.dp
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 // The trophy pops once the banner has landed.
                 val trophyScale = remember(pr) { Animatable(0.3f) }
@@ -303,25 +307,25 @@ private fun PersonalRecordBanner(
                         .graphicsLayer {
                             scaleX = trophyScale.value
                             scaleY = trophyScale.value
-                        },
+                        }
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
                     Text(
                         text = stringResource(R.string.workout_pr_title),
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.Bold
                     )
                     Text(
                         text = stringResource(
                             R.string.workout_pr_detail,
                             pr.exerciseName,
                             pr.estimatedOneRepMaxKg.kgToRounded(pr.unit).formatDecimal(),
-                            pr.unit.label,
+                            pr.unit.label
                         ),
                         style = MaterialTheme.typography.bodyMedium,
                         maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
@@ -334,33 +338,30 @@ private const val PR_BANNER_MS = 3_500L
 // ============================================================== start screen
 
 @Composable
-private fun WorkoutStartScreen(
-    routines: List<Routine>,
-    onEvent: (ActiveWorkoutUiEvent) -> Unit,
-) {
+private fun WorkoutStartScreen(routines: List<Routine>, onEvent: (ActiveWorkoutUiEvent) -> Unit) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         item {
             Text(
                 text = stringResource(R.string.workout_start_title),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground,
+                color = MaterialTheme.colorScheme.onBackground
             )
             Text(
                 text = stringResource(R.string.workout_start_subtitle),
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
 
         item {
             HdCard(
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
-                onClick = { onEvent(ActiveWorkoutUiEvent.OnStartFreeWorkout) },
+                onClick = { onEvent(ActiveWorkoutUiEvent.OnStartFreeWorkout) }
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     IconBadge(icon = Icons.Default.FitnessCenter)
@@ -370,18 +371,18 @@ private fun WorkoutStartScreen(
                             text = stringResource(R.string.workout_free_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                         Text(
                             text = stringResource(R.string.workout_free_description),
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                     }
                     Icon(
                         imageVector = Icons.Default.PlayArrow,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
             }
@@ -393,18 +394,18 @@ private fun WorkoutStartScreen(
                     .fillMaxWidth()
                     .padding(top = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = stringResource(R.string.workout_your_routines),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground,
+                    color = MaterialTheme.colorScheme.onBackground
                 )
                 if (routines.isNotEmpty()) {
                     HdTextButton(
                         text = stringResource(R.string.workout_manage_routines),
-                        onClick = { onEvent(ActiveWorkoutUiEvent.OnNavigateToRoutines) },
+                        onClick = { onEvent(ActiveWorkoutUiEvent.OnNavigateToRoutines) }
                     )
                 }
             }
@@ -415,21 +416,21 @@ private fun WorkoutStartScreen(
                 HdEmptyState(
                     icon = Icons.Default.FitnessCenter,
                     title = stringResource(R.string.workout_no_routines_title),
-                    description = stringResource(R.string.workout_no_routines_description),
+                    description = stringResource(R.string.workout_no_routines_description)
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 HdTonalButton(
                     text = stringResource(R.string.workout_create_routine),
                     onClick = { onEvent(ActiveWorkoutUiEvent.OnNavigateToRoutines) },
                     icon = Icons.Default.Add,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         } else {
             items(items = routines, key = { it.id }) { routine ->
                 RoutineStartCard(
                     routine = routine,
-                    onStart = { onEvent(ActiveWorkoutUiEvent.OnStartRoutine(routine.id)) },
+                    onStart = { onEvent(ActiveWorkoutUiEvent.OnStartRoutine(routine.id)) }
                 )
             }
         }
@@ -447,14 +448,15 @@ private fun RoutineStartCard(routine: Routine, onStart: () -> Unit) {
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
+                    overflow = TextOverflow.Ellipsis
                 )
                 val subtitle = when {
                     routine.exercises.isNotEmpty() -> pluralStringResource(
                         R.plurals.workout_exercise_count,
                         routine.exercises.size,
-                        routine.exercises.size,
+                        routine.exercises.size
                     )
+
                     else -> routine.description
                 }
                 if (subtitle.isNotBlank()) {
@@ -463,7 +465,7 @@ private fun RoutineStartCard(routine: Routine, onStart: () -> Unit) {
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
@@ -471,7 +473,7 @@ private fun RoutineStartCard(routine: Routine, onStart: () -> Unit) {
             HdButton(
                 text = stringResource(R.string.workout_start_action),
                 onClick = onStart,
-                icon = Icons.Default.PlayArrow,
+                icon = Icons.Default.PlayArrow
             )
         }
     }
@@ -481,10 +483,7 @@ private fun RoutineStartCard(routine: Routine, onStart: () -> Unit) {
 
 /** Internal (not private) so UI tests can drive it with a plain state, no ViewModel or Hilt. */
 @Composable
-internal fun ActiveWorkoutContent(
-    uiState: ActiveWorkoutUiState,
-    onEvent: (ActiveWorkoutUiEvent) -> Unit,
-) {
+internal fun ActiveWorkoutContent(uiState: ActiveWorkoutUiState, onEvent: (ActiveWorkoutUiEvent) -> Unit) {
     var showFinishDialog by rememberSaveable { mutableStateOf(false) }
     val currentExercise = uiState.currentExercise
 
@@ -505,13 +504,13 @@ internal fun ActiveWorkoutContent(
         AnimatedVisibility(
             visible = uiState.restTimer != null,
             enter = fadeIn() + expandVertically(),
-            exit = fadeOut() + shrinkVertically(),
+            exit = fadeOut() + shrinkVertically()
         ) {
             lastRest?.let { rest ->
                 RestTimerBanner(
                     rest = rest,
                     onAdjust = { onEvent(ActiveWorkoutUiEvent.OnAdjustRest(it)) },
-                    onSkip = { onEvent(ActiveWorkoutUiEvent.OnSkipRest) },
+                    onSkip = { onEvent(ActiveWorkoutUiEvent.OnSkipRest) }
                 )
             }
         }
@@ -525,7 +524,7 @@ internal fun ActiveWorkoutContent(
                 .weight(1f)
                 .fillMaxWidth(),
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             if (compactHeight) {
                 item(key = "workoutHeader") {
@@ -552,10 +551,13 @@ internal fun ActiveWorkoutContent(
                             // Slides the way the lifter moved through the routine.
                             val direction = if (targetState > initialState) 1 else -1
                             (slideInHorizontally(tween(EXERCISE_SWITCH_MS)) { direction * it / 4 } + fadeIn(tween(EXERCISE_SWITCH_MS)))
-                                .togetherWith(slideOutHorizontally(tween(EXERCISE_SWITCH_MS)) { -direction * it / 4 } + fadeOut(tween(EXERCISE_SWITCH_MS / 2)))
+                                .togetherWith(
+                                    slideOutHorizontally(tween(EXERCISE_SWITCH_MS)) { -direction * it / 4 } +
+                                        fadeOut(tween(EXERCISE_SWITCH_MS / 2))
+                                )
                                 .using(SizeTransform(clip = false))
                         },
-                        label = "exerciseHeader",
+                        label = "exerciseHeader"
                     ) { index ->
                         val shownExercise = uiState.routineExercises.getOrNull(index) ?: return@AnimatedContent
                         CurrentExerciseHeader(
@@ -563,7 +565,7 @@ internal fun ActiveWorkoutContent(
                             index = index,
                             count = uiState.routineExercises.size,
                             isFreeWorkout = uiState.allowAddingExercises,
-                            onSelect = { onEvent(ActiveWorkoutUiEvent.OnSelectExercise(it)) },
+                            onSelect = { onEvent(ActiveWorkoutUiEvent.OnSelectExercise(it)) }
                         )
                     }
                 }
@@ -573,7 +575,7 @@ internal fun ActiveWorkoutContent(
                             suggestion = suggestion,
                             weightUnit = uiState.currentUnit,
                             onUse = { onEvent(ActiveWorkoutUiEvent.OnUseSuggestion) },
-                            modifier = Modifier.animateItem(),
+                            modifier = Modifier.animateItem()
                         )
                     }
                 }
@@ -582,7 +584,7 @@ internal fun ActiveWorkoutContent(
                         uiState = uiState,
                         routineExercise = currentExercise,
                         onEvent = onEvent,
-                        modifier = Modifier.animateItem(),
+                        modifier = Modifier.animateItem()
                     )
                 }
                 item(key = "options-$exerciseKey") {
@@ -590,7 +592,7 @@ internal fun ActiveWorkoutContent(
                         uiState = uiState,
                         routineExercise = currentExercise,
                         onEvent = onEvent,
-                        modifier = Modifier.animateItem(),
+                        modifier = Modifier.animateItem()
                     )
                 }
                 nextExerciseIndex(uiState)?.let { nextIndex ->
@@ -602,7 +604,7 @@ internal fun ActiveWorkoutContent(
                             icon = Icons.AutoMirrored.Filled.ArrowForward,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .animateItem(),
+                                .animateItem()
                         )
                     }
                 }
@@ -611,7 +613,7 @@ internal fun ActiveWorkoutContent(
                     HdEmptyState(
                         icon = Icons.Default.FitnessCenter,
                         title = stringResource(R.string.workout_no_exercises_title),
-                        description = stringResource(R.string.workout_no_exercises_description),
+                        description = stringResource(R.string.workout_no_exercises_description)
                     )
                 }
             }
@@ -623,13 +625,13 @@ internal fun ActiveWorkoutContent(
                             query = uiState.exercisePickerQuery,
                             results = uiState.exercisePickerResults,
                             onQueryChange = { onEvent(ActiveWorkoutUiEvent.OnExercisePickerQueryChange(it)) },
-                            onExercisePick = { onEvent(ActiveWorkoutUiEvent.OnAddExercise(it)) },
+                            onExercisePick = { onEvent(ActiveWorkoutUiEvent.OnAddExercise(it)) }
                         )
                     } else {
                         HdTextButton(
                             text = stringResource(R.string.workout_add_exercise),
                             onClick = { onEvent(ActiveWorkoutUiEvent.OnToggleExercisePicker) },
-                            icon = Icons.Default.Add,
+                            icon = Icons.Default.Add
                         )
                     }
                 }
@@ -646,7 +648,7 @@ internal fun ActiveWorkoutContent(
                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 onEvent(ActiveWorkoutUiEvent.OnCompleteWorkout)
             },
-            onDismiss = { showFinishDialog = false },
+            onDismiss = { showFinishDialog = false }
         )
     }
 }
@@ -684,7 +686,7 @@ private fun WorkoutHeader(uiState: ActiveWorkoutUiState, onFinish: () -> Unit) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(horizontal = 16.dp, vertical = 12.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(modifier = Modifier.weight(1f)) {
@@ -694,19 +696,19 @@ private fun WorkoutHeader(uiState: ActiveWorkoutUiState, onFinish: () -> Unit) {
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
+                        overflow = TextOverflow.Ellipsis
                     )
                     Text(
                         text = formatDuration(uiState.elapsedSeconds),
                         style = MaterialTheme.typography.headlineSmall.tabular(),
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
                 HdButton(
                     text = stringResource(R.string.workout_finish),
                     onClick = onFinish,
-                    icon = Icons.Default.Check,
+                    icon = Icons.Default.Check
                 )
             }
             Spacer(modifier = Modifier.height(8.dp))
@@ -716,7 +718,7 @@ private fun WorkoutHeader(uiState: ActiveWorkoutUiState, onFinish: () -> Unit) {
                 val progress by animateFloatAsState(
                     targetValue = done.toFloat() / planned,
                     animationSpec = spring(stiffness = Spring.StiffnessLow),
-                    label = "workoutProgress",
+                    label = "workoutProgress"
                 )
                 LinearProgressIndicator(
                     progress = { progress },
@@ -724,20 +726,20 @@ private fun WorkoutHeader(uiState: ActiveWorkoutUiState, onFinish: () -> Unit) {
                         .fillMaxWidth()
                         .clip(CircleShape),
                     // A muted track, so 0/6 reads as empty rather than as a full bar.
-                    trackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                    trackColor = MaterialTheme.colorScheme.surfaceContainerHighest
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 HdRollingText(
                     text = stringResource(R.string.workout_sets_progress, done, planned),
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             } else {
                 val logged = uiState.completedSets.count { !it.isWarmup }
                 Text(
                     text = pluralStringResource(R.plurals.workout_sets_logged, logged, logged),
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -750,11 +752,7 @@ private fun WorkoutHeader(uiState: ActiveWorkoutUiState, onFinish: () -> Unit) {
  * tick each second so the lifter can get set without watching the screen.
  */
 @Composable
-private fun RestTimerBanner(
-    rest: RestTimerState,
-    onAdjust: (Int) -> Unit,
-    onSkip: () -> Unit,
-) {
+private fun RestTimerBanner(rest: RestTimerState, onAdjust: (Int) -> Unit, onSkip: () -> Unit) {
     val haptic = LocalHapticFeedback.current
     val ending = rest.remainingSeconds in 1..REST_WARNING_SECONDS
     LaunchedEffect(rest.remainingSeconds) {
@@ -762,40 +760,40 @@ private fun RestTimerBanner(
     }
     val containerColor by animateColorAsState(
         if (ending) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.secondaryContainer,
-        label = "restContainer",
+        label = "restContainer"
     )
     val contentColor by animateColorAsState(
         if (ending) MaterialTheme.colorScheme.onTertiaryContainer else MaterialTheme.colorScheme.onSecondaryContainer,
-        label = "restContent",
+        label = "restContent"
     )
     val barColor by animateColorAsState(
         if (ending) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.secondary,
-        label = "restBar",
+        label = "restBar"
     )
     // Each one-second step is spread over that second, so the bar moves smoothly.
     val progress by animateFloatAsState(
         targetValue = rest.remainingSeconds.toFloat() / rest.totalSeconds.coerceAtLeast(1),
         animationSpec = tween(durationMillis = 1_000, easing = LinearEasing),
-        label = "restProgress",
+        label = "restProgress"
     )
 
     Surface(color = containerColor, contentColor = contentColor) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 10.dp),
+                .padding(horizontal = 16.dp, vertical = 10.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = stringResource(R.string.workout_rest),
-                        style = MaterialTheme.typography.labelMedium,
+                        style = MaterialTheme.typography.labelMedium
                     )
                     HdRollingText(
                         text = formatDuration(rest.remainingSeconds),
                         style = MaterialTheme.typography.titleLarge.tabular(),
                         fontWeight = FontWeight.Bold,
-                        countingDown = true,
+                        countingDown = true
                     )
                 }
                 SmallTonalButton(text = stringResource(R.string.workout_rest_minus), onClick = { onAdjust(-REST_STEP_SECONDS) })
@@ -813,7 +811,7 @@ private fun RestTimerBanner(
                     .clip(CircleShape),
                 color = barColor,
                 trackColor = contentColor.copy(alpha = 0.15f),
-                drawStopIndicator = {},
+                drawStopIndicator = {}
             )
         }
     }
@@ -830,9 +828,9 @@ private fun SmallTonalButton(text: String, onClick: () -> Unit) {
         contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
         colors = ButtonDefaults.filledTonalButtonColors(
             containerColor = contentColor.copy(alpha = 0.12f),
-            contentColor = contentColor,
+            contentColor = contentColor
         ),
-        modifier = Modifier.height(32.dp),
+        modifier = Modifier.height(32.dp)
     ) {
         Text(text = text, style = MaterialTheme.typography.labelMedium)
     }
@@ -847,7 +845,7 @@ private fun ExerciseStrip(uiState: ActiveWorkoutUiState, onSelect: (Int) -> Unit
     LazyRow(
         state = listState,
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         itemsIndexed(uiState.routineExercises) { index, exercise ->
             val isSelected = index == uiState.currentExerciseIndex
@@ -855,17 +853,17 @@ private fun ExerciseStrip(uiState: ActiveWorkoutUiState, onSelect: (Int) -> Unit
             val isDone = uiState.isDone(exercise)
             val containerColor by animateColorAsState(
                 if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh,
-                label = "stripContainer",
+                label = "stripContainer"
             )
             val contentColor by animateColorAsState(
                 if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
-                label = "stripContent",
+                label = "stripContent"
             )
             Surface(
                 onClick = { onSelect(index) },
                 shape = MaterialTheme.shapes.small,
                 color = containerColor,
-                contentColor = contentColor,
+                contentColor = contentColor
             ) {
                 Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
                     Text(
@@ -873,7 +871,7 @@ private fun ExerciseStrip(uiState: ActiveWorkoutUiState, onSelect: (Int) -> Unit
                         style = MaterialTheme.typography.labelLarge,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.widthIn(max = 150.dp),
+                        modifier = Modifier.widthIn(max = 150.dp)
                     )
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         // The check pops in when the last planned set is logged.
@@ -882,20 +880,20 @@ private fun ExerciseStrip(uiState: ActiveWorkoutUiState, onSelect: (Int) -> Unit
                             enter = expandHorizontally() +
                                 scaleIn(spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMediumLow)) +
                                 fadeIn(),
-                            exit = shrinkHorizontally() + fadeOut(),
+                            exit = shrinkHorizontally() + fadeOut()
                         ) {
                             Row {
                                 Icon(
                                     imageVector = Icons.Default.CheckCircle,
                                     contentDescription = stringResource(R.string.workout_done),
-                                    modifier = Modifier.size(12.dp),
+                                    modifier = Modifier.size(12.dp)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                             }
                         }
                         HdRollingText(
                             text = if (exercise.targetSets > 0) "$done/${exercise.targetSets}" else "$done",
-                            style = MaterialTheme.typography.labelSmall,
+                            style = MaterialTheme.typography.labelSmall
                         )
                     }
                 }
@@ -910,7 +908,7 @@ private fun CurrentExerciseHeader(
     index: Int,
     count: Int,
     isFreeWorkout: Boolean,
-    onSelect: (Int) -> Unit,
+    onSelect: (Int) -> Unit
 ) {
     val exercise = routineExercise.exercise
     val unit = routineExercise.displayUnit
@@ -918,12 +916,12 @@ private fun CurrentExerciseHeader(
         IconButton(onClick = { onSelect(index - 1) }, enabled = index > 0) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                contentDescription = stringResource(R.string.workout_previous_exercise_cd),
+                contentDescription = stringResource(R.string.workout_previous_exercise_cd)
             )
         }
         Column(
             modifier = Modifier.weight(1f),
-            horizontalAlignment = Alignment.CenterHorizontally,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = exercise?.displayName.orEmpty(),
@@ -932,7 +930,7 @@ private fun CurrentExerciseHeader(
                 color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center,
                 maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
+                overflow = TextOverflow.Ellipsis
             )
             val details = buildList {
                 exercise?.muscleGroup?.let { add(stringResource(it.nameResId)) }
@@ -951,25 +949,20 @@ private fun CurrentExerciseHeader(
                 text = details.joinToString(" · "),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
+                textAlign = TextAlign.Center
             )
         }
         IconButton(onClick = { onSelect(index + 1) }, enabled = index < count - 1) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = stringResource(R.string.workout_next_exercise_cd),
+                contentDescription = stringResource(R.string.workout_next_exercise_cd)
             )
         }
     }
 }
 
 @Composable
-private fun SuggestionRow(
-    suggestion: Prescription,
-    weightUnit: WeightUnit,
-    onUse: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+private fun SuggestionRow(suggestion: Prescription, weightUnit: WeightUnit, onUse: () -> Unit, modifier: Modifier = Modifier) {
     val containerColor = if (suggestion.isDeload) {
         MaterialTheme.colorScheme.errorContainer
     } else {
@@ -985,7 +978,7 @@ private fun SuggestionRow(
         val durationSecs = suggestion.durationSecs
         val weightKg = suggestion.weightKg?.takeIf { it > 0f }
         when {
-            durationSecs != null -> append("${durationSecs} s")
+            durationSecs != null -> append("$durationSecs s")
             weightKg != null -> append("${suggestion.reps} · ${weightKg.kgToRounded(weightUnit).formatDecimal()} ${weightUnit.label}")
             else -> append("${suggestion.reps}")
         }
@@ -993,7 +986,7 @@ private fun SuggestionRow(
     Surface(color = containerColor, contentColor = contentColor, shape = MaterialTheme.shapes.medium, modifier = modifier) {
         Row(
             modifier = Modifier.padding(start = 12.dp, end = 4.dp, top = 6.dp, bottom = 6.dp),
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(imageVector = Icons.AutoMirrored.Filled.TrendingUp, contentDescription = null, modifier = Modifier.size(18.dp))
             Spacer(modifier = Modifier.width(8.dp))
@@ -1002,7 +995,7 @@ private fun SuggestionRow(
                     text = stringResource(R.string.workout_suggestion, target) +
                         if (suggestion.isDeload) " · ${stringResource(R.string.workout_deload)}" else "",
                     style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold,
+                    fontWeight = FontWeight.SemiBold
                 )
                 suggestion.reasonNote?.let { note ->
                     Text(text = note, style = MaterialTheme.typography.bodySmall)
@@ -1026,7 +1019,7 @@ private fun SetTable(
     uiState: ActiveWorkoutUiState,
     routineExercise: RoutineExercise,
     onEvent: (ActiveWorkoutUiEvent) -> Unit,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
     val exercise = routineExercise.exercise
     val unit = uiState.currentUnit
@@ -1043,11 +1036,11 @@ private fun SetTable(
             UnitToggleHeader(
                 label = weightHeader,
                 onToggle = { onEvent(ActiveWorkoutUiEvent.OnToggleUnit) },
-                modifier = Modifier.width(ValueColumnWidth),
+                modifier = Modifier.width(ValueColumnWidth)
             )
             HeaderCell(
                 stringResource(if (uiState.isTimedInput) R.string.workout_col_time else R.string.workout_col_reps),
-                Modifier.width(ValueColumnWidth),
+                Modifier.width(ValueColumnWidth)
             )
             Spacer(modifier = Modifier.width(ActionColumnWidth))
         }
@@ -1063,7 +1056,7 @@ private fun SetTable(
                     previous = uiState.previousSets[set.setNumber],
                     unit = unit,
                     animateIn = isNew,
-                    onDelete = { onEvent(ActiveWorkoutUiEvent.OnDeleteSet(set)) },
+                    onDelete = { onEvent(ActiveWorkoutUiEvent.OnDeleteSet(set)) }
                 )
             }
         }
@@ -1073,7 +1066,7 @@ private fun SetTable(
             setNumber = currentSetNumber,
             previous = uiState.previousSets[currentSetNumber],
             unit = unit,
-            onEvent = onEvent,
+            onEvent = onEvent
         )
 
         // Planned sets still ahead, so the lifter sees what's left of this exercise.
@@ -1084,22 +1077,19 @@ private fun SetTable(
 }
 
 @Composable
-private fun TableRow(
-    modifier: Modifier = Modifier,
-    content: @Composable RowScope.() -> Unit,
-) {
+private fun TableRow(modifier: Modifier = Modifier, content: @Composable RowScope.() -> Unit) {
     Row(
         modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 2.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp),
-        content = content,
+        content = content
     )
 }
 
 @Composable
-private fun HeaderCell(text: String, modifier: Modifier) {
+private fun HeaderCell(text: String, modifier: Modifier = Modifier) {
     Text(
         text = text,
         style = MaterialTheme.typography.labelSmall,
@@ -1107,12 +1097,12 @@ private fun HeaderCell(text: String, modifier: Modifier) {
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         textAlign = TextAlign.Center,
         maxLines = 1,
-        modifier = modifier,
+        modifier = modifier
     )
 }
 
 @Composable
-private fun ValueCell(text: String, modifier: Modifier, dim: Boolean = false, bold: Boolean = false) {
+private fun ValueCell(text: String, modifier: Modifier = Modifier, dim: Boolean = false, bold: Boolean = false) {
     Text(
         text = text,
         style = MaterialTheme.typography.bodyMedium.tabular(),
@@ -1121,7 +1111,7 @@ private fun ValueCell(text: String, modifier: Modifier, dim: Boolean = false, bo
         textAlign = TextAlign.Center,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
-        modifier = modifier,
+        modifier = modifier
     )
 }
 
@@ -1133,15 +1123,15 @@ private fun SetNumberCell(label: String, highlighted: Boolean) {
                 .size(28.dp)
                 .clip(CircleShape)
                 .background(
-                    if (highlighted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHighest,
+                    if (highlighted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHighest
                 ),
-            contentAlignment = Alignment.Center,
+            contentAlignment = Alignment.Center
         ) {
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold,
-                color = if (highlighted) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                color = if (highlighted) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
             )
         }
     }
@@ -1152,13 +1142,7 @@ private fun SetNumberCell(label: String, highlighted: Boolean) {
  * now drops into place with a light bounce and a confirming vibration.
  */
 @Composable
-private fun LoggedSetRow(
-    set: WorkoutSet,
-    previous: WorkoutSet?,
-    unit: WeightUnit,
-    animateIn: Boolean,
-    onDelete: () -> Unit,
-) {
+private fun LoggedSetRow(set: WorkoutSet, previous: WorkoutSet?, unit: WeightUnit, animateIn: Boolean, onDelete: () -> Unit) {
     val haptic = LocalHapticFeedback.current
     var deleteRequested by remember { mutableStateOf(false) }
     val dismissState = rememberSwipeToDismissBoxState(positionalThreshold = { distance -> distance * 0.4f })
@@ -1198,12 +1182,12 @@ private fun LoggedSetRow(
                         .clip(MaterialTheme.shapes.small)
                         .background(MaterialTheme.colorScheme.errorContainer)
                         .padding(end = 16.dp),
-                    contentAlignment = Alignment.CenterEnd,
+                    contentAlignment = Alignment.CenterEnd
                 ) {
                     Icon(
                         imageVector = Icons.Default.DeleteOutline,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onErrorContainer,
+                        tint = MaterialTheme.colorScheme.onErrorContainer
                     )
                 }
             }
@@ -1215,39 +1199,35 @@ private fun LoggedSetRow(
             translationY = (1f - progress) * -10.dp.toPx()
             scaleX = 0.96f + 0.04f * progress
             scaleY = scaleX
-        },
+        }
     ) {
         LoggedSetRowContent(set = set, previous = previous, unit = unit, onDelete = onDelete)
     }
 }
 
 @Composable
-private fun LoggedSetRowContent(
-    set: WorkoutSet,
-    previous: WorkoutSet?,
-    unit: WeightUnit,
-    onDelete: () -> Unit,
-) {
+private fun LoggedSetRowContent(set: WorkoutSet, previous: WorkoutSet?, unit: WeightUnit, onDelete: () -> Unit) {
     TableRow(
         modifier = Modifier
             .clip(MaterialTheme.shapes.small)
             // Opaque, so the delete background doesn't tint the row while it's swiped.
             .background(
                 MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
-                    .compositeOver(MaterialTheme.colorScheme.surfaceContainerLow),
-            ),
+                    .compositeOver(MaterialTheme.colorScheme.surfaceContainerLow)
+            )
     ) {
         SetNumberCell(
             label = if (set.isWarmup) stringResource(R.string.workout_warmup_short) else set.setNumber.toString(),
-            highlighted = false,
+            highlighted = false
         )
         ValueCell(previous.describe(unit), Modifier.weight(1f), dim = true)
         // Each set shows in the unit it was logged in — a lb machine set stays "50 lb".
         val setUnit = set.weightUnit ?: unit
         ValueCell(
-            text = set.weight?.kgToRounded(setUnit)?.let { "${it.formatDecimal()}${if (setUnit != unit) " ${setUnit.label}" else ""}" } ?: "—",
+            text =
+                set.weight?.kgToRounded(setUnit)?.let { "${it.formatDecimal()}${if (setUnit != unit) " ${setUnit.label}" else ""}" } ?: "—",
             modifier = Modifier.width(ValueColumnWidth),
-            bold = true,
+            bold = true
         )
         val effortSuffix = when (val effort = set.effort) {
             is Effort.Rpe -> " @${effort.value.formatDecimal()}"
@@ -1255,16 +1235,16 @@ private fun LoggedSetRowContent(
             null -> ""
         }
         ValueCell(
-            text = (set.durationSecs?.let { "${it} s" } ?: set.reps?.toString() ?: "—") + effortSuffix,
+            text = (set.durationSecs?.let { "$it s" } ?: set.reps?.toString() ?: "—") + effortSuffix,
             modifier = Modifier.width(ValueColumnWidth),
-            bold = true,
+            bold = true
         )
         IconButton(onClick = onDelete, modifier = Modifier.size(ActionColumnWidth)) {
             Icon(
                 imageVector = Icons.Default.DeleteOutline,
                 contentDescription = stringResource(R.string.workout_delete_set),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(20.dp),
+                modifier = Modifier.size(20.dp)
             )
         }
     }
@@ -1276,7 +1256,7 @@ private fun ActiveSetRow(
     setNumber: Int,
     previous: WorkoutSet?,
     unit: WeightUnit,
-    onEvent: (ActiveWorkoutUiEvent) -> Unit,
+    onEvent: (ActiveWorkoutUiEvent) -> Unit
 ) {
     val hint = uiState.currentSetHint
     Column(
@@ -1285,12 +1265,12 @@ private fun ActiveSetRow(
             .padding(vertical = 4.dp)
             .clip(MaterialTheme.shapes.small)
             .background(MaterialTheme.colorScheme.surfaceContainerHighest)
-            .padding(vertical = 4.dp),
+            .padding(vertical = 4.dp)
     ) {
         TableRow {
             SetNumberCell(
                 label = if (uiState.isWarmupInput) stringResource(R.string.workout_warmup_short) else setNumber.toString(),
-                highlighted = true,
+                highlighted = true
             )
             ValueCell(previous.describe(unit), Modifier.weight(1f), dim = true)
             CompactNumberInput(
@@ -1298,14 +1278,14 @@ private fun ActiveSetRow(
                 onValueChange = { onEvent(ActiveWorkoutUiEvent.OnWeightChange(it)) },
                 placeholder = hint.weightKg?.kgToRounded(unit)?.formatDecimal() ?: "0",
                 keyboardType = KeyboardType.Decimal,
-                width = ValueColumnWidth,
+                width = ValueColumnWidth
             )
             if (uiState.isTimedInput) {
                 HoldTimerCell(
                     elapsedSeconds = uiState.workTimerElapsedSecs,
                     placeholderSeconds = hint.durationSecs,
                     isRunning = uiState.isWorkTimerRunning,
-                    onToggle = { onEvent(ActiveWorkoutUiEvent.OnToggleWorkTimer) },
+                    onToggle = { onEvent(ActiveWorkoutUiEvent.OnToggleWorkTimer) }
                 )
             } else {
                 CompactNumberInput(
@@ -1313,7 +1293,7 @@ private fun ActiveSetRow(
                     onValueChange = { onEvent(ActiveWorkoutUiEvent.OnRepsChange(it)) },
                     placeholder = hint.reps?.toString() ?: "0",
                     keyboardType = KeyboardType.Number,
-                    width = ValueColumnWidth,
+                    width = ValueColumnWidth
                 )
             }
             // Squeezes and springs back on tap; the new row's arrival confirms the set.
@@ -1335,11 +1315,11 @@ private fun ActiveSetRow(
                     .graphicsLayer {
                         scaleX = press.value
                         scaleY = press.value
-                    },
+                    }
             ) {
                 Icon(
                     imageVector = Icons.Default.Check,
-                    contentDescription = stringResource(R.string.workout_log_set),
+                    contentDescription = stringResource(R.string.workout_log_set)
                 )
             }
         }
@@ -1348,12 +1328,12 @@ private fun ActiveSetRow(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = SetColumnWidth + 6.dp, top = 4.dp, end = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = uiState.preferredEffortScale,
                     style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 CompactNumberInput(
@@ -1361,7 +1341,7 @@ private fun ActiveSetRow(
                     onValueChange = { onEvent(ActiveWorkoutUiEvent.OnEffortInputChange(it)) },
                     placeholder = "—",
                     keyboardType = KeyboardType.Decimal,
-                    width = 64.dp,
+                    width = 64.dp
                 )
             }
         }
@@ -1380,17 +1360,11 @@ private fun PendingSetRow(setNumber: Int, previous: WorkoutSet?, unit: WeightUni
 }
 
 @Composable
-private fun CompactNumberInput(
-    value: String,
-    onValueChange: (String) -> Unit,
-    placeholder: String,
-    keyboardType: KeyboardType,
-    width: Dp,
-) {
+private fun CompactNumberInput(value: String, onValueChange: (String) -> Unit, placeholder: String, keyboardType: KeyboardType, width: Dp) {
     val textStyle = MaterialTheme.typography.bodyLarge.tabular().copy(
         color = MaterialTheme.colorScheme.onSurface,
         fontWeight = FontWeight.SemiBold,
-        textAlign = TextAlign.Center,
+        textAlign = TextAlign.Center
     )
     BasicTextField(
         value = value,
@@ -1406,29 +1380,24 @@ private fun CompactNumberInput(
                     .clip(MaterialTheme.shapes.small)
                     .background(MaterialTheme.colorScheme.surface)
                     .padding(vertical = 10.dp),
-                contentAlignment = Alignment.Center,
+                contentAlignment = Alignment.Center
             ) {
                 if (value.isEmpty()) {
                     Text(
                         text = placeholder,
                         style = textStyle.copy(
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                        ),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                        )
                     )
                 }
                 innerTextField()
             }
-        },
+        }
     )
 }
 
 @Composable
-private fun HoldTimerCell(
-    elapsedSeconds: Int,
-    placeholderSeconds: Int?,
-    isRunning: Boolean,
-    onToggle: () -> Unit,
-) {
+private fun HoldTimerCell(elapsedSeconds: Int, placeholderSeconds: Int?, isRunning: Boolean, onToggle: () -> Unit) {
     Row(
         modifier = Modifier
             .width(ValueColumnWidth)
@@ -1437,13 +1406,13 @@ private fun HoldTimerCell(
             .clickable(onClick = onToggle)
             .padding(vertical = 8.dp),
         horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically,
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
             imageVector = if (isRunning) Icons.Default.Stop else Icons.Default.PlayArrow,
             contentDescription = stringResource(if (isRunning) R.string.workout_hold_stop else R.string.workout_hold_start),
             tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(18.dp),
+            modifier = Modifier.size(18.dp)
         )
         val showPlaceholder = elapsedSeconds == 0 && !isRunning && placeholderSeconds != null
         Text(
@@ -1454,7 +1423,7 @@ private fun HoldTimerCell(
                 MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
             } else {
                 MaterialTheme.colorScheme.onSurface
-            },
+            }
         )
     }
 }
@@ -1464,28 +1433,28 @@ private fun SetOptions(
     uiState: ActiveWorkoutUiState,
     routineExercise: RoutineExercise,
     onEvent: (ActiveWorkoutUiEvent) -> Unit,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
     var showPlateCalculator by rememberSaveable { mutableStateOf(false) }
     Row(
         modifier = modifier.horizontalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         HdChip(
             text = stringResource(R.string.workout_warmup),
             isSelected = uiState.isWarmupInput,
-            onClick = { onEvent(ActiveWorkoutUiEvent.OnToggleWarmupInput) },
+            onClick = { onEvent(ActiveWorkoutUiEvent.OnToggleWarmupInput) }
         )
         HdChip(
             text = stringResource(R.string.workout_timed),
             isSelected = uiState.isTimedInput,
-            onClick = { onEvent(ActiveWorkoutUiEvent.OnToggleTimedInput) },
+            onClick = { onEvent(ActiveWorkoutUiEvent.OnToggleTimedInput) }
         )
         if (routineExercise.exercise?.isBodyweight != true) {
             HdChip(
                 text = stringResource(R.string.workout_plates),
                 isSelected = false,
-                onClick = { showPlateCalculator = true },
+                onClick = { showPlateCalculator = true }
             )
         }
     }
@@ -1495,7 +1464,7 @@ private fun SetOptions(
         PlateCalculatorDialog(
             unit = unit,
             initialWeight = initial?.formatDecimal().orEmpty(),
-            onDismiss = { showPlateCalculator = false },
+            onDismiss = { showPlateCalculator = false }
         )
     }
 }
@@ -1503,11 +1472,7 @@ private fun SetOptions(
 // ============================================================== dialogs & pickers
 
 @Composable
-private fun FinishWorkoutDialog(
-    uiState: ActiveWorkoutUiState,
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit,
-) {
+private fun FinishWorkoutDialog(uiState: ActiveWorkoutUiState, onConfirm: () -> Unit, onDismiss: () -> Unit) {
     val planned = uiState.plannedSetCount
     val done = uiState.completedPlannedSetCount
     val message = if (planned > 0 && done < planned) {
@@ -1526,34 +1491,29 @@ private fun FinishWorkoutDialog(
         },
         dismissButton = {
             TextButton(onClick = onDismiss) { Text(stringResource(R.string.workout_cancel)) }
-        },
+        }
     )
 }
 
 @Composable
-private fun ExercisePicker(
-    query: String,
-    results: List<Exercise>,
-    onQueryChange: (String) -> Unit,
-    onExercisePick: (Exercise) -> Unit,
-) {
+private fun ExercisePicker(query: String, results: List<Exercise>, onQueryChange: (String) -> Unit, onExercisePick: (Exercise) -> Unit) {
     HdCard {
         Text(
             text = stringResource(R.string.workout_add_exercise),
             style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.primary,
+            color = MaterialTheme.colorScheme.primary
         )
         Spacer(modifier = Modifier.height(8.dp))
         HdSearchBar(
             query = query,
             onQueryChange = onQueryChange,
-            placeholder = stringResource(R.string.workout_search_exercises),
+            placeholder = stringResource(R.string.workout_search_exercises)
         )
         Spacer(modifier = Modifier.height(8.dp))
         LazyColumn(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(240.dp),
+                .height(240.dp)
         ) {
             items(items = results, key = { it.id }) { exercise ->
                 Row(
@@ -1561,7 +1521,7 @@ private fun ExercisePicker(
                         .fillMaxWidth()
                         .clickable { onExercisePick(exercise) }
                         .padding(vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     HdExerciseThumbnail(exercise = exercise, size = 44.dp)
                     Spacer(modifier = Modifier.width(12.dp))
@@ -1571,18 +1531,18 @@ private fun ExercisePicker(
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurface,
                             maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
+                            overflow = TextOverflow.Ellipsis
                         )
                         Text(
                             text = stringResource(exercise.muscleGroup.nameResId),
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     Icon(
                         imageVector = Icons.Default.Add,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
+                        tint = MaterialTheme.colorScheme.primary
                     )
                 }
             }
@@ -1601,7 +1561,7 @@ private fun PlateCalculatorDialog(unit: WeightUnit, initialWeight: String, onDis
             Text(
                 text = stringResource(R.string.workout_plate_calculator),
                 style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary,
+                color = MaterialTheme.colorScheme.primary
             )
             Spacer(modifier = Modifier.height(12.dp))
             OutlinedTextField(
@@ -1612,13 +1572,13 @@ private fun PlateCalculatorDialog(unit: WeightUnit, initialWeight: String, onDis
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.small,
-                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = MaterialTheme.colorScheme.primary),
+                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = MaterialTheme.colorScheme.primary)
             )
             Spacer(modifier = Modifier.height(12.dp))
             Text(
                 text = stringResource(R.string.workout_plate_bar),
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(6.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -1626,7 +1586,7 @@ private fun PlateCalculatorDialog(unit: WeightUnit, initialWeight: String, onDis
                     HdChip(
                         text = "${bar.formatDecimal()} ${unit.label}",
                         isSelected = barWeight == bar,
-                        onClick = { barWeight = bar },
+                        onClick = { barWeight = bar }
                     )
                 }
             }
@@ -1642,7 +1602,7 @@ private fun PlateCalculatorDialog(unit: WeightUnit, initialWeight: String, onDis
                 },
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = MaterialTheme.colorScheme.onSurface
             )
             Spacer(modifier = Modifier.height(16.dp))
             HdButton(text = stringResource(R.string.workout_close), onClick = onDismiss, modifier = Modifier.fillMaxWidth())
@@ -1659,7 +1619,7 @@ private fun IconBadge(icon: androidx.compose.ui.graphics.vector.ImageVector) {
             .size(48.dp)
             .clip(CircleShape)
             .background(MaterialTheme.colorScheme.primary),
-        contentAlignment = Alignment.Center,
+        contentAlignment = Alignment.Center
     ) {
         Icon(imageVector = icon, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary)
     }
@@ -1669,7 +1629,7 @@ private const val REST_STEP_SECONDS = 15
 
 /** Header of the weight column; tapping it switches the exercise between kg and lb. */
 @Composable
-private fun UnitToggleHeader(label: String, onToggle: () -> Unit, modifier: Modifier) {
+private fun UnitToggleHeader(label: String, onToggle: () -> Unit, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .clip(MaterialTheme.shapes.small)
@@ -1677,13 +1637,13 @@ private fun UnitToggleHeader(label: String, onToggle: () -> Unit, modifier: Modi
             .clickable(onClick = onToggle)
             .padding(vertical = 4.dp),
         horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically,
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSecondaryContainer,
+            color = MaterialTheme.colorScheme.onSecondaryContainer
         )
         Icon(
             imageVector = Icons.Default.SwapHoriz,
@@ -1691,7 +1651,7 @@ private fun UnitToggleHeader(label: String, onToggle: () -> Unit, modifier: Modi
             tint = MaterialTheme.colorScheme.onSecondaryContainer,
             modifier = Modifier
                 .padding(start = 2.dp)
-                .size(14.dp),
+                .size(14.dp)
         )
     }
 }
@@ -1706,7 +1666,7 @@ private fun WorkoutSet?.describe(unit: WeightUnit): String {
     val weightPart = weight?.takeIf { it > 0f }?.kgToRounded(setUnit)?.formatDecimal()
         ?.let { if (setUnit != unit) "$it ${setUnit.label}" else it }
     return when {
-        durationSecs != null -> "${durationSecs} s" + (weightPart?.let { " × $it" } ?: "")
+        durationSecs != null -> "$durationSecs s" + (weightPart?.let { " × $it" } ?: "")
         reps != null && weightPart != null -> "$reps × $weightPart"
         reps != null -> "$reps"
         else -> "—"

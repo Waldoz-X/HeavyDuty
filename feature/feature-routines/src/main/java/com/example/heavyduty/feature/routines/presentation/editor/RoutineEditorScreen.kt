@@ -1,8 +1,5 @@
 package com.example.heavyduty.feature.routines.presentation.editor
 
-import com.example.heavyduty.core.domain.model.displayName
-import com.example.heavyduty.core.ui.components.HdCardListSkeleton
-import androidx.compose.ui.platform.LocalResources
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -33,6 +30,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.DragIndicator
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ExpandLess
@@ -44,7 +42,6 @@ import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.LinkOff
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Scale
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
@@ -88,18 +85,19 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -112,13 +110,15 @@ import com.example.heavyduty.core.domain.model.ProgressionPolicy
 import com.example.heavyduty.core.domain.model.RoutineExercise
 import com.example.heavyduty.core.domain.model.WeightUnit
 import com.example.heavyduty.core.domain.model.WorkoutType
-import com.example.heavyduty.core.domain.model.isBodyweight
+import com.example.heavyduty.core.domain.model.displayName
 import com.example.heavyduty.core.domain.model.displayUnit
+import com.example.heavyduty.core.domain.model.isBodyweight
 import com.example.heavyduty.core.domain.model.kgToRounded
 import com.example.heavyduty.core.domain.model.label
 import com.example.heavyduty.core.domain.model.loadStep
 import com.example.heavyduty.core.domain.model.toKgFrom
 import com.example.heavyduty.core.ui.components.HdCard
+import com.example.heavyduty.core.ui.components.HdCardListSkeleton
 import com.example.heavyduty.core.ui.components.HdChip
 import com.example.heavyduty.core.ui.components.HdEmptyState
 import com.example.heavyduty.core.ui.components.HdErrorState
@@ -126,10 +126,10 @@ import com.example.heavyduty.core.ui.components.HdExerciseThumbnail
 import com.example.heavyduty.core.ui.components.HdLineChart
 import com.example.heavyduty.core.ui.components.HdTonalButton
 import com.example.heavyduty.core.ui.nameResId
+import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
-import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -139,7 +139,7 @@ fun RoutineEditorScreen(
     modifier: Modifier = Modifier,
     /** This destination's nav-entry handle, where the exercise picker leaves its result. */
     navResults: SavedStateHandle? = null,
-    viewModel: RoutineEditorViewModel = hiltViewModel(),
+    viewModel: RoutineEditorViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val onEvent = viewModel::onEvent
@@ -159,28 +159,32 @@ fun RoutineEditorScreen(
         }
     }
 
+    val currentOnNavigateBack by rememberUpdatedState(onNavigateBack)
     LaunchedEffect(Unit) {
         viewModel.uiEffect.collect { effect ->
             when (effect) {
-                RoutineEditorUiEffect.NavigateBack -> onNavigateBack()
+                RoutineEditorUiEffect.NavigateBack -> currentOnNavigateBack()
+
                 is RoutineEditorUiEffect.ShowMessage -> scope.launch {
                     snackbarHostState.showSnackbar(resources.getString(effect.messageResId))
                 }
+
                 is RoutineEditorUiEffect.ShowUndoRemove -> scope.launch {
                     snackbarHostState.currentSnackbarData?.dismiss()
                     val result = snackbarHostState.showSnackbar(
                         message = resources.getString(R.string.routine_removed, effect.exerciseName.capitalized()),
                         actionLabel = resources.getString(R.string.routine_undo),
-                        duration = SnackbarDuration.Short,
+                        duration = SnackbarDuration.Short
                     )
                     if (result == SnackbarResult.ActionPerformed) onEvent(RoutineEditorUiEvent.OnUndoRemove)
                 }
+
                 is RoutineEditorUiEffect.ExercisesAdded -> scope.launch {
                     // The new rows are at the end: bring them into view.
                     val lastIndex = listState.layoutInfo.totalItemsCount - 1
                     if (lastIndex >= 0) listState.animateScrollToItem(lastIndex)
                     snackbarHostState.showSnackbar(
-                        resources.getQuantityString(R.plurals.routine_exercises_added, effect.count, effect.count),
+                        resources.getQuantityString(R.plurals.routine_exercises_added, effect.count, effect.count)
                     )
                 }
             }
@@ -198,14 +202,14 @@ fun RoutineEditorScreen(
                 title = {
                     Text(
                         text = stringResource(if (uiState.isEditMode) R.string.routine_edit else R.string.routine_new),
-                        style = MaterialTheme.typography.titleLarge,
+                        style = MaterialTheme.typography.titleLarge
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = handleBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.routine_back),
+                            contentDescription = stringResource(R.string.routine_back)
                         )
                     }
                 },
@@ -221,34 +225,34 @@ fun RoutineEditorScreen(
                                     onClick = {
                                         showUnitMenu = false
                                         onEvent(RoutineEditorUiEvent.OnSetAllUnits(WeightUnit.KG))
-                                    },
+                                    }
                                 )
                                 DropdownMenuItem(
                                     text = { Text(stringResource(R.string.routine_units_all_lb)) },
                                     onClick = {
                                         showUnitMenu = false
                                         onEvent(RoutineEditorUiEvent.OnSetAllUnits(WeightUnit.LB))
-                                    },
+                                    }
                                 )
                             }
                         }
                     }
                     TextButton(
                         onClick = { onEvent(RoutineEditorUiEvent.OnSave) },
-                        enabled = !uiState.isSaving,
+                        enabled = !uiState.isSaving
                     ) {
                         Text(
                             text = stringResource(R.string.routine_save),
                             style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface),
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        modifier = modifier,
+        modifier = modifier
     ) { innerPadding ->
         if (uiState.isLoading) {
             HdCardListSkeleton(modifier = Modifier.padding(innerPadding).padding(16.dp), rows = 6, thumbnailSize = 48.dp)
@@ -260,7 +264,7 @@ fun RoutineEditorScreen(
                 onEvent = onEvent,
                 onOpenExercisePicker = onOpenExercisePicker,
                 listState = listState,
-                modifier = Modifier.padding(innerPadding),
+                modifier = Modifier.padding(innerPadding)
             )
         }
     }
@@ -270,7 +274,7 @@ fun RoutineEditorScreen(
         ExerciseSettingsSheet(
             routineExercise = exercise,
             onUpdate = { onEvent(RoutineEditorUiEvent.OnUpdateExercise(index, it)) },
-            onDismiss = { onEvent(RoutineEditorUiEvent.OnCloseExercise) },
+            onDismiss = { onEvent(RoutineEditorUiEvent.OnCloseExercise) }
         )
     }
 
@@ -284,7 +288,7 @@ fun RoutineEditorScreen(
                     onClick = {
                         showDiscardDialog = false
                         onEvent(RoutineEditorUiEvent.OnSave)
-                    },
+                    }
                 ) { Text(stringResource(R.string.routine_save)) }
             },
             dismissButton = {
@@ -293,13 +297,13 @@ fun RoutineEditorScreen(
                         onClick = {
                             showDiscardDialog = false
                             onNavigateBack()
-                        },
+                        }
                     ) { Text(stringResource(R.string.routine_discard), color = MaterialTheme.colorScheme.error) }
                     TextButton(onClick = { showDiscardDialog = false }) {
                         Text(stringResource(R.string.routine_keep_editing))
                     }
                 }
-            },
+            }
         )
     }
 }
@@ -310,7 +314,7 @@ private fun EditorContent(
     onEvent: (RoutineEditorUiEvent) -> Unit,
     onOpenExercisePicker: () -> Unit,
     listState: androidx.compose.foundation.lazy.LazyListState,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
     val haptic = LocalHapticFeedback.current
     val exercises by rememberUpdatedState(uiState.exercises)
@@ -334,7 +338,7 @@ private fun EditorContent(
         state = listState,
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 32.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         item(key = "name") {
             OutlinedTextField(
@@ -352,16 +356,16 @@ private fun EditorContent(
                 textStyle = MaterialTheme.typography.titleMedium,
                 keyboardOptions = KeyboardOptions(
                     capitalization = KeyboardCapitalization.Sentences,
-                    imeAction = ImeAction.Done,
+                    imeAction = ImeAction.Done
                 ),
                 shape = MaterialTheme.shapes.medium,
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .focusRequester(nameFocus),
+                    .focusRequester(nameFocus)
             )
         }
 
@@ -376,9 +380,9 @@ private fun EditorContent(
                     shape = MaterialTheme.shapes.medium,
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
                     ),
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth()
                 )
             } else {
                 TextButton(onClick = { showDescription = true }) {
@@ -395,7 +399,7 @@ private fun EditorContent(
                     HdChip(
                         text = stringResource(type.nameResId),
                         isSelected = uiState.type == type,
-                        onClick = { onEvent(RoutineEditorUiEvent.OnTypeChange(type)) },
+                        onClick = { onEvent(RoutineEditorUiEvent.OnTypeChange(type)) }
                     )
                 }
             }
@@ -408,13 +412,13 @@ private fun EditorContent(
                     Text(
                         text = stringResource(R.string.routine_volume_history),
                         style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onSurface,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     HdLineChart(
                         data = uiState.volumeHistory,
                         valueLabelFormatter = { "${it.toInt()} kg" },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             }
@@ -425,20 +429,25 @@ private fun EditorContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 12.dp),
-                verticalAlignment = Alignment.Bottom,
+                verticalAlignment = Alignment.Bottom
             ) {
                 Text(
                     text = stringResource(R.string.routine_exercises_header),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f)
                 )
                 if (uiState.exercises.isNotEmpty()) {
                     Text(
-                        text = pluralStringResource(R.plurals.routine_summary, uiState.totalSets, uiState.totalSets, uiState.estimatedMinutes),
+                        text = pluralStringResource(
+                            R.plurals.routine_summary,
+                            uiState.totalSets,
+                            uiState.totalSets,
+                            uiState.estimatedMinutes
+                        ),
                         style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -446,7 +455,7 @@ private fun EditorContent(
                 Text(
                     text = stringResource(R.string.routine_reorder_hint),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -456,7 +465,7 @@ private fun EditorContent(
                 HdEmptyState(
                     icon = Icons.Default.FitnessCenter,
                     title = stringResource(R.string.routine_empty_title),
-                    description = stringResource(R.string.routine_empty_description),
+                    description = stringResource(R.string.routine_empty_description)
                 )
             }
         }
@@ -484,9 +493,9 @@ private fun EditorContent(
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier
                                 .draggableHandle(
-                                    onDragStarted = { haptic.performHapticFeedback(HapticFeedbackType.LongPress) },
+                                    onDragStarted = { haptic.performHapticFeedback(HapticFeedbackType.LongPress) }
                                 )
-                                .padding(horizontal = 4.dp, vertical = 12.dp),
+                                .padding(horizontal = 4.dp, vertical = 12.dp)
                         )
                     },
                     onOpen = { onEvent(RoutineEditorUiEvent.OnOpenExercise(index)) },
@@ -503,7 +512,7 @@ private fun EditorContent(
                     onRemove = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         onEvent(RoutineEditorUiEvent.OnRemoveExercise(index))
-                    },
+                    }
                 )
             }
         }
@@ -515,7 +524,7 @@ private fun EditorContent(
                 icon = Icons.Default.Add,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 8.dp),
+                    .padding(top = 8.dp)
             )
         }
     }
@@ -537,7 +546,7 @@ private fun sh.calvin.reorderable.ReorderableCollectionItemScope.ExerciseRow(
     onMoveUp: () -> Unit,
     onMoveDown: () -> Unit,
     onToggleSuperset: () -> Unit,
-    onRemove: () -> Unit,
+    onRemove: () -> Unit
 ) {
     var showMenu by remember { mutableStateOf(false) }
     val exercise = routineExercise.exercise
@@ -546,21 +555,21 @@ private fun sh.calvin.reorderable.ReorderableCollectionItemScope.ExerciseRow(
         color = if (isDragging) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
         modifier = Modifier
             .fillMaxWidth()
-            .then(if (isDragging) Modifier.shadow(8.dp, MaterialTheme.shapes.medium) else Modifier),
+            .then(if (isDragging) Modifier.shadow(8.dp, MaterialTheme.shapes.medium) else Modifier)
     ) {
         Row(
             modifier = Modifier
                 .clickable(onClick = onOpen)
                 .longPressDraggableHandle()
                 .padding(end = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             // Superset members share a colored edge, so the grouping reads at a glance.
             Box(
                 modifier = Modifier
                     .width(4.dp)
                     .height(72.dp)
-                    .background(if (inSuperset) MaterialTheme.colorScheme.tertiary else androidx.compose.ui.graphics.Color.Transparent),
+                    .background(if (inSuperset) MaterialTheme.colorScheme.tertiary else androidx.compose.ui.graphics.Color.Transparent)
             )
             dragHandle()
             HdExerciseThumbnail(exercise = exercise, size = 52.dp)
@@ -568,14 +577,14 @@ private fun sh.calvin.reorderable.ReorderableCollectionItemScope.ExerciseRow(
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(vertical = 10.dp),
+                    .padding(vertical = 10.dp)
             ) {
                 Text(
                     text = "$position. ${exercise?.displayName.orEmpty().capitalized()}",
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -584,19 +593,19 @@ private fun sh.calvin.reorderable.ReorderableCollectionItemScope.ExerciseRow(
                             text = stringResource(R.string.routine_superset),
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.tertiary,
+                            color = MaterialTheme.colorScheme.tertiary
                         )
                         Text(
                             text = " · ",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     Text(
                         text = routineExercise.summary(),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.SemiBold,
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
             }
@@ -605,25 +614,45 @@ private fun sh.calvin.reorderable.ReorderableCollectionItemScope.ExerciseRow(
                     Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.routine_more_options))
                 }
                 DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
-                    MenuItem(Icons.Default.Edit, stringResource(R.string.routine_menu_edit)) { showMenu = false; onOpen() }
-                    MenuItem(Icons.Default.ContentCopy, stringResource(R.string.routine_menu_duplicate)) { showMenu = false; onDuplicate() }
+                    MenuItem(Icons.Default.Edit, stringResource(R.string.routine_menu_edit)) {
+                        showMenu = false
+                        onOpen()
+                    }
+                    MenuItem(Icons.Default.ContentCopy, stringResource(R.string.routine_menu_duplicate)) {
+                        showMenu = false
+                        onDuplicate()
+                    }
                     if (canMoveUp) {
-                        MenuItem(Icons.Default.KeyboardArrowUp, stringResource(R.string.routine_menu_move_up)) { showMenu = false; onMoveUp() }
+                        MenuItem(Icons.Default.KeyboardArrowUp, stringResource(R.string.routine_menu_move_up)) {
+                            showMenu = false
+                            onMoveUp()
+                        }
                     }
                     if (canMoveDown) {
-                        MenuItem(Icons.Default.KeyboardArrowDown, stringResource(R.string.routine_menu_move_down)) { showMenu = false; onMoveDown() }
+                        MenuItem(Icons.Default.KeyboardArrowDown, stringResource(R.string.routine_menu_move_down)) {
+                            showMenu = false
+                            onMoveDown()
+                        }
                     }
                     if (hasNext) {
                         MenuItem(
                             icon = if (linkedWithNext) Icons.Default.LinkOff else Icons.Default.Link,
-                            text = stringResource(if (linkedWithNext) R.string.routine_menu_unpair else R.string.routine_menu_superset),
-                        ) { showMenu = false; onToggleSuperset() }
+                            text = stringResource(if (linkedWithNext) R.string.routine_menu_unpair else R.string.routine_menu_superset)
+                        ) {
+                            showMenu = false
+                            onToggleSuperset()
+                        }
                     }
                     HorizontalDivider()
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.routine_menu_remove), color = MaterialTheme.colorScheme.error) },
-                        leadingIcon = { Icon(Icons.Default.DeleteOutline, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
-                        onClick = { showMenu = false; onRemove() },
+                        leadingIcon = {
+                            Icon(Icons.Default.DeleteOutline, contentDescription = null, tint = MaterialTheme.colorScheme.error)
+                        },
+                        onClick = {
+                            showMenu = false
+                            onRemove()
+                        }
                     )
                 }
             }
@@ -636,7 +665,7 @@ private fun MenuItem(icon: androidx.compose.ui.graphics.vector.ImageVector, text
     DropdownMenuItem(
         text = { Text(text) },
         leadingIcon = { Icon(icon, contentDescription = null) },
-        onClick = onClick,
+        onClick = onClick
     )
 }
 
@@ -644,7 +673,7 @@ private fun MenuItem(icon: androidx.compose.ui.graphics.vector.ImageVector, text
 private fun RoutineExercise.summary(): String {
     val unit = displayUnit
     val work = if (progressionPolicy == ProgressionPolicy.TIME && targetDurationSecs > 0) {
-        "$targetSets × ${targetDurationSecs} s"
+        "$targetSets × $targetDurationSecs s"
     } else {
         "$targetSets × $targetReps"
     }
@@ -656,11 +685,7 @@ private fun RoutineExercise.summary(): String {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ExerciseSettingsSheet(
-    routineExercise: RoutineExercise,
-    onUpdate: (RoutineExercise) -> Unit,
-    onDismiss: () -> Unit,
-) {
+private fun ExerciseSettingsSheet(routineExercise: RoutineExercise, onUpdate: (RoutineExercise) -> Unit, onDismiss: () -> Unit) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val exercise = routineExercise.exercise
     // kg/lb of the machine or plates used for this exercise in this routine.
@@ -676,7 +701,7 @@ private fun ExerciseSettingsSheet(
                 .padding(horizontal = 20.dp)
                 .navigationBarsPadding()
                 .padding(bottom = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 HdExerciseThumbnail(exercise = exercise, size = 56.dp)
@@ -687,13 +712,13 @@ private fun ExerciseSettingsSheet(
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
+                        overflow = TextOverflow.Ellipsis
                     )
                     exercise?.muscleGroup?.let {
                         Text(
                             text = stringResource(it.nameResId),
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -706,7 +731,7 @@ private fun ExerciseSettingsSheet(
                     step = 1f,
                     range = 1f..20f,
                     onValueChange = { onUpdate(routineExercise.copy(targetSets = it.roundToInt())) },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f)
                 )
                 if (isTimeBased) {
                     NumberStepper(
@@ -715,7 +740,7 @@ private fun ExerciseSettingsSheet(
                         step = 5f,
                         range = 5f..600f,
                         onValueChange = { onUpdate(routineExercise.copy(targetDurationSecs = it.roundToInt())) },
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f)
                     )
                 } else {
                     NumberStepper(
@@ -724,7 +749,7 @@ private fun ExerciseSettingsSheet(
                         step = 1f,
                         range = 1f..100f,
                         onValueChange = { onUpdate(routineExercise.withTargetReps(it.roundToInt())) },
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f)
                     )
                 }
             }
@@ -734,7 +759,7 @@ private fun ExerciseSettingsSheet(
                     SectionLabel(stringResource(R.string.routine_weight), Modifier.weight(1f))
                     UnitToggle(
                         unit = unit,
-                        onUnitChange = { newUnit -> onUpdate(routineExercise.copy(weightUnit = newUnit)) },
+                        onUnitChange = { newUnit -> onUpdate(routineExercise.copy(weightUnit = newUnit)) }
                     )
                 }
                 NumberStepper(
@@ -745,13 +770,13 @@ private fun ExerciseSettingsSheet(
                     decimals = true,
                     suffix = unit.label,
                     onValueChange = { onUpdate(routineExercise.copy(targetWeight = it.toKgFrom(unit))) },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth()
                 )
                 if (exercise?.isBodyweight == true) {
                     Text(
                         text = stringResource(R.string.routine_bodyweight_hint),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -763,7 +788,7 @@ private fun ExerciseSettingsSheet(
                         HdChip(
                             text = formatRest(seconds),
                             isSelected = routineExercise.restBetweenSetsSecs == seconds,
-                            onClick = { onUpdate(routineExercise.copy(restBetweenSetsSecs = seconds)) },
+                            onClick = { onUpdate(routineExercise.copy(restBetweenSetsSecs = seconds)) }
                         )
                     }
                 }
@@ -774,13 +799,13 @@ private fun ExerciseSettingsSheet(
                     range = 0f..600f,
                     format = { formatRest(it.roundToInt()) },
                     onValueChange = { onUpdate(routineExercise.copy(restBetweenSetsSecs = it.roundToInt())) },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
 
             Surface(
                 shape = MaterialTheme.shapes.medium,
-                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                color = MaterialTheme.colorScheme.surfaceContainerHigh
             ) {
                 Column(modifier = Modifier.padding(12.dp)) {
                     Row(
@@ -788,14 +813,14 @@ private fun ExerciseSettingsSheet(
                             .fillMaxWidth()
                             .clip(MaterialTheme.shapes.small)
                             .clickable { showAdvanced = !showAdvanced },
-                        verticalAlignment = Alignment.CenterVertically,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             SectionLabel(stringResource(R.string.routine_advanced))
                             Text(
                                 text = stringResource(routineExercise.progressionPolicy.nameResId),
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                         Icon(if (showAdvanced) Icons.Default.ExpandLess else Icons.Default.ExpandMore, contentDescription = null)
@@ -807,7 +832,7 @@ private fun ExerciseSettingsSheet(
                                 HdChip(
                                     text = stringResource(policy.nameResId),
                                     isSelected = routineExercise.progressionPolicy == policy,
-                                    onClick = { onUpdate(routineExercise.copy(progressionPolicy = policy)) },
+                                    onClick = { onUpdate(routineExercise.copy(progressionPolicy = policy)) }
                                 )
                             }
                         }
@@ -815,20 +840,24 @@ private fun ExerciseSettingsSheet(
                             Spacer(modifier = Modifier.height(12.dp))
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 NumberStepper(
-                                    label = stringResource(if (isTimeBased) R.string.routine_time_range_min else R.string.routine_rep_range_min),
+                                    label = stringResource(
+                                        if (isTimeBased) R.string.routine_time_range_min else R.string.routine_rep_range_min
+                                    ),
                                     value = routineExercise.repRangeLow.toFloat(),
                                     step = if (isTimeBased) 5f else 1f,
                                     range = 1f..routineExercise.repRangeHigh.toFloat(),
                                     onValueChange = { onUpdate(routineExercise.copy(repRangeLow = it.roundToInt())) },
-                                    modifier = Modifier.weight(1f),
+                                    modifier = Modifier.weight(1f)
                                 )
                                 NumberStepper(
-                                    label = stringResource(if (isTimeBased) R.string.routine_time_range_max else R.string.routine_rep_range_max),
+                                    label = stringResource(
+                                        if (isTimeBased) R.string.routine_time_range_max else R.string.routine_rep_range_max
+                                    ),
                                     value = routineExercise.repRangeHigh.toFloat(),
                                     step = if (isTimeBased) 5f else 1f,
                                     range = routineExercise.repRangeLow.toFloat()..600f,
                                     onValueChange = { onUpdate(routineExercise.copy(repRangeHigh = it.roundToInt())) },
-                                    modifier = Modifier.weight(1f),
+                                    modifier = Modifier.weight(1f)
                                 )
                             }
                             val showStall = routineExercise.progressionPolicy == ProgressionPolicy.LINEAR ||
@@ -841,7 +870,7 @@ private fun ExerciseSettingsSheet(
                                     step = 1f,
                                     range = 1f..10f,
                                     onValueChange = { onUpdate(routineExercise.copy(stallThreshold = it.roundToInt())) },
-                                    modifier = Modifier.fillMaxWidth(),
+                                    modifier = Modifier.fillMaxWidth()
                                 )
                             }
                         }
@@ -852,7 +881,7 @@ private fun ExerciseSettingsSheet(
             HdTonalButton(
                 text = stringResource(R.string.routine_done),
                 onClick = onDismiss,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth()
             )
         }
     }
@@ -865,7 +894,7 @@ private fun SectionLabel(text: String, modifier: Modifier = Modifier) {
         style = MaterialTheme.typography.labelLarge,
         fontWeight = FontWeight.Bold,
         color = MaterialTheme.colorScheme.onSurface,
-        modifier = modifier,
+        modifier = modifier
     )
 }
 
@@ -878,7 +907,7 @@ private fun UnitToggle(unit: WeightUnit, onUnitChange: (WeightUnit) -> Unit) {
                 selected = unit == option,
                 onClick = { onUnitChange(option) },
                 shape = SegmentedButtonDefaults.itemShape(index = index, count = 2),
-                label = { Text(option.label) },
+                label = { Text(option.label) }
             )
         }
     }
@@ -898,7 +927,7 @@ private fun NumberStepper(
     modifier: Modifier = Modifier,
     decimals: Boolean = false,
     suffix: String? = null,
-    format: ((Float) -> String)? = null,
+    format: ((Float) -> String)? = null
 ) {
     val display: (Float) -> String = format ?: { if (decimals) it.formatDecimal() else it.roundToInt().toString() }
     fun textOf(v: Float) = display(v).let { TextFieldValue(it, TextRange(it.length)) }
@@ -927,7 +956,7 @@ private fun NumberStepper(
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
+                overflow = TextOverflow.Ellipsis
             )
             Spacer(modifier = Modifier.height(4.dp))
         }
@@ -937,11 +966,11 @@ private fun NumberStepper(
                 .clip(MaterialTheme.shapes.medium)
                 .background(MaterialTheme.colorScheme.surfaceContainerHighest)
                 .padding(4.dp),
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             FilledTonalIconButton(
                 onClick = { stepBy(-step) },
-                enabled = value > range.start,
+                enabled = value > range.start
             ) {
                 Icon(Icons.Default.Remove, contentDescription = stringResource(R.string.routine_decrease))
             }
@@ -949,13 +978,13 @@ private fun NumberStepper(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight(),
-                contentAlignment = Alignment.Center,
+                contentAlignment = Alignment.Center
             ) {
                 val style = MaterialTheme.typography.titleLarge.copy(
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
                     color = MaterialTheme.colorScheme.onSurface,
-                    fontFeatureSettings = "tnum",
+                    fontFeatureSettings = "tnum"
                 )
                 if (editable) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -977,7 +1006,7 @@ private fun NumberStepper(
                             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
                             keyboardOptions = KeyboardOptions(
                                 keyboardType = if (decimals) KeyboardType.Decimal else KeyboardType.Number,
-                                imeAction = ImeAction.Done,
+                                imeAction = ImeAction.Done
                             ),
                             // Tapping selects the whole number, so typing replaces it instead of
                             // landing mid-number ("0" + "180" used to become "1800").
@@ -989,13 +1018,13 @@ private fun NumberStepper(
                                         selectAllOnTap = true
                                     }
                                     isFocused = focus.isFocused
-                                },
+                                }
                         )
                         if (suffix != null) {
                             Text(
                                 text = suffix,
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -1005,7 +1034,7 @@ private fun NumberStepper(
             }
             FilledTonalIconButton(
                 onClick = { stepBy(step) },
-                enabled = value < range.endInclusive,
+                enabled = value < range.endInclusive
             ) {
                 Icon(Icons.Default.Add, contentDescription = stringResource(R.string.routine_increase))
             }
@@ -1024,14 +1053,12 @@ private fun RoutineExercise.withTargetReps(reps: Int): RoutineExercise {
     return copy(
         targetReps = reps,
         repRangeHigh = if (linked) reps else repRangeHigh,
-        repRangeLow = if (linked) (reps - 2).coerceAtLeast(1) else repRangeLow,
+        repRangeLow = if (linked) (reps - 2).coerceAtLeast(1) else repRangeLow
     )
 }
 
 private val REST_PRESETS_SECONDS = listOf(60, 90, 120, 180)
 
-private fun formatRest(seconds: Int): String =
-    if (seconds < 60) "$seconds s" else "%d:%02d".format(seconds / 60, seconds % 60)
-
+private fun formatRest(seconds: Int): String = if (seconds < 60) "$seconds s" else "%d:%02d".format(seconds / 60, seconds % 60)
 
 private fun String.capitalized(): String = replaceFirstChar { it.uppercase() }

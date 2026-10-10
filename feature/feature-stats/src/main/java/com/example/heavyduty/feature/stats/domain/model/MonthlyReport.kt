@@ -5,7 +5,8 @@ import com.example.heavyduty.core.domain.model.MuscleGroup
 data class MuscleVolumeContribution(
     val muscleGroup: MuscleGroup,
     val volumeKg: Float,
-    val percentage: Float // 0.0 to 100.0
+    // 0.0 to 100.0
+    val percentage: Float
 )
 
 data class TopExerciseMonthly(

@@ -1,46 +1,30 @@
 package com.example.heavyduty
 
-import com.example.heavyduty.core.common.R
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.sp
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.foundation.text.TextAutoSize
-import androidx.compose.foundation.text.BasicText
 import android.app.LocaleManager
 import android.content.Context
 import android.content.Intent
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.ExperimentalSharedTransitionApi
-import androidx.compose.animation.SharedTransitionLayout
-import com.example.heavyduty.core.ui.LocalSharedTransitionScope
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.layout.Column
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import com.example.heavyduty.core.common.navigation.AppSections
-import com.example.heavyduty.ui.ActiveWorkoutBar
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.viewModels
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.heavyduty.core.ui.LocalWeightUnit
 import androidx.activity.enableEdgeToEdge
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.activity.viewModels
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.exclude
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.DrawerValue
@@ -48,6 +32,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
@@ -61,21 +46,37 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.heavyduty.core.common.R
+import com.example.heavyduty.core.common.navigation.AppSections
+import com.example.heavyduty.core.ui.LocalSharedTransitionScope
+import com.example.heavyduty.core.ui.LocalWeightUnit
 import com.example.heavyduty.core.ui.theme.HeavyDutyTheme
 import com.example.heavyduty.navigation.DrawerDestination
 import com.example.heavyduty.navigation.HeavyDutyNavHost
 import com.example.heavyduty.navigation.TopLevelDestination
 import com.example.heavyduty.navigation.navigateToTopLevel
+import com.example.heavyduty.ui.ActiveWorkoutBar
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
 import java.util.Locale
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -117,7 +118,7 @@ class MainActivity : ComponentActivity() {
                     HeavyDutyMainScreen(
                         activeWorkout = activeWorkout,
                         pendingSection = pendingSection,
-                        onSectionOpened = mainViewModel::onSectionOpened,
+                        onSectionOpen = mainViewModel::onSectionOpen
                     )
                 }
             }
@@ -151,22 +152,19 @@ private val ROUTES_WITH_OWN_TOP_BAR = setOf(
     "stats/clasificacion",
     "stats/informe_mensual",
     "stats/mapa_actividad",
-    "stats/peso_corporal",
+    "stats/peso_corporal"
 )
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
-private fun HeavyDutyMainScreen(
-    activeWorkout: ActiveWorkoutSummary?,
-    pendingSection: String?,
-    onSectionOpened: () -> Unit,
-) {
+private fun HeavyDutyMainScreen(activeWorkout: ActiveWorkoutSummary?, pendingSection: String?, onSectionOpen: () -> Unit) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val coroutineScope = rememberCoroutineScope()
 
+    val currentOnSectionOpen by rememberUpdatedState(onSectionOpen)
     LaunchedEffect(pendingSection) {
         val route = when (pendingSection) {
             AppSections.SECTION_WORKOUT -> TopLevelDestination.WORKOUT.route
@@ -174,7 +172,7 @@ private fun HeavyDutyMainScreen(
             else -> return@LaunchedEffect
         }
         navController.navigateToTopLevel(route)
-        onSectionOpened()
+        currentOnSectionOpen()
     }
 
     ModalNavigationDrawer(
@@ -184,7 +182,7 @@ private fun HeavyDutyMainScreen(
                 Text(
                     text = "HeavyDuty",
                     style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(16.dp),
+                    modifier = Modifier.padding(16.dp)
                 )
                 HorizontalDivider()
                 DrawerDestination.entries.forEach { destination ->
@@ -200,11 +198,11 @@ private fun HeavyDutyMainScreen(
                             coroutineScope.launch { drawerState.close() }
                             navController.navigateToTopLevel(destination.route)
                         },
-                        modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding),
+                        modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                     )
                 }
             }
-        },
+        }
     ) {
         val currentRouteHasOwnTopBar = currentDestination?.route?.let { it in ROUTES_WITH_OWN_TOP_BAR } ?: false
 
@@ -218,10 +216,10 @@ private fun HeavyDutyMainScreen(
                                 Icon(
                                     imageVector = Icons.Default.Menu,
                                     contentDescription = stringResource(R.string.nav_open_menu),
-                                    modifier = Modifier.size(24.dp),
+                                    modifier = Modifier.size(24.dp)
                                 )
                             }
-                        },
+                        }
                     )
                 }
             },
@@ -244,12 +242,12 @@ private fun HeavyDutyMainScreen(
                     AnimatedVisibility(
                         visible = activeWorkout != null && !onWorkoutScreen,
                         enter = expandVertically(expandFrom = Alignment.Bottom) + fadeIn(),
-                        exit = shrinkVertically(shrinkTowards = Alignment.Bottom) + fadeOut(),
+                        exit = shrinkVertically(shrinkTowards = Alignment.Bottom) + fadeOut()
                     ) {
                         shownWorkout?.let { workout ->
                             ActiveWorkoutBar(
                                 workout = workout,
-                                onClick = { navController.navigateToTopLevel(TopLevelDestination.WORKOUT.route) },
+                                onClick = { navController.navigateToTopLevel(TopLevelDestination.WORKOUT.route) }
                             )
                         }
                     }
@@ -271,15 +269,15 @@ private fun HeavyDutyMainScreen(
                                         } else {
                                             destination.unselectedIcon
                                         },
-                                        contentDescription = stringResource(destination.labelRes),
+                                        contentDescription = stringResource(destination.labelRes)
                                     )
                                 },
-                                label = { NavBarLabel(stringResource(destination.labelRes)) },
+                                label = { NavBarLabel(stringResource(destination.labelRes)) }
                             )
                         }
                     }
                 }
-            },
+            }
         ) { innerPadding ->
             // Lets screens share elements across navigation (see core.ui.hdSharedBounds).
             SharedTransitionLayout(modifier = Modifier.padding(innerPadding)) {
@@ -305,6 +303,6 @@ private fun NavBarLabel(text: String) {
         autoSize = TextAutoSize.StepBased(minFontSize = 8.sp, maxFontSize = style.fontSize),
         // A little room at the sides: the last tab sits at the screen edge, and a label exactly
         // as wide as its tab had its last letter clipped there.
-        modifier = Modifier.padding(horizontal = 4.dp),
+        modifier = Modifier.padding(horizontal = 4.dp)
     )
 }

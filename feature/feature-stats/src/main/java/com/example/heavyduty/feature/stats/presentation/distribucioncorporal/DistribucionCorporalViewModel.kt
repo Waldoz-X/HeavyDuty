@@ -13,6 +13,7 @@ import com.example.heavyduty.feature.stats.domain.usecase.GetMuscleGroupStrength
 import com.example.heavyduty.feature.stats.domain.usecase.GetMuscleGroupVolumeUseCase
 import com.example.heavyduty.feature.stats.domain.usecase.GetPeriodSummaryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,7 +22,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
@@ -31,21 +31,22 @@ class DistribucionCorporalViewModel @Inject constructor(
     private val getMuscleGroupStrengthRetention: GetMuscleGroupStrengthRetentionUseCase,
     private val getPeriodSummary: GetPeriodSummaryUseCase,
     private val userPreferencesRepository: UserPreferencesRepository,
-    private val clock: Clock,
+    private val clock: Clock
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DistribucionCorporalUiState())
+
     /** Loads only while the screen is watching — see [whileSubscribed]. */
     val uiState: StateFlow<DistribucionCorporalUiState> = _uiState.whileSubscribed(viewModelScope) {
         launch {
-            _selectedPeriod.flatMapLatest { period ->
+            selectedPeriod.flatMapLatest { period ->
                 val (currentRange, previousRange) = period.currentAndPreviousRange(clock.nowMillis())
                 combine(
                     getMuscleGroupVolume(currentRange.first, currentRange.last),
                     getMuscleGroupFatigue(),
                     getMuscleGroupStrengthRetention(),
                     userPreferencesRepository.bodyDiagramGender,
-                    getPeriodSummary(currentRange, previousRange),
+                    getPeriodSummary(currentRange, previousRange)
                 ) { volumeByMuscle, fatigueByMuscle, strengthByMuscle, genderValue, summary ->
                     _uiState.update {
                         it.copy(
@@ -55,7 +56,7 @@ class DistribucionCorporalViewModel @Inject constructor(
                             gender = BodyGender.fromStorageValue(genderValue),
                             selectedPeriod = period,
                             summary = summary,
-                            isLoading = false,
+                            isLoading = false
                         )
                     }
                 }
@@ -64,12 +65,12 @@ class DistribucionCorporalViewModel @Inject constructor(
         }
     }
 
-    private val _selectedPeriod = MutableStateFlow(StatsPeriod.LAST_30_DAYS)
+    private val selectedPeriod = MutableStateFlow(StatsPeriod.LAST_30_DAYS)
 
     fun onEvent(event: DistribucionCorporalUiEvent) {
         when (event) {
             is DistribucionCorporalUiEvent.OnModeChange -> _uiState.update { it.copy(mode = event.mode) }
-            is DistribucionCorporalUiEvent.OnPeriodChange -> _selectedPeriod.value = event.period
+            is DistribucionCorporalUiEvent.OnPeriodChange -> selectedPeriod.value = event.period
         }
     }
 }

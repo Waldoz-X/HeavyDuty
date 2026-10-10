@@ -1,31 +1,18 @@
 package com.example.heavyduty.feature.exercises.presentation.list
 
-import com.example.heavyduty.core.domain.model.displayName
-import com.example.heavyduty.core.common.R
-import androidx.compose.ui.res.pluralStringResource
-import com.example.heavyduty.core.ui.components.HdErrorState
-import com.example.heavyduty.core.ui.components.HdTonalButton
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.style.TextOverflow
-import coil3.compose.AsyncImage
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -36,6 +23,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Build
@@ -43,8 +31,6 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.TextButton
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -52,30 +38,45 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.compose.AsyncImage
+import com.example.heavyduty.core.common.R
 import com.example.heavyduty.core.domain.model.Exercise
 import com.example.heavyduty.core.domain.model.MuscleGroup
-import com.example.heavyduty.core.ui.equipmentLabel
+import com.example.heavyduty.core.domain.model.displayName
 import com.example.heavyduty.core.ui.components.HdButton
+import com.example.heavyduty.core.ui.components.HdCardListSkeleton
 import com.example.heavyduty.core.ui.components.HdChip
 import com.example.heavyduty.core.ui.components.HdEmptyState
-import com.example.heavyduty.core.ui.components.HdCardListSkeleton
+import com.example.heavyduty.core.ui.components.HdErrorState
 import com.example.heavyduty.core.ui.components.HdExerciseAnimation
-import com.example.heavyduty.core.ui.hdSharedBounds
-import com.example.heavyduty.feature.exercises.presentation.exerciseImageKey
 import com.example.heavyduty.core.ui.components.HdExerciseThumbnail
 import com.example.heavyduty.core.ui.components.HdSearchBar
+import com.example.heavyduty.core.ui.components.HdTonalButton
+import com.example.heavyduty.core.ui.equipmentLabel
+import com.example.heavyduty.core.ui.hdSharedBounds
 import com.example.heavyduty.core.ui.nameResId
 import com.example.heavyduty.feature.exercises.presentation.accentColor
+import com.example.heavyduty.feature.exercises.presentation.exerciseImageKey
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -85,14 +86,15 @@ fun ExerciseListScreen(
     selectionMode: Boolean = false,
     onConfirmSelection: (List<Long>) -> Unit = {},
     onCancelSelection: () -> Unit = {},
-    viewModel: ExerciseListViewModel = hiltViewModel(),
+    viewModel: ExerciseListViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    val currentOnExerciseClick by rememberUpdatedState(onExerciseClick)
     LaunchedEffect(Unit) {
         viewModel.uiEffect.collect { effect ->
             when (effect) {
-                is ExerciseListUiEffect.NavigateToDetail -> onExerciseClick(effect.exerciseId)
+                is ExerciseListUiEffect.NavigateToDetail -> currentOnExerciseClick(effect.exerciseId)
                 is ExerciseListUiEffect.ShowError -> { /* Could show snackbar */ }
             }
         }
@@ -104,7 +106,7 @@ fun ExerciseListScreen(
             selectionMode = selectionMode,
             isSelected = exercise.id in uiState.selectedIds,
             onToggleSelection = { viewModel.onEvent(ExerciseListUiEvent.OnToggleSelection(exercise.id)) },
-            onDismiss = { viewModel.onEvent(ExerciseListUiEvent.OnPreviewExercise(null)) },
+            onDismiss = { viewModel.onEvent(ExerciseListUiEvent.OnPreviewExercise(null)) }
         )
     }
 
@@ -120,38 +122,42 @@ fun ExerciseListScreen(
                             } else {
                                 val count = uiState.selectedIds.size
                                 pluralStringResource(R.plurals.exercises_selected_count, count, count)
-                            },
+                            }
                         )
                     },
                     navigationIcon = {
                         IconButton(onClick = onCancelSelection) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = stringResource(R.string.action_cancel),
+                                contentDescription = stringResource(R.string.action_cancel)
                             )
                         }
-                    },
+                    }
                 )
             },
             bottomBar = {
                 if (uiState.selectedIds.isNotEmpty()) {
                     Surface(shadowElevation = 8.dp) {
                         HdButton(
-                            text = pluralStringResource(R.plurals.exercises_add_to_routine, uiState.selectedIds.size, uiState.selectedIds.size),
+                            text = pluralStringResource(
+                                R.plurals.exercises_add_to_routine,
+                                uiState.selectedIds.size,
+                                uiState.selectedIds.size
+                            ),
                             onClick = { onConfirmSelection(uiState.selectedIds.toList()) },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(16.dp),
+                                .padding(16.dp)
                         )
                     }
                 }
-            },
+            }
         ) { innerPadding ->
             ExerciseListContent(
                 uiState = uiState,
                 onEvent = viewModel::onEvent,
                 selectionMode = true,
-                modifier = Modifier.padding(innerPadding),
+                modifier = Modifier.padding(innerPadding)
             )
         }
     } else {
@@ -159,7 +165,7 @@ fun ExerciseListScreen(
             uiState = uiState,
             onEvent = viewModel::onEvent,
             selectionMode = false,
-            modifier = modifier,
+            modifier = modifier
         )
     }
 }
@@ -169,12 +175,12 @@ private fun ExerciseListContent(
     uiState: ExerciseListUiState,
     onEvent: (ExerciseListUiEvent) -> Unit,
     selectionMode: Boolean,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = 16.dp)
     ) {
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -182,7 +188,7 @@ private fun ExerciseListContent(
             Text(
                 text = stringResource(R.string.exercises_title),
                 style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = MaterialTheme.colorScheme.onSurface
             )
             Spacer(modifier = Modifier.height(16.dp))
         }
@@ -190,7 +196,7 @@ private fun ExerciseListContent(
         HdSearchBar(
             query = uiState.searchQuery,
             onQueryChange = { onEvent(ExerciseListUiEvent.OnSearchQueryChange(it)) },
-            placeholder = stringResource(R.string.exercises_search_hint),
+            placeholder = stringResource(R.string.exercises_search_hint)
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -198,13 +204,13 @@ private fun ExerciseListContent(
         // Muscle group filter chips
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            contentPadding = PaddingValues(vertical = 4.dp),
+            contentPadding = PaddingValues(vertical = 4.dp)
         ) {
             items(MuscleGroup.entries.toList()) { group ->
                 HdChip(
                     text = stringResource(group.nameResId),
                     isSelected = uiState.selectedFilter == group,
-                    onClick = { onEvent(ExerciseListUiEvent.OnFilterSelect(group)) },
+                    onClick = { onEvent(ExerciseListUiEvent.OnFilterSelect(group)) }
                 )
             }
         }
@@ -213,13 +219,13 @@ private fun ExerciseListContent(
             Spacer(modifier = Modifier.height(8.dp))
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = PaddingValues(vertical = 4.dp),
+                contentPadding = PaddingValues(vertical = 4.dp)
             ) {
                 items(uiState.availableEquipment) { equipment ->
                     HdChip(
                         text = equipmentLabel(equipment),
                         isSelected = uiState.selectedEquipment == equipment,
-                        onClick = { onEvent(ExerciseListUiEvent.OnEquipmentFilterSelect(equipment)) },
+                        onClick = { onEvent(ExerciseListUiEvent.OnEquipmentFilterSelect(equipment)) }
                     )
                 }
             }
@@ -230,7 +236,7 @@ private fun ExerciseListContent(
             Text(
                 text = pluralStringResource(R.plurals.exercises_count, uiState.exercises.size, uiState.exercises.size),
                 style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(8.dp))
         }
@@ -241,10 +247,12 @@ private fun ExerciseListContent(
                 HdCardListSkeleton(
                     modifier = Modifier.weight(1f),
                     rows = 5,
-                    thumbnailSize = if (selectionMode) 64.dp else 88.dp,
+                    thumbnailSize = if (selectionMode) 64.dp else 88.dp
                 )
             }
+
             uiState.loadFailed -> HdErrorState(modifier = Modifier.weight(1f))
+
             uiState.exercises.isEmpty() -> {
                 val hasActiveFilters = uiState.searchQuery.isNotBlank() ||
                     uiState.selectedFilter != null || uiState.selectedEquipment != null
@@ -265,14 +273,15 @@ private fun ExerciseListContent(
                                     onEvent(ExerciseListUiEvent.OnSearchQueryChange(""))
                                     onEvent(ExerciseListUiEvent.OnFilterSelect(null))
                                     onEvent(ExerciseListUiEvent.OnEquipmentFilterSelect(null))
-                                },
+                                }
                             )
                         }
                     } else {
                         null
-                    },
+                    }
                 )
             }
+
             else -> {
                 AnimatedVisibility(
                     visible = true,
@@ -291,11 +300,11 @@ private fun ExerciseListContent(
                         state = listState,
                         modifier = Modifier.fillMaxSize(),
                         verticalArrangement = Arrangement.spacedBy(if (selectionMode) 6.dp else 8.dp),
-                        contentPadding = PaddingValues(bottom = 16.dp),
+                        contentPadding = PaddingValues(bottom = 16.dp)
                     ) {
                         items(
                             items = uiState.exercises,
-                            key = { it.id },
+                            key = { it.id }
                         ) { exercise ->
                             if (selectionMode) {
                                 val order = uiState.selectedIds.indexOf(exercise.id)
@@ -303,7 +312,7 @@ private fun ExerciseListContent(
                                     exercise = exercise,
                                     selectionOrder = if (order >= 0) order + 1 else null,
                                     onToggle = { onEvent(ExerciseListUiEvent.OnToggleSelection(exercise.id)) },
-                                    onPreview = { onEvent(ExerciseListUiEvent.OnPreviewExercise(exercise)) },
+                                    onPreview = { onEvent(ExerciseListUiEvent.OnPreviewExercise(exercise)) }
                                 )
                                 return@items
                             }
@@ -317,7 +326,7 @@ private fun ExerciseListContent(
                                     } else {
                                         onEvent(ExerciseListUiEvent.OnExerciseClick(exercise.id))
                                     }
-                                },
+                                }
                             )
                         }
                     }
@@ -333,7 +342,7 @@ private fun ExerciseListItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     selectionMode: Boolean = false,
-    isSelected: Boolean = false,
+    isSelected: Boolean = false
 ) {
     val accent = exercise.muscleGroup.accentColor()
 
@@ -342,7 +351,7 @@ private fun ExerciseListItem(
             .fillMaxWidth()
             .clip(MaterialTheme.shapes.large)
             .background(
-                if (isSelected) accent.copy(alpha = 0.18f) else MaterialTheme.colorScheme.surfaceContainerHigh,
+                if (isSelected) accent.copy(alpha = 0.18f) else MaterialTheme.colorScheme.surfaceContainerHigh
             )
             // A thin accent outline instead of a colored drop shadow: on the dark theme the
             // shadow was barely visible, yet each card drew its own shadow layer, one of the
@@ -350,14 +359,14 @@ private fun ExerciseListItem(
             .border(
                 width = if (isSelected) 2.dp else 1.dp,
                 color = if (isSelected) accent else accent.copy(alpha = 0.25f),
-                shape = MaterialTheme.shapes.large,
+                shape = MaterialTheme.shapes.large
             )
             .clickable(onClick = onClick)
-            .padding(12.dp),
+            .padding(12.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
@@ -367,16 +376,16 @@ private fun ExerciseListItem(
                     .clip(RoundedCornerShape(14.dp))
                     .background(
                         Brush.linearGradient(
-                            listOf(accent.copy(alpha = 0.25f), accent.copy(alpha = 0.08f)),
-                        ),
-                    ),
+                            listOf(accent.copy(alpha = 0.25f), accent.copy(alpha = 0.08f))
+                        )
+                    )
             ) {
                 if (exercise.imageUrl.isNotBlank()) {
                     AsyncImage(
                         model = exercise.imageUrl,
                         contentDescription = exercise.displayName,
                         contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier.fillMaxSize()
                     )
                 } else {
                     Icon(
@@ -385,7 +394,7 @@ private fun ExerciseListItem(
                         tint = accent,
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(24.dp),
+                            .padding(24.dp)
                     )
                 }
                 if (selectionMode && isSelected) {
@@ -395,7 +404,7 @@ private fun ExerciseListItem(
                             .padding(4.dp)
                             .size(22.dp)
                             .clip(RoundedCornerShape(50))
-                            .background(accent),
+                            .background(accent)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Check,
@@ -403,7 +412,7 @@ private fun ExerciseListItem(
                             tint = MaterialTheme.colorScheme.onPrimary,
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(3.dp),
+                                .padding(3.dp)
                         )
                     }
                 }
@@ -412,28 +421,28 @@ private fun ExerciseListItem(
             Spacer(modifier = Modifier.width(16.dp))
 
             Column(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f)
             ) {
                 Text(
                     text = exercise.displayName,
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     HdChip(
                         text = stringResource(exercise.muscleGroup.nameResId),
                         isSelected = true,
-                        onClick = {},
+                        onClick = {}
                     )
                     HdChip(
                         text = stringResource(exercise.exerciseType.nameResId),
                         isSelected = false,
-                        onClick = {},
+                        onClick = {}
                     )
                 }
                 if (exercise.equipment.isNotBlank()) {
@@ -443,7 +452,7 @@ private fun ExerciseListItem(
                             imageVector = Icons.Default.Build,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(14.dp),
+                            modifier = Modifier.size(14.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
@@ -451,7 +460,7 @@ private fun ExerciseListItem(
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -465,12 +474,7 @@ private fun ExerciseListItem(
  * once selected — the order the exercises will be added to the routine in.
  */
 @Composable
-private fun SelectableExerciseRow(
-    exercise: Exercise,
-    selectionOrder: Int?,
-    onToggle: () -> Unit,
-    onPreview: () -> Unit,
-) {
+private fun SelectableExerciseRow(exercise: Exercise, selectionOrder: Int?, onToggle: () -> Unit, onPreview: () -> Unit) {
     val accent = exercise.muscleGroup.accentColor()
     val isSelected = selectionOrder != null
     Row(
@@ -481,7 +485,7 @@ private fun SelectableExerciseRow(
             .then(if (isSelected) Modifier.border(2.dp, accent, MaterialTheme.shapes.medium) else Modifier)
             .clickable(onClick = onToggle)
             .padding(8.dp),
-        verticalAlignment = Alignment.CenterVertically,
+        verticalAlignment = Alignment.CenterVertically
     ) {
         HdExerciseThumbnail(exercise = exercise, size = 64.dp)
         Spacer(modifier = Modifier.width(12.dp))
@@ -491,25 +495,25 @@ private fun SelectableExerciseRow(
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
+                overflow = TextOverflow.Ellipsis
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = listOfNotNull(
                     stringResource(exercise.muscleGroup.nameResId),
-                    exercise.equipment.takeIf { it.isNotBlank() }?.let { equipmentLabel(it) },
+                    exercise.equipment.takeIf { it.isNotBlank() }?.let { equipmentLabel(it) }
                 ).joinToString(" · "),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
+                overflow = TextOverflow.Ellipsis
             )
         }
         IconButton(onClick = onPreview) {
             Icon(
                 imageVector = Icons.Outlined.Info,
                 contentDescription = stringResource(R.string.exercises_view),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
         Box(
@@ -518,14 +522,14 @@ private fun SelectableExerciseRow(
                 .clip(RoundedCornerShape(50))
                 .background(if (isSelected) accent else Color.Transparent)
                 .border(2.dp, if (isSelected) accent else MaterialTheme.colorScheme.outline, RoundedCornerShape(50)),
-            contentAlignment = Alignment.Center,
+            contentAlignment = Alignment.Center
         ) {
             if (selectionOrder != null) {
                 Text(
                     text = selectionOrder.toString(),
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimary,
+                    color = MaterialTheme.colorScheme.onPrimary
                 )
             }
         }
@@ -539,7 +543,7 @@ private fun ExercisePreviewDialog(
     selectionMode: Boolean,
     isSelected: Boolean,
     onToggleSelection: () -> Unit,
-    onDismiss: () -> Unit,
+    onDismiss: () -> Unit
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -547,7 +551,7 @@ private fun ExercisePreviewDialog(
             Text(
                 text = exercise.displayName.replaceFirstChar { it.uppercase() },
                 maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
+                overflow = TextOverflow.Ellipsis
             )
         },
         text = {
@@ -556,16 +560,16 @@ private fun ExercisePreviewDialog(
                     exercise = exercise,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .aspectRatio(1f),
+                        .aspectRatio(1f)
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     text = listOfNotNull(
                         stringResource(exercise.muscleGroup.nameResId),
-                        exercise.equipment.takeIf { it.isNotBlank() }?.let { equipmentLabel(it) },
+                        exercise.equipment.takeIf { it.isNotBlank() }?.let { equipmentLabel(it) }
                     ).joinToString(" · "),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         },
@@ -575,7 +579,7 @@ private fun ExercisePreviewDialog(
                     onClick = {
                         onToggleSelection()
                         onDismiss()
-                    },
+                    }
                 ) { Text(stringResource(if (isSelected) R.string.exercises_unselect else R.string.exercises_select)) }
             } else {
                 TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_close)) }
@@ -585,6 +589,6 @@ private fun ExercisePreviewDialog(
             { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_close)) } }
         } else {
             null
-        },
+        }
     )
 }
