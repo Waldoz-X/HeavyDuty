@@ -154,6 +154,7 @@ dependencies {
 
     // Testing
     testImplementation(libs.junit)
+    testImplementation(project(":core:core-testing"))
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

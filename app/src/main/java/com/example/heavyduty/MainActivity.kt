@@ -86,6 +86,7 @@ import com.example.heavyduty.navigation.TopLevelDestination
 import com.example.heavyduty.navigation.navigateToTopLevel
 import com.example.heavyduty.ui.ActiveWorkoutBar
 import com.example.heavyduty.ui.ActiveWorkoutRailButton
+import com.example.heavyduty.ui.ForgottenWorkoutDialog
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.Locale
 import kotlinx.coroutines.launch
@@ -125,6 +126,7 @@ class MainActivity : ComponentActivity() {
             val weightUnit by mainViewModel.preferredWeightUnit.collectAsStateWithLifecycle()
             val activeWorkout by mainViewModel.activeWorkout.collectAsStateWithLifecycle()
             val pendingSection by mainViewModel.pendingSection.collectAsStateWithLifecycle()
+            val forgottenWorkout by mainViewModel.forgottenWorkout.collectAsStateWithLifecycle()
             CompositionLocalProvider(LocalWeightUnit provides weightUnit) {
                 HeavyDutyTheme {
                     HeavyDutyMainScreen(
@@ -132,6 +134,15 @@ class MainActivity : ComponentActivity() {
                         pendingSection = pendingSection,
                         onSectionOpen = mainViewModel::onSectionOpen
                     )
+                    // Asked over whatever screen is open: a forgotten workout distorts every stat.
+                    forgottenWorkout?.let { workout ->
+                        ForgottenWorkoutDialog(
+                            workout = workout,
+                            onFinish = mainViewModel::finishForgottenWorkout,
+                            onDiscard = mainViewModel::discardForgottenWorkout,
+                            onKeepTraining = mainViewModel::keepTraining
+                        )
+                    }
                 }
             }
         }

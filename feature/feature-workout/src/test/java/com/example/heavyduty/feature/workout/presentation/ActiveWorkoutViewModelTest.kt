@@ -261,6 +261,23 @@ class ActiveWorkoutViewModelTest {
     }
 
     @Test
+    fun `a workout finished long after its last set ends at that set`() {
+        val viewModel = createViewModel()
+        viewModel.onEvent(ActiveWorkoutUiEvent.OnStartRoutine(routine.id))
+        val start = workoutRepository.sessions.value.single().startTime
+
+        clock.advanceBy(50 * 60_000L)
+        viewModel.logSet("8")
+        // Left open overnight, then finished.
+        clock.advanceBy(10 * 60 * 60_000L)
+        viewModel.onEvent(ActiveWorkoutUiEvent.OnCompleteWorkout)
+
+        val session = workoutRepository.sessions.value.single()
+        assertEquals(start + 50 * 60_000L, session.endTime)
+        assertEquals(50 * 60, session.totalDurationSecs)
+    }
+
+    @Test
     fun `a set typed in pounds is stored in kg and remembers its unit`() {
         val viewModel = createViewModel()
         viewModel.onEvent(ActiveWorkoutUiEvent.OnStartRoutine(routine.id))

@@ -84,6 +84,15 @@
     <string name="workout_discard_dialog_empty">This workout will be deleted. This can\'t be undone.</string>
     <string name="workout_discard_confirm">Discard</string>
     <string name="workout_error_discard">Couldn\'t discard the workout</string>
+    <string name="forgotten_workout_title">Still training?</string>
+    <plurals name="forgotten_workout_message">
+        <item quantity="one">“%1$s” is still open, but nothing has been logged for %2$d hour.</item>
+        <item quantity="other">“%1$s” is still open, but nothing has been logged for %2$d hours.</item>
+    </plurals>
+    <string name="forgotten_workout_finish_hint">If you finish it, it\'s saved up to your last set.</string>
+    <string name="forgotten_workout_empty_hint">It has no sets logged, so you can discard it.</string>
+    <string name="forgotten_workout_finish">Finish it</string>
+    <string name="forgotten_workout_keep">Still training</string>
 
     <!-- Active workout: plate calculator -->
     <string name="workout_plate_calculator">Plate calculator</string>

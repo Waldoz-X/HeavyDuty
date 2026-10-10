@@ -90,6 +90,16 @@
     <string name="workout_discard_dialog_empty">Se borrará este entrenamiento. No se puede deshacer.</string>
     <string name="workout_discard_confirm">Descartar</string>
     <string name="workout_error_discard">No se pudo descartar el entrenamiento</string>
+    <string name="forgotten_workout_title">¿Sigues entrenando?</string>
+    <plurals name="forgotten_workout_message">
+        <item quantity="one">«%1$s» sigue abierto, pero no registras nada desde hace %2$d hora.</item>
+        <item quantity="other">«%1$s» sigue abierto, pero no registras nada desde hace %2$d horas.</item>
+        <item quantity="many">«%1$s» sigue abierto, pero no registras nada desde hace %2$d horas.</item>
+    </plurals>
+    <string name="forgotten_workout_finish_hint">Si lo terminas, se guardará hasta tu última serie.</string>
+    <string name="forgotten_workout_empty_hint">No tiene series registradas, así que lo puedes descartar.</string>
+    <string name="forgotten_workout_finish">Terminarlo</string>
+    <string name="forgotten_workout_keep">Sigo entrenando</string>
 
     <!-- Active workout: plate calculator -->
     <string name="workout_plate_calculator">Calculadora de discos</string>
