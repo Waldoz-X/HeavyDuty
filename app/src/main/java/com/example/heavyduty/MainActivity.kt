@@ -18,9 +18,16 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.exclude
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.text.BasicText
@@ -40,6 +47,8 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.NavigationDrawerItemDefaults
+import androidx.compose.material3.NavigationRail
+import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
@@ -56,6 +65,8 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -74,6 +85,7 @@ import com.example.heavyduty.navigation.HeavyDutyNavHost
 import com.example.heavyduty.navigation.TopLevelDestination
 import com.example.heavyduty.navigation.navigateToTopLevel
 import com.example.heavyduty.ui.ActiveWorkoutBar
+import com.example.heavyduty.ui.ActiveWorkoutRailButton
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.Locale
 import kotlinx.coroutines.launch
@@ -205,88 +217,182 @@ private fun HeavyDutyMainScreen(activeWorkout: ActiveWorkoutSummary?, pendingSec
         }
     ) {
         val currentRouteHasOwnTopBar = currentDestination?.route?.let { it in ROUTES_WITH_OWN_TOP_BAR } ?: false
+        // A phone on its side: the top bar, workout bar and bottom navigation together left a
+        // strip of content, so navigation moves to a rail at the side instead.
+        val compactHeight = isCompactHeight()
+        val isSelected: (TopLevelDestination) -> Boolean = { destination ->
+            currentDestination?.route?.let { currentRoute ->
+                destination.associatedRoutes.any { associated -> currentRoute.startsWith(associated) }
+            } == true
+        }
+        val navigate: (TopLevelDestination) -> Unit = { navController.navigateToTopLevel(it.route) }
+        val openWorkout = { navController.navigateToTopLevel(TopLevelDestination.WORKOUT.route) }
+        val openMenu: () -> Unit = { coroutineScope.launch { drawerState.open() } }
+        // The workout screen shows the session itself; everywhere else a shortcut leads back.
+        val onWorkoutScreen = currentDestination?.route?.startsWith(TopLevelDestination.WORKOUT.route) == true
+        val showWorkoutShortcut = activeWorkout != null && !onWorkoutScreen
+        // Keeps drawing the last workout while the shortcut animates out after finishing it.
+        var shownWorkout by remember { mutableStateOf(activeWorkout) }
+        if (activeWorkout != null) shownWorkout = activeWorkout
 
-        Scaffold(
-            topBar = {
-                if (!currentRouteHasOwnTopBar) {
-                    TopAppBar(
-                        title = { Text(text = "HeavyDuty") },
-                        navigationIcon = {
-                            IconButton(onClick = { coroutineScope.launch { drawerState.open() } }) {
-                                Icon(
-                                    imageVector = Icons.Default.Menu,
-                                    contentDescription = stringResource(R.string.nav_open_menu),
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            }
-                        }
-                    )
-                }
-            },
-            // When the pushed screen owns its own TopAppBar, it already consumes the status
-            // bar inset itself — without this, Scaffold reserves that inset a second time
-            // here (nothing consumed it, since the outer topBar renders nothing), leaving a
-            // blank gap above the pushed screen's own header.
-            contentWindowInsets = if (currentRouteHasOwnTopBar) {
-                ScaffoldDefaults.contentWindowInsets.exclude(WindowInsets.statusBars)
-            } else {
-                ScaffoldDefaults.contentWindowInsets
-            },
-            bottomBar = {
-                Column {
-                    // The workout screen shows the session itself; everywhere else a bar leads back.
-                    val onWorkoutScreen = currentDestination?.route?.startsWith(TopLevelDestination.WORKOUT.route) == true
-                    // Keeps drawing the last workout while the bar animates out after finishing it.
-                    var shownWorkout by remember { mutableStateOf(activeWorkout) }
-                    if (activeWorkout != null) shownWorkout = activeWorkout
-                    AnimatedVisibility(
-                        visible = activeWorkout != null && !onWorkoutScreen,
-                        enter = expandVertically(expandFrom = Alignment.Bottom) + fadeIn(),
-                        exit = shrinkVertically(shrinkTowards = Alignment.Bottom) + fadeOut()
-                    ) {
-                        shownWorkout?.let { workout ->
-                            ActiveWorkoutBar(
-                                workout = workout,
-                                onClick = { navController.navigateToTopLevel(TopLevelDestination.WORKOUT.route) }
-                            )
-                        }
-                    }
-                    NavigationBar {
-                        TopLevelDestination.entries.forEach { destination ->
-                            val selected = currentDestination?.route?.let { currentRoute ->
-                                destination.associatedRoutes.any { associated ->
-                                    currentRoute.startsWith(associated)
-                                }
-                            } == true
+        // When the pushed screen owns its own TopAppBar, it already consumes the status bar
+        // inset itself — without this, Scaffold reserves that inset a second time here (nothing
+        // consumed it, since the outer topBar renders nothing), leaving a blank gap above the
+        // pushed screen's own header.
+        val routeInsets = if (currentRouteHasOwnTopBar) {
+            ScaffoldDefaults.contentWindowInsets.exclude(WindowInsets.statusBars)
+        } else {
+            ScaffoldDefaults.contentWindowInsets
+        }
+        // Beside the rail the start side (the camera cutout) is the rail's. It's dropped here
+        // outright rather than left to Scaffold's consumed-insets tracking, which forgets the
+        // exclusion whenever these insets change on navigation.
+        val contentInsets = if (compactHeight) routeInsets.only(WindowInsetsSides.Vertical + WindowInsetsSides.End) else routeInsets
 
-                            NavigationBarItem(
-                                selected = selected,
-                                onClick = { navController.navigateToTopLevel(destination.route) },
-                                icon = {
-                                    Icon(
-                                        imageVector = if (selected) {
-                                            destination.selectedIcon
-                                        } else {
-                                            destination.unselectedIcon
-                                        },
-                                        contentDescription = stringResource(destination.labelRes)
-                                    )
-                                },
-                                label = { NavBarLabel(stringResource(destination.labelRes)) }
-                            )
-                        }
-                    }
-                }
+        Row(modifier = Modifier.fillMaxSize()) {
+            if (compactHeight) {
+                HeavyDutyNavigationRail(
+                    isSelected = isSelected,
+                    onNavigate = navigate,
+                    onOpenMenu = openMenu,
+                    workout = shownWorkout,
+                    showWorkout = showWorkoutShortcut,
+                    onOpenWorkout = openWorkout
+                )
             }
-        ) { innerPadding ->
-            // Lets screens share elements across navigation (see core.ui.hdSharedBounds).
-            SharedTransitionLayout(modifier = Modifier.padding(innerPadding)) {
-                CompositionLocalProvider(LocalSharedTransitionScope provides this) {
-                    HeavyDutyNavHost(navController = navController)
+            Scaffold(
+                modifier = Modifier
+                    .weight(1f)
+                    // The rail already sits clear of the cutout on its side; screens mustn't pad for it again.
+                    .then(
+                        if (compactHeight) {
+                            Modifier.consumeWindowInsets(
+                                WindowInsets.safeDrawing.only(WindowInsetsSides.Start)
+                            )
+                        } else {
+                            Modifier
+                        }
+                    ),
+                topBar = {
+                    // In landscape the menu lives in the rail, and the bar's height is worth more as content.
+                    if (!currentRouteHasOwnTopBar && !compactHeight) {
+                        TopAppBar(
+                            title = { Text(text = "HeavyDuty") },
+                            navigationIcon = {
+                                IconButton(onClick = openMenu) {
+                                    Icon(
+                                        imageVector = Icons.Default.Menu,
+                                        contentDescription = stringResource(R.string.nav_open_menu),
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                }
+                            }
+                        )
+                    }
+                },
+                contentWindowInsets = contentInsets,
+                bottomBar = {
+                    if (!compactHeight) {
+                        Column {
+                            AnimatedVisibility(
+                                visible = showWorkoutShortcut,
+                                enter = expandVertically(expandFrom = Alignment.Bottom) + fadeIn(),
+                                exit = shrinkVertically(shrinkTowards = Alignment.Bottom) + fadeOut()
+                            ) {
+                                shownWorkout?.let { workout -> ActiveWorkoutBar(workout = workout, onClick = openWorkout) }
+                            }
+                            HeavyDutyNavigationBar(isSelected = isSelected, onNavigate = navigate)
+                        }
+                    }
+                }
+            ) { innerPadding ->
+                // Lets screens share elements across navigation (see core.ui.hdSharedBounds).
+                // Consumed as well as applied, so screens with their own Scaffold don't pad for the
+                // same insets again (in landscape that left a cutout-wide gap beside the rail).
+                SharedTransitionLayout(modifier = Modifier.padding(innerPadding).consumeWindowInsets(innerPadding)) {
+                    CompositionLocalProvider(LocalSharedTransitionScope provides this) {
+                        HeavyDutyNavHost(navController = navController)
+                    }
                 }
             }
         }
     }
+}
+
+/** Below this height (a phone in landscape) navigation moves from the bottom to a side rail. */
+private val COMPACT_HEIGHT = 480.dp
+
+@Composable
+private fun isCompactHeight(): Boolean {
+    val height = LocalWindowInfo.current.containerSize.height
+    return with(LocalDensity.current) { height.toDp() } < COMPACT_HEIGHT
+}
+
+@Composable
+private fun HeavyDutyNavigationBar(isSelected: (TopLevelDestination) -> Boolean, onNavigate: (TopLevelDestination) -> Unit) {
+    NavigationBar {
+        TopLevelDestination.entries.forEach { destination ->
+            val selected = isSelected(destination)
+            NavigationBarItem(
+                selected = selected,
+                onClick = { onNavigate(destination) },
+                icon = { DestinationIcon(destination, selected) },
+                label = { NavBarLabel(stringResource(destination.labelRes)) }
+            )
+        }
+    }
+}
+
+/**
+ * Landscape navigation: the menu on top, the sections centred (only the selected one labelled,
+ * so all four fit the short height), and the workout-in-progress shortcut at the bottom.
+ */
+@Composable
+private fun HeavyDutyNavigationRail(
+    isSelected: (TopLevelDestination) -> Boolean,
+    onNavigate: (TopLevelDestination) -> Unit,
+    onOpenMenu: () -> Unit,
+    workout: ActiveWorkoutSummary?,
+    showWorkout: Boolean,
+    onOpenWorkout: () -> Unit
+) {
+    NavigationRail(
+        header = {
+            IconButton(onClick = onOpenMenu) {
+                Icon(imageVector = Icons.Default.Menu, contentDescription = stringResource(R.string.nav_open_menu))
+            }
+        },
+        // Clear of the camera cutout too, which sits on this side when the phone is turned left.
+        windowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical + WindowInsetsSides.Start)
+    ) {
+        Spacer(modifier = Modifier.weight(1f))
+        TopLevelDestination.entries.forEach { destination ->
+            val selected = isSelected(destination)
+            NavigationRailItem(
+                selected = selected,
+                onClick = { onNavigate(destination) },
+                icon = { DestinationIcon(destination, selected) },
+                label = { NavBarLabel(stringResource(destination.labelRes)) },
+                alwaysShowLabel = false
+            )
+        }
+        Spacer(modifier = Modifier.weight(1f))
+        AnimatedVisibility(
+            visible = showWorkout,
+            enter = expandVertically(expandFrom = Alignment.Bottom) + fadeIn(),
+            exit = shrinkVertically(shrinkTowards = Alignment.Bottom) + fadeOut()
+        ) {
+            workout?.let { ActiveWorkoutRailButton(workout = it, onClick = onOpenWorkout, modifier = Modifier.padding(bottom = 8.dp)) }
+        }
+    }
+}
+
+@Composable
+private fun DestinationIcon(destination: TopLevelDestination, selected: Boolean) {
+    Icon(
+        imageVector = if (selected) destination.selectedIcon else destination.unselectedIcon,
+        contentDescription = stringResource(destination.labelRes)
+    )
 }
 
 /**

@@ -33,6 +33,7 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -119,8 +120,51 @@ fun ActiveWorkoutBar(workout: ActiveWorkoutSummary, onClick: () -> Unit, modifie
     }
 }
 
+/**
+ * The same workout shortcut for the navigation rail used in landscape, where a full-width bar
+ * would take a row out of a screen that's already short: the icon and the clock (or the rest
+ * countdown, in the rest colour) in the rail's width. Tapping it goes back to the workout.
+ */
 @Composable
-private fun SessionClock(startTime: Long) {
+fun ActiveWorkoutRailButton(workout: ActiveWorkoutSummary, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val openLabel = stringResource(R.string.active_workout_bar_open)
+    val resting = workout.rest != null
+    val accent = if (resting) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary
+    Surface(
+        onClick = onClick,
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surfaceContainerHighest,
+        modifier = modifier.semantics { contentDescription = openLabel }
+    ) {
+        // Kept short: in landscape the rail has to fit the menu and four sections above it.
+        Column(
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 6.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            Icon(
+                imageVector = if (resting) Icons.Default.Timer else Icons.Default.FitnessCenter,
+                contentDescription = null,
+                tint = accent,
+                modifier = Modifier.size(18.dp)
+            )
+            if (resting) {
+                HdRollingText(
+                    text = formatClock(workout.rest?.remainingSeconds ?: 0),
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = accent,
+                    countingDown = true
+                )
+            } else {
+                SessionClock(startTime = workout.startTime, style = MaterialTheme.typography.labelSmall)
+            }
+        }
+    }
+}
+
+@Composable
+private fun SessionClock(startTime: Long, style: TextStyle = MaterialTheme.typography.titleMedium) {
     // Ticks only while the bar is on screen; aligned to whole seconds so it changes in step
     // with the workout screen's own clock.
     val elapsedSeconds by produceState(initialValue = secondsSince(startTime), startTime) {
@@ -131,7 +175,7 @@ private fun SessionClock(startTime: Long) {
     }
     HdRollingText(
         text = formatClock(elapsedSeconds),
-        style = MaterialTheme.typography.titleMedium,
+        style = style,
         fontWeight = FontWeight.Bold,
         color = MaterialTheme.colorScheme.primary
     )
