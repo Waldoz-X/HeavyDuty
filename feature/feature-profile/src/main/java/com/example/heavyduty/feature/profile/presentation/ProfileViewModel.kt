@@ -17,6 +17,7 @@ import com.example.heavyduty.core.domain.repository.UserPreferencesRepository
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
 import com.example.heavyduty.core.ui.components.WorkoutFeedItem
 import com.example.heavyduty.feature.profile.domain.model.ProfileStats
+import com.example.heavyduty.feature.profile.domain.model.feedSessions
 import com.example.heavyduty.feature.profile.domain.model.personalRecordSetIds
 import com.example.heavyduty.feature.profile.domain.model.weeklyTrainingHours
 import com.example.heavyduty.feature.profile.domain.usecase.ExportBackupUseCase
@@ -50,9 +51,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/** Workouts shown in the profile's activity feed; the full list lives in the history screen. */
-private const val FEED_SIZE = 30
-
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
@@ -82,7 +80,7 @@ class ProfileViewModel @Inject constructor(
         // Only the latest workouts are shown, so only their sets are read — plus, per exercise,
         // the heaviest weight lifted before them, which their sets must beat to be records.
         val feedSetsFlow = sessionsFlow
-            .map { sessions -> sessions.sortedByDescending { it.startTime }.take(FEED_SIZE).minOfOrNull { it.startTime } }
+            .map { sessions -> feedSessions(sessions).minOfOrNull { it.startTime } }
             .distinctUntilChanged()
             .flatMapLatest { since ->
                 if (since == null) {
@@ -113,8 +111,7 @@ class ProfileViewModel @Inject constructor(
             val setsBySession = sets.groupBy { it.sessionId }
 
             // Process Feed Items
-            val sortedSessions = sessions.sortedByDescending { it.startTime }.take(FEED_SIZE)
-            val feedItems = sortedSessions.map { session ->
+            val feedItems = feedSessions(sessions).map { session ->
                 val sessionSets = setsBySession[session.id] ?: emptyList()
                 val volume = sessionSets.map { (it.weight ?: 0f) * (it.reps ?: 0) }.sum()
                 val prs = sessionSets.count { it.id in personalRecordSetIds }

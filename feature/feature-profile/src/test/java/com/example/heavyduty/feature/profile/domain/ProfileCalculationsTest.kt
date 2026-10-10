@@ -4,6 +4,7 @@ import com.example.heavyduty.core.domain.model.WorkoutSession
 import com.example.heavyduty.core.domain.model.WorkoutSet
 import com.example.heavyduty.core.domain.model.WorkoutStatus
 import com.example.heavyduty.core.testing.FakeWorkoutRepository
+import com.example.heavyduty.feature.profile.domain.model.feedSessions
 import com.example.heavyduty.feature.profile.domain.model.personalRecordSetIds
 import com.example.heavyduty.feature.profile.domain.model.weeklyTrainingHours
 import com.example.heavyduty.feature.profile.domain.usecase.GetProfileStatsUseCase
@@ -102,5 +103,27 @@ class ProfileCalculationsTest {
         assertEquals(0, stats.totalWorkouts)
         assertEquals(0f, stats.totalVolumeKg)
         assertNull(stats.memberSinceMillis)
+    }
+
+    @Test
+    fun `the feed lists finished workouts only, newest first`() {
+        val sessions = listOf(
+            WorkoutSession(id = 1, startTime = 1_000, status = WorkoutStatus.COMPLETED),
+            // Left open: its sets don't count yet, so it read "0 min · 0 kg" in the feed.
+            WorkoutSession(id = 2, startTime = 3_000, status = WorkoutStatus.IN_PROGRESS),
+            WorkoutSession(id = 3, startTime = 2_000, status = WorkoutStatus.COMPLETED)
+        )
+
+        assertEquals(listOf(3L, 1L), feedSessions(sessions).map { it.id })
+    }
+
+    @Test
+    fun `the feed keeps the latest thirty`() {
+        val sessions = (1L..40L).map { WorkoutSession(id = it, startTime = it * 1_000, status = WorkoutStatus.COMPLETED) }
+
+        val feed = feedSessions(sessions)
+
+        assertEquals(30, feed.size)
+        assertEquals(40L, feed.first().id)
     }
 }

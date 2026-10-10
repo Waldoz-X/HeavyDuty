@@ -27,6 +27,18 @@ fun personalRecordSetIds(workingSets: List<WorkoutSet>, earlierBests: Map<Long, 
         }
 }
 
+/** Workouts shown in the profile's activity feed; the full list lives in the history screen. */
+private const val FEED_SIZE = 30
+
+/**
+ * The finished workouts the profile feed shows, newest first. One still in progress isn't
+ * one yet: its sets only count once it's finished, so it showed as "0 min · 0 kg".
+ */
+fun feedSessions(sessions: List<WorkoutSession>): List<WorkoutSession> = sessions
+    .filter { it.status == WorkoutStatus.COMPLETED }
+    .sortedByDescending { it.startTime }
+    .take(FEED_SIZE)
+
 /**
  * Hours of completed workouts in each of the last [weeks] seven-day windows ending at [now],
  * **oldest first** (charts read left to right). Each pair is the window's start and its hours.
