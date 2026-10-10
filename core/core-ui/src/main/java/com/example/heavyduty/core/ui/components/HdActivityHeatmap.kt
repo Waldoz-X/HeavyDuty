@@ -12,16 +12,17 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.heavyduty.core.ui.theme.raised
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
-import java.util.Locale
 
 /**
  * A GitHub-style year-of-activity grid: one column per week, one row per weekday, each cell
@@ -36,7 +37,8 @@ fun HdActivityHeatmap(
     data: Map<Long, Float>,
     modifier: Modifier = Modifier,
     weeks: Int = 53,
-    baseColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
+    // An empty day must still show against the card it sits in, so one tonal step above it.
+    baseColor: Color = MaterialTheme.colorScheme.raised,
     highlightColor: Color = MaterialTheme.colorScheme.primary,
     labelColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
     cellSpacing: Dp = 2.dp,
@@ -47,6 +49,8 @@ fun HdActivityHeatmap(
     val todayMillis = remember { startOfDayMillis(System.currentTimeMillis()) }
     val grid = remember(todayMillis, weeks) { buildWeekGrid(todayMillis, weeks) }
     val topLabelHeight = 16.dp
+    val locale = LocalConfiguration.current.locales[0]
+    val monthFormat = remember(locale) { SimpleDateFormat("MMM", locale) }
 
     Canvas(modifier = modifier.fillMaxWidth().height(height)) {
         val spacingPx = cellSpacing.toPx()
@@ -57,7 +61,16 @@ fun HdActivityHeatmap(
         val cellHeightPx = (size.height - topPx - 6 * spacingPx) / 7
         val cornerRadius = CornerRadius(2.dp.toPx())
 
-        var lastMonth = -1
+        val labelGapPx = 4.dp.toPx()
+        val monthLabels = monthStartColumns(grid).map { (weekIndex, dayMillis) ->
+            val text = monthFormat.format(Date(dayMillis)).replaceFirstChar { it.titlecase(locale) }
+            val layout = textMeasurer.measure(text, style = labelStyle)
+            MonthLabel(x = weekIndex * (cellWidthPx + spacingPx), width = layout.size.width.toFloat(), text = text)
+        }
+        labelsThatFit(monthLabels, availableWidth = size.width, gap = labelGapPx).forEach { label ->
+            drawText(textMeasurer = textMeasurer, text = label.text, style = labelStyle, topLeft = Offset(label.x, 0f))
+        }
+
         grid.forEachIndexed { weekIndex, week ->
             val x = weekIndex * (cellWidthPx + spacingPx)
             week.forEachIndexed { dayIndex, dayMillis ->
@@ -70,13 +83,6 @@ fun HdActivityHeatmap(
                     size = Size(cellWidthPx, cellHeightPx),
                     cornerRadius = cornerRadius
                 )
-                if (dayIndex == 0) {
-                    val month = monthOf(dayMillis)
-                    if (month != lastMonth) {
-                        lastMonth = month
-                        drawText(textMeasurer = textMeasurer, text = monthLabel(dayMillis), style = labelStyle, topLeft = Offset(x, 0f))
-                    }
-                }
             }
         }
     }
@@ -109,6 +115,29 @@ private fun buildWeekGrid(todayMillis: Long, weeks: Int): List<List<Long?>> {
 
 private fun monthOf(millis: Long): Int = Calendar.getInstance().apply { timeInMillis = millis }.get(Calendar.MONTH)
 
-private fun monthLabel(millis: Long): String = SimpleDateFormat("MMM", Locale.Builder().setLanguage("es").setRegion("ES").build())
-    .format(Date(millis))
-    .replaceFirstChar { it.uppercase() }
+/** (column, its Monday) for the first column and each column where a new month begins. */
+internal fun monthStartColumns(grid: List<List<Long?>>): List<Pair<Int, Long>> {
+    var lastMonth = -1
+    return grid.mapIndexedNotNull { weekIndex, week ->
+        val monday = week.first() ?: return@mapIndexedNotNull null
+        monthOf(monday).takeIf { it != lastMonth }?.let {
+            lastMonth = it
+            weekIndex to monday
+        }
+    }
+}
+
+internal data class MonthLabel(val x: Float, val width: Float, val text: String)
+
+/**
+ * The month labels that fit whole: one that would run into the previous label or past the
+ * right edge is left out, instead of overlapping or wrapping into a column of letters.
+ */
+internal fun labelsThatFit(labels: List<MonthLabel>, availableWidth: Float, gap: Float): List<MonthLabel> {
+    var nextFreeX = 0f
+    return labels.filter { label ->
+        val fits = label.x >= nextFreeX && label.x + label.width <= availableWidth
+        if (fits) nextFreeX = label.x + label.width + gap
+        fits
+    }
+}

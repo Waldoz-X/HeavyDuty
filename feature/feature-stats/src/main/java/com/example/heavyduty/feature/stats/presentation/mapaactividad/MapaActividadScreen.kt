@@ -53,6 +53,7 @@ import com.example.heavyduty.core.ui.components.HdActivityHeatmap
 import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdCardsSkeleton
 import com.example.heavyduty.core.ui.components.HdErrorState
+import com.example.heavyduty.core.ui.theme.raised
 import com.example.heavyduty.feature.stats.domain.usecase.ActivityHeatmapStatsReport
 import com.example.heavyduty.feature.stats.domain.usecase.TimeSlot
 import kotlin.math.roundToInt
@@ -236,7 +237,8 @@ private fun StreaksHeroCard(report: ActivityHeatmapStatsReport) {
 
 @Composable
 private fun HeatmapCard(report: ActivityHeatmapStatsReport) {
-    val baseColor = MaterialTheme.colorScheme.surfaceContainerHigh
+    // One step above the card, or empty days (and the legend's "none" square) vanish into it.
+    val baseColor = MaterialTheme.colorScheme.raised
     val highlightColor = MaterialTheme.colorScheme.primary
 
     HdCard(modifier = Modifier.fillMaxWidth()) {

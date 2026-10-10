@@ -51,6 +51,28 @@ class GetTrainingActivityHeatmapUseCaseTest {
     }
 
     @Test
+    fun `a short day stays visible next to a very long one`() = runBlocking {
+        val cal = Calendar.getInstance().apply {
+            clear()
+            set(2026, Calendar.SEPTEMBER, 28, 10, 0)
+        }
+        val today = cal.timeInMillis
+        cal.add(Calendar.DAY_OF_YEAR, -2)
+        val twoDaysAgo = cal.timeInMillis
+        val sessions = listOf(
+            // A workout left running for 35 hours, then finished.
+            WorkoutSession(id = 1, startTime = twoDaysAgo, totalDurationSecs = 35 * 3600, status = WorkoutStatus.COMPLETED),
+            WorkoutSession(id = 2, startTime = today, totalDurationSecs = 3600, status = WorkoutStatus.COMPLETED)
+        )
+
+        val heat = GetTrainingActivityHeatmapUseCase(FakeWorkoutRepository(sessions), FakeClock(today)).invoke().first().activityByDay
+
+        assertEquals(2, heat.size)
+        assertEquals(1f, heat.values.max(), 0.001f)
+        assertTrue("an hour's workout drew as ${heat.values.min()}", heat.values.min() >= MIN_TRAINED_DAY_INTENSITY)
+    }
+
+    @Test
     fun `sessions calculate streaks, day of week and time slot distributions`() = runBlocking {
         // Pinned to Monday 2026-09-28 so "yesterday" (Sunday) falls in the previous
         // Monday-first week — with the real clock the weekly streak depended on the weekday.

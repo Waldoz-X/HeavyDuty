@@ -56,6 +56,9 @@ data class ActivityHeatmapStatsReport(
 
 private const val HEATMAP_WEEKS = 53
 
+/** The lightest shade a day with any workout gets — the legend's first step past "none". */
+internal const val MIN_TRAINED_DAY_INTENSITY = 0.25f
+
 /**
  * Aggregates training activity over the last ~53 weeks:
  * - Normalized intensity grid for GitHub-style heatmap.
@@ -109,7 +112,11 @@ class GetTrainingActivityHeatmapUseCase @Inject constructor(private val workoutR
         }
 
         val maxMinutes = minutesByDay.values.maxOrNull()?.coerceAtLeast(1f) ?: 1f
-        val normalizedHeatmap = minutesByDay.mapValues { (_, minutes) -> (minutes / maxMinutes).coerceIn(0f, 1f) }
+        // Any trained day starts at the legend's first shade: scaled straight by the longest day,
+        // an hour beside a forgotten 35-hour workout came out at 0.03 — the same as no workout.
+        val normalizedHeatmap = minutesByDay.mapValues { (_, minutes) ->
+            MIN_TRAINED_DAY_INTENSITY + (1f - MIN_TRAINED_DAY_INTENSITY) * (minutes / maxMinutes).coerceIn(0f, 1f)
+        }
 
         // Racha diaria
         val trainedDays = minutesByDay.keys.sorted()
