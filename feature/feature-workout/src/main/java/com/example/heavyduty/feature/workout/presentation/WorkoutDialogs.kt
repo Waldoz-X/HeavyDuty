@@ -80,6 +80,33 @@ internal fun FinishWorkoutDialog(uiState: ActiveWorkoutUiState, onConfirm: () ->
     )
 }
 
+/** Confirms throwing the workout away, saying how many sets go with it. */
+@Composable
+internal fun DiscardWorkoutDialog(uiState: ActiveWorkoutUiState, onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    val logged = uiState.completedSets.size
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.workout_discard_dialog_title)) },
+        text = {
+            Text(
+                if (logged == 0) {
+                    stringResource(R.string.workout_discard_dialog_empty)
+                } else {
+                    pluralStringResource(R.plurals.workout_discard_dialog_message, logged, logged)
+                }
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(stringResource(R.string.workout_discard_confirm), color = MaterialTheme.colorScheme.error)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.workout_cancel)) }
+        }
+    )
+}
+
 @Composable
 internal fun ExercisePicker(query: String, results: List<Exercise>, onQueryChange: (String) -> Unit, onExercisePick: (Exercise) -> Unit) {
     HdCard {

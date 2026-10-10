@@ -74,6 +74,16 @@
     </plurals>
     <string name="workout_finish_dialog_logged">Sets logged: %1$d</string>
     <string name="workout_cancel">Cancel</string>
+    <string name="workout_more_options">More options</string>
+    <string name="workout_discard">Discard workout</string>
+    <string name="workout_discard_dialog_title">Discard workout?</string>
+    <plurals name="workout_discard_dialog_message">
+        <item quantity="one">This workout and the set you logged will be deleted. This can\'t be undone.</item>
+        <item quantity="other">This workout and the %1$d sets you logged will be deleted. This can\'t be undone.</item>
+    </plurals>
+    <string name="workout_discard_dialog_empty">This workout will be deleted. This can\'t be undone.</string>
+    <string name="workout_discard_confirm">Discard</string>
+    <string name="workout_error_discard">Couldn\'t discard the workout</string>
 
     <!-- Active workout: plate calculator -->
     <string name="workout_plate_calculator">Plate calculator</string>

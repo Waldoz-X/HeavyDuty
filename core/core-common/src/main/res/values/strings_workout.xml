@@ -79,6 +79,17 @@
     </plurals>
     <string name="workout_finish_dialog_logged">Series registradas: %1$d</string>
     <string name="workout_cancel">Cancelar</string>
+    <string name="workout_more_options">Más opciones</string>
+    <string name="workout_discard">Descartar entrenamiento</string>
+    <string name="workout_discard_dialog_title">¿Descartar entrenamiento?</string>
+    <plurals name="workout_discard_dialog_message">
+        <item quantity="one">Se borrará este entrenamiento y la serie que registraste. No se puede deshacer.</item>
+        <item quantity="other">Se borrará este entrenamiento y las %1$d series que registraste. No se puede deshacer.</item>
+        <item quantity="many">Se borrará este entrenamiento y las %1$d series que registraste. No se puede deshacer.</item>
+    </plurals>
+    <string name="workout_discard_dialog_empty">Se borrará este entrenamiento. No se puede deshacer.</string>
+    <string name="workout_discard_confirm">Descartar</string>
+    <string name="workout_error_discard">No se pudo descartar el entrenamiento</string>
 
     <!-- Active workout: plate calculator -->
     <string name="workout_plate_calculator">Calculadora de discos</string>

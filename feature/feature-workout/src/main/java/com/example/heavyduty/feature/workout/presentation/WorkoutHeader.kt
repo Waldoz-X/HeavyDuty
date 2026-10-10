@@ -13,6 +13,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -33,7 +34,11 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -46,6 +51,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -76,7 +83,7 @@ import com.example.heavyduty.core.ui.nameResId
 // Everything above the set table: workout header, rest timer, exercise strip and suggestion.
 
 @Composable
-internal fun WorkoutHeader(uiState: ActiveWorkoutUiState, onFinish: () -> Unit) {
+internal fun WorkoutHeader(uiState: ActiveWorkoutUiState, onFinish: () -> Unit, onDiscard: () -> Unit) {
     Surface(color = MaterialTheme.colorScheme.surfaceContainer) {
         Column(
             modifier = Modifier
@@ -105,6 +112,7 @@ internal fun WorkoutHeader(uiState: ActiveWorkoutUiState, onFinish: () -> Unit) 
                     onClick = onFinish,
                     icon = Icons.Default.Check
                 )
+                WorkoutOptionsMenu(onDiscard = onDiscard)
             }
             Spacer(modifier = Modifier.height(8.dp))
             val planned = uiState.plannedSetCount
@@ -137,6 +145,27 @@ internal fun WorkoutHeader(uiState: ActiveWorkoutUiState, onFinish: () -> Unit) 
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+        }
+    }
+}
+
+/** The menu beside "Finalizar": the rarer, destructive action sits one tap further away than finishing. */
+@Composable
+private fun WorkoutOptionsMenu(onDiscard: () -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    Box {
+        IconButton(onClick = { expanded = true }) {
+            Icon(imageVector = Icons.Default.MoreVert, contentDescription = stringResource(R.string.workout_more_options))
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.workout_discard), color = MaterialTheme.colorScheme.error) },
+                leadingIcon = { Icon(Icons.Default.DeleteOutline, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+                onClick = {
+                    expanded = false
+                    onDiscard()
+                }
+            )
         }
     }
 }

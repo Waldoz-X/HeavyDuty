@@ -86,4 +86,31 @@ class ActiveWorkoutContentTest {
 
         compose.onNodeWithText("Te falta 1 serie planificada (llevas 2 de 3). Quedará sin registrar.").assertIsDisplayed()
     }
+
+    @Test
+    fun discardingAsksFirstAndSaysHowManySetsGo() {
+        val events = show(state(loggedSets = 2))
+
+        compose.onNodeWithContentDescription("Más opciones").performClick()
+        compose.onNodeWithText("Descartar entrenamiento").performClick()
+
+        compose.onNodeWithText("Se borrará este entrenamiento y las 2 series que registraste. No se puede deshacer.").assertIsDisplayed()
+        assertTrue(ActiveWorkoutUiEvent.OnDiscardWorkout !in events)
+
+        compose.onNodeWithText("Descartar").performClick()
+
+        assertTrue(ActiveWorkoutUiEvent.OnDiscardWorkout in events)
+    }
+
+    @Test
+    fun cancellingTheDiscardKeepsTheWorkout() {
+        val events = show(state(loggedSets = 1))
+
+        compose.onNodeWithContentDescription("Más opciones").performClick()
+        compose.onNodeWithText("Descartar entrenamiento").performClick()
+        compose.onNodeWithText("Cancelar").performClick()
+
+        compose.onNodeWithText("¿Descartar entrenamiento?").assertDoesNotExist()
+        assertTrue(ActiveWorkoutUiEvent.OnDiscardWorkout !in events)
+    }
 }

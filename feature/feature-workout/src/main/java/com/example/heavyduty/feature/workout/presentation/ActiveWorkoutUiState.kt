@@ -121,6 +121,9 @@ sealed interface ActiveWorkoutUiEvent {
     data class OnUndoDeleteSet(val set: WorkoutSet) : ActiveWorkoutUiEvent
     data class OnSelectExercise(val index: Int) : ActiveWorkoutUiEvent
     data object OnCompleteWorkout : ActiveWorkoutUiEvent
+
+    /** Throws the workout away — session and sets — as if it had never been started. */
+    data object OnDiscardWorkout : ActiveWorkoutUiEvent
     data object OnStartFreeWorkout : ActiveWorkoutUiEvent
     data class OnStartRoutine(val routineId: Long) : ActiveWorkoutUiEvent
     data object OnNavigateToRoutines : ActiveWorkoutUiEvent
@@ -142,6 +145,7 @@ sealed interface ActiveWorkoutUiEffect {
     data object NavigateToRoutines : ActiveWorkoutUiEffect
     data class ShowMessage(@param:StringRes val messageResId: Int) : ActiveWorkoutUiEffect
     data object WorkoutCompleted : ActiveWorkoutUiEffect
+    data object WorkoutDiscarded : ActiveWorkoutUiEffect
 
     /** A set was deleted — offer to undo it. */
     data class SetDeleted(val set: WorkoutSet) : ActiveWorkoutUiEffect

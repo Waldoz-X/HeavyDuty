@@ -19,6 +19,7 @@ import com.example.heavyduty.core.domain.repository.WorkoutRepository
 import com.example.heavyduty.core.testing.FakeClock
 import com.example.heavyduty.core.testing.MainDispatcherRule
 import com.example.heavyduty.feature.workout.domain.usecase.CompleteWorkoutUseCase
+import com.example.heavyduty.feature.workout.domain.usecase.DiscardWorkoutUseCase
 import com.example.heavyduty.feature.workout.domain.usecase.LogSetUseCase
 import com.example.heavyduty.feature.workout.domain.usecase.StartWorkoutUseCase
 import io.mockk.every
@@ -75,6 +76,7 @@ class ActiveWorkoutViewModelTest {
             startWorkoutUseCase = StartWorkoutUseCase(workoutRepository, clock),
             logSetUseCase = LogSetUseCase(workoutRepository, restTimer, clock),
             completeWorkoutUseCase = CompleteWorkoutUseCase(workoutRepository, clock),
+            discardWorkoutUseCase = DiscardWorkoutUseCase(workoutRepository),
             routineRepository = FakeRoutineRepository(listOf(routine)),
             workoutRepository = workoutRepository,
             exerciseRepository = FakeExerciseRepository(listOf(bench, row)),
@@ -226,6 +228,23 @@ class ActiveWorkoutViewModelTest {
     }
 
     @Test
+    fun `discarding the workout deletes it and its sets, and returns to the start screen`() {
+        val viewModel = createViewModel()
+        val effects = viewModel.collectEffects()
+        viewModel.onEvent(ActiveWorkoutUiEvent.OnStartRoutine(routine.id))
+        viewModel.logSet("8")
+        viewModel.logSet("8")
+
+        viewModel.onEvent(ActiveWorkoutUiEvent.OnDiscardWorkout)
+
+        assertTrue(workoutRepository.sessions.value.isEmpty())
+        assertTrue(workoutRepository.sets.value.isEmpty())
+        assertFalse(viewModel.uiState.value.isActive)
+        assertEquals(null, restTimer.restState.value)
+        assertTrue(ActiveWorkoutUiEffect.WorkoutDiscarded in effects)
+    }
+
+    @Test
     fun `a workout lasts from its start to when it's finished`() {
         val viewModel = createViewModel()
         viewModel.onEvent(ActiveWorkoutUiEvent.OnStartRoutine(routine.id))
@@ -327,7 +346,7 @@ class ActiveWorkoutViewModelTest {
 
     private class FakeWorkoutRepository : WorkoutRepository {
         val sessions = MutableStateFlow<List<WorkoutSession>>(emptyList())
-        private val sets = MutableStateFlow<List<WorkoutSet>>(emptyList())
+        val sets = MutableStateFlow<List<WorkoutSet>>(emptyList())
         private var nextId = 1L
 
         override fun getAllSessions(): Flow<List<WorkoutSession>> = sessions
@@ -351,8 +370,11 @@ class ActiveWorkoutViewModelTest {
         override suspend fun updateSession(session: WorkoutSession) {
             sessions.value = sessions.value.map { if (it.id == session.id) session else it }
         }
+
+        // Like the database: a session's sets go with it (ForeignKey CASCADE).
         override suspend fun deleteSession(session: WorkoutSession) {
             sessions.value = sessions.value.filter { it.id != session.id }
+            sets.value = sets.value.filter { it.sessionId != session.id }
         }
 
         /** Like the DAO's REPLACE insert: a set that already has an id keeps it. */

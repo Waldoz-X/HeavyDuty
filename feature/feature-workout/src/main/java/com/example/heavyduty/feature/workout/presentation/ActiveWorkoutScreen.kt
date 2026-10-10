@@ -116,7 +116,8 @@ fun ActiveWorkoutScreen(
             when (effect) {
                 ActiveWorkoutUiEffect.NavigateToRoutines -> currentOnNavigateToRoutines()
 
-                ActiveWorkoutUiEffect.WorkoutCompleted -> currentOnWorkoutComplete()
+                // Either way the workout is over: back to the dashboard.
+                ActiveWorkoutUiEffect.WorkoutCompleted, ActiveWorkoutUiEffect.WorkoutDiscarded -> currentOnWorkoutComplete()
 
                 // Shown in its own coroutine so a visible snackbar never holds up navigation.
                 is ActiveWorkoutUiEffect.ShowMessage -> scope.launch {
@@ -270,7 +271,7 @@ private const val PR_BANNER_MS = 3_500L
 /** Internal (not private) so UI tests can drive it with a plain state, no ViewModel or Hilt. */
 @Composable
 internal fun ActiveWorkoutContent(uiState: ActiveWorkoutUiState, onEvent: (ActiveWorkoutUiEvent) -> Unit) {
-    var showFinishDialog by rememberSaveable { mutableStateOf(false) }
+    var endDialog by rememberSaveable { mutableStateOf<EndWorkoutDialog?>(null) }
     val currentExercise = uiState.currentExercise
 
     // A phone on its side is too short to pin the header and the exercise strip above the
@@ -281,7 +282,10 @@ internal fun ActiveWorkoutContent(uiState: ActiveWorkoutUiState, onEvent: (Activ
 
     Column(modifier = Modifier.fillMaxSize()) {
         if (!compactHeight) {
-            WorkoutHeader(uiState = uiState, onFinish = { showFinishDialog = true })
+            WorkoutHeader(uiState = uiState, onFinish = { endDialog = EndWorkoutDialog.FINISH }, onDiscard = {
+                endDialog =
+                    EndWorkoutDialog.DISCARD
+            })
         }
 
         PinnedRestBanner(restTimer = uiState.restTimer, onEvent = onEvent)
@@ -298,7 +302,13 @@ internal fun ActiveWorkoutContent(uiState: ActiveWorkoutUiState, onEvent: (Activ
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             if (compactHeight) {
-                scrollingHeaderItems(uiState, showExerciseStrip, onFinish = { showFinishDialog = true }, onEvent = onEvent)
+                scrollingHeaderItems(
+                    uiState,
+                    showExerciseStrip,
+                    onFinish = { endDialog = EndWorkoutDialog.FINISH },
+                    onDiscard = { endDialog = EndWorkoutDialog.DISCARD },
+                    onEvent = onEvent
+                )
             }
             if (currentExercise != null) {
                 currentExerciseItems(uiState, currentExercise, onEvent)
@@ -318,16 +328,42 @@ internal fun ActiveWorkoutContent(uiState: ActiveWorkoutUiState, onEvent: (Activ
         }
     }
 
-    if (showFinishDialog) {
-        val haptic = LocalHapticFeedback.current
-        FinishWorkoutDialog(
+    endDialog?.let { dialog ->
+        EndWorkoutDialogs(dialog = dialog, uiState = uiState, onDismiss = { endDialog = null }, onEvent = onEvent)
+    }
+}
+
+/** The two ways out of a workout, each confirmed first. */
+private enum class EndWorkoutDialog { FINISH, DISCARD }
+
+@Composable
+private fun EndWorkoutDialogs(
+    dialog: EndWorkoutDialog,
+    uiState: ActiveWorkoutUiState,
+    onDismiss: () -> Unit,
+    onEvent: (ActiveWorkoutUiEvent) -> Unit
+) {
+    when (dialog) {
+        EndWorkoutDialog.FINISH -> {
+            val haptic = LocalHapticFeedback.current
+            FinishWorkoutDialog(
+                uiState = uiState,
+                onConfirm = {
+                    onDismiss()
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onEvent(ActiveWorkoutUiEvent.OnCompleteWorkout)
+                },
+                onDismiss = onDismiss
+            )
+        }
+
+        EndWorkoutDialog.DISCARD -> DiscardWorkoutDialog(
             uiState = uiState,
             onConfirm = {
-                showFinishDialog = false
-                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                onEvent(ActiveWorkoutUiEvent.OnCompleteWorkout)
+                onDismiss()
+                onEvent(ActiveWorkoutUiEvent.OnDiscardWorkout)
             },
-            onDismiss = { showFinishDialog = false }
+            onDismiss = onDismiss
         )
     }
 }
@@ -357,11 +393,12 @@ private fun LazyListScope.scrollingHeaderItems(
     uiState: ActiveWorkoutUiState,
     showExerciseStrip: Boolean,
     onFinish: () -> Unit,
+    onDiscard: () -> Unit,
     onEvent: (ActiveWorkoutUiEvent) -> Unit
 ) {
     item(key = "workoutHeader") {
         Box(modifier = Modifier.bleedHorizontally(16.dp)) {
-            WorkoutHeader(uiState = uiState, onFinish = onFinish)
+            WorkoutHeader(uiState = uiState, onFinish = onFinish, onDiscard = onDiscard)
         }
     }
     if (showExerciseStrip) {

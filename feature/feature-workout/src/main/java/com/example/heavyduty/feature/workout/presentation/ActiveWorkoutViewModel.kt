@@ -29,6 +29,7 @@ import com.example.heavyduty.core.domain.repository.RoutineRepository
 import com.example.heavyduty.core.domain.repository.UserPreferencesRepository
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
 import com.example.heavyduty.feature.workout.domain.usecase.CompleteWorkoutUseCase
+import com.example.heavyduty.feature.workout.domain.usecase.DiscardWorkoutUseCase
 import com.example.heavyduty.feature.workout.domain.usecase.LogSetUseCase
 import com.example.heavyduty.feature.workout.domain.usecase.StartWorkoutUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -64,6 +65,7 @@ class ActiveWorkoutViewModel @Inject constructor(
     private val startWorkoutUseCase: StartWorkoutUseCase,
     private val logSetUseCase: LogSetUseCase,
     private val completeWorkoutUseCase: CompleteWorkoutUseCase,
+    private val discardWorkoutUseCase: DiscardWorkoutUseCase,
     private val routineRepository: RoutineRepository,
     private val workoutRepository: WorkoutRepository,
     private val exerciseRepository: ExerciseRepository,
@@ -123,6 +125,8 @@ class ActiveWorkoutViewModel @Inject constructor(
             ActiveWorkoutUiEvent.OnLogSet -> logSet()
 
             ActiveWorkoutUiEvent.OnCompleteWorkout -> completeWorkout()
+
+            ActiveWorkoutUiEvent.OnDiscardWorkout -> discardWorkout()
 
             ActiveWorkoutUiEvent.OnStartFreeWorkout -> startFreeWorkout()
 
@@ -668,6 +672,21 @@ class ActiveWorkoutViewModel @Inject constructor(
                 throw e
             } catch (_: Exception) {
                 showMessage(R.string.workout_error_finish)
+            }
+        }
+    }
+
+    private fun discardWorkout() {
+        val sessionId = _uiState.value.sessionId ?: return
+        viewModelScope.launch {
+            try {
+                discardWorkoutUseCase(sessionId)
+                restTimerController.skipRest()
+                _uiEffect.send(ActiveWorkoutUiEffect.WorkoutDiscarded)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                showMessage(R.string.workout_error_discard)
             }
         }
     }
