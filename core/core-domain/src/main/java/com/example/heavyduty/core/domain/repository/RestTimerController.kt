@@ -20,7 +20,4 @@ interface RestTimerController {
     fun skipRest()
 }
 
-data class RestTimerState(
-    val remainingSeconds: Int,
-    val totalSeconds: Int,
-)
+data class RestTimerState(val remainingSeconds: Int, val totalSeconds: Int)

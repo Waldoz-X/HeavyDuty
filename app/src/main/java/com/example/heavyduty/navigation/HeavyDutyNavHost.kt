@@ -17,9 +17,9 @@ import com.example.heavyduty.feature.exercises.navigation.exercisePickerScreen
 import com.example.heavyduty.feature.history.navigation.historyScreen
 import com.example.heavyduty.feature.history.navigation.progressScreen
 import com.example.heavyduty.feature.profile.navigation.profileScreen
-import com.example.heavyduty.feature.routines.presentation.editor.SELECTED_EXERCISE_IDS_KEY
 import com.example.heavyduty.feature.routines.navigation.routineEditorScreen
 import com.example.heavyduty.feature.routines.navigation.routineListScreen
+import com.example.heavyduty.feature.routines.presentation.editor.SELECTED_EXERCISE_IDS_KEY
 import com.example.heavyduty.feature.stats.navigation.statsGraph
 import com.example.heavyduty.feature.timer.navigation.timerScreen
 import com.example.heavyduty.feature.workout.navigation.activeWorkoutScreen
@@ -42,10 +42,7 @@ private fun isTabSwitch(fromRoute: String?, toRoute: String?): Boolean =
  *   [popBackStackIfResumed], so double taps can't push twice or skip the previous screen.
  */
 @Composable
-fun HeavyDutyNavHost(
-    navController: NavHostController,
-    modifier: Modifier = Modifier,
-) {
+fun HeavyDutyNavHost(navController: NavHostController, modifier: Modifier = Modifier) {
     val navigateBack: () -> Unit = { navController.popBackStackIfResumed() }
 
     NavHost(
@@ -79,7 +76,7 @@ fun HeavyDutyNavHost(
             } else {
                 slideOutHorizontally(tween(TRANSITION_DURATION_MS)) { it / 3 } + fadeOut(tween(TRANSITION_DURATION_MS))
             }
-        },
+        }
     ) {
         dashboardScreen(
             onNavigateToActiveWorkout = {
@@ -91,7 +88,7 @@ fun HeavyDutyNavHost(
             },
             onStartRoutine = { routineId ->
                 navController.navigateToWorkout(routineId)
-            },
+            }
         )
 
         activeWorkoutScreen(
@@ -104,19 +101,19 @@ fun HeavyDutyNavHost(
                         inclusive = true
                     }
                 }
-            },
+            }
         )
 
         exerciseListScreen(
             onExerciseClick = { exerciseId ->
                 navController.navigateIfResumed("exercise_detail/$exerciseId")
-            },
+            }
         )
         exerciseDetailScreen(
             onNavigateBack = navigateBack,
             onViewProgress = { exerciseId ->
                 navController.navigateIfResumed("progress/$exerciseId")
-            },
+            }
         )
         exercisePickerScreen(
             onExercisesSelected = { exerciseIds ->
@@ -127,7 +124,7 @@ fun HeavyDutyNavHost(
                     ?.set(SELECTED_EXERCISE_IDS_KEY, exerciseIds.toLongArray())
                 navController.popBackStackIfResumed()
             },
-            onCancel = navigateBack,
+            onCancel = navigateBack
         )
 
         routineListScreen(
@@ -139,11 +136,11 @@ fun HeavyDutyNavHost(
             },
             onStartRoutine = { routineId ->
                 navController.navigateToWorkout(routineId)
-            },
+            }
         )
         routineEditorScreen(
             onNavigateBack = navigateBack,
-            onOpenExercisePicker = { navController.navigateIfResumed("exercise_picker") },
+            onOpenExercisePicker = { navController.navigateIfResumed("exercise_picker") }
         )
 
         timerScreen()
@@ -153,20 +150,20 @@ fun HeavyDutyNavHost(
             onSessionClick = { },
             onExerciseProgressClick = { exerciseId ->
                 navController.navigateIfResumed("progress/$exerciseId")
-            },
+            }
         )
         progressScreen(
-            onNavigateBack = navigateBack,
+            onNavigateBack = navigateBack
         )
 
         calendarScreen(
             onRoutineClick = { routineId ->
                 navController.navigateIfResumed("routine_editor/$routineId")
-            },
+            }
         )
 
         profileScreen(
-            onNavigateToStats = { navController.navigateIfResumed("stats_graph") },
+            onNavigateToStats = { navController.navigateIfResumed("stats_graph") }
         )
 
         statsGraph(
@@ -178,7 +175,7 @@ fun HeavyDutyNavHost(
             onNavigateToClasificacion = { navController.navigateIfResumed("stats/clasificacion") },
             onNavigateToInformeMensual = { navController.navigateIfResumed("stats/informe_mensual") },
             onNavigateToMapaActividad = { navController.navigateIfResumed("stats/mapa_actividad") },
-            onNavigateToPesoCorporal = { navController.navigateIfResumed("stats/peso_corporal") },
+            onNavigateToPesoCorporal = { navController.navigateIfResumed("stats/peso_corporal") }
         )
     }
 }

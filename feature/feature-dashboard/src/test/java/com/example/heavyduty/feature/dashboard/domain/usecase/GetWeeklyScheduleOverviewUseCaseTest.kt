@@ -9,20 +9,21 @@ import com.example.heavyduty.core.testing.FakeClock
 import com.example.heavyduty.core.testing.FakeRoutineRepository
 import com.example.heavyduty.core.testing.FakeWorkoutRepository
 import com.example.heavyduty.feature.dashboard.domain.model.DayStatus
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.ZoneId
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import java.time.LocalDate
-import java.time.LocalTime
-import java.time.ZoneId
 
 /** The home screen's week strip, driven by the calendar: what was planned, done or missed. */
 class GetWeeklyScheduleOverviewUseCaseTest {
 
     private val thursday = LocalDate.of(2026, 10, 8)
-    private fun millis(date: LocalDate, hour: Int = 18) = date.atTime(LocalTime.of(hour, 0)).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+    private fun millis(date: LocalDate, hour: Int = 18) =
+        date.atTime(LocalTime.of(hour, 0)).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
 
     private val torso = Routine(id = 10, name = "Torso")
     private val legs = Routine(id = 11, name = "Pierna")
@@ -33,8 +34,8 @@ class GetWeeklyScheduleOverviewUseCaseTest {
             CalendarEntry(id = 3, routineId = 10, dayOfWeek = 4), // Thu (today): Torso AM…
             CalendarEntry(id = 4, routineId = 11, dayOfWeek = 4), // …and Legs PM, only one done
             CalendarEntry(id = 5, routineId = 10, dayOfWeek = 6), // Sat: upcoming
-            CalendarEntry(id = 6, routineId = 99, dayOfWeek = 7), // Sun: a routine that was deleted
-        ),
+            CalendarEntry(id = 6, routineId = 99, dayOfWeek = 7) // Sun: a routine that was deleted
+        )
     )
     private val workouts = FakeWorkoutRepository(
         listOf(
@@ -43,12 +44,17 @@ class GetWeeklyScheduleOverviewUseCaseTest {
             // Wednesday was a rest day, but they trained anyway.
             WorkoutSession(id = 3, routineId = null, startTime = millis(thursday.minusDays(1)), status = WorkoutStatus.COMPLETED),
             // Started Tuesday's routine but never finished it: still missed.
-            WorkoutSession(id = 4, routineId = 11, startTime = millis(thursday.minusDays(2)), status = WorkoutStatus.IN_PROGRESS),
-        ),
+            WorkoutSession(id = 4, routineId = 11, startTime = millis(thursday.minusDays(2)), status = WorkoutStatus.IN_PROGRESS)
+        )
     )
 
     private fun week(offset: Int = 0) = runBlocking {
-        GetWeeklyScheduleOverviewUseCase(schedule, FakeRoutineRepository(listOf(torso, legs)), workouts, FakeClock(millis(thursday, hour = 12)))(offset).first()
+        GetWeeklyScheduleOverviewUseCase(
+            schedule,
+            FakeRoutineRepository(listOf(torso, legs)),
+            workouts,
+            FakeClock(millis(thursday, hour = 12))
+        )(offset).first()
     }
 
     @Test
@@ -57,8 +63,16 @@ class GetWeeklyScheduleOverviewUseCaseTest {
 
         assertEquals((5..11).toList(), days.map { it.dayNumber }) // Mon Oct 5 … Sun Oct 11
         assertEquals(
-            listOf(DayStatus.COMPLETED, DayStatus.MISSED, DayStatus.COMPLETED, DayStatus.TODAY_PENDING, DayStatus.REST, DayStatus.UPCOMING, DayStatus.REST),
-            days.map { it.status },
+            listOf(
+                DayStatus.COMPLETED,
+                DayStatus.MISSED,
+                DayStatus.COMPLETED,
+                DayStatus.TODAY_PENDING,
+                DayStatus.REST,
+                DayStatus.UPCOMING,
+                DayStatus.REST
+            ),
+            days.map { it.status }
         )
         assertEquals(listOf(false, false, false, true, false, false, false), days.map { it.isToday })
     }

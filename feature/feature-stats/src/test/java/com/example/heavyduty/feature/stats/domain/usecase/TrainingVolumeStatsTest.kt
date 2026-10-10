@@ -19,7 +19,8 @@ import org.junit.Test
  */
 class TrainingVolumeStatsTest {
 
-    private val deleted = Exercise(id = DELETED_EXERCISE_ID, name = "Borrado", muscleGroup = MuscleGroup.CALVES, exerciseType = ExerciseType.STRENGTH)
+    private val deleted =
+        Exercise(id = DELETED_EXERCISE_ID, name = "Borrado", muscleGroup = MuscleGroup.CALVES, exerciseType = ExerciseType.STRENGTH)
 
     // Current window: days 10–19. Previous window: days 0–9.
     private val currentRange = 10 * DAY until 20 * DAY
@@ -30,7 +31,7 @@ class TrainingVolumeStatsTest {
         session(2, start = 15 * DAY, durationMins = 45),
         session(3, start = 16 * DAY, status = WorkoutStatus.IN_PROGRESS),
         session(4, start = 17 * DAY, status = WorkoutStatus.CANCELLED),
-        session(5, start = 3 * DAY, durationMins = 30),
+        session(5, start = 3 * DAY, durationMins = 30)
     )
 
     private val sets = listOf(
@@ -48,7 +49,7 @@ class TrainingVolumeStatsTest {
         set(3, SQUAT, reps = 5, weightKg = 200f, at = 16 * DAY + 1),
         set(4, SQUAT, reps = 5, weightKg = 200f, at = 17 * DAY + 1),
         // Previous window: curl 10×20 = 200 kg.
-        set(5, CURL, reps = 10, weightKg = 20f, at = 3 * DAY + 1),
+        set(5, CURL, reps = 10, weightKg = 20f, at = 3 * DAY + 1)
     )
 
     private val workouts = FakeWorkoutRepository(sessions, sets)
@@ -136,7 +137,7 @@ class TrainingVolumeStatsTest {
             set(2, BENCH, reps = 1, weightKg = 120f, at = 2 * DAY + 2), // a real single: 120
             set(1, SQUAT, reps = 15, weightKg = 60f, at = DAY + 3), // over 12 reps: no estimate
             set(2, SQUAT, reps = 5, weightKg = 100f, at = 2 * DAY + 3), // 116.67
-            set(1, CURL, reps = 15, weightKg = 20f, at = DAY + 4), // only high-rep sets: no PR
+            set(1, CURL, reps = 15, weightKg = 20f, at = DAY + 4) // only high-rep sets: no PR
         )
 
         val records = GetExercisePersonalRecordsListUseCase(FakeWorkoutRepository(history, prSets), exercises)().first()

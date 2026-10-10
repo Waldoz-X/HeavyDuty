@@ -36,10 +36,8 @@ fun Int.toDurationString(): String {
     }
 }
 
-fun Float.toWeightString(): String {
-    return if (this % 1.0f == 0f) {
-        this.toInt().toString()
-    } else {
-        String.format(Locale.getDefault(), "%.1f", this)
-    }
+fun Float.toWeightString(): String = if (this % 1.0f == 0f) {
+    this.toInt().toString()
+} else {
+    String.format(Locale.getDefault(), "%.1f", this)
 }

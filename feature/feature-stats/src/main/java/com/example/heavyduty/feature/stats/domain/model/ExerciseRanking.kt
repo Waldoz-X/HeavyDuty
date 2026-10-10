@@ -13,5 +13,5 @@ data class ExerciseRanking(
     val estimatedOneRepMaxKg: Float,
     val sourceWeightKg: Float,
     val sourceReps: Int,
-    val achievedAtMillis: Long?,
+    val achievedAtMillis: Long?
 )

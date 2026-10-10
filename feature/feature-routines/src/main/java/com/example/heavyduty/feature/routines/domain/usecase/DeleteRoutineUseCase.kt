@@ -7,9 +7,6 @@ import javax.inject.Inject
 /**
  * Use case to delete a routine.
  */
-class DeleteRoutineUseCase @Inject constructor(
-    private val routineRepository: RoutineRepository,
-) {
-    suspend operator fun invoke(routine: Routine) =
-        routineRepository.deleteRoutine(routine)
+class DeleteRoutineUseCase @Inject constructor(private val routineRepository: RoutineRepository) {
+    suspend operator fun invoke(routine: Routine) = routineRepository.deleteRoutine(routine)
 }

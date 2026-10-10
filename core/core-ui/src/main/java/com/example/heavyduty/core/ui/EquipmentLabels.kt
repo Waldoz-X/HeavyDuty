@@ -34,7 +34,7 @@ private val EQUIPMENT_LABELS: Map<String, Int> = mapOf(
     "trap bar" to R.string.equipment_trap_bar,
     "upper body ergometer" to R.string.equipment_upper_body_ergometer,
     "weighted" to R.string.equipment_weighted,
-    "wheel roller" to R.string.equipment_wheel_roller,
+    "wheel roller" to R.string.equipment_wheel_roller
 )
 
 /**

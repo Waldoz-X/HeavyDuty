@@ -6,5 +6,5 @@ data class EjerciciosPrincipalesUiState(
     val exercises: List<ExerciseFrequency> = emptyList(),
     val isLoading: Boolean = true,
     /** The data couldn't be read; the screen shows an error instead of looking empty. */
-    val loadFailed: Boolean = false,
+    val loadFailed: Boolean = false
 )

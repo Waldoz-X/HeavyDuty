@@ -1,10 +1,10 @@
 package com.example.heavyduty.core.ui
 
-import com.example.heavyduty.core.common.extensions.formatOneDecimal
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
 import com.example.heavyduty.core.common.extensions.formatCompact
+import com.example.heavyduty.core.common.extensions.formatOneDecimal
 import com.example.heavyduty.core.domain.model.WeightUnit
 import com.example.heavyduty.core.domain.model.kgTo
 import com.example.heavyduty.core.domain.model.label

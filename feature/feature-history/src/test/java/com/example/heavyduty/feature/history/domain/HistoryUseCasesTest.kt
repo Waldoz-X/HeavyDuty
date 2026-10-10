@@ -20,15 +20,23 @@ class HistoryUseCasesTest {
     private val bench = 1L
     private val squat = 2L
 
-    private fun set(id: Long, exercise: Long, reps: Int, weight: Float, at: Long, warmup: Boolean = false) =
-        WorkoutSet(id = id, sessionId = 1, exerciseId = exercise, reps = reps, weight = weight, isCompleted = true, completedAt = at, isWarmup = warmup)
+    private fun set(id: Long, exercise: Long, reps: Int, weight: Float, at: Long, warmup: Boolean = false) = WorkoutSet(
+        id = id,
+        sessionId = 1,
+        exerciseId = exercise,
+        reps = reps,
+        weight = weight,
+        isCompleted = true,
+        completedAt = at,
+        isWarmup = warmup
+    )
 
     private val sets = listOf(
         set(1, bench, reps = 1, weight = 150f, at = 1, warmup = true), // warm-ups never count
         set(2, bench, reps = 10, weight = 80f, at = 2), // most reps; 1RM 106.7
         set(3, bench, reps = 3, weight = 100f, at = 3), // heaviest; 1RM 110
         set(4, bench, reps = 5, weight = 0f, at = 4), // no weight: not a record
-        set(5, squat, reps = 5, weight = 140f, at = 5),
+        set(5, squat, reps = 5, weight = 140f, at = 5)
     )
     private val workouts = FakeWorkoutRepository(listOf(WorkoutSession(id = 1, startTime = 0, status = WorkoutStatus.COMPLETED)), sets)
 
@@ -62,7 +70,7 @@ class HistoryUseCasesTest {
     @Test
     fun `history is newest first`() = runBlocking {
         val repo = FakeWorkoutRepository(
-            listOf(WorkoutSession(id = 1, startTime = 10), WorkoutSession(id = 2, startTime = 30), WorkoutSession(id = 3, startTime = 20)),
+            listOf(WorkoutSession(id = 1, startTime = 10), WorkoutSession(id = 2, startTime = 30), WorkoutSession(id = 3, startTime = 20))
         )
 
         assertEquals(listOf(2L, 3L, 1L), GetWorkoutHistoryUseCase(repo)().first().map { it.id })
@@ -75,8 +83,8 @@ class HistoryUseCasesTest {
                 WorkoutSession(id = 1, startTime = 1, totalDurationSecs = 3600, status = WorkoutStatus.COMPLETED),
                 WorkoutSession(id = 2, startTime = 2, totalDurationSecs = 1800, status = WorkoutStatus.COMPLETED),
                 WorkoutSession(id = 3, startTime = 3, totalDurationSecs = 600, status = WorkoutStatus.CANCELLED),
-                WorkoutSession(id = 4, startTime = 4, status = WorkoutStatus.IN_PROGRESS),
-            ),
+                WorkoutSession(id = 4, startTime = 4, status = WorkoutStatus.IN_PROGRESS)
+            )
         )
 
         val stats = GetStatsUseCase(repo)().first()

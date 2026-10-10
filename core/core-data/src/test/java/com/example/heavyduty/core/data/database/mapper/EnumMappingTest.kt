@@ -53,7 +53,7 @@ class EnumMappingTest {
         assertEquals(WorkoutType.GYM, RoutineEntity(name = "Torso", type = "YOGA").toDomain().type)
         assertEquals(
             ProgressionPolicy.OFF, // never auto-change weights by a rule this version doesn't know
-            RoutineExerciseEntity(routineId = 1, exerciseId = 1, orderIndex = 0, progressionPolicy = "MAGIC").toDomain().progressionPolicy,
+            RoutineExerciseEntity(routineId = 1, exerciseId = 1, orderIndex = 0, progressionPolicy = "MAGIC").toDomain().progressionPolicy
         )
         assertEquals(Recurrence.WEEKLY, CalendarEntryEntity(routineId = 1, dayOfWeek = 1, recurrence = "MONTHLY").toDomain().recurrence)
     }

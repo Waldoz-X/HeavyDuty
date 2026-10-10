@@ -13,9 +13,7 @@ class DuplicateCalendarEntryException : IllegalStateException("Routine already s
  *
  * @throws DuplicateCalendarEntryException if the routine is already on that day.
  */
-class AssignRoutineToDayUseCase @Inject constructor(
-    private val calendarRepository: CalendarRepository,
-) {
+class AssignRoutineToDayUseCase @Inject constructor(private val calendarRepository: CalendarRepository) {
     suspend operator fun invoke(routineId: Long, dayOfWeek: Int): Long {
         if (calendarRepository.hasRoutineOnDay(routineId, dayOfWeek)) {
             throw DuplicateCalendarEntryException()
@@ -24,7 +22,7 @@ class AssignRoutineToDayUseCase @Inject constructor(
             routineId = routineId,
             dayOfWeek = dayOfWeek,
             recurrence = Recurrence.WEEKLY,
-            isActive = true,
+            isActive = true
         )
         return calendarRepository.insertEntry(entry)
     }

@@ -13,18 +13,18 @@ import com.example.heavyduty.core.data.database.entity.RoutineExerciseEntity
 import com.example.heavyduty.core.data.database.entity.WorkoutSessionEntity
 import com.example.heavyduty.core.data.database.entity.WorkoutSetEntity
 import com.example.heavyduty.core.domain.model.Clock
-import com.example.heavyduty.core.domain.repository.BackupImportResult
-import com.example.heavyduty.core.domain.repository.BackupRepository
 import com.example.heavyduty.core.domain.model.ExerciseType
 import com.example.heavyduty.core.domain.model.MuscleGroup
 import com.example.heavyduty.core.domain.model.ProgressionPolicy
 import com.example.heavyduty.core.domain.model.WorkoutStatus
 import com.example.heavyduty.core.domain.model.WorkoutType
+import com.example.heavyduty.core.domain.repository.BackupImportResult
+import com.example.heavyduty.core.domain.repository.BackupRepository
 import com.google.gson.Gson
 import com.google.gson.JsonParser
-import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.flow.first
 
 private const val BACKUP_FORMAT_VERSION = 1
 private const val STATUS_IN_PROGRESS = "IN_PROGRESS"
@@ -43,7 +43,7 @@ private data class BackupSnapshotDto(
     val customExercises: List<ExerciseDto>? = emptyList(),
     val routines: List<RoutineDto>? = emptyList(),
     val sessions: List<SessionDto>? = emptyList(),
-    val bodyWeightEntries: List<BodyWeightDto>? = emptyList(),
+    val bodyWeightEntries: List<BodyWeightDto>? = emptyList()
 )
 
 /** Exercises are cross-referenced by [name], not row id, so a snapshot is portable across installs. */
@@ -55,7 +55,7 @@ private data class ExerciseDto(
     val exerciseType: String? = "",
     val equipment: String? = "",
     /** Raw Gson-encoded fractional muscle weights, carried through as-is — see Exercise.muscleWeights. */
-    val muscleWeightsJson: String? = "",
+    val muscleWeightsJson: String? = ""
 )
 
 private data class RoutineDto(
@@ -64,7 +64,7 @@ private data class RoutineDto(
     val type: String? = "GYM",
     val createdAt: Long? = System.currentTimeMillis(),
     val updatedAt: Long? = System.currentTimeMillis(),
-    val exercises: List<RoutineExerciseDto>? = emptyList(),
+    val exercises: List<RoutineExerciseDto>? = emptyList()
 )
 
 private data class RoutineExerciseDto(
@@ -82,7 +82,7 @@ private data class RoutineExerciseDto(
     val stallThreshold: Int? = 3,
     /** Preserved verbatim — still valid, since exercises re-import in the same order. */
     val supersetGroupId: String? = null,
-    val weightUnit: String? = null,
+    val weightUnit: String? = null
 )
 
 /** routineId / [endTime] intentionally NOT linked back to a routine — see BackupRepository doc. */
@@ -94,7 +94,7 @@ private data class SessionDto(
     val status: String? = STATUS_COMPLETED,
     val notes: String? = "",
     val type: String? = "GYM",
-    val sets: List<SetDto>? = emptyList(),
+    val sets: List<SetDto>? = emptyList()
 )
 
 private data class SetDto(
@@ -110,7 +110,7 @@ private data class SetDto(
     val isWarmup: Boolean? = false,
     val effortType: String? = null,
     val effortValue: Float? = null,
-    val weightUnit: String? = null,
+    val weightUnit: String? = null
 )
 
 private data class BodyWeightDto(val weightKg: Float?, val loggedAt: Long?)
@@ -160,7 +160,7 @@ class BackupRepositoryImpl @Inject constructor(
     private val routineDao: RoutineDao,
     private val workoutDao: WorkoutDao,
     private val bodyWeightDao: BodyWeightDao,
-    private val clock: Clock,
+    private val clock: Clock
 ) : BackupRepository {
 
     private val gson = Gson()
@@ -179,7 +179,7 @@ class BackupRepositoryImpl @Inject constructor(
                 muscleGroup = it.muscleGroup,
                 exerciseType = it.exerciseType,
                 equipment = it.equipment,
-                muscleWeightsJson = it.muscleWeightsJson,
+                muscleWeightsJson = it.muscleWeightsJson
             )
         }
 
@@ -208,9 +208,9 @@ class BackupRepositoryImpl @Inject constructor(
                         repRangeHigh = rx.repRangeHigh,
                         stallThreshold = rx.stallThreshold,
                         supersetGroupId = rx.supersetGroupId,
-                        weightUnit = rx.weightUnit,
+                        weightUnit = rx.weightUnit
                     )
-                },
+                }
             )
         }
 
@@ -239,9 +239,9 @@ class BackupRepositoryImpl @Inject constructor(
                         isWarmup = set.isWarmup,
                         effortType = set.effortType,
                         effortValue = set.effortValue,
-                        weightUnit = set.weightUnit,
+                        weightUnit = set.weightUnit
                     )
-                },
+                }
             )
         }
 
@@ -251,7 +251,7 @@ class BackupRepositoryImpl @Inject constructor(
             customExercises = customExercises,
             routines = routines,
             sessions = sessions,
-            bodyWeightEntries = bodyWeightEntries,
+            bodyWeightEntries = bodyWeightEntries
         )
         return gson.toJson(snapshot)
     }
@@ -298,8 +298,8 @@ class BackupRepositoryImpl @Inject constructor(
                     exerciseType = dto.exerciseType!!,
                     equipment = dto.equipment.orEmpty(),
                     isCustom = true,
-                    muscleWeightsJson = dto.muscleWeightsJson.orEmpty(),
-                ),
+                    muscleWeightsJson = dto.muscleWeightsJson.orEmpty()
+                )
             )
             existingNames.add(name)
             customExercisesImported++
@@ -341,7 +341,7 @@ class BackupRepositoryImpl @Inject constructor(
                     repRangeHigh = reDto.repRangeHigh ?: 10,
                     stallThreshold = reDto.stallThreshold ?: 3,
                     supersetGroupId = reDto.supersetGroupId,
-                    weightUnit = reDto.weightUnit,
+                    weightUnit = reDto.weightUnit
                 )
             }
             val routineId = routineDao.insertRoutine(
@@ -350,8 +350,8 @@ class BackupRepositoryImpl @Inject constructor(
                     description = routineDto.description.orEmpty(),
                     type = routineDto.type ?: "GYM",
                     createdAt = createdAt,
-                    updatedAt = routineDto.updatedAt ?: now,
-                ),
+                    updatedAt = routineDto.updatedAt ?: now
+                )
             )
             routineExercises.forEach { routineDao.insertRoutineExercise(it.copy(routineId = routineId)) }
             routinesImported++
@@ -386,8 +386,8 @@ class BackupRepositoryImpl @Inject constructor(
                     },
                     status = if (wasRunning) STATUS_COMPLETED else sessionDto.status ?: STATUS_COMPLETED,
                     notes = sessionDto.notes.orEmpty(),
-                    type = sessionDto.type ?: "GYM",
-                ),
+                    type = sessionDto.type ?: "GYM"
+                )
             )
             sets.forEach { setDto ->
                 val exerciseId = exerciseIdByName[setDto.exerciseName]
@@ -410,8 +410,8 @@ class BackupRepositoryImpl @Inject constructor(
                         isWarmup = setDto.isWarmup ?: false,
                         effortType = setDto.effortType,
                         effortValue = setDto.effortValue,
-                        weightUnit = setDto.weightUnit,
-                    ),
+                        weightUnit = setDto.weightUnit
+                    )
                 )
             }
             sessionsImported++
@@ -433,7 +433,7 @@ class BackupRepositoryImpl @Inject constructor(
             sessionsImported = sessionsImported,
             bodyWeightEntriesImported = bodyWeightImported,
             skippedReferences = skipped,
-            alreadyPresent = alreadyPresent,
+            alreadyPresent = alreadyPresent
         )
     }
 }

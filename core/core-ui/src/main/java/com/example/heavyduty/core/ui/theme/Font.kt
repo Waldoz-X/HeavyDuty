@@ -9,7 +9,7 @@ import com.example.heavyduty.core.ui.R
 private val googleFontProvider = GoogleFont.Provider(
     providerAuthority = "com.google.android.gms.fonts",
     providerPackage = "com.google.android.gms",
-    certificates = R.array.com_google_android_gms_fonts_certs,
+    certificates = R.array.com_google_android_gms_fonts_certs
 )
 
 private val plusJakartaSans = GoogleFont("Plus Jakarta Sans")
@@ -28,5 +28,5 @@ val HeavyDutyFontFamily = FontFamily(
     Font(googleFont = plusJakartaSans, fontProvider = googleFontProvider, weight = FontWeight.Medium),
     Font(googleFont = plusJakartaSans, fontProvider = googleFontProvider, weight = FontWeight.SemiBold),
     Font(googleFont = plusJakartaSans, fontProvider = googleFontProvider, weight = FontWeight.Bold),
-    Font(googleFont = plusJakartaSans, fontProvider = googleFontProvider, weight = FontWeight.ExtraBold),
+    Font(googleFont = plusJakartaSans, fontProvider = googleFontProvider, weight = FontWeight.ExtraBold)
 )

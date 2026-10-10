@@ -38,17 +38,15 @@ private val HeavyDutyDarkColorScheme = darkColorScheme(
     inverseSurface = InverseSurface,
     inverseOnSurface = InverseOnSurface,
     inversePrimary = InversePrimary,
-    scrim = Scrim,
+    scrim = Scrim
 )
 
 @Composable
-fun HeavyDutyTheme(
-    content: @Composable () -> Unit,
-) {
+fun HeavyDutyTheme(content: @Composable () -> Unit) {
     MaterialTheme(
         colorScheme = HeavyDutyDarkColorScheme,
         typography = HeavyDutyTypography,
         shapes = HeavyDutyShapes,
-        content = content,
+        content = content
     )
 }

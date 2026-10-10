@@ -8,5 +8,5 @@ enum class TimerMode {
     STOPWATCH,
     AMRAP,
     EMOM,
-    TABATA,
+    TABATA
 }

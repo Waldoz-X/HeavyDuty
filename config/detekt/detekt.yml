@@ -1,0 +1,22 @@
+# Overrides on top of detekt's default rules (buildUponDefaultConfig), aligned with the project's
+# conventions and with ktlint (.editorconfig) so the two never disagree.
+
+style:
+  MaxLineLength:
+    maxLineLength: 140 # same limit ktlint formats to
+  MagicNumber:
+    # UI code is full of sizes (16.dp, 0.5f…) that read best inline.
+    ignoreAnnotated: ['Composable', 'Preview']
+    ignorePropertyDeclaration: true
+    ignoreCompanionObjectPropertyDeclaration: true
+
+naming:
+  FunctionNaming:
+    # Composables are named like types.
+    ignoreAnnotated: ['Composable']
+
+Compose:
+  CompositionLocalAllowlist:
+    active: true
+    # Deliberate app-wide locals: the weight unit and the shared-element transition scopes.
+    allowedCompositionLocals: ['LocalWeightUnit', 'LocalSharedTransitionScope', 'LocalNavAnimatedVisibilityScope']

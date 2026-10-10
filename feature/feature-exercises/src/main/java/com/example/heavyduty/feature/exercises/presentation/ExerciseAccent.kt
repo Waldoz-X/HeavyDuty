@@ -16,7 +16,7 @@ fun MuscleGroup.accentColor(): Color = when (this) {
     MuscleGroup.SHOULDERS,
     MuscleGroup.LATS,
     MuscleGroup.TRAPS,
-    MuscleGroup.FULL_BODY,
+    MuscleGroup.FULL_BODY
     -> PrimaryCyan
 
     MuscleGroup.BICEPS,
@@ -24,12 +24,12 @@ fun MuscleGroup.accentColor(): Color = when (this) {
     MuscleGroup.FOREARMS,
     MuscleGroup.ABS,
     MuscleGroup.OBLIQUES,
-    MuscleGroup.CARDIO,
+    MuscleGroup.CARDIO
     -> SecondaryMagenta
 
     MuscleGroup.QUADRICEPS,
     MuscleGroup.HAMSTRINGS,
     MuscleGroup.GLUTES,
-    MuscleGroup.CALVES,
+    MuscleGroup.CALVES
     -> TertiaryLime
 }

@@ -21,7 +21,7 @@ fun List<Exercise>.searchExercises(query: String): List<Exercise> {
         if (terms.all { alternatives -> alternatives.any { it in haystack } }) exercise to exercise.rank(terms) else null
     }.sortedWith(
         compareBy<Pair<Exercise, Int>>({ it.second }, { it.first.displayName.length })
-            .thenBy(collator) { it.first.displayName },
+            .thenBy(collator) { it.first.displayName }
     ).map { it.first }
 }
 
@@ -35,15 +35,13 @@ internal fun parseQuery(query: String): List<Set<String>> {
         .map { word -> setOf(word) + SYNONYMS[word].orEmpty() + SYNONYMS[word.singular()].orEmpty() }
 }
 
-internal fun normalize(text: String): String =
-    Normalizer.normalize(text.lowercase(Locale.ROOT), Normalizer.Form.NFD)
-        .replace(DIACRITICS, "")
-        .replace(NON_ALPHANUMERIC, " ")
-        .replace(WHITESPACE, " ")
-        .trim()
+internal fun normalize(text: String): String = Normalizer.normalize(text.lowercase(Locale.ROOT), Normalizer.Form.NFD)
+    .replace(DIACRITICS, "")
+    .replace(NON_ALPHANUMERIC, " ")
+    .replace(WHITESPACE, " ")
+    .trim()
 
-private fun Exercise.searchText(): String =
-    normalize("${names()} $equipment ${muscleGroup.name} ${exerciseType.name}")
+private fun Exercise.searchText(): String = normalize("${names()} $equipment ${muscleGroup.name} ${exerciseType.name}")
 
 /** Displayed (Spanish) and original (English) names, plus unhyphenated forms ("pullup"). */
 private fun Exercise.names(): String = "$name $nameEn ${name.replace("-", "")} ${nameEn.replace("-", "")}"
@@ -86,7 +84,7 @@ private val PHRASES = listOf(
     "peso corporal" to "body_weight",
     "maquina smith" to "smith",
     "press frances" to "skull_crusher",
-    "de pie" to "standing",
+    "de pie" to "standing"
 ).map { (es, en) -> normalize(es) to en }
 
 private val SYNONYMS: Map<String, Set<String>> = mapOf(
@@ -170,5 +168,5 @@ private val SYNONYMS: Map<String, Set<String>> = mapOf(
     "tumbado" to setOf("lying"),
     "unilateral" to setOf("single", "one arm", "one leg"),
     "cardio" to setOf("cardio"),
-    "estiramiento" to setOf("stretch"),
+    "estiramiento" to setOf("stretch")
 )

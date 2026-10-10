@@ -44,7 +44,10 @@ class MigrationTest {
         // Also validates the migrated tables against schemas/16.json.
         val db = helper.runMigrationsAndValidate(TEST_DB, 16, true, MIGRATION_15_16)
 
-        fun count(table: String) = db.query("SELECT COUNT(*) FROM $table").use { it.moveToFirst(); it.getInt(0) }
+        fun count(table: String) = db.query("SELECT COUNT(*) FROM $table").use {
+            it.moveToFirst()
+            it.getInt(0)
+        }
         assertEquals(2, count("exercises"))
         assertEquals(1, count("routines"))
         assertEquals(1, count("routine_exercises"))
@@ -54,9 +57,18 @@ class MigrationTest {
         assertEquals(1, count("calendar_entries"))
 
         // New columns start empty: no unit chosen yet, names not localized yet.
-        db.query("SELECT nameEn FROM exercises WHERE id = 1").use { it.moveToFirst(); assertEquals("", it.getString(0)) }
-        db.query("SELECT weightUnit FROM routine_exercises").use { it.moveToFirst(); assertTrue(it.isNull(0)) }
-        db.query("SELECT weightUnit FROM workout_sets").use { it.moveToFirst(); assertTrue(it.isNull(0)) }
+        db.query("SELECT nameEn FROM exercises WHERE id = 1").use {
+            it.moveToFirst()
+            assertEquals("", it.getString(0))
+        }
+        db.query("SELECT weightUnit FROM routine_exercises").use {
+            it.moveToFirst()
+            assertTrue(it.isNull(0))
+        }
+        db.query("SELECT weightUnit FROM workout_sets").use {
+            it.moveToFirst()
+            assertTrue(it.isNull(0))
+        }
         db.close()
     }
 
@@ -104,8 +116,14 @@ class MigrationTest {
 
         val db = helper.runMigrationsAndValidate(TEST_DB, 17, true, MIGRATION_16_17)
 
-        db.query("SELECT COUNT(*) FROM exercises").use { it.moveToFirst(); assertEquals(2, it.getInt(0)) }
-        db.query("SELECT instructionsEn FROM exercises WHERE id = 1").use { it.moveToFirst(); assertEquals("", it.getString(0)) }
+        db.query("SELECT COUNT(*) FROM exercises").use {
+            it.moveToFirst()
+            assertEquals(2, it.getInt(0))
+        }
+        db.query("SELECT instructionsEn FROM exercises WHERE id = 1").use {
+            it.moveToFirst()
+            assertEquals("", it.getString(0))
+        }
         db.close()
     }
 
@@ -121,8 +139,14 @@ class MigrationTest {
         // Also checks the indices against schemas/18.json.
         val db = helper.runMigrationsAndValidate(TEST_DB, 18, true, MIGRATION_17_18)
 
-        db.query("SELECT COUNT(*) FROM workout_sets").use { it.moveToFirst(); assertEquals(2, it.getInt(0)) }
-        db.query("SELECT COUNT(*) FROM workout_sessions").use { it.moveToFirst(); assertEquals(1, it.getInt(0)) }
+        db.query("SELECT COUNT(*) FROM workout_sets").use {
+            it.moveToFirst()
+            assertEquals(2, it.getInt(0))
+        }
+        db.query("SELECT COUNT(*) FROM workout_sessions").use {
+            it.moveToFirst()
+            assertEquals(1, it.getInt(0))
+        }
         db.close()
     }
 
@@ -140,20 +164,31 @@ class MigrationTest {
 
         db.query("SELECT id, reps, weight, effortType, completedAt FROM workout_sets ORDER BY id").use {
             it.moveToFirst()
-            assertEquals(1, it.getInt(0)); assertEquals(8, it.getInt(1)); assertEquals(80f, it.getFloat(2)); assertEquals("RIR", it.getString(3)); assertEquals(2000L, it.getLong(4))
+            assertEquals(1, it.getInt(0))
+            assertEquals(8, it.getInt(1))
+            assertEquals(80f, it.getFloat(2))
+            assertEquals("RIR", it.getString(3))
+            assertEquals(2000L, it.getLong(4))
             it.moveToNext()
-            assertEquals(2, it.getInt(0)); assertEquals(6, it.getInt(1))
+            assertEquals(2, it.getInt(0))
+            assertEquals(6, it.getInt(1))
             assertFalse(it.moveToNext())
         }
         db.execSQL("PRAGMA foreign_keys = ON")
         val refused = runCatching { db.execSQL("DELETE FROM exercises WHERE id = 1") }
         assertTrue("an exercise with logged sets can't be deleted", refused.isFailure)
-        db.query("SELECT COUNT(*) FROM workout_sets").use { it.moveToFirst(); assertEquals(2, it.getInt(0)) }
+        db.query("SELECT COUNT(*) FROM workout_sets").use {
+            it.moveToFirst()
+            assertEquals(2, it.getInt(0))
+        }
         // Without history it still can be, and leaves its routines too.
         db.execSQL("DELETE FROM exercises WHERE id = 2")
         // Deleting a workout still takes its sets with it.
         db.execSQL("DELETE FROM workout_sessions WHERE id = 1")
-        db.query("SELECT COUNT(*) FROM workout_sets").use { it.moveToFirst(); assertEquals(0, it.getInt(0)) }
+        db.query("SELECT COUNT(*) FROM workout_sets").use {
+            it.moveToFirst()
+            assertEquals(0, it.getInt(0))
+        }
         db.close()
     }
 
@@ -163,8 +198,11 @@ class MigrationTest {
         try {
             val dao = database.exerciseDao()
             fun row(spanish: String) = com.example.heavyduty.core.data.database.entity.ExerciseEntity(
-                name = "Elevación de talones", nameEn = "smith reverse calf raises", instructions = spanish,
-                muscleGroup = "CALVES", exerciseType = "STRENGTH",
+                name = "Elevación de talones",
+                nameEn = "smith reverse calf raises",
+                instructions = spanish,
+                muscleGroup = "CALVES",
+                exerciseType = "STRENGTH"
             )
             val a = dao.insertExercise(row("Paso A"))
             val b = dao.insertExercise(row("Paso B"))
@@ -173,8 +211,8 @@ class MigrationTest {
             dao.setEnglishInstructions(
                 listOf(
                     Triple("smith reverse calf raises", "Paso A", "Step A"),
-                    Triple("smith reverse calf raises", "Paso B", "Step B"),
-                ),
+                    Triple("smith reverse calf raises", "Paso B", "Step B")
+                )
             )
 
             val byId = dao.getAllExercises().first().associateBy { it.id }
@@ -191,33 +229,33 @@ class MigrationTest {
         execSQL(
             """INSERT INTO exercises (id, name, description, instructions, imageUrl, gifUrl, muscleGroup,
                exerciseType, equipment, isCustom, weightUnit, muscleWeightsJson)
-               VALUES (1, 'barbell bench press', '', '', '', '', 'CHEST', 'STRENGTH', 'barbell', 0, 'KG', '')""",
+               VALUES (1, 'barbell bench press', '', '', '', '', 'CHEST', 'STRENGTH', 'barbell', 0, 'KG', '')"""
         )
         execSQL(
             """INSERT INTO exercises (id, name, description, instructions, imageUrl, gifUrl, muscleGroup,
                exerciseType, equipment, isCustom, weightUnit, muscleWeightsJson)
-               VALUES (2, 'Mi press raro', '', '', '', '', 'CHEST', 'STRENGTH', '', 1, 'LB', '')""",
+               VALUES (2, 'Mi press raro', '', '', '', '', 'CHEST', 'STRENGTH', '', 1, 'LB', '')"""
         )
         execSQL("INSERT INTO routines (id, name, description, type, createdAt, updatedAt) VALUES (1, 'Torso', '', 'GYM', 1, 1)")
         execSQL(
             """INSERT INTO routine_exercises (id, routineId, exerciseId, orderIndex, targetSets, targetReps,
                targetWeight, targetDurationSecs, restBetweenSetsSecs, notes, progressionPolicy, repRangeLow,
                repRangeHigh, stallThreshold, supersetGroupId)
-               VALUES (1, 1, 1, 0, 3, 8, 80.0, 0, 90, '', 'LINEAR', 8, 10, 3, NULL)""",
+               VALUES (1, 1, 1, 0, 3, 8, 80.0, 0, 90, '', 'LINEAR', 8, 10, 3, NULL)"""
         )
         execSQL(
             """INSERT INTO workout_sessions (id, routineId, sessionName, startTime, endTime, totalDurationSecs,
-               status, notes, type) VALUES (1, 1, 'Torso', 1000, 4000, 3, 'COMPLETED', '', 'GYM')""",
+               status, notes, type) VALUES (1, 1, 'Torso', 1000, 4000, 3, 'COMPLETED', '', 'GYM')"""
         )
         execSQL(
             """INSERT INTO workout_sets (id, sessionId, exerciseId, setNumber, reps, weight, durationSecs, distance,
                isCompleted, completedAt, notes, isWarmup, effortType, effortValue)
-               VALUES (1, 1, 1, 1, 8, 80.0, NULL, NULL, 1, 2000, '', 0, 'RIR', 2.0)""",
+               VALUES (1, 1, 1, 1, 8, 80.0, NULL, NULL, 1, 2000, '', 0, 'RIR', 2.0)"""
         )
         execSQL(
             """INSERT INTO workout_sets (id, sessionId, exerciseId, setNumber, reps, weight, durationSecs, distance,
                isCompleted, completedAt, notes, isWarmup, effortType, effortValue)
-               VALUES (2, 1, 1, 2, 6, 85.0, NULL, NULL, 1, 3000, '', 0, NULL, NULL)""",
+               VALUES (2, 1, 1, 2, 6, 85.0, NULL, NULL, 1, 3000, '', 0, NULL, NULL)"""
         )
         execSQL("INSERT INTO body_weight_entries (id, weightKg, loggedAt) VALUES (1, 82.5, 1000)")
         execSQL("INSERT INTO calendar_entries (id, routineId, dayOfWeek, recurrence, isActive) VALUES (1, 1, 1, 'WEEKLY', 1)")

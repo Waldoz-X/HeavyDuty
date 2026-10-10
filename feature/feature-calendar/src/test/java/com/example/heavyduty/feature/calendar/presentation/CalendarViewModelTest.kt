@@ -10,6 +10,7 @@ import com.example.heavyduty.core.testing.FakeRoutineRepository
 import com.example.heavyduty.core.testing.MainDispatcherRule
 import com.example.heavyduty.feature.calendar.domain.usecase.AssignRoutineToDayUseCase
 import com.example.heavyduty.feature.calendar.domain.usecase.GetWeekScheduleUseCase
+import java.io.IOException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -23,7 +24,6 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
-import java.io.IOException
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class CalendarViewModelTest {
@@ -37,8 +37,8 @@ class CalendarViewModelTest {
         listOf(
             CalendarEntry(id = 1, routineId = 10, dayOfWeek = monday),
             CalendarEntry(id = 2, routineId = 11, dayOfWeek = monday), // two routines the same day
-            CalendarEntry(id = 3, routineId = 10, dayOfWeek = 5, isActive = false), // switched off
-        ),
+            CalendarEntry(id = 3, routineId = 10, dayOfWeek = 5, isActive = false) // switched off
+        )
     )
     private val routines = FakeRoutineRepository(listOf(Routine(id = 10, name = "Torso"), Routine(id = 11, name = "Pierna")))
 
@@ -46,7 +46,7 @@ class CalendarViewModelTest {
         GetWeekScheduleUseCase(calendar),
         AssignRoutineToDayUseCase(calendar),
         calendar,
-        routines,
+        routines
     )
 
     @Test

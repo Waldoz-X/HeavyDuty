@@ -7,8 +7,8 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.MaterialTheme
@@ -39,9 +39,9 @@ fun Modifier.shimmer(): Modifier {
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
             animation = tween(durationMillis = 1300, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart,
+            repeatMode = RepeatMode.Restart
         ),
-        label = "shimmerProgress",
+        label = "shimmerProgress"
     )
     val base = MaterialTheme.colorScheme.raised
     val highlight = MaterialTheme.colorScheme.surfaceBright
@@ -53,23 +53,20 @@ fun Modifier.shimmer(): Modifier {
             Brush.linearGradient(
                 colors = listOf(base, highlight, base),
                 start = Offset(x - band, 0f),
-                end = Offset(x, 0f),
-            ),
+                end = Offset(x, 0f)
+            )
         )
     }
 }
 
 /** One shimmering placeholder bar, standing in for a line of text while content loads. */
 @Composable
-fun HdSkeletonLine(
-    modifier: Modifier = Modifier,
-    height: Dp = 16.dp,
-) {
+fun HdSkeletonLine(modifier: Modifier = Modifier, height: Dp = 16.dp) {
     Box(
         modifier = modifier
             .height(height)
             .clip(MaterialTheme.shapes.small)
-            .shimmer(),
+            .shimmer()
     )
 }
 

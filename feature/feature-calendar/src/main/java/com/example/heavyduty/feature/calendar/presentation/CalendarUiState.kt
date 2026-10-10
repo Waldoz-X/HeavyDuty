@@ -10,7 +10,7 @@ data class CalendarUiState(
     val selectedDay: Int? = null,
     val isPickingRoutine: Boolean = false,
     val isLoading: Boolean = true,
-    val loadFailed: Boolean = false,
+    val loadFailed: Boolean = false
 )
 
 sealed interface CalendarUiEvent {

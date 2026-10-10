@@ -6,24 +6,19 @@ import com.example.heavyduty.core.data.database.mapper.toEntity
 import com.example.heavyduty.core.domain.model.Routine
 import com.example.heavyduty.core.domain.model.RoutineExercise
 import com.example.heavyduty.core.domain.repository.RoutineRepository
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 @Singleton
-class RoutineRepositoryImpl @Inject constructor(
-    private val routineDao: RoutineDao,
-) : RoutineRepository {
+class RoutineRepositoryImpl @Inject constructor(private val routineDao: RoutineDao) : RoutineRepository {
 
-    override fun getAllRoutines(): Flow<List<Routine>> =
-        routineDao.getAllRoutines().map { list -> list.map { it.toDomain() } }
+    override fun getAllRoutines(): Flow<List<Routine>> = routineDao.getAllRoutines().map { list -> list.map { it.toDomain() } }
 
-    override fun getRoutineById(id: Long): Flow<Routine?> =
-        routineDao.getRoutineById(id).map { it?.toDomain() }
+    override fun getRoutineById(id: Long): Flow<Routine?> = routineDao.getRoutineById(id).map { it?.toDomain() }
 
-    override fun getRoutineWithExercises(id: Long): Flow<Routine?> =
-        routineDao.getRoutineWithExercises(id).map { it?.toDomain() }
+    override fun getRoutineWithExercises(id: Long): Flow<Routine?> = routineDao.getRoutineWithExercises(id).map { it?.toDomain() }
 
     override suspend fun insertRoutine(routine: Routine): Long =
         routineDao.insertRoutineWithExercises(routine.toEntity(), routine.orderedExerciseEntities())
@@ -32,11 +27,9 @@ class RoutineRepositoryImpl @Inject constructor(
         routineDao.replaceRoutineWithExercises(routine.toEntity(), routine.orderedExerciseEntities())
 
     /** The routine's exercises with [RoutineExercise.orderIndex] matching their list position. */
-    private fun Routine.orderedExerciseEntities() =
-        exercises.mapIndexed { index, exercise -> exercise.copy(orderIndex = index).toEntity() }
+    private fun Routine.orderedExerciseEntities() = exercises.mapIndexed { index, exercise -> exercise.copy(orderIndex = index).toEntity() }
 
-    override suspend fun deleteRoutine(routine: Routine) =
-        routineDao.deleteRoutine(routine.toEntity())
+    override suspend fun deleteRoutine(routine: Routine) = routineDao.deleteRoutine(routine.toEntity())
 
     override suspend fun insertRoutineExercise(routineExercise: RoutineExercise): Long =
         routineDao.insertRoutineExercise(routineExercise.toEntity())

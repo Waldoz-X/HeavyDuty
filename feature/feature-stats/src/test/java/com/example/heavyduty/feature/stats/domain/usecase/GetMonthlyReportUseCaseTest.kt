@@ -5,12 +5,12 @@ import com.example.heavyduty.core.domain.model.WorkoutStatus
 import com.example.heavyduty.core.testing.FakeClock
 import com.example.heavyduty.core.testing.FakeExerciseRepository
 import com.example.heavyduty.core.testing.FakeWorkoutRepository
+import java.util.Calendar
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
-import java.util.Calendar
 
 class GetMonthlyReportUseCaseTest {
 
@@ -28,7 +28,7 @@ class GetMonthlyReportUseCaseTest {
         session(1, start = at(Calendar.SEPTEMBER, 2), durationMins = 60),
         session(2, start = at(Calendar.SEPTEMBER, 20), durationMins = 45),
         session(3, start = at(Calendar.SEPTEMBER, 25), status = WorkoutStatus.IN_PROGRESS),
-        session(4, start = at(Calendar.AUGUST, 10), durationMins = 50),
+        session(4, start = at(Calendar.AUGUST, 10), durationMins = 50)
     )
 
     private val sets = listOf(
@@ -37,11 +37,14 @@ class GetMonthlyReportUseCaseTest {
         set(1, BENCH, reps = 8, weightKg = 100f, at = at(Calendar.SEPTEMBER, 2, minute = 15)),
         set(2, SQUAT, reps = 5, weightKg = 120f, at = at(Calendar.SEPTEMBER, 20, minute = 10)),
         set(3, SQUAT, reps = 5, weightKg = 200f, at = at(Calendar.SEPTEMBER, 25, minute = 10)),
-        set(4, BENCH, reps = 10, weightKg = 80f, at = at(Calendar.AUGUST, 10, minute = 10)),
+        set(4, BENCH, reps = 10, weightKg = 80f, at = at(Calendar.AUGUST, 10, minute = 10))
     )
 
-    private fun report(reference: Long, sessions: List<com.example.heavyduty.core.domain.model.WorkoutSession> = this.sessions,
-                       sets: List<com.example.heavyduty.core.domain.model.WorkoutSet> = this.sets) = runBlocking {
+    private fun report(
+        reference: Long,
+        sessions: List<com.example.heavyduty.core.domain.model.WorkoutSession> = this.sessions,
+        sets: List<com.example.heavyduty.core.domain.model.WorkoutSet> = this.sets
+    ) = runBlocking {
         GetMonthlyReportUseCase(FakeWorkoutRepository(sessions, sets), FakeExerciseRepository(EXERCISES), FakeClock(reference))().first()
     }
 
@@ -71,7 +74,12 @@ class GetMonthlyReportUseCaseTest {
         val report = report(september)
 
         assertEquals(MuscleGroup.CHEST, report.topMuscleGroup)
-        val expected = listOf(MuscleGroup.CHEST to 960f, MuscleGroup.QUADRICEPS to 600f, MuscleGroup.TRICEPS to 400f, MuscleGroup.SHOULDERS to 240f)
+        val expected = listOf(
+            MuscleGroup.CHEST to 960f,
+            MuscleGroup.QUADRICEPS to 600f,
+            MuscleGroup.TRICEPS to 400f,
+            MuscleGroup.SHOULDERS to 240f
+        )
         assertEquals(expected.map { it.first }, report.muscleContributions.map { it.muscleGroup })
         expected.zip(report.muscleContributions).forEach { (want, got) -> assertEquals(want.second, got.volumeKg, 0.01f) }
         assertEquals(100f, report.muscleContributions.sumOf { it.percentage.toDouble() }.toFloat(), 0.01f)
@@ -106,7 +114,7 @@ class GetMonthlyReportUseCaseTest {
         val lateSessions = listOf(session(1, start = at(Calendar.SEPTEMBER, 30, hour = 23, minute = 40)))
         val lateSets = listOf(
             set(1, SQUAT, reps = 5, weightKg = 100f, at = at(Calendar.SEPTEMBER, 30, hour = 23, minute = 55)),
-            set(1, SQUAT, reps = 5, weightKg = 100f, at = at(Calendar.OCTOBER, 1, hour = 0, minute = 10)),
+            set(1, SQUAT, reps = 5, weightKg = 100f, at = at(Calendar.OCTOBER, 1, hour = 0, minute = 10))
         )
 
         val sept = report(september, lateSessions, lateSets)
@@ -125,7 +133,7 @@ class GetMonthlyReportUseCaseTest {
         val report = report(
             september,
             listOf(session(1, start = start)),
-            listOf(set(1, SQUAT, reps = 5, weightKg = 100f, at = start + 60_000)),
+            listOf(set(1, SQUAT, reps = 5, weightKg = 100f, at = start + 60_000))
         )
 
         assertEquals(1, report.totalWorkouts)

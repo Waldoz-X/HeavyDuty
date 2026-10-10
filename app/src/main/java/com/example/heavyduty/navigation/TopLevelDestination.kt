@@ -1,5 +1,6 @@
 package com.example.heavyduty.navigation
 
+import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Home
@@ -9,7 +10,6 @@ import androidx.compose.material.icons.outlined.FitnessCenter
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Timer
-import androidx.annotation.StringRes
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.example.heavyduty.core.common.R
 
@@ -22,34 +22,34 @@ enum class TopLevelDestination(
     val unselectedIcon: ImageVector,
     @param:StringRes val labelRes: Int,
     val route: String,
-    val associatedRoutes: List<String>,
+    val associatedRoutes: List<String>
 ) {
     DASHBOARD(
         selectedIcon = Icons.Filled.Home,
         unselectedIcon = Icons.Outlined.Home,
         labelRes = R.string.nav_home,
         route = "dashboard",
-        associatedRoutes = listOf("dashboard"),
+        associatedRoutes = listOf("dashboard")
     ),
     WORKOUT(
         selectedIcon = Icons.Filled.PlayArrow,
         unselectedIcon = Icons.Outlined.PlayArrow,
         labelRes = R.string.nav_workout,
         route = "workout_graph",
-        associatedRoutes = listOf("workout_graph"),
+        associatedRoutes = listOf("workout_graph")
     ),
     EXERCISES(
         selectedIcon = Icons.Filled.FitnessCenter,
         unselectedIcon = Icons.Outlined.FitnessCenter,
         labelRes = R.string.nav_exercises,
         route = "exercises_graph",
-        associatedRoutes = listOf("exercises_graph", "exercise_detail"),
+        associatedRoutes = listOf("exercises_graph", "exercise_detail")
     ),
     TIMER(
         selectedIcon = Icons.Filled.Timer,
         unselectedIcon = Icons.Outlined.Timer,
         labelRes = R.string.nav_timer,
         route = "timer_graph",
-        associatedRoutes = listOf("timer_graph"),
-    ),
+        associatedRoutes = listOf("timer_graph")
+    )
 }

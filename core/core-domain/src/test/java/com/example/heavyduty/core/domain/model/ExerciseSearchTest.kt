@@ -51,8 +51,22 @@ class ExerciseSearchTest {
 
     @Test
     fun `a match in the spanish name ranks before one found only in the english name`() {
-        val jm = Exercise(id = 10, name = "Press JM con barra", nameEn = "barbell jm bench press", muscleGroup = MuscleGroup.TRICEPS, exerciseType = ExerciseType.STRENGTH)
-        val bench = Exercise(id = 11, name = "Press de banca con barra", nameEn = "barbell bench press", muscleGroup = MuscleGroup.CHEST, exerciseType = ExerciseType.STRENGTH)
+        val jm =
+            Exercise(
+                id = 10,
+                name = "Press JM con barra",
+                nameEn = "barbell jm bench press",
+                muscleGroup = MuscleGroup.TRICEPS,
+                exerciseType = ExerciseType.STRENGTH
+            )
+        val bench =
+            Exercise(
+                id = 11,
+                name = "Press de banca con barra",
+                nameEn = "barbell bench press",
+                muscleGroup = MuscleGroup.CHEST,
+                exerciseType = ExerciseType.STRENGTH
+            )
 
         assertEquals(listOf(11L, 10L), listOf(jm, bench).searchExercises("press banca barra").map { it.id })
     }
@@ -62,6 +76,6 @@ class ExerciseSearchTest {
         name = name,
         muscleGroup = muscleGroup,
         exerciseType = ExerciseType.STRENGTH,
-        equipment = equipment,
+        equipment = equipment
     )
 }

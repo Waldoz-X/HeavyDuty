@@ -40,4 +40,3 @@ val WeightUnit.label: String
     }
 
 fun WeightUnit.other(): WeightUnit = if (this == WeightUnit.KG) WeightUnit.LB else WeightUnit.KG
-

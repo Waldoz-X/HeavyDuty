@@ -6,6 +6,7 @@ import com.example.heavyduty.core.common.flow.whileSubscribed
 import com.example.heavyduty.feature.history.domain.usecase.GetStatsUseCase
 import com.example.heavyduty.feature.history.domain.usecase.GetWorkoutHistoryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -15,15 +16,15 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 @HiltViewModel
 class HistoryListViewModel @Inject constructor(
     private val getWorkoutHistoryUseCase: GetWorkoutHistoryUseCase,
-    private val getStatsUseCase: GetStatsUseCase,
+    private val getStatsUseCase: GetStatsUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HistoryListUiState())
+
     /** Loads only while the screen is watching — see [whileSubscribed]. */
     val uiState: StateFlow<HistoryListUiState> = _uiState.whileSubscribed(viewModelScope) {
         observeHistory()
@@ -38,6 +39,7 @@ class HistoryListViewModel @Inject constructor(
     fun onEvent(event: HistoryListUiEvent) {
         when (event) {
             is HistoryListUiEvent.OnSessionClick -> { /* future detail */ }
+
             is HistoryListUiEvent.OnExerciseProgressClick -> {
                 viewModelScope.launch {
                     _uiEffect.send(HistoryListUiEffect.NavigateToProgress(event.exerciseId))

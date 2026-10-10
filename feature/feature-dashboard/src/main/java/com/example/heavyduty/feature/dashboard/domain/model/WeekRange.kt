@@ -1,9 +1,9 @@
 package com.example.heavyduty.feature.dashboard.domain.model
 
+import java.util.Calendar
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import java.util.Calendar
 
 private const val DAY_MILLIS = 24L * 60 * 60 * 1000
 

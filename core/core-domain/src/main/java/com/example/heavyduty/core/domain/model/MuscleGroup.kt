@@ -19,5 +19,5 @@ enum class MuscleGroup {
     TRAPS,
     LATS,
     FULL_BODY,
-    CARDIO,
+    CARDIO
 }

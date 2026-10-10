@@ -9,7 +9,7 @@ data class ExercisePersonalRecords(
     val maxWeightAchievedAtMillis: Long? = null,
     val maxReps: Int? = null,
     val maxRepsWeight: Float? = null,
-    val estimatedOneRepMax: Float? = null,
+    val estimatedOneRepMax: Float? = null
 ) {
     val hasRecords: Boolean get() = maxWeight != null
 }

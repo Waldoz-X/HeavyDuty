@@ -21,10 +21,12 @@ interface WorkoutRepository {
     fun getSessionById(id: Long): Flow<WorkoutSession?>
     fun getSessionWithSets(id: Long): Flow<WorkoutSession?>
     fun getSessionsByDateRange(startTime: Long, endTime: Long): Flow<List<WorkoutSession>>
+
     /** Completed sessions for one routine, oldest first, each with its own sets already loaded. */
     fun getCompletedSessionsByRoutineId(routineId: Long): Flow<List<WorkoutSession>>
     fun getSetsByExerciseId(exerciseId: Long): Flow<List<WorkoutSet>>
     fun getAllCompletedSets(): Flow<List<WorkoutSet>>
+
     /** Working and warm-up sets of finished workouts that started in the range (like [getSessionsByDateRange]). */
     fun getCompletedSetsByDateRange(startTime: Long, endTime: Long): Flow<List<WorkoutSet>>
     fun getActiveSession(): Flow<WorkoutSession?>
@@ -42,20 +44,16 @@ interface WorkoutRepository {
      */
 
     /** Per-exercise working-set count and best estimated 1RM — see [exerciseSetSummaries]. */
-    fun getExerciseSetSummaries(): Flow<List<ExerciseSetSummary>> =
-        getAllCompletedSets().map(::exerciseSetSummaries)
+    fun getExerciseSetSummaries(): Flow<List<ExerciseSetSummary>> = getAllCompletedSets().map(::exerciseSetSummaries)
 
     /** When each exercise last had a hard set — see [lastHardSetAtByExercise]. */
-    fun getLastHardSetTimes(): Flow<Map<Long, Long>> =
-        getAllCompletedSets().map(::lastHardSetAtByExercise)
+    fun getLastHardSetTimes(): Flow<Map<Long, Long>> = getAllCompletedSets().map(::lastHardSetAtByExercise)
 
     /** Workouts, time, volume and working sets of all finished training — see [trainingTotals]. */
-    fun getAllTimeTotals(): Flow<TrainingTotals> =
-        combine(getAllSessions(), getAllCompletedSets(), ::trainingTotals)
+    fun getAllTimeTotals(): Flow<TrainingTotals> = combine(getAllSessions(), getAllCompletedSets(), ::trainingTotals)
 
     /** See [latestCompletedSession]. */
-    fun getLatestCompletedSession(): Flow<WorkoutSession?> =
-        getAllSessions().map(::latestCompletedSession)
+    fun getLatestCompletedSession(): Flow<WorkoutSession?> = getAllSessions().map(::latestCompletedSession)
 
     /** See [bestWeightsBefore]. */
     fun getBestWeightsBefore(time: Long): Flow<Map<Long, Float>> =

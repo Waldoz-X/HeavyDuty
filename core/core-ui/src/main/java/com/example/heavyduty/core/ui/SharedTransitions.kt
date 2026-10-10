@@ -39,7 +39,7 @@ fun Modifier.hdSharedBounds(key: Any, clipShape: Shape): Modifier {
         this@hdSharedBounds.sharedBounds(
             sharedContentState = rememberSharedContentState(key),
             animatedVisibilityScope = visibilityScope,
-            clipInOverlayDuringTransition = OverlayClip(clipShape),
+            clipInOverlayDuringTransition = OverlayClip(clipShape)
         )
     }
 }

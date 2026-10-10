@@ -12,22 +12,19 @@ import com.example.heavyduty.feature.workout.presentation.ActiveWorkoutScreen
  * started on arrival unless a workout is already running. A single destination means a single
  * screen per workout; two routes used to let two copies of the same session drift apart.
  */
-fun NavGraphBuilder.activeWorkoutScreen(
-    onNavigateToRoutines: () -> Unit,
-    onWorkoutCompleted: () -> Unit,
-) {
+fun NavGraphBuilder.activeWorkoutScreen(onNavigateToRoutines: () -> Unit, onWorkoutCompleted: () -> Unit) {
     composable(
         route = "workout_graph?routineId={routineId}",
         arguments = listOf(
             navArgument("routineId") {
                 type = NavType.LongType
                 defaultValue = -1L
-            },
-        ),
+            }
+        )
     ) {
         ActiveWorkoutScreen(
             onNavigateToRoutines = onNavigateToRoutines,
-            onWorkoutCompleted = onWorkoutCompleted,
+            onWorkoutCompleted = onWorkoutCompleted
         )
     }
 }

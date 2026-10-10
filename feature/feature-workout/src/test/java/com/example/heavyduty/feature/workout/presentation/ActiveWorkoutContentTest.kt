@@ -45,7 +45,7 @@ class ActiveWorkoutContentTest {
         routineExercises = listOf(RoutineExercise(exerciseId = 1, exercise = bench, targetSets = 3, targetReps = 8)),
         completedSets = (1..loggedSets).map {
             WorkoutSet(id = it.toLong(), sessionId = 1, exerciseId = 1, setNumber = it, reps = 8, weight = 60f, isCompleted = true)
-        },
+        }
     )
 
     private fun show(state: ActiveWorkoutUiState): MutableList<ActiveWorkoutUiEvent> {

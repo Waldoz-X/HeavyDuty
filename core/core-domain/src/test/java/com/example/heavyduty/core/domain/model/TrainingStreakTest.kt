@@ -1,8 +1,8 @@
 package com.example.heavyduty.core.domain.model
 
+import java.util.Calendar
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import java.util.Calendar
 
 class TrainingStreakTest {
 

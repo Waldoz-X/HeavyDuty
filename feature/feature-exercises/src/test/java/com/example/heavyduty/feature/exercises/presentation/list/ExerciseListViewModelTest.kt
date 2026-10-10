@@ -114,6 +114,6 @@ class ExerciseListViewModelTest {
         id = id,
         name = name,
         muscleGroup = muscleGroup,
-        exerciseType = ExerciseType.STRENGTH,
+        exerciseType = ExerciseType.STRENGTH
     )
 }

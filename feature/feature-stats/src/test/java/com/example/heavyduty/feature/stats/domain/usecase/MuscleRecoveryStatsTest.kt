@@ -5,13 +5,13 @@ import com.example.heavyduty.core.domain.model.WorkoutStatus
 import com.example.heavyduty.core.testing.FakeClock
 import com.example.heavyduty.core.testing.FakeExerciseRepository
 import com.example.heavyduty.core.testing.FakeWorkoutRepository
+import kotlin.math.exp
+import kotlin.math.pow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import kotlin.math.exp
-import kotlin.math.pow
 
 /** Fatigue and strength retention per muscle; both are measured against the real clock. */
 class MuscleRecoveryStatsTest {
@@ -20,8 +20,10 @@ class MuscleRecoveryStatsTest {
     private val exercises = FakeExerciseRepository(EXERCISES)
 
     /** One workout per session id, started when its first set was done. */
-    private fun sessionsOf(sets: List<com.example.heavyduty.core.domain.model.WorkoutSet>, status: WorkoutStatus = WorkoutStatus.COMPLETED) =
-        sets.groupBy { it.sessionId }.map { (id, its) -> session(id, start = its.minOf { it.completedAt!! } - 60_000, status = status) }
+    private fun sessionsOf(
+        sets: List<com.example.heavyduty.core.domain.model.WorkoutSet>,
+        status: WorkoutStatus = WorkoutStatus.COMPLETED
+    ) = sets.groupBy { it.sessionId }.map { (id, its) -> session(id, start = its.minOf { it.completedAt!! } - 60_000, status = status) }
 
     private fun fatigue(vararg sets: com.example.heavyduty.core.domain.model.WorkoutSet, status: WorkoutStatus = WorkoutStatus.COMPLETED) =
         runBlocking {
@@ -71,7 +73,7 @@ class MuscleRecoveryStatsTest {
         val three = fatigue(
             set(1, SQUAT, reps = 5, weightKg = 120f, at = now - HOUR - 2),
             set(1, SQUAT, reps = 5, weightKg = 120f, at = now - HOUR - 1),
-            set(1, SQUAT, reps = 5, weightKg = 120f, at = now - HOUR),
+            set(1, SQUAT, reps = 5, weightKg = 120f, at = now - HOUR)
         ).getValue(MuscleGroup.QUADRICEPS)
 
         assertTrue("$three > $one", three > one)
@@ -91,7 +93,7 @@ class MuscleRecoveryStatsTest {
         val levels = retention(
             set(1, SQUAT, reps = 5, weightKg = 120f, at = now - 3 * DAY),
             // 42 days = 14 full + one 28-day half-life: 0.5 + 0.5 × 0.5
-            set(2, BENCH, reps = 5, weightKg = 100f, at = now - 42 * DAY),
+            set(2, BENCH, reps = 5, weightKg = 100f, at = now - 42 * DAY)
         )
 
         assertEquals(1f, levels.getValue(MuscleGroup.QUADRICEPS), 0.001f)
@@ -107,7 +109,7 @@ class MuscleRecoveryStatsTest {
     fun `light sets don't refresh strength retention`() {
         val levels = retention(
             set(1, CURL, reps = 10, weightKg = 20f, at = now - 42 * DAY), // the hard set: 1RM 26.7 kg
-            set(2, CURL, reps = 10, weightKg = 10f, at = now - DAY), // 37 % of 1RM: not hard
+            set(2, CURL, reps = 10, weightKg = 10f, at = now - DAY) // 37 % of 1RM: not hard
         )
 
         assertEquals(0.75f, levels.getValue(MuscleGroup.BICEPS), 0.001f)

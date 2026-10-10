@@ -22,11 +22,10 @@ fun estimatedOneRepMax(weightKg: Float, reps: Int): Float? = when {
  * The best [estimatedOneRepMax] among these sets' working sets (warm-ups don't count), or null
  * when none has a weight and reps it can be estimated from.
  */
-fun List<WorkoutSet>.bestEstimatedOneRepMax(): Float? =
-    filter { !it.isWarmup }
-        .mapNotNull { set ->
-            val weight = set.weight ?: return@mapNotNull null
-            val reps = set.reps ?: return@mapNotNull null
-            estimatedOneRepMax(weight, reps)
-        }
-        .maxOrNull()
+fun List<WorkoutSet>.bestEstimatedOneRepMax(): Float? = filter { !it.isWarmup }
+    .mapNotNull { set ->
+        val weight = set.weight ?: return@mapNotNull null
+        val reps = set.reps ?: return@mapNotNull null
+        estimatedOneRepMax(weight, reps)
+    }
+    .maxOrNull()

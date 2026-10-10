@@ -10,6 +10,7 @@ import androidx.core.app.ServiceCompat
 import com.example.heavyduty.feature.timer.engine.TimerEngine
 import com.example.heavyduty.feature.timer.presentation.TimerUiEvent
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -17,7 +18,6 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * Keeps the process alive with foreground priority while a timer is running/paused and mirrors
@@ -56,7 +56,7 @@ class TimerService : Service() {
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
             } else {
                 0
-            },
+            }
         )
         observeState()
         return START_NOT_STICKY

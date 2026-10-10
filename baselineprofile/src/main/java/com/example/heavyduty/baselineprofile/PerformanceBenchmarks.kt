@@ -41,7 +41,7 @@ class PerformanceBenchmarks {
         compilationMode = compilationMode,
         startupMode = StartupMode.COLD,
         iterations = 10,
-        setupBlock = { pressHome() },
+        setupBlock = { pressHome() }
     ) {
         startActivityAndWait()
         waitForHome()
@@ -60,7 +60,7 @@ class PerformanceBenchmarks {
             startActivityAndWait()
             waitForHome()
             openExercises()
-        },
+        }
     ) {
         flingMainList()
     }

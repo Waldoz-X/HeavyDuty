@@ -6,6 +6,7 @@ import com.example.heavyduty.core.common.R
 import com.example.heavyduty.feature.routines.domain.usecase.DeleteRoutineUseCase
 import com.example.heavyduty.feature.routines.domain.usecase.GetRoutinesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -16,12 +17,11 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 @HiltViewModel
 class RoutineListViewModel @Inject constructor(
     private val getRoutinesUseCase: GetRoutinesUseCase,
-    private val deleteRoutineUseCase: DeleteRoutineUseCase,
+    private val deleteRoutineUseCase: DeleteRoutineUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RoutineListUiState())
@@ -43,16 +43,19 @@ class RoutineListViewModel @Inject constructor(
                     _uiEffect.send(RoutineListUiEffect.NavigateToEditor(event.routineId))
                 }
             }
+
             RoutineListUiEvent.OnCreateRoutine -> {
                 viewModelScope.launch {
                     _uiEffect.send(RoutineListUiEffect.NavigateToEditor(null))
                 }
             }
+
             is RoutineListUiEvent.OnStartRoutine -> {
                 viewModelScope.launch {
                     _uiEffect.send(RoutineListUiEffect.StartRoutine(event.routineId))
                 }
             }
+
             is RoutineListUiEvent.OnDeleteRoutine -> {
                 viewModelScope.launch {
                     try {

@@ -32,7 +32,7 @@ fun HdCard(
     modifier: Modifier = Modifier,
     containerColor: Color = MaterialTheme.colorScheme.card,
     onClick: (() -> Unit)? = null,
-    content: @Composable ColumnScope.() -> Unit,
+    content: @Composable ColumnScope.() -> Unit
 ) {
     Box(
         modifier = modifier
@@ -41,7 +41,7 @@ fun HdCard(
             .clip(MaterialTheme.shapes.medium)
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
             .background(containerColor)
-            .padding(16.dp),
+            .padding(16.dp)
     ) {
         Column(content = content)
     }
@@ -51,11 +51,7 @@ fun HdCard(
  * Gradient card variant for highlighted content.
  */
 @Composable
-fun HdGradientCard(
-    gradientColors: List<Color>,
-    modifier: Modifier = Modifier,
-    content: @Composable ColumnScope.() -> Unit,
-) {
+fun HdGradientCard(gradientColors: List<Color>, modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -63,10 +59,10 @@ fun HdGradientCard(
             .clip(MaterialTheme.shapes.medium)
             .background(
                 brush = Brush.linearGradient(colors = gradientColors),
-                alpha = 0.15f,
+                alpha = 0.15f
             )
             .background(MaterialTheme.colorScheme.card.copy(alpha = 0.85f))
-            .padding(16.dp),
+            .padding(16.dp)
     ) {
         Column(content = content)
     }

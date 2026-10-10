@@ -1,4 +1,9 @@
 [versions]
+# Code style and static analysis (./gradlew spotlessCheck detekt)
+spotless = "8.10.4"
+ktlint = "1.8.0"
+composeRules = "0.6.8"
+detekt = "2.0.0-alpha.6"
 # Core
 agp = "9.3.2"
 kotlin = "2.2.10"
@@ -152,3 +157,5 @@ kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "ko
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 room = { id = "androidx.room", version.ref = "room" }
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
+detekt = { id = "dev.detekt", version.ref = "detekt" }

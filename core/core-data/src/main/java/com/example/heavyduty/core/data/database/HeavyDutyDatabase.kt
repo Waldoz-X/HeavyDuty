@@ -24,10 +24,10 @@ import com.example.heavyduty.core.data.database.entity.WorkoutSetEntity
         WorkoutSetEntity::class,
         CalendarEntryEntity::class,
 
-        BodyWeightEntity::class,
+        BodyWeightEntity::class
     ],
     version = 19,
-    exportSchema = true,
+    exportSchema = true
 )
 abstract class HeavyDutyDatabase : RoomDatabase() {
     abstract fun exerciseDao(): ExerciseDao

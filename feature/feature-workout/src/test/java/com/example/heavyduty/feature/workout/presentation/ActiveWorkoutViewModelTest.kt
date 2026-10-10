@@ -55,8 +55,8 @@ class ActiveWorkoutViewModelTest {
         name = "Torso",
         exercises = listOf(
             RoutineExercise(exerciseId = 1, exercise = bench, orderIndex = 0, targetSets = 3, targetReps = 8),
-            RoutineExercise(exerciseId = 2, exercise = row, orderIndex = 1, targetSets = 3, targetReps = 10),
-        ),
+            RoutineExercise(exerciseId = 2, exercise = row, orderIndex = 1, targetSets = 3, targetReps = 10)
+        )
     )
 
     private val workoutRepository = FakeWorkoutRepository()
@@ -65,7 +65,7 @@ class ActiveWorkoutViewModelTest {
 
     private fun createViewModel(
         routineId: Long? = null,
-        savedState: SavedStateHandle = SavedStateHandle(routineId?.let { mapOf("routineId" to it) } ?: emptyMap()),
+        savedState: SavedStateHandle = SavedStateHandle(routineId?.let { mapOf("routineId" to it) } ?: emptyMap())
     ): ActiveWorkoutViewModel {
         val preferences = mockk<UserPreferencesRepository> {
             every { effortTrackingEnabled } returns flowOf(false)
@@ -81,7 +81,7 @@ class ActiveWorkoutViewModelTest {
             userPreferencesRepository = preferences,
             restTimerController = restTimer,
             savedStateHandle = savedState,
-            clock = clock,
+            clock = clock
         )
     }
 
@@ -332,10 +332,9 @@ class ActiveWorkoutViewModelTest {
 
         override fun getAllSessions(): Flow<List<WorkoutSession>> = sessions
         override fun getSessionById(id: Long): Flow<WorkoutSession?> = sessions.map { list -> list.find { it.id == id } }
-        override fun getSessionWithSets(id: Long): Flow<WorkoutSession?> =
-            combine(sessions, sets) { list, allSets ->
-                list.find { it.id == id }?.copy(sets = allSets.filter { it.sessionId == id })
-            }
+        override fun getSessionWithSets(id: Long): Flow<WorkoutSession?> = combine(sessions, sets) { list, allSets ->
+            list.find { it.id == id }?.copy(sets = allSets.filter { it.sessionId == id })
+        }
         override fun getSessionsByDateRange(startTime: Long, endTime: Long): Flow<List<WorkoutSession>> = sessions
         override fun getCompletedSessionsByRoutineId(routineId: Long): Flow<List<WorkoutSession>> = flowOf(emptyList())
         override fun getSetsByExerciseId(exerciseId: Long): Flow<List<WorkoutSet>> =
@@ -355,6 +354,7 @@ class ActiveWorkoutViewModelTest {
         override suspend fun deleteSession(session: WorkoutSession) {
             sessions.value = sessions.value.filter { it.id != session.id }
         }
+
         /** Like the DAO's REPLACE insert: a set that already has an id keeps it. */
         override suspend fun insertSet(set: WorkoutSet): Long {
             val id = if (set.id != 0L) set.id else nextId++

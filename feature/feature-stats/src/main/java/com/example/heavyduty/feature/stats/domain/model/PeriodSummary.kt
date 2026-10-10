@@ -13,7 +13,7 @@ data class PeriodSummary(
     val previousWorkouts: Int = 0,
     val previousDurationMinutes: Int = 0,
     val previousVolumeKg: Float = 0f,
-    val previousSets: Int = 0,
+    val previousSets: Int = 0
 ) {
     val workoutsDelta: Int get() = workouts - previousWorkouts
     val durationMinutesDelta: Int get() = durationMinutes - previousDurationMinutes

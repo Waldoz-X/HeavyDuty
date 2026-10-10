@@ -8,6 +8,7 @@ import com.example.heavyduty.core.domain.repository.RestTimerState
 import com.example.heavyduty.core.domain.repository.UserPreferencesRepository
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -19,7 +20,6 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import javax.inject.Inject
 
 /** App-wide state the whole UI reads: settings, the workout in progress, deep-link requests. */
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -27,7 +27,7 @@ import javax.inject.Inject
 class MainViewModel @Inject constructor(
     userPreferencesRepository: UserPreferencesRepository,
     workoutRepository: WorkoutRepository,
-    restTimerController: RestTimerController,
+    restTimerController: RestTimerController
 ) : ViewModel() {
     val preferredWeightUnit: StateFlow<WeightUnit> = userPreferencesRepository.preferredWeightUnit
         .stateIn(viewModelScope, SharingStarted.Eagerly, WeightUnit.KG)
@@ -45,7 +45,7 @@ class MainViewModel @Inject constructor(
                     sessionName = it.sessionName,
                     startTime = it.startTime,
                     setsLogged = it.sets.count { set -> !set.isWarmup },
-                    rest = rest,
+                    rest = rest
                 )
             }
         }
@@ -69,9 +69,4 @@ class MainViewModel @Inject constructor(
     }
 }
 
-data class ActiveWorkoutSummary(
-    val sessionName: String,
-    val startTime: Long,
-    val setsLogged: Int,
-    val rest: RestTimerState?,
-)
+data class ActiveWorkoutSummary(val sessionName: String, val startTime: Long, val setsLogged: Int, val rest: RestTimerState?)

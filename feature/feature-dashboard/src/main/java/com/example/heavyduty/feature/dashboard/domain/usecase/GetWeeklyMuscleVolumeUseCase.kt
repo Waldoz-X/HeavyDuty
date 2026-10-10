@@ -5,10 +5,10 @@ import com.example.heavyduty.core.domain.model.countedFor
 import com.example.heavyduty.core.domain.model.muscleCredits
 import com.example.heavyduty.core.domain.repository.ExerciseRepository
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
+import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import javax.inject.Inject
 
 /**
  * Aggregates training volume (reps * weight) by muscle group for a date range,
@@ -17,28 +17,27 @@ import javax.inject.Inject
  */
 class GetWeeklyMuscleVolumeUseCase @Inject constructor(
     private val workoutRepository: WorkoutRepository,
-    private val exerciseRepository: ExerciseRepository,
+    private val exerciseRepository: ExerciseRepository
 ) {
-    operator fun invoke(startTime: Long, endTime: Long): Flow<Map<MuscleGroup, Float>> =
-        combine(
-            workoutRepository.getSessionsByDateRange(startTime, endTime),
-            workoutRepository.getCompletedSetsByDateRange(startTime, endTime),
-            exerciseRepository.getAllExercises(),
-        ) { sessions, sets, exercises ->
-            val exerciseById = exercises.associateBy { it.id }
-            val volumeByMuscle = mutableMapOf<MuscleGroup, Float>()
-            sets.countedFor(sessions).forEach { set ->
-                val exercise = exerciseById[set.exerciseId] ?: return@forEach
-                val setVolume = (set.reps ?: 0) * (set.weight ?: 0f)
-                exercise.muscleCredits(setVolume).forEach { (muscle, credit) ->
-                    volumeByMuscle[muscle] = (volumeByMuscle[muscle] ?: 0f) + credit
-                }
+    operator fun invoke(startTime: Long, endTime: Long): Flow<Map<MuscleGroup, Float>> = combine(
+        workoutRepository.getSessionsByDateRange(startTime, endTime),
+        workoutRepository.getCompletedSetsByDateRange(startTime, endTime),
+        exerciseRepository.getAllExercises()
+    ) { sessions, sets, exercises ->
+        val exerciseById = exercises.associateBy { it.id }
+        val volumeByMuscle = mutableMapOf<MuscleGroup, Float>()
+        sets.countedFor(sessions).forEach { set ->
+            val exercise = exerciseById[set.exerciseId] ?: return@forEach
+            val setVolume = (set.reps ?: 0) * (set.weight ?: 0f)
+            exercise.muscleCredits(setVolume).forEach { (muscle, credit) ->
+                volumeByMuscle[muscle] = (volumeByMuscle[muscle] ?: 0f) + credit
             }
-            volumeByMuscle.entries
-                .sortedByDescending { it.value }
-                .take(MAX_MUSCLE_AXES)
-                .associate { it.key to it.value }
-        }.distinctUntilChanged()
+        }
+        volumeByMuscle.entries
+            .sortedByDescending { it.value }
+            .take(MAX_MUSCLE_AXES)
+            .associate { it.key to it.value }
+    }.distinctUntilChanged()
 
     private companion object {
         const val MAX_MUSCLE_AXES = 8

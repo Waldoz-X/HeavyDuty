@@ -48,7 +48,7 @@ val MIGRATION_18_19 = object : Migration(18, 19) {
                 "`durationSecs` INTEGER, `distance` REAL, `isCompleted` INTEGER NOT NULL, `completedAt` INTEGER, " +
                 "`notes` TEXT NOT NULL, `isWarmup` INTEGER NOT NULL, `effortType` TEXT, `effortValue` REAL, `weightUnit` TEXT, " +
                 "FOREIGN KEY(`sessionId`) REFERENCES `workout_sessions`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , " +
-                "FOREIGN KEY(`exerciseId`) REFERENCES `exercises`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT )",
+                "FOREIGN KEY(`exerciseId`) REFERENCES `exercises`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT )"
         )
         val columns = "`id`, `sessionId`, `exerciseId`, `setNumber`, `reps`, `weight`, `durationSecs`, `distance`, " +
             "`isCompleted`, `completedAt`, `notes`, `isWarmup`, `effortType`, `effortValue`, `weightUnit`"

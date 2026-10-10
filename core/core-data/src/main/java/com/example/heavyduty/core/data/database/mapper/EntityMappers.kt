@@ -1,7 +1,5 @@
 package com.example.heavyduty.core.data.database.mapper
 
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import com.example.heavyduty.core.data.database.entity.CalendarEntryEntity
 import com.example.heavyduty.core.data.database.entity.ExerciseEntity
 import com.example.heavyduty.core.data.database.entity.RoutineEntity
@@ -19,19 +17,20 @@ import com.example.heavyduty.core.domain.model.ProgressionPolicy
 import com.example.heavyduty.core.domain.model.Recurrence
 import com.example.heavyduty.core.domain.model.Routine
 import com.example.heavyduty.core.domain.model.RoutineExercise
+import com.example.heavyduty.core.domain.model.WeightUnit
 import com.example.heavyduty.core.domain.model.WorkoutSession
 import com.example.heavyduty.core.domain.model.WorkoutSet
-import com.example.heavyduty.core.domain.model.WeightUnit
 import com.example.heavyduty.core.domain.model.WorkoutStatus
 import com.example.heavyduty.core.domain.model.WorkoutType
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 
 /*
  * Enums are stored by name. Reading one the app doesn't know — a value written by a newer
  * version, a bad import, a hand-edited database — falls back to a safe default instead of
  * throwing, which would crash every screen that lists that row, every time.
  */
-internal inline fun <reified E : Enum<E>> String.toEnumOr(default: E): E =
-    enumValues<E>().firstOrNull { it.name == this } ?: default
+internal inline fun <reified E : Enum<E>> String.toEnumOr(default: E): E = enumValues<E>().firstOrNull { it.name == this } ?: default
 
 /**
  * An unknown workout status reads as cancelled: never counted in the stats as finished training,
@@ -57,7 +56,7 @@ fun ExerciseEntity.toDomain(): Exercise {
         equipment = equipment,
         isCustom = isCustom,
         weightUnit = weightUnit.toEnumOr(WeightUnit.KG),
-        muscleWeights = decodeMuscleWeights(muscleWeightsJson, primary),
+        muscleWeights = decodeMuscleWeights(muscleWeightsJson, primary)
     )
 }
 
@@ -75,7 +74,7 @@ fun Exercise.toEntity(): ExerciseEntity = ExerciseEntity(
     equipment = equipment,
     isCustom = isCustom,
     weightUnit = weightUnit.name,
-    muscleWeightsJson = encodeMuscleWeights(muscleWeights),
+    muscleWeightsJson = encodeMuscleWeights(muscleWeights)
 )
 
 private val muscleWeightsGson = Gson()
@@ -95,8 +94,7 @@ private fun decodeMuscleWeights(json: String, primary: MuscleGroup): Map<MuscleG
     }
 }
 
-private fun encodeMuscleWeights(weights: Map<MuscleGroup, Float>): String =
-    muscleWeightsGson.toJson(weights.mapKeys { it.key.name })
+private fun encodeMuscleWeights(weights: Map<MuscleGroup, Float>): String = muscleWeightsGson.toJson(weights.mapKeys { it.key.name })
 
 // ============ Routine Mappers ============
 
@@ -106,7 +104,7 @@ fun RoutineEntity.toDomain(): Routine = Routine(
     description = description,
     type = type.toEnumOr(WorkoutType.GYM),
     createdAt = createdAt,
-    updatedAt = updatedAt,
+    updatedAt = updatedAt
 )
 
 fun Routine.toEntity(): RoutineEntity = RoutineEntity(
@@ -115,7 +113,7 @@ fun Routine.toEntity(): RoutineEntity = RoutineEntity(
     description = description,
     type = type.name,
     createdAt = createdAt,
-    updatedAt = updatedAt,
+    updatedAt = updatedAt
 )
 
 fun RoutineExerciseEntity.toDomain(): RoutineExercise = RoutineExercise(
@@ -134,7 +132,7 @@ fun RoutineExerciseEntity.toDomain(): RoutineExercise = RoutineExercise(
     repRangeHigh = repRangeHigh,
     stallThreshold = stallThreshold,
     supersetGroupId = supersetGroupId,
-    weightUnit = weightUnit.toWeightUnit(),
+    weightUnit = weightUnit.toWeightUnit()
 )
 
 fun RoutineExercise.toEntity(): RoutineExerciseEntity = RoutineExerciseEntity(
@@ -153,12 +151,13 @@ fun RoutineExercise.toEntity(): RoutineExerciseEntity = RoutineExerciseEntity(
     repRangeHigh = repRangeHigh,
     stallThreshold = stallThreshold,
     supersetGroupId = supersetGroupId,
-    weightUnit = weightUnit?.name,
+    weightUnit = weightUnit?.name
 )
 
-fun com.example.heavyduty.core.data.database.relation.RoutineExerciseWithDetails.toDomain(): RoutineExercise = routineExercise.toDomain().copy(
-    exercise = exercise.toDomain()
-)
+fun com.example.heavyduty.core.data.database.relation.RoutineExerciseWithDetails.toDomain(): RoutineExercise =
+    routineExercise.toDomain().copy(
+        exercise = exercise.toDomain()
+    )
 
 fun RoutineWithExercises.toDomain(): Routine = Routine(
     id = routine.id,
@@ -168,7 +167,7 @@ fun RoutineWithExercises.toDomain(): Routine = Routine(
     createdAt = routine.createdAt,
     updatedAt = routine.updatedAt,
     // Room returns @Relation rows in storage order, not the user's order — sort explicitly.
-    exercises = routineExercises.map { it.toDomain() }.sortedBy { it.orderIndex },
+    exercises = routineExercises.map { it.toDomain() }.sortedBy { it.orderIndex }
 )
 
 // ============ Workout Mappers ============
@@ -182,7 +181,7 @@ fun WorkoutSessionEntity.toDomain(): WorkoutSession = WorkoutSession(
     totalDurationSecs = totalDurationSecs,
     status = status.toEnumOr(UNKNOWN_STATUS_FALLBACK),
     notes = notes,
-    type = type.toEnumOr(WorkoutType.GYM),
+    type = type.toEnumOr(WorkoutType.GYM)
 )
 
 fun WorkoutSession.toEntity(): WorkoutSessionEntity = WorkoutSessionEntity(
@@ -194,7 +193,7 @@ fun WorkoutSession.toEntity(): WorkoutSessionEntity = WorkoutSessionEntity(
     totalDurationSecs = totalDurationSecs,
     status = status.name,
     notes = notes,
-    type = type.name,
+    type = type.name
 )
 
 fun WorkoutSetEntity.toDomain(): WorkoutSet = WorkoutSet(
@@ -211,7 +210,7 @@ fun WorkoutSetEntity.toDomain(): WorkoutSet = WorkoutSet(
     notes = notes,
     isWarmup = isWarmup,
     effort = effortToDomain(effortType, effortValue),
-    weightUnit = weightUnit.toWeightUnit(),
+    weightUnit = weightUnit.toWeightUnit()
 )
 
 fun WorkoutSet.toEntity(): WorkoutSetEntity = WorkoutSetEntity(
@@ -237,7 +236,7 @@ fun WorkoutSet.toEntity(): WorkoutSetEntity = WorkoutSetEntity(
         is Effort.Rpe -> e.value
         null -> null
     },
-    weightUnit = weightUnit?.name,
+    weightUnit = weightUnit?.name
 )
 
 private fun String?.toWeightUnit(): WeightUnit? = this?.let { name -> WeightUnit.entries.firstOrNull { it.name == name } }
@@ -264,7 +263,7 @@ fun SessionWithSets.toDomain(): WorkoutSession = WorkoutSession(
     status = session.status.toEnumOr(UNKNOWN_STATUS_FALLBACK),
     notes = session.notes,
     type = session.type.toEnumOr(WorkoutType.GYM),
-    sets = sets.map { it.toDomain() },
+    sets = sets.map { it.toDomain() }
 )
 
 // ============ Calendar Mappers ============
@@ -274,7 +273,7 @@ fun CalendarEntryEntity.toDomain(): CalendarEntry = CalendarEntry(
     routineId = routineId,
     dayOfWeek = dayOfWeek,
     recurrence = recurrence.toEnumOr(Recurrence.WEEKLY),
-    isActive = isActive,
+    isActive = isActive
 )
 
 fun CalendarEntry.toEntity(): CalendarEntryEntity = CalendarEntryEntity(
@@ -282,7 +281,7 @@ fun CalendarEntry.toEntity(): CalendarEntryEntity = CalendarEntryEntity(
     routineId = routineId,
     dayOfWeek = dayOfWeek,
     recurrence = recurrence.name,
-    isActive = isActive,
+    isActive = isActive
 )
 
 // ============ Body Weight Mappers ============
@@ -291,6 +290,5 @@ fun com.example.heavyduty.core.data.database.entity.BodyWeightEntity.toDomain():
     com.example.heavyduty.core.domain.model.BodyWeightEntry(
         id = id,
         weightKg = weightKg,
-        loggedAt = loggedAt,
+        loggedAt = loggedAt
     )
-

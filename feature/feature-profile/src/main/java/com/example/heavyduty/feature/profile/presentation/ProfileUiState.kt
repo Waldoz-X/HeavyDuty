@@ -1,7 +1,7 @@
 package com.example.heavyduty.feature.profile.presentation
 
-import com.example.heavyduty.core.domain.model.WeightUnit
 import android.net.Uri
+import com.example.heavyduty.core.domain.model.WeightUnit
 import com.example.heavyduty.feature.profile.domain.model.ProfileStats
 
 /**
@@ -24,7 +24,7 @@ data class ProfileUiState(
     val loadFailed: Boolean = false,
     val isExportingData: Boolean = false,
     val isImportingData: Boolean = false,
-    val backupMessage: String? = null,
+    val backupMessage: String? = null
 )
 
 /**

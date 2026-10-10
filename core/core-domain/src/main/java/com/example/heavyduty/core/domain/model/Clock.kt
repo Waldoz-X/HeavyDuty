@@ -12,4 +12,3 @@ fun interface Clock {
         val System: Clock = Clock { java.lang.System.currentTimeMillis() }
     }
 }
-

@@ -54,7 +54,7 @@ class RoutineEditorViewModelTest {
             getRoutineVolumeHistoryUseCase = GetRoutineVolumeHistoryUseCase(workoutRepository),
             exerciseRepository = exerciseRepository,
             savedStateHandle = savedStateHandle,
-            clock = FakeClock(1_800_000_000_000),
+            clock = FakeClock(1_800_000_000_000)
         )
         return viewModel
     }
@@ -163,7 +163,7 @@ class RoutineEditorViewModelTest {
         routineRepository.routines += Routine(
             id = 9,
             name = "Pierna",
-            exercises = listOf(RoutineExercise(id = 5, routineId = 9, exerciseId = 2, exercise = squat)),
+            exercises = listOf(RoutineExercise(id = 5, routineId = 9, exerciseId = 2, exercise = squat))
         )
         val viewModel = createViewModel(routineId = 9)
 
@@ -177,7 +177,7 @@ class RoutineEditorViewModelTest {
         id = id,
         name = name,
         muscleGroup = MuscleGroup.CHEST,
-        exerciseType = ExerciseType.STRENGTH,
+        exerciseType = ExerciseType.STRENGTH
     )
 
     private class FakeRoutineRepository : RoutineRepository {

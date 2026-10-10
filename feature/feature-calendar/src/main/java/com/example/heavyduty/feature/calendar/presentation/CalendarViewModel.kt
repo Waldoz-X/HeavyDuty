@@ -1,14 +1,15 @@
 package com.example.heavyduty.feature.calendar.presentation
 
-import com.example.heavyduty.core.common.R
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.heavyduty.core.common.R
 import com.example.heavyduty.core.domain.repository.CalendarRepository
 import com.example.heavyduty.core.domain.repository.RoutineRepository
 import com.example.heavyduty.feature.calendar.domain.usecase.AssignRoutineToDayUseCase
 import com.example.heavyduty.feature.calendar.domain.usecase.DuplicateCalendarEntryException
 import com.example.heavyduty.feature.calendar.domain.usecase.GetWeekScheduleUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -19,14 +20,13 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 @HiltViewModel
 class CalendarViewModel @Inject constructor(
     private val getWeekScheduleUseCase: GetWeekScheduleUseCase,
     private val assignRoutineToDayUseCase: AssignRoutineToDayUseCase,
     private val calendarRepository: CalendarRepository,
-    private val routineRepository: RoutineRepository,
+    private val routineRepository: RoutineRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CalendarUiState())
@@ -48,14 +48,17 @@ class CalendarViewModel @Inject constructor(
                 val newDay = if (_uiState.value.selectedDay == event.dayOfWeek) null else event.dayOfWeek
                 _uiState.update { it.copy(selectedDay = newDay, isPickingRoutine = false) }
             }
+
             is CalendarUiEvent.OnRoutineClick -> {
                 viewModelScope.launch {
                     _uiEffect.send(CalendarUiEffect.NavigateToRoutine(event.routineId))
                 }
             }
+
             CalendarUiEvent.OnToggleRoutinePicker -> {
                 _uiState.update { it.copy(isPickingRoutine = !it.isPickingRoutine) }
             }
+
             is CalendarUiEvent.OnAssignRoutine -> {
                 viewModelScope.launch {
                     try {
@@ -71,6 +74,7 @@ class CalendarViewModel @Inject constructor(
                     }
                 }
             }
+
             is CalendarUiEvent.OnRemoveEntry -> {
                 viewModelScope.launch {
                     try {

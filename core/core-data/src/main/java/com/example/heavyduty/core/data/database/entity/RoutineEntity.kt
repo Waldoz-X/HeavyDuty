@@ -6,7 +6,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(
-    tableName = "routines",
+    tableName = "routines"
 )
 data class RoutineEntity(
     @PrimaryKey(autoGenerate = true)
@@ -15,7 +15,7 @@ data class RoutineEntity(
     val description: String = "",
     val type: String = "GYM",
     val createdAt: Long = System.currentTimeMillis(),
-    val updatedAt: Long = System.currentTimeMillis(),
+    val updatedAt: Long = System.currentTimeMillis()
 )
 
 @Entity(
@@ -25,19 +25,19 @@ data class RoutineEntity(
             entity = RoutineEntity::class,
             parentColumns = ["id"],
             childColumns = ["routineId"],
-            onDelete = ForeignKey.CASCADE,
+            onDelete = ForeignKey.CASCADE
         ),
         ForeignKey(
             entity = ExerciseEntity::class,
             parentColumns = ["id"],
             childColumns = ["exerciseId"],
-            onDelete = ForeignKey.CASCADE,
-        ),
+            onDelete = ForeignKey.CASCADE
+        )
     ],
     indices = [
         Index(value = ["routineId"]),
-        Index(value = ["exerciseId"]),
-    ],
+        Index(value = ["exerciseId"])
+    ]
 )
 data class RoutineExerciseEntity(
     @PrimaryKey(autoGenerate = true)
@@ -57,5 +57,5 @@ data class RoutineExerciseEntity(
     val stallThreshold: Int = 3,
     val supersetGroupId: String? = null,
     /** "KG"/"LB" of the equipment used for this exercise in this routine; null = the exercise's default. */
-    val weightUnit: String? = null,
+    val weightUnit: String? = null
 )

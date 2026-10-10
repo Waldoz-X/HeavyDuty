@@ -11,6 +11,10 @@ import com.example.heavyduty.core.ui.components.currentAndPreviousRange
 import com.example.heavyduty.feature.stats.domain.usecase.GetMuscleGroupVolumeUseCase
 import com.example.heavyduty.feature.stats.domain.usecase.GetPeriodSummaryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
@@ -19,23 +23,20 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Locale
-import javax.inject.Inject
 
 @HiltViewModel
 class EstadisticasViewModel @Inject constructor(
     private val getMuscleGroupVolume: GetMuscleGroupVolumeUseCase,
     private val getPeriodSummary: GetPeriodSummaryUseCase,
     private val userPreferencesRepository: UserPreferencesRepository,
-    private val clock: Clock,
+    private val clock: Clock
 ) : ViewModel() {
 
     private val last7Days: List<Long> = buildLast7DaysStartMillis(clock.nowMillis())
     private val selectedDayMillis = MutableStateFlow(last7Days.last())
 
     private val _uiState = MutableStateFlow(EstadisticasUiState())
+
     /** Loads only while the screen is watching — see [whileSubscribed]. */
     val uiState: StateFlow<EstadisticasUiState> = _uiState.whileSubscribed(viewModelScope) {
         launch {
@@ -50,7 +51,7 @@ class EstadisticasViewModel @Inject constructor(
                             days = last7Days.map { day -> day.toDayChipUi(isSelected = day == selectedDay) },
                             selectedDayVolumeByMuscle = volumeByMuscle,
                             gender = BodyGender.fromStorageValue(genderValue),
-                            isLoading = false,
+                            isLoading = false
                         )
                     }
                 }
@@ -100,14 +101,12 @@ private fun Long.toDayChipUi(isSelected: Boolean): DayChipUi {
         dateMillis = this,
         dayLetter = dayLetter,
         dayNumber = calendar.get(Calendar.DAY_OF_MONTH).toString(),
-        isSelected = isSelected,
+        isSelected = isSelected
     )
 }
 
 /** Midnight after [dayStart] — not dayStart + 24h, which is off by an hour on DST days. */
-private fun nextDayStart(dayStart: Long): Long =
-    Calendar.getInstance().apply {
-        timeInMillis = dayStart
-        add(Calendar.DAY_OF_YEAR, 1)
-    }.timeInMillis
-
+private fun nextDayStart(dayStart: Long): Long = Calendar.getInstance().apply {
+    timeInMillis = dayStart
+    add(Calendar.DAY_OF_YEAR, 1)
+}.timeInMillis

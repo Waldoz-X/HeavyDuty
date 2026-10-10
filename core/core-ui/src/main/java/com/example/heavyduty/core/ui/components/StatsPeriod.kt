@@ -10,7 +10,7 @@ import com.example.heavyduty.core.common.R
  */
 enum class StatsPeriod(val days: Int, @param:StringRes val labelRes: Int) {
     LAST_7_DAYS(7, R.string.period_last_7_days),
-    LAST_30_DAYS(30, R.string.period_last_30_days),
+    LAST_30_DAYS(30, R.string.period_last_30_days)
 }
 
 /**

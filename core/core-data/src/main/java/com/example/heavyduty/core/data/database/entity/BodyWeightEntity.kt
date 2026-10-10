@@ -8,5 +8,5 @@ data class BodyWeightEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val weightKg: Float,
-    val loggedAt: Long,
+    val loggedAt: Long
 )

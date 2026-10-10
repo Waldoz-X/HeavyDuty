@@ -6,7 +6,7 @@ package com.example.heavyduty.core.domain.model
 enum class ExerciseType {
     STRENGTH,
     CARDIO,
-    FUNCTIONAL,
+    FUNCTIONAL
 }
 
 /**
@@ -15,7 +15,7 @@ enum class ExerciseType {
 enum class WorkoutStatus {
     IN_PROGRESS,
     COMPLETED,
-    CANCELLED,
+    CANCELLED
 }
 
 /**
@@ -25,7 +25,7 @@ enum class WorkoutType {
     GYM,
     CROSSFIT,
     CARDIO,
-    MIXED,
+    MIXED
 }
 
 /**
@@ -33,7 +33,7 @@ enum class WorkoutType {
  */
 enum class Recurrence {
     WEEKLY,
-    CUSTOM,
+    CUSTOM
 }
 
 /**
@@ -44,7 +44,7 @@ enum class ProgressionPolicy {
     LINEAR,
     GREYSKULL_LP,
     DOUBLE_PROGRESSION,
-    TIME,
+    TIME
 }
 
 /**
@@ -55,5 +55,5 @@ enum class ProgressionPolicy {
  */
 enum class WeightUnit {
     KG,
-    LB,
+    LB
 }

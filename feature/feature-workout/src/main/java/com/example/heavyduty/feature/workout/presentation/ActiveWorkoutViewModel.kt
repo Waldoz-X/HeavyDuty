@@ -1,12 +1,11 @@
 package com.example.heavyduty.feature.workout.presentation
 
-import com.example.heavyduty.core.domain.model.Clock
-import com.example.heavyduty.core.domain.model.displayName
-import com.example.heavyduty.core.common.extensions.formatOneDecimal
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.heavyduty.core.common.R
+import com.example.heavyduty.core.common.extensions.formatOneDecimal
+import com.example.heavyduty.core.domain.model.Clock
 import com.example.heavyduty.core.domain.model.Effort
 import com.example.heavyduty.core.domain.model.Exercise
 import com.example.heavyduty.core.domain.model.RoutineExercise
@@ -15,11 +14,12 @@ import com.example.heavyduty.core.domain.model.WorkoutSession
 import com.example.heavyduty.core.domain.model.WorkoutSet
 import com.example.heavyduty.core.domain.model.WorkoutStatus
 import com.example.heavyduty.core.domain.model.bestEstimatedOneRepMax
+import com.example.heavyduty.core.domain.model.displayName
 import com.example.heavyduty.core.domain.model.displayUnit
 import com.example.heavyduty.core.domain.model.estimatedOneRepMax
 import com.example.heavyduty.core.domain.model.kgToRounded
-import com.example.heavyduty.core.domain.model.other
 import com.example.heavyduty.core.domain.model.nextPrescription
+import com.example.heavyduty.core.domain.model.other
 import com.example.heavyduty.core.domain.model.searchExercises
 import com.example.heavyduty.core.domain.model.toKgFrom
 import com.example.heavyduty.core.domain.model.toProgressionConfig
@@ -32,6 +32,8 @@ import com.example.heavyduty.feature.workout.domain.usecase.CompleteWorkoutUseCa
 import com.example.heavyduty.feature.workout.domain.usecase.LogSetUseCase
 import com.example.heavyduty.feature.workout.domain.usecase.StartWorkoutUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -49,8 +51,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
-import kotlin.time.Duration.Companion.seconds
 
 /**
  * Drives the active workout. The in-progress session is observed straight from the database,
@@ -70,7 +70,7 @@ class ActiveWorkoutViewModel @Inject constructor(
     private val userPreferencesRepository: UserPreferencesRepository,
     private val restTimerController: RestTimerController,
     private val savedStateHandle: SavedStateHandle,
-    private val clock: Clock,
+    private val clock: Clock
 ) : ViewModel() {
 
     private var cachedExercises: List<Exercise>? = null
@@ -103,27 +103,47 @@ class ActiveWorkoutViewModel @Inject constructor(
     fun onEvent(event: ActiveWorkoutUiEvent) {
         when (event) {
             is ActiveWorkoutUiEvent.OnRepsChange -> updateInputs { it.copy(repsInput = event.reps) }
+
             is ActiveWorkoutUiEvent.OnWeightChange -> updateInputs { it.copy(weightInput = event.weight) }
+
             ActiveWorkoutUiEvent.OnToggleWarmupInput -> _uiState.update { it.copy(isWarmupInput = !it.isWarmupInput) }
+
             is ActiveWorkoutUiEvent.OnEffortInputChange -> updateInputs { it.copy(effortInput = event.value) }
+
             ActiveWorkoutUiEvent.OnToggleTimedInput -> toggleTimedInput()
+
             ActiveWorkoutUiEvent.OnToggleWorkTimer -> toggleWorkTimer()
+
             is ActiveWorkoutUiEvent.OnSelectExercise -> selectExercise(event.index)
+
             is ActiveWorkoutUiEvent.OnDeleteSet -> deleteSet(event.set)
+
             is ActiveWorkoutUiEvent.OnUndoDeleteSet -> restoreSet(event.set)
+
             ActiveWorkoutUiEvent.OnLogSet -> logSet()
+
             ActiveWorkoutUiEvent.OnCompleteWorkout -> completeWorkout()
+
             ActiveWorkoutUiEvent.OnStartFreeWorkout -> startFreeWorkout()
+
             is ActiveWorkoutUiEvent.OnStartRoutine -> startWorkoutFromRoutine(event.routineId)
+
             ActiveWorkoutUiEvent.OnNavigateToRoutines -> {
                 viewModelScope.launch { _uiEffect.send(ActiveWorkoutUiEffect.NavigateToRoutines) }
             }
+
             ActiveWorkoutUiEvent.OnToggleExercisePicker -> toggleExercisePicker()
+
             is ActiveWorkoutUiEvent.OnExercisePickerQueryChange -> onExercisePickerQueryChange(event.query)
+
             is ActiveWorkoutUiEvent.OnAddExercise -> addExerciseToSession(event.exercise)
+
             ActiveWorkoutUiEvent.OnUseSuggestion -> useSuggestion()
+
             is ActiveWorkoutUiEvent.OnAdjustRest -> restTimerController.adjustRest(event.deltaSeconds)
+
             ActiveWorkoutUiEvent.OnSkipRest -> restTimerController.skipRest()
+
             ActiveWorkoutUiEvent.OnToggleUnit -> toggleUnit()
         }
     }
@@ -134,7 +154,7 @@ class ActiveWorkoutViewModel @Inject constructor(
         viewModelScope.launch {
             combine(
                 userPreferencesRepository.effortTrackingEnabled,
-                userPreferencesRepository.preferredEffortScale,
+                userPreferencesRepository.preferredEffortScale
             ) { enabled, scale -> enabled to scale }.collect { (enabled, scale) ->
                 _uiState.update { it.copy(effortTrackingEnabled = enabled, preferredEffortScale = scale) }
             }
@@ -195,7 +215,7 @@ class ActiveWorkoutViewModel @Inject constructor(
                 routines = current.routines,
                 restTimer = current.restTimer,
                 effortTrackingEnabled = current.effortTrackingEnabled,
-                preferredEffortScale = current.preferredEffortScale,
+                preferredEffortScale = current.preferredEffortScale
             )
         }
     }
@@ -229,7 +249,7 @@ class ActiveWorkoutViewModel @Inject constructor(
                     // What was typed but not logged yet, if Android closed the app meanwhile.
                     repsInput = savedStateHandle.get<String>(KEY_REPS_INPUT).takeIf { sameSession }.orEmpty(),
                     weightInput = savedStateHandle.get<String>(KEY_WEIGHT_INPUT).takeIf { sameSession }.orEmpty(),
-                    effortInput = savedStateHandle.get<String>(KEY_EFFORT_INPUT).takeIf { sameSession }.orEmpty(),
+                    effortInput = savedStateHandle.get<String>(KEY_EFFORT_INPUT).takeIf { sameSession }.orEmpty()
                 )
             }
             startClock(session.startTime)
@@ -239,7 +259,7 @@ class ActiveWorkoutViewModel @Inject constructor(
                 it.copy(
                     sessionName = session.sessionName,
                     completedSets = sets,
-                    routineExercises = mergeLoggedExercises(it.routineExercises, sets),
+                    routineExercises = mergeLoggedExercises(it.routineExercises, sets)
                 )
             }
         }
@@ -271,7 +291,7 @@ class ActiveWorkoutViewModel @Inject constructor(
         exercise = exercise,
         orderIndex = orderIndex,
         targetSets = 0,
-        targetReps = 0,
+        targetReps = 0
     )
 
     /** Appends exercises that have logged sets but aren't listed yet (free workouts). */
@@ -314,7 +334,7 @@ class ActiveWorkoutViewModel @Inject constructor(
                 effortInput = "",
                 isWarmupInput = false,
                 suggestedPrescription = null,
-                previousSets = emptyMap(),
+                previousSets = emptyMap()
             )
         }
         loadCurrentExerciseInfo()
@@ -341,7 +361,7 @@ class ActiveWorkoutViewModel @Inject constructor(
                 state.copy(
                     // A free workout has no plan to progress, only last time's numbers.
                     suggestedPrescription = if (state.allowAddingExercises) null else prescription,
-                    previousSets = previousSets,
+                    previousSets = previousSets
                 )
             }
         }
@@ -354,7 +374,7 @@ class ActiveWorkoutViewModel @Inject constructor(
         updateInputs {
             it.copy(
                 repsInput = suggestion.reps?.toString() ?: it.repsInput,
-                weightInput = suggestion.weightKg?.takeIf { kg -> kg > 0f }?.kgToRounded(unit)?.let(::formatInput) ?: it.weightInput,
+                weightInput = suggestion.weightKg?.takeIf { kg -> kg > 0f }?.kgToRounded(unit)?.let(::formatInput) ?: it.weightInput
             )
         }
     }
@@ -393,7 +413,7 @@ class ActiveWorkoutViewModel @Inject constructor(
             it.copy(
                 routineExercises = it.routineExercises.mapIndexed { i, entry -> if (i == index) updated else entry },
                 // What was typed was in the old unit; clear it rather than silently reinterpret it.
-                weightInput = "",
+                weightInput = ""
             )
         }
         viewModelScope.launch {
@@ -474,7 +494,7 @@ class ActiveWorkoutViewModel @Inject constructor(
                     routineId = routineId,
                     sessionName = routine.name,
                     type = routine.type,
-                    startTime = clock.nowMillis(),
+                    startTime = clock.nowMillis()
                 )
             }
         }
@@ -542,7 +562,7 @@ class ActiveWorkoutViewModel @Inject constructor(
                     isWarmup = state.isWarmupInput,
                     effort = effort,
                     restSeconds = currentExercise.restBetweenSetsSecs,
-                    weightUnit = unit,
+                    weightUnit = unit
                 )
                 val loggedSet = WorkoutSet(
                     id = setId,
@@ -557,7 +577,7 @@ class ActiveWorkoutViewModel @Inject constructor(
                     completedAt = clock.nowMillis(),
                     isWarmup = state.isWarmupInput,
                     effort = effort,
-                    weightUnit = unit,
+                    weightUnit = unit
                 )
                 resetWorkTimer()
                 // Shown right away; the database emission that follows carries the same set.
@@ -567,7 +587,7 @@ class ActiveWorkoutViewModel @Inject constructor(
                         repsInput = "",
                         weightInput = "",
                         isWarmupInput = false,
-                        effortInput = "",
+                        effortInput = ""
                     )
                 }
                 checkPersonalRecord(loggedSet, earlierToday = state.setsFor(currentExercise.exerciseId), unit = unit)
@@ -603,8 +623,8 @@ class ActiveWorkoutViewModel @Inject constructor(
                 ActiveWorkoutUiEffect.PersonalRecord(
                     exerciseName = set.exercise?.displayName.orEmpty(),
                     estimatedOneRepMaxKg = estimate,
-                    unit = unit,
-                ),
+                    unit = unit
+                )
             )
         }
     }
@@ -682,7 +702,7 @@ class ActiveWorkoutViewModel @Inject constructor(
             it.copy(
                 isPickingExercise = false,
                 exercisePickerQuery = "",
-                exercisePickerResults = emptyList(),
+                exercisePickerResults = emptyList()
             )
         }
         if (existingIndex >= 0) {
@@ -695,7 +715,7 @@ class ActiveWorkoutViewModel @Inject constructor(
         savedStateHandle[KEY_ADDED_EXERCISE_IDS] = added + exercise.id
         _uiState.update {
             it.copy(
-                routineExercises = it.routineExercises + freeExercise(exercise, it.routineExercises.size),
+                routineExercises = it.routineExercises + freeExercise(exercise, it.routineExercises.size)
             )
         }
         selectExercise(_uiState.value.routineExercises.lastIndex)
@@ -727,7 +747,6 @@ class ActiveWorkoutViewModel @Inject constructor(
         const val PR_MIN_GAIN_KG = 0.1f
 
         /** "62.5" stays "62.5", "60.0" becomes "60" — what a lifter would type. */
-        fun formatInput(value: Float): String =
-            if (value % 1f == 0f) value.toInt().toString() else value.formatOneDecimal()
+        fun formatInput(value: Float): String = if (value % 1f == 0f) value.toInt().toString() else value.formatOneDecimal()
     }
 }

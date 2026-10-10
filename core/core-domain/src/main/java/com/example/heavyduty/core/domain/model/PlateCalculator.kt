@@ -24,11 +24,7 @@ fun WeightUnit.standardPlates(): List<Float> = when (this) {
  * target at or below the bar's own weight needs no plates at all (empty list); a remainder
  * too small for the smallest denomination is simply left unrepresented rather than rounded.
  */
-fun calculatePlatesPerSide(
-    targetWeightKg: Float,
-    barWeightKg: Float,
-    availablePlates: List<Float> = STANDARD_PLATES_KG,
-): List<Float> {
+fun calculatePlatesPerSide(targetWeightKg: Float, barWeightKg: Float, availablePlates: List<Float> = STANDARD_PLATES_KG): List<Float> {
     var remainingPerSide = (targetWeightKg - barWeightKg) / 2f
     if (remainingPerSide <= 0f) return emptyList()
 

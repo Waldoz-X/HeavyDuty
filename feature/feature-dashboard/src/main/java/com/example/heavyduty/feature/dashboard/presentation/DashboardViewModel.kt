@@ -14,6 +14,7 @@ import com.example.heavyduty.feature.dashboard.domain.usecase.GetWeeklyMuscleVol
 import com.example.heavyduty.feature.dashboard.domain.usecase.GetWeeklyScheduleOverviewUseCase
 import com.example.heavyduty.feature.dashboard.domain.usecase.GetWeeklySummaryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -25,7 +26,6 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
@@ -37,10 +37,11 @@ class DashboardViewModel @Inject constructor(
     private val getRecentWorkout: GetRecentWorkoutUseCase,
     private val getBodyWeightSummary: GetBodyWeightSummaryUseCase,
     private val getCurrentStreak: GetCurrentStreakUseCase,
-    private val clock: Clock,
+    private val clock: Clock
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DashboardUiState())
+
     /** Loads only while the screen is watching — see [whileSubscribed]. */
     val uiState: StateFlow<DashboardUiState> = _uiState.whileSubscribed(viewModelScope) {
         loadDashboardData()
@@ -61,24 +62,31 @@ class DashboardViewModel @Inject constructor(
                     _uiEffect.send(DashboardUiEffect.NavigateToActiveWorkout)
                 }
             }
+
             is DashboardUiEvent.OnChooseRoutine -> {
                 viewModelScope.launch {
                     _uiEffect.send(DashboardUiEffect.NavigateToRoutines)
                 }
             }
+
             is DashboardUiEvent.OnWeekPrev -> changeWeekOffset(-1)
+
             is DashboardUiEvent.OnWeekNext -> changeWeekOffset(1)
+
             is DashboardUiEvent.OnStartTodayRoutine -> {
                 viewModelScope.launch {
                     _uiEffect.send(DashboardUiEffect.NavigateToRoutine(event.routineId))
                 }
             }
+
             is DashboardUiEvent.OnOpenLogWeight -> {
                 _uiState.update { it.copy(showLogWeightSheet = true) }
             }
+
             is DashboardUiEvent.OnDismissLogWeight -> {
                 _uiState.update { it.copy(showLogWeightSheet = false) }
             }
+
             is DashboardUiEvent.OnLogWeight -> saveWeight(event.weightKg)
         }
     }
@@ -103,7 +111,7 @@ class DashboardViewModel @Inject constructor(
                     _uiState.update {
                         it.copy(
                             weekPlan = plan,
-                            plannedDaysThisWeek = schedule.count { entry -> entry.value.isNotEmpty() },
+                            plannedDaysThisWeek = schedule.count { entry -> entry.value.isNotEmpty() }
                         )
                     }
                 }
@@ -121,7 +129,7 @@ class DashboardViewModel @Inject constructor(
             val weekly = currentWeekRanges(clock::nowMillis).flatMapLatest { week ->
                 combine(
                     getWeeklySummary(week),
-                    getWeeklyMuscleVolume(week.first, week.last),
+                    getWeeklyMuscleVolume(week.first, week.last)
                 ) { totals, muscleVolume -> totals to muscleVolume }
             }
 
@@ -129,7 +137,7 @@ class DashboardViewModel @Inject constructor(
                 weekly,
                 getRecentWorkout(),
                 getBodyWeightSummary(),
-                getCurrentStreak(),
+                getCurrentStreak()
             ) { (totals, muscleVolume), recentWorkout, weightSummary, streak ->
                 _uiState.update {
                     it.copy(
@@ -141,7 +149,7 @@ class DashboardViewModel @Inject constructor(
                         recentWorkoutName = recentWorkout?.sessionName?.takeIf { name -> name.isNotBlank() },
                         recentWorkoutEndTime = recentWorkout?.endTime,
                         bodyWeightSummary = weightSummary,
-                        streakDays = streak,
+                        streakDays = streak
                     )
                 }
             }

@@ -54,7 +54,7 @@ data class ActiveWorkoutUiState(
     /** Routines the start screen offers to begin. */
     val routines: List<Routine> = emptyList(),
     /** True while a set is being saved, so a double tap can't log it twice. */
-    val isLoggingSet: Boolean = false,
+    val isLoggingSet: Boolean = false
 ) {
     val currentExercise: RoutineExercise? get() = routineExercises.getOrNull(currentExerciseIndex)
 
@@ -88,17 +88,13 @@ data class ActiveWorkoutUiState(
                     ?: previous?.weight?.takeIf { it > 0f }
                     ?: exercise.targetWeight.takeIf { it > 0f },
                 durationSecs = suggestion?.durationSecs ?: previous?.durationSecs
-                    ?: exercise.targetDurationSecs.takeIf { it > 0 },
+                    ?: exercise.targetDurationSecs.takeIf { it > 0 }
             )
         }
 }
 
 /** Reps/weight/time a set falls back to when its input is left empty. Weight is in kg. */
-data class SetHint(
-    val reps: Int? = null,
-    val weightKg: Float? = null,
-    val durationSecs: Int? = null,
-)
+data class SetHint(val reps: Int? = null, val weightKg: Float? = null, val durationSecs: Int? = null)
 
 /** Next set number for [exerciseId]: one past both the count and the highest number logged. */
 internal fun nextSetNumber(exerciseId: Long?, completedSets: List<WorkoutSet>): Int {
@@ -120,6 +116,7 @@ sealed interface ActiveWorkoutUiEvent {
     data object OnToggleWorkTimer : ActiveWorkoutUiEvent
     data object OnLogSet : ActiveWorkoutUiEvent
     data class OnDeleteSet(val set: WorkoutSet) : ActiveWorkoutUiEvent
+
     /** Puts back a set just deleted, from the snackbar's "Deshacer". */
     data class OnUndoDeleteSet(val set: WorkoutSet) : ActiveWorkoutUiEvent
     data class OnSelectExercise(val index: Int) : ActiveWorkoutUiEvent
@@ -133,6 +130,7 @@ sealed interface ActiveWorkoutUiEvent {
     data object OnUseSuggestion : ActiveWorkoutUiEvent
     data class OnAdjustRest(val deltaSeconds: Int) : ActiveWorkoutUiEvent
     data object OnSkipRest : ActiveWorkoutUiEvent
+
     /** Switches the current exercise between kg and lb — the machine or plates in use. */
     data object OnToggleUnit : ActiveWorkoutUiEvent
 }
@@ -144,12 +142,10 @@ sealed interface ActiveWorkoutUiEffect {
     data object NavigateToRoutines : ActiveWorkoutUiEffect
     data class ShowMessage(@param:StringRes val messageResId: Int) : ActiveWorkoutUiEffect
     data object WorkoutCompleted : ActiveWorkoutUiEffect
+
     /** A set was deleted — offer to undo it. */
     data class SetDeleted(val set: WorkoutSet) : ActiveWorkoutUiEffect
+
     /** The set just logged beats every earlier set of the exercise (by estimated 1RM). */
-    data class PersonalRecord(
-        val exerciseName: String,
-        val estimatedOneRepMaxKg: Float,
-        val unit: WeightUnit,
-    ) : ActiveWorkoutUiEffect
+    data class PersonalRecord(val exerciseName: String, val estimatedOneRepMaxKg: Float, val unit: WeightUnit) : ActiveWorkoutUiEffect
 }

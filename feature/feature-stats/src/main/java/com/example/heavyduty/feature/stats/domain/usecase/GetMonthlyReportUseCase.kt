@@ -1,21 +1,21 @@
 package com.example.heavyduty.feature.stats.domain.usecase
 
 import com.example.heavyduty.core.domain.model.Clock
-import com.example.heavyduty.core.domain.model.displayName
 import com.example.heavyduty.core.domain.model.MuscleGroup
 import com.example.heavyduty.core.domain.model.WorkoutStatus
+import com.example.heavyduty.core.domain.model.displayName
 import com.example.heavyduty.core.domain.model.excludeWarmups
 import com.example.heavyduty.core.domain.model.muscleCredits
 import com.example.heavyduty.core.domain.repository.ExerciseRepository
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
 import com.example.heavyduty.feature.stats.domain.model.MonthlyReport
+import java.util.Calendar
+import javax.inject.Inject
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.Dispatchers
-import java.util.Calendar
-import javax.inject.Inject
 
 /**
  * Aggregates workouts, sets, volume and the most-trained muscle group for the
@@ -24,7 +24,7 @@ import javax.inject.Inject
 class GetMonthlyReportUseCase @Inject constructor(
     private val workoutRepository: WorkoutRepository,
     private val exerciseRepository: ExerciseRepository,
-    private val clock: Clock,
+    private val clock: Clock
 ) {
     operator fun invoke(referenceMillis: Long = clock.nowMillis()): Flow<MonthlyReport> {
         val calendar = Calendar.getInstance().apply {
@@ -59,7 +59,7 @@ class GetMonthlyReportUseCase @Inject constructor(
             workoutRepository.getCompletedSetsByDateRange(monthStart, monthEnd),
             workoutRepository.getSessionsByDateRange(prevMonthStart, prevMonthEnd),
             workoutRepository.getCompletedSetsByDateRange(prevMonthStart, prevMonthEnd),
-            exerciseRepository.getAllExercises(),
+            exerciseRepository.getAllExercises()
         ) { sessions, rawSets, prevSessions, prevRawSets, exercises ->
             val exerciseById = exercises.associateBy { it.id }
 
@@ -122,10 +122,12 @@ class GetMonthlyReportUseCase @Inject constructor(
                         com.example.heavyduty.feature.stats.domain.model.MuscleVolumeContribution(
                             muscleGroup = it.key,
                             volumeKg = it.value,
-                            percentage = (it.value / totalVolumeKg * 100f).coerceIn(0f, 100f),
+                            percentage = (it.value / totalVolumeKg * 100f).coerceIn(0f, 100f)
                         )
                     }
-            } else emptyList()
+            } else {
+                emptyList()
+            }
 
             // Top ejercicios del mes
             val topExercises = completedSets
@@ -140,7 +142,7 @@ class GetMonthlyReportUseCase @Inject constructor(
                         muscleGroup = exercise.muscleGroup,
                         totalSets = exSets.size,
                         totalVolumeKg = exVolume,
-                        maxWeightKg = maxWeight,
+                        maxWeightKg = maxWeight
                     )
                 }
                 .sortedByDescending { it.totalVolumeKg }
@@ -149,16 +151,22 @@ class GetMonthlyReportUseCase @Inject constructor(
             // Comparativas vs mes anterior
             val workoutsDelta = if (prevCompletedSessions.isNotEmpty() || completedSessions.isNotEmpty()) {
                 completedSessions.size - prevCompletedSessions.size
-            } else null
+            } else {
+                null
+            }
 
             val volumeDeltaPercent = if (prevTotalVolumeKg > 0f) {
                 ((totalVolumeKg - prevTotalVolumeKg) / prevTotalVolumeKg * 100f)
-            } else null
+            } else {
+                null
+            }
 
             val totalDurationSecs = completedSessions.sumOf { it.totalDurationSecs }
             val avgDurationMins = if (completedSessions.isNotEmpty()) {
                 (totalDurationSecs / completedSessions.size / 60)
-            } else 0
+            } else {
+                0
+            }
             val totalDurationMins = (totalDurationSecs / 60)
             val avgPerWeek = if (maxWeek > 0) completedSessions.size.toFloat() / maxWeek.toFloat() else 0f
 
@@ -178,7 +186,7 @@ class GetMonthlyReportUseCase @Inject constructor(
                 muscleContributions = muscleContributions,
                 topExercises = topExercises,
                 workoutsPerWeek = workoutsPerWeek,
-                volumePerWeek = volumePerWeek,
+                volumePerWeek = volumePerWeek
             )
         }.distinctUntilChanged().flowOn(Dispatchers.Default)
     }

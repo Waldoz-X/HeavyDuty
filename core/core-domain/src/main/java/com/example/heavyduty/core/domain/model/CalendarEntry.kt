@@ -9,5 +9,5 @@ data class CalendarEntry(
     val routine: Routine? = null,
     val dayOfWeek: Int = 1, // 1 = Monday, 7 = Sunday
     val recurrence: Recurrence = Recurrence.WEEKLY,
-    val isActive: Boolean = true,
+    val isActive: Boolean = true
 )

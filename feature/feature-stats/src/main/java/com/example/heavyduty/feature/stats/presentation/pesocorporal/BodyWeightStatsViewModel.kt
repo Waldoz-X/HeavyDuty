@@ -9,22 +9,23 @@ import com.example.heavyduty.core.domain.repository.UserPreferencesRepository
 import com.example.heavyduty.feature.stats.domain.usecase.BodyWeightHistoryItem
 import com.example.heavyduty.feature.stats.domain.usecase.GetBodyWeightStatsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 @HiltViewModel
 class BodyWeightStatsViewModel @Inject constructor(
     private val getBodyWeightStatsUseCase: GetBodyWeightStatsUseCase,
     private val userPreferencesRepository: UserPreferencesRepository,
-    private val bodyWeightRepository: BodyWeightRepository,
+    private val bodyWeightRepository: BodyWeightRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(BodyWeightStatsUiState())
+
     /** Loads only while the screen is watching — see [whileSubscribed]. */
     val uiState: StateFlow<BodyWeightStatsUiState> = _uiState.whileSubscribed(viewModelScope) {
         loadStats()
@@ -41,7 +42,7 @@ class BodyWeightStatsViewModel @Inject constructor(
                         it.copy(
                             isLoading = false,
                             report = report,
-                            loadFailed = false,
+                            loadFailed = false
                         )
                     }
                 }
@@ -66,7 +67,7 @@ class BodyWeightStatsViewModel @Inject constructor(
                 BodyWeightEntry(
                     id = entry.id,
                     weightKg = entry.weightKg,
-                    loggedAt = entry.loggedAt,
+                    loggedAt = entry.loggedAt
                 )
             )
         }

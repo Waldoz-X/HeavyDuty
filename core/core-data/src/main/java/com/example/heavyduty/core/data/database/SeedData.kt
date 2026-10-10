@@ -65,7 +65,7 @@ object SeedData {
         "trapezius" to "TRAPS",
         "traps" to "TRAPS",
         "latissimus dorsi" to "LATS",
-        "lats" to "LATS",
+        "lats" to "LATS"
     )
 
     /**
@@ -93,7 +93,7 @@ object SeedData {
         "spine" to "Columna",
         "traps" to "Trapecios",
         "triceps" to "Tríceps",
-        "upper back" to "Espalda alta",
+        "upper back" to "Espalda alta"
     )
 
     data class ExerciseDto(
@@ -169,11 +169,10 @@ object SeedData {
         return if (!steps.isNullOrEmpty()) steps.joinToString("\n") else instructions?.get(language).orEmpty()
     }
 
-    private fun loadCatalog(context: Context): List<ExerciseDto> =
-        context.assets.open("exercises.json").use { stream ->
-            val listType = object : TypeToken<List<ExerciseDto>>() {}.type
-            Gson().fromJson(InputStreamReader(stream), listType)
-        }
+    private fun loadCatalog(context: Context): List<ExerciseDto> = context.assets.open("exercises.json").use { stream ->
+        val listType = object : TypeToken<List<ExerciseDto>>() {}.type
+        Gson().fromJson(InputStreamReader(stream), listType)
+    }
 
     suspend fun populateExercises(context: Context, exerciseDao: ExerciseDao) {
         if (exerciseDao.getExerciseCount() > 0) return
@@ -197,19 +196,33 @@ object SeedData {
                 val bodyPart = dto.body_part?.lowercase() ?: ""
                 val muscleGroup = when (target) {
                     "abs" -> "ABS"
+
                     "pectorals", "serratus anterior" -> "CHEST"
+
                     "biceps" -> "BICEPS"
+
                     "triceps" -> "TRICEPS"
+
                     "delts" -> "SHOULDERS"
+
                     "upper back", "spine" -> "BACK"
+
                     "lats" -> "LATS"
+
                     "calves" -> "CALVES"
+
                     "quads", "adductors", "abductors" -> "QUADRICEPS"
+
                     "hamstrings" -> "HAMSTRINGS"
+
                     "glutes" -> "GLUTES"
+
                     "forearms" -> "FOREARMS"
+
                     "traps", "levator scapulae" -> "TRAPS"
+
                     "cardiovascular system" -> "CARDIO"
+
                     else -> when (bodyPart) {
                         "chest" -> "CHEST"
                         "back" -> "BACK"
@@ -282,7 +295,7 @@ object SeedData {
                     imageUrl = imageUrl,
                     gifUrl = gifUrl,
                     isCustom = false,
-                    muscleWeightsJson = Gson().toJson(muscleWeights),
+                    muscleWeightsJson = Gson().toJson(muscleWeights)
                 )
             }
 

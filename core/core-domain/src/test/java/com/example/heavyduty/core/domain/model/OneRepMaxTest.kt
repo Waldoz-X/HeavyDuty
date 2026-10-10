@@ -11,7 +11,7 @@ class OneRepMaxTest {
         val sets = listOf(
             WorkoutSet(reps = 10, weight = 60f), // 80
             WorkoutSet(reps = 5, weight = 75f), // 87.5
-            WorkoutSet(reps = 1, weight = 85f), // 85, measured
+            WorkoutSet(reps = 1, weight = 85f) // 85, measured
         )
         assertEquals(87.5f, sets.bestEstimatedOneRepMax()!!, 0.001f)
     }
@@ -22,7 +22,7 @@ class OneRepMaxTest {
             WorkoutSet(reps = 3, weight = 100f, isWarmup = true),
             WorkoutSet(reps = null, weight = 120f, durationSecs = 30),
             WorkoutSet(reps = 8, weight = null),
-            WorkoutSet(reps = 6, weight = 60f), // 72
+            WorkoutSet(reps = 6, weight = 60f) // 72
         )
         assertEquals(72f, sets.bestEstimatedOneRepMax()!!, 0.001f)
     }

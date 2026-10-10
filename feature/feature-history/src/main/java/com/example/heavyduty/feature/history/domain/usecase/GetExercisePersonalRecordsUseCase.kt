@@ -5,17 +5,15 @@ import com.example.heavyduty.core.domain.model.estimatedOneRepMax
 import com.example.heavyduty.core.domain.model.excludeWarmups
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
 import com.example.heavyduty.feature.history.domain.model.ExercisePersonalRecords
+import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import javax.inject.Inject
 
 /**
  * Use case that derives personal records (heaviest set, most reps, estimated 1RM) for a
  * single exercise from its logged set history.
  */
-class GetExercisePersonalRecordsUseCase @Inject constructor(
-    private val workoutRepository: WorkoutRepository,
-) {
+class GetExercisePersonalRecordsUseCase @Inject constructor(private val workoutRepository: WorkoutRepository) {
     operator fun invoke(exerciseId: Long): Flow<ExercisePersonalRecords> =
         workoutRepository.getSetsByExerciseId(exerciseId).map { sets -> computeRecords(sets) }
 
@@ -35,7 +33,7 @@ class GetExercisePersonalRecordsUseCase @Inject constructor(
             maxWeightAchievedAtMillis = maxWeightSet.completedAt,
             maxReps = maxRepsSet.reps,
             maxRepsWeight = maxRepsSet.weight,
-            estimatedOneRepMax = bestEstimatedOneRepMax,
+            estimatedOneRepMax = bestEstimatedOneRepMax
         )
     }
 }

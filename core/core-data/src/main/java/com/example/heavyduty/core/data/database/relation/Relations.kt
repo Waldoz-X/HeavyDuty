@@ -16,9 +16,9 @@ data class RoutineWithExercises(
     @Relation(
         entity = RoutineExerciseEntity::class,
         parentColumn = "id",
-        entityColumn = "routineId",
+        entityColumn = "routineId"
     )
-    val routineExercises: List<RoutineExerciseWithDetails>,
+    val routineExercises: List<RoutineExerciseWithDetails>
 )
 
 /**
@@ -28,9 +28,9 @@ data class RoutineExerciseWithDetails(
     @Embedded val routineExercise: RoutineExerciseEntity,
     @Relation(
         parentColumn = "exerciseId",
-        entityColumn = "id",
+        entityColumn = "id"
     )
-    val exercise: ExerciseEntity,
+    val exercise: ExerciseEntity
 )
 
 /**
@@ -40,9 +40,9 @@ data class SetWithExercise(
     @Embedded val set: WorkoutSetEntity,
     @Relation(
         parentColumn = "exerciseId",
-        entityColumn = "id",
+        entityColumn = "id"
     )
-    val exercise: ExerciseEntity,
+    val exercise: ExerciseEntity
 )
 
 /**
@@ -53,7 +53,7 @@ data class SessionWithSets(
     @Relation(
         entity = WorkoutSetEntity::class,
         parentColumn = "id",
-        entityColumn = "sessionId",
+        entityColumn = "sessionId"
     )
-    val sets: List<SetWithExercise>,
+    val sets: List<SetWithExercise>
 )

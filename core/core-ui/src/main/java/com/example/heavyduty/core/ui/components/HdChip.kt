@@ -17,19 +17,14 @@ import androidx.compose.ui.unit.dp
  * Filter chip component with selected/unselected states and smooth color transitions.
  */
 @Composable
-fun HdChip(
-    text: String,
-    isSelected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+fun HdChip(text: String, isSelected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val backgroundColor by animateColorAsState(
         targetValue = if (isSelected) {
             MaterialTheme.colorScheme.primary
         } else {
             MaterialTheme.colorScheme.surfaceContainerHigh
         },
-        label = "chipColor",
+        label = "chipColor"
     )
 
     val textColor by animateColorAsState(
@@ -38,7 +33,7 @@ fun HdChip(
         } else {
             MaterialTheme.colorScheme.onSurfaceVariant
         },
-        label = "chipTextColor",
+        label = "chipTextColor"
     )
 
     Box(
@@ -46,12 +41,12 @@ fun HdChip(
             .clip(MaterialTheme.shapes.small)
             .background(backgroundColor)
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
         Text(
             text = text,
             style = MaterialTheme.typography.labelMedium,
-            color = textColor,
+            color = textColor
         )
     }
 }

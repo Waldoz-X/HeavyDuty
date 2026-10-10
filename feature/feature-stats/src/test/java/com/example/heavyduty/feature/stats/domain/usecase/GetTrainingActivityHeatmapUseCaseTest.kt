@@ -5,6 +5,7 @@ import com.example.heavyduty.core.domain.model.WorkoutSet
 import com.example.heavyduty.core.domain.model.WorkoutStatus
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
 import com.example.heavyduty.core.testing.FakeClock
+import java.util.Calendar
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
@@ -13,13 +14,10 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import java.util.Calendar
 
 class GetTrainingActivityHeatmapUseCaseTest {
 
-    private class FakeWorkoutRepository(
-        private val sessions: List<WorkoutSession>,
-    ) : WorkoutRepository {
+    private class FakeWorkoutRepository(private val sessions: List<WorkoutSession>) : WorkoutRepository {
         override fun getAllSessions(): Flow<List<WorkoutSession>> = flowOf(sessions)
         override fun getSessionById(id: Long): Flow<WorkoutSession?> = flowOf(null)
         override fun getSessionWithSets(id: Long): Flow<WorkoutSession?> = flowOf(null)
@@ -75,21 +73,21 @@ class GetTrainingActivityHeatmapUseCaseTest {
                 id = 1,
                 startTime = today10am,
                 totalDurationSecs = 3600, // 60 mins
-                status = WorkoutStatus.COMPLETED,
+                status = WorkoutStatus.COMPLETED
             ),
             WorkoutSession(
                 id = 2,
                 startTime = yesterday10am,
                 totalDurationSecs = 1800, // 30 mins
-                status = WorkoutStatus.COMPLETED,
+                status = WorkoutStatus.COMPLETED
             ),
             // In progress session should be excluded
             WorkoutSession(
                 id = 3,
                 startTime = now,
                 totalDurationSecs = 600,
-                status = WorkoutStatus.IN_PROGRESS,
-            ),
+                status = WorkoutStatus.IN_PROGRESS
+            )
         )
 
         val repo = FakeWorkoutRepository(sessions)
@@ -129,7 +127,10 @@ class GetTrainingActivityHeatmapUseCaseTest {
             WorkoutSession(id = i + 1L, startTime = start, totalDurationSecs = 1800, status = WorkoutStatus.COMPLETED)
         }
 
-        val report = GetTrainingActivityHeatmapUseCase(FakeWorkoutRepository(sessions), FakeClock(at(2025, Calendar.DECEMBER, 31)))().first()
+        val report = GetTrainingActivityHeatmapUseCase(
+            FakeWorkoutRepository(sessions),
+            FakeClock(at(2025, Calendar.DECEMBER, 31))
+        )().first()
 
         assertEquals(2, report.currentStreakWeeks)
         assertEquals(2, report.longestStreakWeeks)

@@ -1,12 +1,6 @@
 package com.example.heavyduty.feature.stats.presentation.distribucioncorporal
 
-import com.example.heavyduty.core.ui.components.HdCardsSkeleton
-import androidx.compose.ui.platform.LocalResources
-import com.example.heavyduty.core.common.R
-import com.example.heavyduty.core.domain.model.MuscleGroup
 import androidx.compose.foundation.background
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,6 +10,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarMonth
@@ -36,26 +32,30 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.heavyduty.core.common.R
 import com.example.heavyduty.core.common.extensions.formatCompact
+import com.example.heavyduty.core.domain.model.MuscleGroup
 import com.example.heavyduty.core.ui.components.HdBodyDiagram
+import com.example.heavyduty.core.ui.components.HdCardsSkeleton
 import com.example.heavyduty.core.ui.components.HdChip
 import com.example.heavyduty.core.ui.components.HdErrorState
 import com.example.heavyduty.core.ui.components.HdPeriodSelector
 import com.example.heavyduty.core.ui.components.HdStatCard
+import com.example.heavyduty.core.ui.formatTotalWeight
 import com.example.heavyduty.core.ui.nameResId
 import com.example.heavyduty.feature.stats.domain.model.PeriodSummary
-import com.example.heavyduty.core.ui.formatTotalWeight
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DistribucionCorporalScreen(
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: DistribucionCorporalViewModel = hiltViewModel(),
+    viewModel: DistribucionCorporalViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -67,10 +67,10 @@ fun DistribucionCorporalScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
-                },
+                }
             )
         },
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize()
     ) { innerPadding ->
         if (uiState.isLoading) {
             HdCardsSkeleton(modifier = Modifier.padding(innerPadding).padding(16.dp), heights = listOf(48.dp, 400.dp, 120.dp))
@@ -89,12 +89,14 @@ fun DistribucionCorporalScreen(
             BodyMapMode.FATIGUE -> uiState.fatigueByMuscle.entries.associate { (muscle, level) ->
                 muscle to lerp(baseColor, fatiguedColor, level.coerceIn(0f, 1f))
             }
+
             BodyMapMode.STRENGTH -> uiState.strengthByMuscle.entries.associate { (muscle, retention) ->
                 // Retention floors at 0.5 (see strengthRetention), so normalize that range to
                 // 0..1 before interpolating — otherwise the floor would never read as "base."
                 val fraction = ((retention - 0.5f) / 0.5f).coerceIn(0f, 1f)
                 muscle to lerp(baseColor, strongColor, fraction)
             }
+
             BodyMapMode.VOLUME -> null
         }
 
@@ -103,41 +105,53 @@ fun DistribucionCorporalScreen(
                 .padding(innerPadding)
                 .padding(16.dp)
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState()),
+                .verticalScroll(rememberScrollState())
         ) {
             HdPeriodSelector(
                 selected = uiState.selectedPeriod,
-                onSelect = { viewModel.onEvent(DistribucionCorporalUiEvent.OnPeriodChange(it)) },
+                onSelect = { viewModel.onEvent(DistribucionCorporalUiEvent.OnPeriodChange(it)) }
             )
             Spacer(modifier = Modifier.height(12.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 HdChip(
                     text = stringResource(R.string.metric_volume),
                     isSelected = uiState.mode == BodyMapMode.VOLUME,
-                    onClick = { viewModel.onEvent(DistribucionCorporalUiEvent.OnModeChange(BodyMapMode.VOLUME)) },
+                    onClick = { viewModel.onEvent(DistribucionCorporalUiEvent.OnModeChange(BodyMapMode.VOLUME)) }
                 )
                 HdChip(
                     text = stringResource(R.string.stats_fatigue),
                     isSelected = uiState.mode == BodyMapMode.FATIGUE,
-                    onClick = { viewModel.onEvent(DistribucionCorporalUiEvent.OnModeChange(BodyMapMode.FATIGUE)) },
+                    onClick = { viewModel.onEvent(DistribucionCorporalUiEvent.OnModeChange(BodyMapMode.FATIGUE)) }
                 )
                 HdChip(
                     text = stringResource(R.string.metric_strength),
                     isSelected = uiState.mode == BodyMapMode.STRENGTH,
-                    onClick = { viewModel.onEvent(DistribucionCorporalUiEvent.OnModeChange(BodyMapMode.STRENGTH)) },
+                    onClick = { viewModel.onEvent(DistribucionCorporalUiEvent.OnModeChange(BodyMapMode.STRENGTH)) }
                 )
             }
             Spacer(modifier = Modifier.height(12.dp))
 
             when (uiState.mode) {
                 BodyMapMode.FATIGUE -> {
-                    GradientLegend(startColor = baseColor, endColor = fatiguedColor, startLabel = stringResource(R.string.stats_fresh), endLabel = stringResource(R.string.stats_fatigued))
+                    GradientLegend(
+                        startColor = baseColor,
+                        endColor = fatiguedColor,
+                        startLabel = stringResource(R.string.stats_fresh),
+                        endLabel = stringResource(R.string.stats_fatigued)
+                    )
                     Spacer(modifier = Modifier.height(12.dp))
                 }
+
                 BodyMapMode.STRENGTH -> {
-                    GradientLegend(startColor = baseColor, endColor = strongColor, startLabel = stringResource(R.string.stats_long_ago), endLabel = stringResource(R.string.stats_recently_trained))
+                    GradientLegend(
+                        startColor = baseColor,
+                        endColor = strongColor,
+                        startLabel = stringResource(R.string.stats_long_ago),
+                        endLabel = stringResource(R.string.stats_recently_trained)
+                    )
                     Spacer(modifier = Modifier.height(12.dp))
                 }
+
                 BodyMapMode.VOLUME -> Unit
             }
 
@@ -148,7 +162,7 @@ fun DistribucionCorporalScreen(
                 categoryColors = categoryColors,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(400.dp),
+                    .height(400.dp)
             )
             Spacer(modifier = Modifier.height(16.dp))
             BodyPeriodTotals(summary = uiState.summary)
@@ -173,7 +187,7 @@ private fun BodyPeriodTotals(summary: PeriodSummary) {
                 value = "${summary.workouts}",
                 deltaText = deltaText(summary.workoutsDelta),
                 isPositive = summary.workoutsDelta >= 0,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f)
             )
             HdStatCard(
                 icon = Icons.Default.Timer,
@@ -184,7 +198,7 @@ private fun BodyPeriodTotals(summary: PeriodSummary) {
                     if (h > 0) stringResource(R.string.duration_hours_minutes, h, m) else stringResource(R.string.duration_minutes, m)
                 },
                 subtext = null,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f)
             )
         }
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -197,7 +211,7 @@ private fun BodyPeriodTotals(summary: PeriodSummary) {
                     stringResource(R.string.stats_vs_previous, "$sign${kotlin.math.abs(summary.volumeKgDelta).formatTotalWeight()}")
                 },
                 isPositive = summary.volumeKgDelta >= 0,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f)
             )
             HdStatCard(
                 icon = Icons.Default.Repeat,
@@ -205,27 +219,21 @@ private fun BodyPeriodTotals(summary: PeriodSummary) {
                 value = "${summary.sets}",
                 deltaText = deltaText(summary.setsDelta),
                 isPositive = summary.setsDelta >= 0,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f)
             )
         }
     }
 }
 
 @Composable
-private fun GradientLegend(
-    startColor: Color,
-    endColor: Color,
-    startLabel: String,
-    endLabel: String,
-    modifier: Modifier = Modifier,
-) {
+private fun GradientLegend(startColor: Color, endColor: Color, startLabel: String, endLabel: String, modifier: Modifier = Modifier) {
     Column(modifier = modifier.fillMaxWidth()) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(8.dp)
                 .clip(MaterialTheme.shapes.small)
-                .background(Brush.horizontalGradient(listOf(startColor, endColor))),
+                .background(Brush.horizontalGradient(listOf(startColor, endColor)))
         )
         Spacer(modifier = Modifier.height(4.dp))
         Row(modifier = Modifier.fillMaxWidth()) {
@@ -233,12 +241,12 @@ private fun GradientLegend(
                 text = startLabel,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f)
             )
             Text(
                 text = endLabel,
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }

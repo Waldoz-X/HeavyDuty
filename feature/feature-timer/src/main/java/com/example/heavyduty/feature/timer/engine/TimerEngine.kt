@@ -17,6 +17,9 @@ import com.example.heavyduty.feature.timer.presentation.TimerUiState
 import com.example.heavyduty.feature.timer.service.TimerNotifications
 import com.example.heavyduty.feature.timer.service.TimerService
 import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
+import javax.inject.Singleton
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -24,8 +27,8 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -33,9 +36,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
-import javax.inject.Singleton
-import kotlin.time.Duration.Companion.seconds
 
 /**
  * Owns the timer's countdown loop and lifecycle as a process-scoped singleton so it keeps
@@ -47,7 +47,7 @@ import kotlin.time.Duration.Companion.seconds
 class TimerEngine @Inject constructor(
     @param:ApplicationContext private val context: Context,
     @param:DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher,
-    private val notifications: TimerNotifications,
+    private val notifications: TimerNotifications
 ) : RestTimerController {
     private val engineScope = CoroutineScope(SupervisorJob() + defaultDispatcher)
 
@@ -78,15 +78,19 @@ class TimerEngine @Inject constructor(
     fun onEvent(event: TimerUiEvent) {
         when (event) {
             is TimerUiEvent.OnModeSelect -> selectMode(event.mode)
+
             is TimerUiEvent.OnDurationChange -> {
                 _state.update {
                     it.copy(totalSeconds = event.seconds, remainingSeconds = event.seconds)
                 }
             }
+
             is TimerUiEvent.OnRoundsChange -> {
                 _state.update { it.copy(rounds = event.rounds.coerceAtLeast(1)) }
             }
+
             TimerUiEvent.OnStartPause -> toggleStartPause()
+
             TimerUiEvent.OnReset -> reset()
         }
     }
@@ -107,7 +111,7 @@ class TimerEngine @Inject constructor(
                 totalSeconds = seconds,
                 remainingSeconds = seconds,
                 rounds = 1,
-                isRunning = true,
+                isRunning = true
             )
         }
         startService()
@@ -119,7 +123,7 @@ class TimerEngine @Inject constructor(
         _state.update {
             it.copy(
                 remainingSeconds = (it.remainingSeconds + deltaSeconds).coerceAtLeast(0),
-                totalSeconds = (it.totalSeconds + deltaSeconds).coerceAtLeast(1),
+                totalSeconds = (it.totalSeconds + deltaSeconds).coerceAtLeast(1)
             )
         }
     }
@@ -157,7 +161,7 @@ class TimerEngine @Inject constructor(
                 mode = mode,
                 totalSeconds = defaultSeconds,
                 remainingSeconds = defaultSeconds,
-                rounds = defaultRounds,
+                rounds = defaultRounds
             )
         }
         stopService()
@@ -186,7 +190,7 @@ class TimerEngine @Inject constructor(
                 _state.update {
                     it.copy(
                         remainingSeconds = it.remainingSeconds - 1,
-                        elapsedSeconds = it.elapsedSeconds + 1,
+                        elapsedSeconds = it.elapsedSeconds + 1
                     )
                 }
             }
@@ -196,7 +200,7 @@ class TimerEngine @Inject constructor(
                     _state.update {
                         it.copy(
                             currentRound = it.currentRound + 1,
-                            remainingSeconds = it.totalSeconds,
+                            remainingSeconds = it.totalSeconds
                         )
                     }
                     vibrate()
@@ -237,7 +241,7 @@ class TimerEngine @Inject constructor(
         elapsedSeconds = 0,
         isRunning = false,
         isPaused = false,
-        currentRound = 1,
+        currentRound = 1
     )
 
     private fun startService() {

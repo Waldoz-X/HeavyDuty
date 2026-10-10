@@ -17,8 +17,11 @@ const val DAY = 24 * HOUR
 
 /** A compound lift: most of each set goes to chest, the rest to triceps and shoulders. */
 val BENCH = Exercise(
-    id = 1, name = "Press de banca", muscleGroup = MuscleGroup.CHEST, exerciseType = ExerciseType.STRENGTH,
-    muscleWeights = mapOf(MuscleGroup.CHEST to 0.6f, MuscleGroup.TRICEPS to 0.25f, MuscleGroup.SHOULDERS to 0.15f),
+    id = 1,
+    name = "Press de banca",
+    muscleGroup = MuscleGroup.CHEST,
+    exerciseType = ExerciseType.STRENGTH,
+    muscleWeights = mapOf(MuscleGroup.CHEST to 0.6f, MuscleGroup.TRICEPS to 0.25f, MuscleGroup.SHOULDERS to 0.15f)
 )
 val SQUAT = Exercise(id = 2, name = "Sentadilla", muscleGroup = MuscleGroup.QUADRICEPS, exerciseType = ExerciseType.STRENGTH)
 val CURL = Exercise(id = 3, name = "Curl de bíceps", muscleGroup = MuscleGroup.BICEPS, exerciseType = ExerciseType.STRENGTH)
@@ -38,8 +41,14 @@ fun set(
     at: Long,
     warmup: Boolean = false,
     completed: Boolean = true,
-    unit: WeightUnit? = null,
+    unit: WeightUnit? = null
 ) = WorkoutSet(
-    sessionId = session, exerciseId = exercise.id, reps = reps, weight = weightKg,
-    isCompleted = completed, completedAt = if (completed) at else null, isWarmup = warmup, weightUnit = unit,
+    sessionId = session,
+    exerciseId = exercise.id,
+    reps = reps,
+    weight = weightKg,
+    isCompleted = completed,
+    completedAt = if (completed) at else null,
+    isWarmup = warmup,
+    weightUnit = unit
 )

@@ -19,7 +19,16 @@ class ProfileCalculationsTest {
     private val week = 7 * day
 
     private fun set(id: Long, exercise: Long, weight: Float, at: Long, session: Long = 1, warmup: Boolean = false, reps: Int = 5) =
-        WorkoutSet(id = id, sessionId = session, exerciseId = exercise, reps = reps, weight = weight, isCompleted = true, completedAt = at, isWarmup = warmup)
+        WorkoutSet(
+            id = id,
+            sessionId = session,
+            exerciseId = exercise,
+            reps = reps,
+            weight = weight,
+            isCompleted = true,
+            completedAt = at,
+            isWarmup = warmup
+        )
 
     @Test
     fun `a set is a record when it beats every earlier weight of its exercise`() {
@@ -28,7 +37,7 @@ class ProfileCalculationsTest {
             set(1, exercise = 1, weight = 80f, at = 1), // first ever bench: a record
             set(2, exercise = 1, weight = 80f, at = 2), // only ties it
             set(3, exercise = 1, weight = 70f, at = 3),
-            set(5, exercise = 2, weight = 60f, at = 5), // first squat
+            set(5, exercise = 2, weight = 60f, at = 5) // first squat
         )
 
         assertEquals(setOf(1L, 4L, 5L), personalRecordSetIds(sets))
@@ -39,7 +48,7 @@ class ProfileCalculationsTest {
         val sets = listOf(
             set(1, exercise = 1, weight = 90f, at = 1), // bench was 100 before: not a record
             set(2, exercise = 1, weight = 105f, at = 2), // beats 100
-            set(3, exercise = 2, weight = 60f, at = 3), // squat never done before
+            set(3, exercise = 2, weight = 60f, at = 3) // squat never done before
         )
 
         assertEquals(setOf(2L, 3L), personalRecordSetIds(sets, earlierBests = mapOf(1L to 100f)))
@@ -55,7 +64,7 @@ class ProfileCalculationsTest {
             WorkoutSession(id = 4, startTime = now - 3 * day, totalDurationSecs = 9999, status = WorkoutStatus.IN_PROGRESS),
             // Exactly on a week boundary: counted once, in the newer week.
             WorkoutSession(id = 5, startTime = now - week, totalDurationSecs = 900, status = WorkoutStatus.COMPLETED),
-            WorkoutSession(id = 6, startTime = now - 40 * day, totalDurationSecs = 3600, status = WorkoutStatus.COMPLETED),
+            WorkoutSession(id = 6, startTime = now - 40 * day, totalDurationSecs = 3600, status = WorkoutStatus.COMPLETED)
         )
 
         val weeks = weeklyTrainingHours(sessions, now)
@@ -69,13 +78,13 @@ class ProfileCalculationsTest {
         val sessions = listOf(
             WorkoutSession(id = 1, startTime = 5 * day, status = WorkoutStatus.COMPLETED),
             WorkoutSession(id = 2, startTime = 2 * day, status = WorkoutStatus.COMPLETED),
-            WorkoutSession(id = 3, startTime = 9 * day, status = WorkoutStatus.IN_PROGRESS),
+            WorkoutSession(id = 3, startTime = 9 * day, status = WorkoutStatus.IN_PROGRESS)
         )
         val sets = listOf(
             set(1, exercise = 1, weight = 100f, at = 5 * day, session = 1, reps = 8), // 800
             set(2, exercise = 1, weight = 40f, at = 5 * day, session = 1, warmup = true),
             set(3, exercise = 2, weight = 50f, at = 2 * day, session = 2, reps = 10), // 500
-            set(4, exercise = 2, weight = 90f, at = 9 * day, session = 3), // workout not finished
+            set(4, exercise = 2, weight = 90f, at = 9 * day, session = 3) // workout not finished
         )
 
         val stats = GetProfileStatsUseCase(FakeWorkoutRepository(sessions, sets))().first()

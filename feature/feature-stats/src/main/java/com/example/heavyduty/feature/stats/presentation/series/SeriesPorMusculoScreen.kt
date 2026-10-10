@@ -1,15 +1,9 @@
 package com.example.heavyduty.feature.stats.presentation.series
 
-import com.example.heavyduty.core.ui.components.HdCardsSkeleton
-import com.example.heavyduty.core.common.R
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.material3.MaterialTheme
-import com.example.heavyduty.core.common.extensions.formatDecimal
-import com.example.heavyduty.core.ui.components.HdErrorState
-import com.example.heavyduty.core.ui.components.HdPeriodSelector
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -17,6 +11,7 @@ import androidx.compose.material.icons.filled.Timeline
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -27,8 +22,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.heavyduty.core.common.R
+import com.example.heavyduty.core.common.extensions.formatDecimal
 import com.example.heavyduty.core.ui.components.HdBarChart
+import com.example.heavyduty.core.ui.components.HdCardsSkeleton
 import com.example.heavyduty.core.ui.components.HdEmptyState
+import com.example.heavyduty.core.ui.components.HdErrorState
+import com.example.heavyduty.core.ui.components.HdPeriodSelector
 import com.example.heavyduty.core.ui.nameResId
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,7 +36,7 @@ import com.example.heavyduty.core.ui.nameResId
 fun SeriesPorMusculoScreen(
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: SeriesPorMusculoViewModel = hiltViewModel(),
+    viewModel: SeriesPorMusculoViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -48,10 +48,10 @@ fun SeriesPorMusculoScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
-                },
+                }
             )
         },
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize()
     ) { innerPadding ->
         if (uiState.isLoading) {
             HdCardsSkeleton(modifier = Modifier.padding(innerPadding).padding(16.dp), heights = listOf(48.dp, 64.dp, 280.dp))
@@ -64,30 +64,30 @@ fun SeriesPorMusculoScreen(
         Column(
             modifier = Modifier
                 .padding(innerPadding)
-                .padding(16.dp),
+                .padding(16.dp)
         ) {
             HdPeriodSelector(
                 selected = uiState.selectedPeriod,
-                onSelect = { viewModel.onEvent(SeriesPorMusculoUiEvent.OnPeriodChange(it)) },
+                onSelect = { viewModel.onEvent(SeriesPorMusculoUiEvent.OnPeriodChange(it)) }
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = stringResource(R.string.stats_series_explainer),
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(16.dp))
             if (uiState.data.isEmpty()) {
                 HdEmptyState(
                     icon = Icons.Default.Timeline,
                     title = stringResource(R.string.stats_series_empty_title),
-                    description = stringResource(R.string.stats_series_empty_desc),
+                    description = stringResource(R.string.stats_series_empty_desc)
                 )
             } else {
                 val data = uiState.data.map { (muscle, value) -> stringResource(muscle.nameResId) to value }
                 HdBarChart(
                     data = data,
-                    valueFormatter = { value -> value.formatDecimal() },
+                    valueFormatter = { value -> value.formatDecimal() }
                 )
             }
         }

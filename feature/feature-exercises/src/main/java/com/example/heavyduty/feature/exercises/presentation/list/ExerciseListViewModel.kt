@@ -2,12 +2,13 @@ package com.example.heavyduty.feature.exercises.presentation.list
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.heavyduty.core.common.dispatchers.DefaultDispatcher
 import com.example.heavyduty.core.domain.model.Exercise
 import com.example.heavyduty.core.domain.model.MuscleGroup
 import com.example.heavyduty.core.domain.model.searchExercises
 import com.example.heavyduty.feature.exercises.domain.usecase.GetExercisesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import com.example.heavyduty.core.common.dispatchers.DefaultDispatcher
+import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -20,7 +21,6 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * The whole catalog (~1.3k exercises) is filtered in memory, so the search, the muscle filter
@@ -30,7 +30,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ExerciseListViewModel @Inject constructor(
     private val getExercisesUseCase: GetExercisesUseCase,
-    @param:DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher,
+    @param:DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ExerciseListUiState())
@@ -53,21 +53,25 @@ class ExerciseListViewModel @Inject constructor(
                 _uiState.update { it.copy(searchQuery = event.query) }
                 filters.update { it.copy(query = event.query) }
             }
+
             is ExerciseListUiEvent.OnFilterSelect -> {
                 val newFilter = if (_uiState.value.selectedFilter == event.filter) null else event.filter
                 _uiState.update { it.copy(selectedFilter = newFilter) }
                 filters.update { it.copy(muscleGroup = newFilter) }
             }
+
             is ExerciseListUiEvent.OnEquipmentFilterSelect -> {
                 val newEquipment = if (_uiState.value.selectedEquipment == event.equipment) null else event.equipment
                 _uiState.update { it.copy(selectedEquipment = newEquipment) }
                 filters.update { it.copy(equipment = newEquipment) }
             }
+
             is ExerciseListUiEvent.OnExerciseClick -> {
                 viewModelScope.launch {
                     _uiEffect.send(ExerciseListUiEffect.NavigateToDetail(event.exerciseId))
                 }
             }
+
             is ExerciseListUiEvent.OnToggleSelection -> {
                 _uiState.update { state ->
                     val selected = state.selectedIds
@@ -77,10 +81,11 @@ class ExerciseListViewModel @Inject constructor(
                             selected - event.exerciseId
                         } else {
                             selected + event.exerciseId
-                        },
+                        }
                     )
                 }
             }
+
             is ExerciseListUiEvent.OnPreviewExercise -> {
                 _uiState.update { it.copy(previewExercise = event.exercise) }
             }
@@ -100,7 +105,7 @@ class ExerciseListViewModel @Inject constructor(
                             exercises = exercises,
                             availableEquipment = availableEquipment,
                             isLoading = false,
-                            loadFailed = false,
+                            loadFailed = false
                         )
                     }
                 }
@@ -120,9 +125,5 @@ class ExerciseListViewModel @Inject constructor(
         return result to availableEquipment
     }
 
-    private data class Filters(
-        val query: String = "",
-        val muscleGroup: MuscleGroup? = null,
-        val equipment: String? = null,
-    )
+    private data class Filters(val query: String = "", val muscleGroup: MuscleGroup? = null, val equipment: String? = null)
 }

@@ -7,9 +7,6 @@ import javax.inject.Inject
 /**
  * Use case to update an existing routine.
  */
-class UpdateRoutineUseCase @Inject constructor(
-    private val routineRepository: RoutineRepository,
-) {
-    suspend operator fun invoke(routine: Routine) =
-        routineRepository.updateRoutine(routine)
+class UpdateRoutineUseCase @Inject constructor(private val routineRepository: RoutineRepository) {
+    suspend operator fun invoke(routine: Routine) = routineRepository.updateRoutine(routine)
 }

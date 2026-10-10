@@ -55,7 +55,9 @@ interface ExerciseDao {
      * Matched on English name AND Spanish instructions: a few catalog names repeat with
      * different instructions, and the stored row has no other link to its catalog entry.
      */
-    @Query("UPDATE exercises SET instructionsEn = :english WHERE isCustom = 0 AND instructionsEn = '' AND nameEn = :nameEn AND instructions = :spanish")
+    @Query(
+        "UPDATE exercises SET instructionsEn = :english WHERE isCustom = 0 AND instructionsEn = '' AND nameEn = :nameEn AND instructions = :spanish"
+    )
     suspend fun setEnglishInstructions(nameEn: String, spanish: String, english: String)
 
     /** Catalog rows the catalog couldn't match keep their current instructions, so the fill runs once. */

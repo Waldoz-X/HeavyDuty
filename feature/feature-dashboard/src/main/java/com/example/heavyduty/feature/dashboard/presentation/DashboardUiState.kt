@@ -22,7 +22,7 @@ data class DashboardUiState(
     val streakDays: Int = 0,
     val bodyWeightSummary: BodyWeightSummaryUi = BodyWeightSummaryUi(),
     val showLogWeightSheet: Boolean = false,
-    val loadFailed: Boolean = false,
+    val loadFailed: Boolean = false
 )
 
 /**

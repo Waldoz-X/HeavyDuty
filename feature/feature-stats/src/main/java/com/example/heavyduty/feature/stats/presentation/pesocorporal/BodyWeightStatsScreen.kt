@@ -1,10 +1,5 @@
 package com.example.heavyduty.feature.stats.presentation.pesocorporal
 
-import com.example.heavyduty.core.ui.components.HdCardsSkeleton
-import com.example.heavyduty.core.common.R
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
-import com.example.heavyduty.core.common.extensions.formatOneDecimal
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -53,33 +48,38 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.heavyduty.core.common.R
+import com.example.heavyduty.core.common.extensions.formatOneDecimal
 import com.example.heavyduty.core.common.extensions.toFormattedDateTime
 import com.example.heavyduty.core.common.extensions.toWeightString
+import com.example.heavyduty.core.domain.model.kgTo
+import com.example.heavyduty.core.domain.model.label
+import com.example.heavyduty.core.domain.model.toKgFrom
+import com.example.heavyduty.core.ui.LocalWeightUnit
 import com.example.heavyduty.core.ui.components.HdCard
+import com.example.heavyduty.core.ui.components.HdCardsSkeleton
 import com.example.heavyduty.core.ui.components.HdEmptyState
 import com.example.heavyduty.core.ui.components.HdErrorState
 import com.example.heavyduty.core.ui.components.HdLineChart
+import com.example.heavyduty.core.ui.formatWeight
+import com.example.heavyduty.core.ui.formatWeightValue
+import com.example.heavyduty.core.ui.weightUnitLabel
 import com.example.heavyduty.feature.stats.domain.usecase.BodyWeightHistoryItem
 import com.example.heavyduty.feature.stats.domain.usecase.BodyWeightStatsReport
-import com.example.heavyduty.core.domain.model.label
-import com.example.heavyduty.core.domain.model.toKgFrom
-import com.example.heavyduty.core.domain.model.kgTo
-import com.example.heavyduty.core.ui.weightUnitLabel
-import com.example.heavyduty.core.ui.formatWeightValue
-import com.example.heavyduty.core.ui.formatWeight
-import com.example.heavyduty.core.ui.LocalWeightUnit
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BodyWeightStatsScreen(
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: BodyWeightStatsViewModel = hiltViewModel(),
+    viewModel: BodyWeightStatsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showGoalDialog by remember { mutableStateOf(false) }
@@ -94,7 +94,7 @@ fun BodyWeightStatsScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.action_back),
+                            contentDescription = stringResource(R.string.action_back)
                         )
                     }
                 },
@@ -103,7 +103,7 @@ fun BodyWeightStatsScreen(
                         Icon(
                             imageVector = Icons.Default.Flag,
                             contentDescription = stringResource(R.string.bw_set_goal),
-                            tint = MaterialTheme.colorScheme.primary,
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
@@ -115,10 +115,10 @@ fun BodyWeightStatsScreen(
                 icon = { Icon(Icons.Default.Add, contentDescription = null) },
                 text = { Text(stringResource(R.string.bw_log_weight)) },
                 containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
             )
         },
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize()
     ) { innerPadding ->
         if (uiState.isLoading) {
             HdCardsSkeleton(modifier = Modifier.padding(innerPadding).padding(16.dp), heights = listOf(160.dp, 240.dp, 200.dp))
@@ -138,12 +138,12 @@ fun BodyWeightStatsScreen(
                     .padding(innerPadding)
                     .padding(16.dp),
                 verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 HdEmptyState(
                     icon = Icons.Default.MonitorWeight,
                     title = stringResource(R.string.bw_empty_title),
-                    description = stringResource(R.string.bw_empty_desc),
+                    description = stringResource(R.string.bw_empty_desc)
                 )
                 Spacer(modifier = Modifier.height(24.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -165,13 +165,13 @@ fun BodyWeightStatsScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding),
+                    .padding(innerPadding)
             ) {
                 // 1. Tarjeta Hero de Meta de Peso
                 item {
                     WeightGoalHeroCard(
                         report = report,
-                        onEditGoal = { showGoalDialog = true },
+                        onEditGoal = { showGoalDialog = true }
                     )
                 }
 
@@ -181,19 +181,19 @@ fun BodyWeightStatsScreen(
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
                                 text = stringResource(R.string.bw_over_time),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurface,
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                             if (report.goalWeightKg != null) {
                                 Text(
                                     text = stringResource(R.string.bw_goal_value, report.goalWeightKg.formatWeight()),
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.primary,
+                                    color = MaterialTheme.colorScheme.primary
                                 )
                             }
                         }
@@ -202,7 +202,7 @@ fun BodyWeightStatsScreen(
                         HdLineChart(
                             data = report.chartPoints.map { (time, kg) -> time to kg.kgTo(unit) },
                             goalValue = report.goalWeightKg?.kgTo(unit),
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
                 }
@@ -211,22 +211,22 @@ fun BodyWeightStatsScreen(
                 item {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         MetricCard(
                             title = stringResource(R.string.metric_min),
                             value = report.minWeightKg,
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.weight(1f)
                         )
                         MetricCard(
                             title = stringResource(R.string.metric_max),
                             value = report.maxWeightKg,
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.weight(1f)
                         )
                         MetricCard(
                             title = stringResource(R.string.bw_average),
                             value = report.avgWeightKg,
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.weight(1f)
                         )
                     }
                 }
@@ -236,18 +236,18 @@ fun BodyWeightStatsScreen(
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
                             text = stringResource(R.string.bw_history),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
                             text = pluralStringResource(R.plurals.bw_entries, report.history.size, report.history.size),
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -256,7 +256,7 @@ fun BodyWeightStatsScreen(
                 items(report.history, key = { it.id }) { entry ->
                     HistoryEntryCard(
                         entry = entry,
-                        onDelete = { entryToDelete = entry },
+                        onDelete = { entryToDelete = entry }
                     )
                 }
             }
@@ -293,7 +293,15 @@ fun BodyWeightStatsScreen(
         AlertDialog(
             onDismissRequest = { entryToDelete = null },
             title = { Text(stringResource(R.string.bw_delete_title)) },
-            text = { Text(stringResource(R.string.bw_delete_message, entryToDelete?.weightKg?.formatWeight().orEmpty(), entryToDelete?.loggedAt?.toFormattedDateTime().orEmpty())) },
+            text = {
+                Text(
+                    stringResource(
+                        R.string.bw_delete_message,
+                        entryToDelete?.weightKg?.formatWeight().orEmpty(),
+                        entryToDelete?.loggedAt?.toFormattedDateTime().orEmpty()
+                    )
+                )
+            },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -314,30 +322,26 @@ fun BodyWeightStatsScreen(
 }
 
 @Composable
-private fun WeightGoalHeroCard(
-    report: BodyWeightStatsReport,
-    onEditGoal: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+private fun WeightGoalHeroCard(report: BodyWeightStatsReport, onEditGoal: () -> Unit, modifier: Modifier = Modifier) {
     HdCard(modifier = modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     imageVector = Icons.Default.Flag,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(20.dp),
+                    modifier = Modifier.size(20.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = stringResource(R.string.bw_goal_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
             IconButton(onClick = onEditGoal) {
@@ -345,7 +349,7 @@ private fun WeightGoalHeroCard(
                     imageVector = Icons.Default.Edit,
                     contentDescription = stringResource(R.string.bw_edit_goal),
                     tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(18.dp),
+                    modifier = Modifier.size(18.dp)
                 )
             }
         }
@@ -359,26 +363,26 @@ private fun WeightGoalHeroCard(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Bottom,
+                verticalAlignment = Alignment.Bottom
             ) {
                 Column {
                     Text(
                         text = stringResource(R.string.bw_current),
                         style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Row(verticalAlignment = Alignment.Bottom) {
                         Text(
                             text = report.currentWeightKg.formatWeightValue(),
                             style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                            color = MaterialTheme.colorScheme.onSurface,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = weightUnitLabel(),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(bottom = 4.dp),
+                            modifier = Modifier.padding(bottom = 4.dp)
                         )
                     }
                 }
@@ -387,20 +391,20 @@ private fun WeightGoalHeroCard(
                     Text(
                         text = stringResource(R.string.bw_target),
                         style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Row(verticalAlignment = Alignment.Bottom) {
                         Text(
                             text = report.goalWeightKg.formatWeightValue(),
                             style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                            color = MaterialTheme.colorScheme.primary,
+                            color = MaterialTheme.colorScheme.primary
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = weightUnitLabel(),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(bottom = 4.dp),
+                            modifier = Modifier.padding(bottom = 4.dp)
                         )
                     }
                 }
@@ -412,7 +416,7 @@ private fun WeightGoalHeroCard(
             Column(modifier = Modifier.fillMaxWidth()) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     val statusText = if (kotlin.math.abs(remaining) <= 0.2f) {
                         stringResource(R.string.bw_goal_reached)
@@ -426,13 +430,13 @@ private fun WeightGoalHeroCard(
                         text = statusText,
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurface,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
                         text = "${(progress * 100).toInt()}%",
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
 
@@ -445,7 +449,7 @@ private fun WeightGoalHeroCard(
                         .height(10.dp)
                         .clip(RoundedCornerShape(5.dp)),
                     color = MaterialTheme.colorScheme.primary,
-                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant
                 )
             }
 
@@ -453,12 +457,12 @@ private fun WeightGoalHeroCard(
                 Spacer(modifier = Modifier.height(12.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
                         text = stringResource(R.string.bw_start, report.startWeightKg.formatWeight()),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     val totalChange = report.currentWeightKg - report.startWeightKg
                     val sign = if (totalChange > 0) "+" else ""
@@ -466,7 +470,7 @@ private fun WeightGoalHeroCard(
                         text = stringResource(R.string.bw_total_change, "$sign${totalChange.formatWeight()}"),
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.Medium,
-                        color = if (totalChange <= 0) Color(0xFF4CAF50) else MaterialTheme.colorScheme.primary,
+                        color = if (totalChange <= 0) Color(0xFF4CAF50) else MaterialTheme.colorScheme.primary
                     )
                 }
             }
@@ -474,12 +478,12 @@ private fun WeightGoalHeroCard(
             // No hay meta fijada
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
                     text = stringResource(R.string.bw_no_goal),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 Button(onClick = onEditGoal) {
@@ -493,22 +497,18 @@ private fun WeightGoalHeroCard(
 }
 
 @Composable
-private fun HistoryEntryCard(
-    entry: BodyWeightHistoryItem,
-    onDelete: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+private fun HistoryEntryCard(entry: BodyWeightHistoryItem, onDelete: () -> Unit, modifier: Modifier = Modifier) {
     HdCard(modifier = modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Column {
                 Text(
                     text = entry.loggedAt.toFormattedDateTime(),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 if (entry.deltaKg != null) {
                     Spacer(modifier = Modifier.height(4.dp))
@@ -528,14 +528,14 @@ private fun HistoryEntryCard(
                             imageVector = icon,
                             contentDescription = null,
                             tint = color,
-                            modifier = Modifier.size(16.dp),
+                            modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = "$sign${entry.deltaKg.formatWeight()}",
                             style = MaterialTheme.typography.labelSmall,
                             color = color,
-                            fontWeight = FontWeight.SemiBold,
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
                 }
@@ -545,13 +545,13 @@ private fun HistoryEntryCard(
                 Text(
                     text = entry.weightKg.formatWeightValue(),
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
                     text = weightUnitLabel(),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) {
@@ -559,7 +559,7 @@ private fun HistoryEntryCard(
                         imageVector = Icons.Default.Delete,
                         contentDescription = stringResource(R.string.action_delete),
                         tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
-                        modifier = Modifier.size(18.dp),
+                        modifier = Modifier.size(18.dp)
                     )
                 }
             }
@@ -568,16 +568,12 @@ private fun HistoryEntryCard(
 }
 
 @Composable
-private fun MetricCard(
-    title: String,
-    value: Float?,
-    modifier: Modifier = Modifier,
-) {
+private fun MetricCard(title: String, value: Float?, modifier: Modifier = Modifier) {
     HdCard(modifier = modifier) {
         Text(
             text = title,
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(modifier = Modifier.height(4.dp))
         if (value != null) {
@@ -585,31 +581,27 @@ private fun MetricCard(
                 Text(
                     text = value.formatWeightValue(),
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.width(2.dp))
                 Text(
                     text = weightUnitLabel(),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         } else {
             Text(
                 text = "--",
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
 }
 
 @Composable
-private fun GoalWeightDialog(
-    currentGoal: Float?,
-    onDismiss: () -> Unit,
-    onSave: (Float?) -> Unit,
-) {
+private fun GoalWeightDialog(currentGoal: Float?, onDismiss: () -> Unit, onSave: (Float?) -> Unit) {
     val unit = LocalWeightUnit.current
     var textValue by remember { mutableStateOf(currentGoal?.kgTo(unit)?.formatOneDecimal() ?: "") }
 
@@ -622,7 +614,7 @@ private fun GoalWeightDialog(
                 Text(
                     text = stringResource(R.string.bw_goal_hint, unit.label),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 OutlinedTextField(
@@ -632,7 +624,7 @@ private fun GoalWeightDialog(
                     placeholder = { Text(stringResource(R.string.bw_goal_placeholder)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         },
@@ -662,11 +654,7 @@ private fun GoalWeightDialog(
 }
 
 @Composable
-private fun AddWeightDialog(
-    initialWeight: Float?,
-    onDismiss: () -> Unit,
-    onSave: (Float) -> Unit,
-) {
+private fun AddWeightDialog(initialWeight: Float?, onDismiss: () -> Unit, onSave: (Float) -> Unit) {
     val unit = LocalWeightUnit.current
     var textValue by remember { mutableStateOf(initialWeight?.kgTo(unit)?.formatOneDecimal() ?: "") }
     var isError by remember { mutableStateOf(false) }
@@ -680,7 +668,7 @@ private fun AddWeightDialog(
                 Text(
                     text = stringResource(R.string.bw_log_hint, unit.label),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 OutlinedTextField(
@@ -692,10 +680,14 @@ private fun AddWeightDialog(
                     label = { Text(stringResource(R.string.bw_weight_label, unit.label)) },
                     placeholder = { Text(stringResource(R.string.bw_weight_placeholder)) },
                     isError = isError,
-                    supportingText = if (isError) { { Text(stringResource(R.string.bw_invalid)) } } else null,
+                    supportingText = if (isError) {
+                        { Text(stringResource(R.string.bw_invalid)) }
+                    } else {
+                        null
+                    },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         },

@@ -8,6 +8,7 @@ import com.example.heavyduty.core.ui.components.StatsPeriod
 import com.example.heavyduty.core.ui.components.currentAndPreviousRange
 import com.example.heavyduty.feature.stats.domain.usecase.GetMuscleGroupSetCountUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,7 +17,6 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * Working sets per muscle group over a selectable period. The range runs through the end of
@@ -27,12 +27,13 @@ import javax.inject.Inject
 @HiltViewModel
 class SeriesPorMusculoViewModel @Inject constructor(
     private val getMuscleGroupSetCount: GetMuscleGroupSetCountUseCase,
-    private val clock: Clock,
+    private val clock: Clock
 ) : ViewModel() {
 
     private val selectedPeriod = MutableStateFlow(StatsPeriod.LAST_7_DAYS)
 
     private val _uiState = MutableStateFlow(SeriesPorMusculoUiState())
+
     /** Loads only while the screen is watching — see [whileSubscribed]. */
     val uiState: StateFlow<SeriesPorMusculoUiState> = _uiState.whileSubscribed(viewModelScope) {
         launch {
@@ -50,7 +51,7 @@ class SeriesPorMusculoViewModel @Inject constructor(
                                 .sortedByDescending { entry -> entry.value }
                                 .map { entry -> entry.key to entry.value },
                             selectedPeriod = period,
-                            isLoading = false,
+                            isLoading = false
                         )
                     }
                 }

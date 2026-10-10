@@ -11,8 +11,8 @@ import androidx.core.app.NotificationChannelCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.example.heavyduty.core.common.R
-import com.example.heavyduty.feature.timer.R as TimerR
 import com.example.heavyduty.core.common.navigation.AppSections
+import com.example.heavyduty.feature.timer.R as TimerR
 import com.example.heavyduty.feature.timer.domain.model.TimerMode
 import com.example.heavyduty.feature.timer.presentation.TimerUiState
 import com.example.heavyduty.feature.timer.presentation.nameResId
@@ -30,9 +30,7 @@ import kotlin.math.abs
  * next round), not once a second.
  */
 @Singleton
-class TimerNotifications @Inject constructor(
-    @param:ApplicationContext private val context: Context,
-) {
+class TimerNotifications @Inject constructor(@param:ApplicationContext private val context: Context) {
     private val manager = NotificationManagerCompat.from(context)
 
     fun createChannels() {
@@ -48,8 +46,8 @@ class TimerNotifications @Inject constructor(
                     .setDescription(context.getString(R.string.rest_finished_channel_description))
                     .setVibrationEnabled(true)
                     .setShowBadge(false)
-                    .build(),
-            ),
+                    .build()
+            )
         )
     }
 
@@ -90,9 +88,13 @@ class TimerNotifications @Inject constructor(
             builder.addAction(
                 if (content.isRunning) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play,
                 context.getString(if (content.isRunning) R.string.timer_pause else R.string.timer_resume),
-                serviceAction(TimerService.ACTION_TOGGLE),
+                serviceAction(TimerService.ACTION_TOGGLE)
             )
-            builder.addAction(android.R.drawable.ic_menu_close_clear_cancel, context.getString(R.string.timer_stop), serviceAction(TimerService.ACTION_STOP))
+            builder.addAction(
+                android.R.drawable.ic_menu_close_clear_cancel,
+                context.getString(R.string.timer_stop),
+                serviceAction(TimerService.ACTION_STOP)
+            )
         }
         return builder.build()
     }
@@ -139,7 +141,7 @@ class TimerNotifications @Inject constructor(
             context,
             section.hashCode(),
             intent,
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
     }
 
@@ -166,15 +168,14 @@ class TimerNotifications @Inject constructor(
         val round: Int,
         val rounds: Int,
         val anchorMillis: Long,
-        val frozenSeconds: Int,
+        val frozenSeconds: Int
     ) {
         /**
          * Same notification as [other]: equal apart from anchor jitter. The engine ticks about
          * once a second, so the computed end time wobbles by some milliseconds between ticks.
          */
-        fun showsSameAs(other: OngoingContent): Boolean =
-            copy(anchorMillis = 0) == other.copy(anchorMillis = 0) &&
-                abs(anchorMillis - other.anchorMillis) < ANCHOR_TOLERANCE_MS
+        fun showsSameAs(other: OngoingContent): Boolean = copy(anchorMillis = 0) == other.copy(anchorMillis = 0) &&
+            abs(anchorMillis - other.anchorMillis) < ANCHOR_TOLERANCE_MS
 
         companion object {
             fun of(state: TimerUiState, nowMillis: Long): OngoingContent {
@@ -190,7 +191,7 @@ class TimerNotifications @Inject constructor(
                         isStopwatch -> nowMillis - shownSeconds * 1_000L
                         else -> nowMillis + shownSeconds * 1_000L
                     },
-                    frozenSeconds = if (state.isRunning) 0 else shownSeconds,
+                    frozenSeconds = if (state.isRunning) 0 else shownSeconds
                 )
             }
         }

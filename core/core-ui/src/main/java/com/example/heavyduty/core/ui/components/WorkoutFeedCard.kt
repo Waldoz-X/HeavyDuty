@@ -1,8 +1,5 @@
 package com.example.heavyduty.core.ui.components
 
-import androidx.compose.ui.res.pluralStringResource
-import com.example.heavyduty.core.common.R
-import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -25,9 +22,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import com.example.heavyduty.core.common.R
 import com.example.heavyduty.core.ui.formatTotalWeight
 
 /**
@@ -42,7 +42,7 @@ data class WorkoutFeedItem(
     val durationMinutes: Int,
     val volumeKg: Float,
     val personalRecords: Int,
-    val exercises: List<String>,
+    val exercises: List<String>
 )
 
 private const val MAX_VISIBLE_EXERCISES = 4
@@ -51,10 +51,7 @@ private const val MAX_VISIBLE_EXERCISES = 4
  * Social-feed style card summarizing a completed workout.
  */
 @Composable
-fun WorkoutFeedCard(
-    item: WorkoutFeedItem,
-    modifier: Modifier = Modifier,
-) {
+fun WorkoutFeedCard(item: WorkoutFeedItem, modifier: Modifier = Modifier) {
     HdCard(modifier = modifier.fillMaxWidth()) {
         // Header: avatar, name, relative time
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -64,12 +61,12 @@ fun WorkoutFeedCard(
                 Text(
                     text = item.userName,
                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     text = item.relativeTime,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -79,7 +76,7 @@ fun WorkoutFeedCard(
         Text(
             text = item.workoutName,
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.onSurface,
+            color = MaterialTheme.colorScheme.onSurface
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -92,7 +89,7 @@ fun WorkoutFeedCard(
                 FeedMetric(
                     icon = Icons.Default.EmojiEvents,
                     text = pluralStringResource(R.plurals.feed_personal_records, item.personalRecords, item.personalRecords),
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = MaterialTheme.colorScheme.primary
                 )
             }
         }
@@ -104,7 +101,7 @@ fun WorkoutFeedCard(
                     Text(
                         text = line,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 val remaining = item.exercises.size - MAX_VISIBLE_EXERCISES
@@ -112,7 +109,7 @@ fun WorkoutFeedCard(
                     Text(
                         text = stringResource(R.string.feed_more_exercises, remaining),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary,
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             }
@@ -128,7 +125,7 @@ private fun FeedAvatar(name: String, avatarUrl: String?) {
             contentDescription = null,
             modifier = Modifier
                 .size(40.dp)
-                .clip(CircleShape),
+                .clip(CircleShape)
         )
     } else {
         androidx.compose.foundation.layout.Box(
@@ -136,12 +133,12 @@ private fun FeedAvatar(name: String, avatarUrl: String?) {
                 .size(40.dp)
                 .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.primary),
-            contentAlignment = Alignment.Center,
+            contentAlignment = Alignment.Center
         ) {
             Text(
                 text = name.trim().firstOrNull()?.uppercase() ?: "?",
                 style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onPrimary,
+                color = MaterialTheme.colorScheme.onPrimary
             )
         }
     }
@@ -151,7 +148,7 @@ private fun FeedAvatar(name: String, avatarUrl: String?) {
 private fun FeedMetric(
     icon: ImageVector,
     text: String,
-    tint: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.onSurfaceVariant,
+    tint: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.onSurfaceVariant
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Icon(imageVector = icon, contentDescription = null, tint = tint, modifier = Modifier.size(16.dp))

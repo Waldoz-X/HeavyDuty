@@ -24,7 +24,7 @@ class BaselineProfileGenerator {
     fun generate() = rule.collect(
         packageName = PACKAGE_NAME,
         // Also produce a startup profile, used to lay out the dex for faster startup.
-        includeInStartupProfile = true,
+        includeInStartupProfile = true
     ) {
         pressHome()
         startActivityAndWait()

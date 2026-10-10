@@ -45,40 +45,68 @@ class BackupRoundTripTest {
         target.close()
     }
 
-    private fun HeavyDutyDatabase.backups() = BackupRepositoryImpl(this, exerciseDao(), routineDao(), workoutDao(), bodyWeightDao(), Clock.System)
+    private fun HeavyDutyDatabase.backups() =
+        BackupRepositoryImpl(this, exerciseDao(), routineDao(), workoutDao(), bodyWeightDao(), Clock.System)
 
     @Test
     fun exportThenImport_restoresEverythingOnAnotherInstall() = runTest {
         val bench = source.exerciseDao().insertExercise(
-            ExerciseEntity(name = "Press de banca con barra", nameEn = "barbell bench press", muscleGroup = "CHEST", exerciseType = "STRENGTH"),
+            ExerciseEntity(
+                name = "Press de banca con barra",
+                nameEn = "barbell bench press",
+                muscleGroup = "CHEST",
+                exerciseType = "STRENGTH"
+            )
         )
         val custom = source.exerciseDao().insertExercise(
-            ExerciseEntity(name = "Mi press raro", muscleGroup = "CHEST", exerciseType = "STRENGTH", isCustom = true),
+            ExerciseEntity(name = "Mi press raro", muscleGroup = "CHEST", exerciseType = "STRENGTH", isCustom = true)
         )
         val routineId = source.routineDao().insertRoutine(RoutineEntity(name = "Torso"))
         source.routineDao().insertRoutineExercise(
-            RoutineExerciseEntity(routineId = routineId, exerciseId = bench, orderIndex = 0, targetSets = 4, targetReps = 6, targetWeight = 61.23f, weightUnit = "LB"),
+            RoutineExerciseEntity(
+                routineId = routineId,
+                exerciseId = bench,
+                orderIndex = 0,
+                targetSets = 4,
+                targetReps = 6,
+                targetWeight = 61.23f,
+                weightUnit = "LB"
+            )
         )
         source.routineDao().insertRoutineExercise(
-            RoutineExerciseEntity(routineId = routineId, exerciseId = custom, orderIndex = 1, supersetGroupId = "A"),
+            RoutineExerciseEntity(routineId = routineId, exerciseId = custom, orderIndex = 1, supersetGroupId = "A")
         )
         val sessionId = source.workoutDao().insertSession(
-            WorkoutSessionEntity(sessionName = "Torso", startTime = 1_000, endTime = 5_000, totalDurationSecs = 4, status = "COMPLETED"),
+            WorkoutSessionEntity(sessionName = "Torso", startTime = 1_000, endTime = 5_000, totalDurationSecs = 4, status = "COMPLETED")
         )
         source.workoutDao().insertSet(
-            WorkoutSetEntity(sessionId = sessionId, exerciseId = bench, setNumber = 1, reps = 10, weight = 40f, isCompleted = true, completedAt = 2_000, isWarmup = true),
+            WorkoutSetEntity(
+                sessionId = sessionId,
+                exerciseId = bench,
+                setNumber = 1,
+                reps = 10,
+                weight = 40f,
+                isCompleted = true,
+                completedAt = 2_000,
+                isWarmup = true
+            )
         )
         source.workoutDao().insertSet(
             WorkoutSetEntity(
                 sessionId = sessionId, exerciseId = bench, setNumber = 2, reps = 6, weight = 61.23f, isCompleted = true,
-                completedAt = 3_000, effortType = "RIR", effortValue = 2f, weightUnit = "LB",
-            ),
+                completedAt = 3_000, effortType = "RIR", effortValue = 2f, weightUnit = "LB"
+            )
         )
         source.bodyWeightDao().insertEntry(BodyWeightEntity(weightKg = 82.5f, loggedAt = 1_000))
 
         // The new install's catalog calls the same exercise something else in Spanish.
         target.exerciseDao().insertExercise(
-            ExerciseEntity(name = "Press banca con barra", nameEn = "barbell bench press", muscleGroup = "CHEST", exerciseType = "STRENGTH"),
+            ExerciseEntity(
+                name = "Press banca con barra",
+                nameEn = "barbell bench press",
+                muscleGroup = "CHEST",
+                exerciseType = "STRENGTH"
+            )
         )
 
         val result = target.backups().importSnapshot(source.backups().exportSnapshot())
@@ -107,14 +135,34 @@ class BackupRoundTripTest {
     @Test
     fun backupTakenMidWorkout_restoresThatWorkoutAsFinished() = runTest {
         val bench = source.exerciseDao().insertExercise(
-            ExerciseEntity(name = "Press de banca con barra", nameEn = "barbell bench press", muscleGroup = "CHEST", exerciseType = "STRENGTH"),
+            ExerciseEntity(
+                name = "Press de banca con barra",
+                nameEn = "barbell bench press",
+                muscleGroup = "CHEST",
+                exerciseType = "STRENGTH"
+            )
         )
-        val sessionId = source.workoutDao().insertSession(WorkoutSessionEntity(sessionName = "Torso", startTime = 1_000, status = "IN_PROGRESS"))
+        val sessionId = source.workoutDao().insertSession(
+            WorkoutSessionEntity(sessionName = "Torso", startTime = 1_000, status = "IN_PROGRESS")
+        )
         source.workoutDao().insertSet(
-            WorkoutSetEntity(sessionId = sessionId, exerciseId = bench, setNumber = 1, reps = 8, weight = 60f, isCompleted = true, completedAt = 61_000),
+            WorkoutSetEntity(
+                sessionId = sessionId,
+                exerciseId = bench,
+                setNumber = 1,
+                reps = 8,
+                weight = 60f,
+                isCompleted = true,
+                completedAt = 61_000
+            )
         )
         target.exerciseDao().insertExercise(
-            ExerciseEntity(name = "Press de banca con barra", nameEn = "barbell bench press", muscleGroup = "CHEST", exerciseType = "STRENGTH"),
+            ExerciseEntity(
+                name = "Press de banca con barra",
+                nameEn = "barbell bench press",
+                muscleGroup = "CHEST",
+                exerciseType = "STRENGTH"
+            )
         )
 
         target.backups().importSnapshot(source.backups().exportSnapshot())
@@ -130,15 +178,32 @@ class BackupRoundTripTest {
 
     private suspend fun seedSource() {
         val bench = source.exerciseDao().insertExercise(
-            ExerciseEntity(name = "Press de banca con barra", nameEn = "barbell bench press", muscleGroup = "CHEST", exerciseType = "STRENGTH"),
+            ExerciseEntity(
+                name = "Press de banca con barra",
+                nameEn = "barbell bench press",
+                muscleGroup = "CHEST",
+                exerciseType = "STRENGTH"
+            )
         )
-        source.exerciseDao().insertExercise(ExerciseEntity(name = "Mi press raro", muscleGroup = "CHEST", exerciseType = "STRENGTH", isCustom = true))
+        source.exerciseDao().insertExercise(
+            ExerciseEntity(name = "Mi press raro", muscleGroup = "CHEST", exerciseType = "STRENGTH", isCustom = true)
+        )
         val routineId = source.routineDao().insertRoutine(RoutineEntity(name = "Torso", createdAt = 500))
         source.routineDao().insertRoutineExercise(RoutineExerciseEntity(routineId = routineId, exerciseId = bench, orderIndex = 0))
         val sessionId = source.workoutDao().insertSession(
-            WorkoutSessionEntity(sessionName = "Torso", startTime = 1_000, endTime = 5_000, totalDurationSecs = 4, status = "COMPLETED"),
+            WorkoutSessionEntity(sessionName = "Torso", startTime = 1_000, endTime = 5_000, totalDurationSecs = 4, status = "COMPLETED")
         )
-        source.workoutDao().insertSet(WorkoutSetEntity(sessionId = sessionId, exerciseId = bench, setNumber = 1, reps = 8, weight = 60f, isCompleted = true, completedAt = 2_000))
+        source.workoutDao().insertSet(
+            WorkoutSetEntity(
+                sessionId = sessionId,
+                exerciseId = bench,
+                setNumber = 1,
+                reps = 8,
+                weight = 60f,
+                isCompleted = true,
+                completedAt = 2_000
+            )
+        )
         source.bodyWeightDao().insertEntry(BodyWeightEntity(weightKg = 82.5f, loggedAt = 1_000))
     }
 
@@ -147,14 +212,19 @@ class BackupRoundTripTest {
         routineDao().getAllRoutines().first().size,
         workoutDao().getAllSessions().first().size,
         workoutDao().getAllLoggedSets().first().size,
-        bodyWeightDao().getAllEntries().first().size,
+        bodyWeightDao().getAllEntries().first().size
     )
 
     @Test
     fun importingTheSameBackupTwiceAddsNothingTheSecondTime() = runTest {
         seedSource()
         target.exerciseDao().insertExercise(
-            ExerciseEntity(name = "Press de banca con barra", nameEn = "barbell bench press", muscleGroup = "CHEST", exerciseType = "STRENGTH"),
+            ExerciseEntity(
+                name = "Press de banca con barra",
+                nameEn = "barbell bench press",
+                muscleGroup = "CHEST",
+                exerciseType = "STRENGTH"
+            )
         )
         val backup = source.backups().exportSnapshot()
 
@@ -163,7 +233,10 @@ class BackupRoundTripTest {
         val second = target.backups().importSnapshot(backup)
 
         assertEquals(afterFirst, target.counts())
-        assertEquals(listOf(0, 0, 0, 0), listOf(second.customExercisesImported, second.routinesImported, second.sessionsImported, second.bodyWeightEntriesImported))
+        assertEquals(
+            listOf(0, 0, 0, 0),
+            listOf(second.customExercisesImported, second.routinesImported, second.sessionsImported, second.bodyWeightEntriesImported)
+        )
         assertEquals(3, second.alreadyPresent) // the routine, the workout and the weigh-in
     }
 

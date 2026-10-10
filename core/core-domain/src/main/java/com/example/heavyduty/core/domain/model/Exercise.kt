@@ -30,7 +30,7 @@ data class Exercise(
      * compound exercise credits every muscle it actually trains instead of only its primary.
      * Defaults to crediting [muscleGroup] alone when no secondary data exists.
      */
-    val muscleWeights: Map<MuscleGroup, Float> = mapOf(muscleGroup to 1f),
+    val muscleWeights: Map<MuscleGroup, Float> = mapOf(muscleGroup to 1f)
 )
 
 /**
@@ -38,8 +38,7 @@ data class Exercise(
  * only its primary [Exercise.muscleGroup] — the shared, single point every volume/fatigue/
  * set-count/strength calculation should go through, matching the [excludeWarmups] convention.
  */
-fun Exercise.muscleCredits(amount: Float): Map<MuscleGroup, Float> =
-    muscleWeights.mapValues { (_, weight) -> amount * weight }
+fun Exercise.muscleCredits(amount: Float): Map<MuscleGroup, Float> = muscleWeights.mapValues { (_, weight) -> amount * weight }
 
 /**
  * Inferred from [Exercise.equipment] rather than a stored flag, per the catalog's own
@@ -86,7 +85,7 @@ private val EQUIPMENT_DISPLAY_NAMES = mapOf(
     "trap bar" to "Barra hexagonal",
     "upper body ergometer" to "Ergómetro de brazos",
     "weighted" to "Con peso",
-    "wheel roller" to "Rueda abdominal",
+    "wheel roller" to "Rueda abdominal"
 )
 
 /** Translates a raw catalog equipment value (e.g. "body weight") to its Spanish display label. */
@@ -115,7 +114,7 @@ val Exercise.equipmentDisplayName: String
 private val PER_SIDE_NAME_KEYWORDS = listOf(
     "single leg", "single-leg", "single arm", "single-arm",
     "one arm", "one-arm", "one leg", "one-leg",
-    "lunge", "alternating", "unilateral", "split squat", "pistol squat", "step-up", "step up",
+    "lunge", "alternating", "unilateral", "split squat", "pistol squat", "step-up", "step up"
 )
 
 /**

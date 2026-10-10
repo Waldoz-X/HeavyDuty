@@ -4,12 +4,7 @@ package com.example.heavyduty.core.domain.model
  * Workout/duration/volume/set totals for a window of training. Shared by every screen that
  * shows "how much did I train in this range" so they all agree on what counts.
  */
-data class TrainingTotals(
-    val workouts: Int = 0,
-    val durationSecs: Int = 0,
-    val volumeKg: Float = 0f,
-    val sets: Int = 0,
-)
+data class TrainingTotals(val workouts: Int = 0, val durationSecs: Int = 0, val volumeKg: Float = 0f, val sets: Int = 0)
 
 /**
  * Only [WorkoutStatus.COMPLETED] sessions count, and only the non-warmup sets that belong to
@@ -23,7 +18,7 @@ fun trainingTotals(sessions: List<WorkoutSession>, sets: List<WorkoutSet>): Trai
         workouts = completedSessions.size,
         durationSecs = completedSessions.sumOf { it.totalDurationSecs },
         volumeKg = countedSets.sumOf { ((it.reps ?: 0) * (it.weight ?: 0f)).toDouble() }.toFloat(),
-        sets = countedSets.size,
+        sets = countedSets.size
     )
 }
 

@@ -13,13 +13,13 @@ import com.example.heavyduty.feature.history.presentation.progress.ProgressScree
 fun NavGraphBuilder.historyScreen(
     onSessionClick: (Long) -> Unit,
     onExerciseProgressClick: (Long) -> Unit,
-    onStartWorkout: () -> Unit = {},
+    onStartWorkout: () -> Unit = {}
 ) {
     composable(route = "history_graph") {
         HistoryListScreen(
             onSessionClick = onSessionClick,
             onExerciseProgressClick = onExerciseProgressClick,
-            onStartWorkout = onStartWorkout,
+            onStartWorkout = onStartWorkout
         )
     }
 }
@@ -27,14 +27,12 @@ fun NavGraphBuilder.historyScreen(
 /**
  * Registers the exercise progress composable in the NavHost.
  */
-fun NavGraphBuilder.progressScreen(
-    onNavigateBack: () -> Unit,
-) {
+fun NavGraphBuilder.progressScreen(onNavigateBack: () -> Unit) {
     composable(
         route = "progress/{exerciseId}",
         arguments = listOf(
-            navArgument("exerciseId") { type = NavType.LongType },
-        ),
+            navArgument("exerciseId") { type = NavType.LongType }
+        )
     ) {
         ProgressScreen(onNavigateBack = onNavigateBack)
     }

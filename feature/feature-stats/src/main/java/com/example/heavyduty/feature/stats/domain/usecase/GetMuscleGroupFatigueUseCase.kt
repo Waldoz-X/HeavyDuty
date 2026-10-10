@@ -9,12 +9,12 @@ import com.example.heavyduty.core.domain.model.intensityWeightedTonnage
 import com.example.heavyduty.core.domain.model.muscleCredits
 import com.example.heavyduty.core.domain.repository.ExerciseRepository
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
+import javax.inject.Inject
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.Dispatchers
-import javax.inject.Inject
 
 /**
  * Calibration divisor for [intensityWeightedTonnage]'s raw kg-tonnage output before it's
@@ -42,42 +42,41 @@ private const val FATIGUE_WINDOW_MILLIS = 14 * 24 * 60 * 60 * 1000L
 class GetMuscleGroupFatigueUseCase @Inject constructor(
     private val workoutRepository: WorkoutRepository,
     private val exerciseRepository: ExerciseRepository,
-    private val clock: Clock,
+    private val clock: Clock
 ) {
-    operator fun invoke(): Flow<Map<MuscleGroup, Float>> =
-        combine(
-            workoutRepository.getCompletedSetsByDateRange(clock.nowMillis() - FATIGUE_WINDOW_MILLIS, Long.MAX_VALUE),
-            // Intensity is relative to the best estimated 1RM across all history, not the window.
-            workoutRepository.getExerciseSetSummaries(),
-            exerciseRepository.getAllExercises(),
-        ) { sets, summaries, exercises ->
-            val exerciseById = exercises.associateBy { it.id }
-            val weightedSets = sets.excludeWarmups().filter { it.completedAt != null }
-            val oneRepMaxByExercise = summaries.associate { it.exerciseId to it.bestOneRepMaxKg }
+    operator fun invoke(): Flow<Map<MuscleGroup, Float>> = combine(
+        workoutRepository.getCompletedSetsByDateRange(clock.nowMillis() - FATIGUE_WINDOW_MILLIS, Long.MAX_VALUE),
+        // Intensity is relative to the best estimated 1RM across all history, not the window.
+        workoutRepository.getExerciseSetSummaries(),
+        exerciseRepository.getAllExercises()
+    ) { sets, summaries, exercises ->
+        val exerciseById = exercises.associateBy { it.id }
+        val weightedSets = sets.excludeWarmups().filter { it.completedAt != null }
+        val oneRepMaxByExercise = summaries.associate { it.exerciseId to it.bestOneRepMaxKg }
 
-            // Each set fans its stimulus out across every muscle it credits (see
-            // Exercise.muscleCredits), not just its exercise's single primary muscle group.
-            val stimulusByMuscle = mutableMapOf<MuscleGroup, MutableList<Pair<Long, Float>>>()
-            weightedSets.forEach { set ->
-                val exercise = exerciseById[set.exerciseId] ?: return@forEach
-                val timestamp = set.completedAt ?: return@forEach
-                val rawStimulus = intensityWeightedTonnage(
-                    weightKg = set.weight ?: 0f,
-                    reps = set.reps ?: 0,
-                    estimatedOneRepMaxKg = oneRepMaxByExercise[set.exerciseId],
-                ) / FATIGUE_STIMULUS_DIVISOR
-                exercise.muscleCredits(rawStimulus).forEach { (muscle, weightedStimulus) ->
-                    stimulusByMuscle.getOrPut(muscle) { mutableListOf() }.add(timestamp to weightedStimulus)
-                }
+        // Each set fans its stimulus out across every muscle it credits (see
+        // Exercise.muscleCredits), not just its exercise's single primary muscle group.
+        val stimulusByMuscle = mutableMapOf<MuscleGroup, MutableList<Pair<Long, Float>>>()
+        weightedSets.forEach { set ->
+            val exercise = exerciseById[set.exerciseId] ?: return@forEach
+            val timestamp = set.completedAt ?: return@forEach
+            val rawStimulus = intensityWeightedTonnage(
+                weightKg = set.weight ?: 0f,
+                reps = set.reps ?: 0,
+                estimatedOneRepMaxKg = oneRepMaxByExercise[set.exerciseId]
+            ) / FATIGUE_STIMULUS_DIVISOR
+            exercise.muscleCredits(rawStimulus).forEach { (muscle, weightedStimulus) ->
+                stimulusByMuscle.getOrPut(muscle) { mutableListOf() }.add(timestamp to weightedStimulus)
             }
+        }
 
-            val now = clock.nowMillis()
-            val fatigueByMuscle = stimulusByMuscle.mapValues { (_, entries) ->
-                accumulateFatigue(entries.sortedBy { it.first }, now)
-            }
+        val now = clock.nowMillis()
+        val fatigueByMuscle = stimulusByMuscle.mapValues { (_, entries) ->
+            accumulateFatigue(entries.sortedBy { it.first }, now)
+        }
 
-            MuscleGroup.entries.associateWith { fatigueLevel(fatigueByMuscle[it] ?: 0f) }
-        }.distinctUntilChanged().flowOn(Dispatchers.Default)
+        MuscleGroup.entries.associateWith { fatigueLevel(fatigueByMuscle[it] ?: 0f) }
+    }.distinctUntilChanged().flowOn(Dispatchers.Default)
 
     private fun accumulateFatigue(chronologicalStimulus: List<Pair<Long, Float>>, now: Long): Float {
         var accumulator = 0f

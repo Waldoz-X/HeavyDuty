@@ -12,15 +12,15 @@ import androidx.room.PrimaryKey
             entity = RoutineEntity::class,
             parentColumns = ["id"],
             childColumns = ["routineId"],
-            onDelete = ForeignKey.SET_NULL,
-        ),
+            onDelete = ForeignKey.SET_NULL
+        )
     ],
     indices = [
         Index(value = ["routineId"]),
         // Date-range queries (stats, dashboard, history) and "the running workout".
         Index(value = ["startTime"]),
-        Index(value = ["status", "startTime"]),
-    ],
+        Index(value = ["status", "startTime"])
+    ]
 )
 data class WorkoutSessionEntity(
     @PrimaryKey(autoGenerate = true)
@@ -32,7 +32,7 @@ data class WorkoutSessionEntity(
     val totalDurationSecs: Int = 0,
     val status: String = "IN_PROGRESS",
     val notes: String = "",
-    val type: String = "GYM",
+    val type: String = "GYM"
 )
 
 @Entity(
@@ -42,7 +42,7 @@ data class WorkoutSessionEntity(
             entity = WorkoutSessionEntity::class,
             parentColumns = ["id"],
             childColumns = ["sessionId"],
-            onDelete = ForeignKey.CASCADE,
+            onDelete = ForeignKey.CASCADE
         ),
         // Logged history is never deleted with its exercise: deleting an exercise that has
         // sets fails instead (it used to CASCADE, silently erasing every set of it).
@@ -50,15 +50,15 @@ data class WorkoutSessionEntity(
             entity = ExerciseEntity::class,
             parentColumns = ["id"],
             childColumns = ["exerciseId"],
-            onDelete = ForeignKey.RESTRICT,
-        ),
+            onDelete = ForeignKey.RESTRICT
+        )
     ],
     indices = [
         Index(value = ["sessionId"]),
         Index(value = ["exerciseId"]),
         // An exercise's history in date order (progress chart, last time's sets).
-        Index(value = ["exerciseId", "completedAt"]),
-    ],
+        Index(value = ["exerciseId", "completedAt"])
+    ]
 )
 data class WorkoutSetEntity(
     @PrimaryKey(autoGenerate = true)
@@ -78,5 +78,5 @@ data class WorkoutSetEntity(
     val effortType: String? = null,
     val effortValue: Float? = null,
     /** "KG"/"LB" the set was entered in, so it's shown as logged. [weight] itself is always kg. */
-    val weightUnit: String? = null,
+    val weightUnit: String? = null
 )

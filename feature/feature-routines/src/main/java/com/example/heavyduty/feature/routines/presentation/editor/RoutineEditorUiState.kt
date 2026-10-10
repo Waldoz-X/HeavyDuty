@@ -31,7 +31,7 @@ data class RoutineEditorUiState(
     /** Set when saving was attempted without a name. */
     val showNameError: Boolean = false,
     /** What was last loaded or saved — anything different is an unsaved change. */
-    val savedSnapshot: EditorSnapshot = EditorSnapshot(),
+    val savedSnapshot: EditorSnapshot = EditorSnapshot()
 ) {
     val hasUnsavedChanges: Boolean
         get() = EditorSnapshot(name, description, type, exercises) != savedSnapshot
@@ -53,7 +53,7 @@ data class EditorSnapshot(
     val name: String = "",
     val description: String = "",
     val type: WorkoutType = WorkoutType.GYM,
-    val exercises: List<RoutineExercise> = emptyList(),
+    val exercises: List<RoutineExercise> = emptyList()
 )
 
 /**
@@ -64,6 +64,7 @@ sealed interface RoutineEditorUiEvent {
     data class OnDescriptionChange(val description: String) : RoutineEditorUiEvent
     data class OnTypeChange(val type: WorkoutType) : RoutineEditorUiEvent
     data class OnUpdateExercise(val index: Int, val updated: RoutineExercise) : RoutineEditorUiEvent
+
     /** Moves the exercise at [from] to position [to] (drag-and-drop or the row menu). */
     data class OnMoveExercise(val from: Int, val to: Int) : RoutineEditorUiEvent
     data class OnRemoveExercise(val index: Int) : RoutineEditorUiEvent
@@ -73,9 +74,11 @@ sealed interface RoutineEditorUiEvent {
     data class OnUnpair(val index: Int) : RoutineEditorUiEvent
     data class OnOpenExercise(val index: Int) : RoutineEditorUiEvent
     data object OnCloseExercise : RoutineEditorUiEvent
+
     /** Shows every exercise of the routine in [unit]. */
     data class OnSetAllUnits(val unit: WeightUnit) : RoutineEditorUiEvent
     data object OnSave : RoutineEditorUiEvent
+
     /** Exercises chosen in the picker, in pick order. */
     data class OnExercisesPicked(val exerciseIds: List<Long>) : RoutineEditorUiEvent
 }
@@ -86,8 +89,10 @@ sealed interface RoutineEditorUiEvent {
 sealed interface RoutineEditorUiEffect {
     data object NavigateBack : RoutineEditorUiEffect
     data class ShowMessage(@param:StringRes val messageResId: Int) : RoutineEditorUiEffect
+
     /** An exercise was removed; the snackbar offers to undo it. */
     data class ShowUndoRemove(val exerciseName: String) : RoutineEditorUiEffect
+
     /** Exercises came back from the picker; the list scrolls to show them. */
     data class ExercisesAdded(val count: Int) : RoutineEditorUiEffect
 }

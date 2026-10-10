@@ -1,15 +1,5 @@
 package com.example.heavyduty.feature.stats.presentation.mapaactividad
 
-import com.example.heavyduty.core.ui.components.HdCardsSkeleton
-import com.example.heavyduty.core.ui.components.HdErrorState
-import com.example.heavyduty.feature.stats.domain.usecase.TimeSlot
-import androidx.compose.runtime.ReadOnlyComposable
-import androidx.compose.ui.platform.LocalConfiguration
-import com.example.heavyduty.core.common.R
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
-import kotlin.math.roundToInt
-import com.example.heavyduty.core.common.extensions.formatOneDecimal
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -42,28 +32,34 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.heavyduty.core.common.R
+import com.example.heavyduty.core.common.extensions.formatOneDecimal
 import com.example.heavyduty.core.ui.components.HdActivityHeatmap
 import com.example.heavyduty.core.ui.components.HdCard
+import com.example.heavyduty.core.ui.components.HdCardsSkeleton
+import com.example.heavyduty.core.ui.components.HdErrorState
 import com.example.heavyduty.feature.stats.domain.usecase.ActivityHeatmapStatsReport
+import com.example.heavyduty.feature.stats.domain.usecase.TimeSlot
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MapaActividadScreen(
-    onNavigateBack: () -> Unit,
-    modifier: Modifier = Modifier,
-    viewModel: MapaActividadViewModel = hiltViewModel(),
-) {
+fun MapaActividadScreen(onNavigateBack: () -> Unit, modifier: Modifier = Modifier, viewModel: MapaActividadViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
@@ -74,13 +70,13 @@ fun MapaActividadScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.action_back),
+                            contentDescription = stringResource(R.string.action_back)
                         )
                     }
-                },
+                }
             )
         },
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize()
     ) { innerPadding ->
         if (uiState.isLoading) {
             HdCardsSkeleton(modifier = Modifier.padding(innerPadding).padding(16.dp), heights = listOf(180.dp, 200.dp, 220.dp))
@@ -98,7 +94,7 @@ fun MapaActividadScreen(
                 .padding(innerPadding)
                 .fillMaxSize(),
             contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // Hero card: Rachas y Constancia
             item {
@@ -135,46 +131,46 @@ private fun StreaksHeroCard(report: ActivityHeatmapStatsReport) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.LocalFireDepartment,
                     contentDescription = null,
                     tint = Color(0xFFFF7043),
-                    modifier = Modifier.size(24.dp),
+                    modifier = Modifier.size(24.dp)
                 )
                 Text(
                     text = stringResource(R.string.activity_streaks),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = stringResource(R.string.activity_current_streak),
                         style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
                         text = pluralStringResource(R.plurals.activity_days, report.currentStreakDays, report.currentStreakDays),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
+                        color = MaterialTheme.colorScheme.primary
                     )
                     Text(
                         text = pluralStringResource(R.plurals.activity_record_days, report.longestStreakDays, report.longestStreakDays),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
@@ -182,41 +178,41 @@ private fun StreaksHeroCard(report: ActivityHeatmapStatsReport) {
                     Text(
                         text = stringResource(R.string.activity_active_weeks),
                         style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
                         text = pluralStringResource(R.plurals.activity_weeks, report.currentStreakWeeks, report.currentStreakWeeks),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.secondary,
+                        color = MaterialTheme.colorScheme.secondary
                     )
                     Text(
                         text = pluralStringResource(R.plurals.activity_record_weeks, report.longestStreakWeeks, report.longestStreakWeeks),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
 
             HorizontalDivider(
                 color = MaterialTheme.colorScheme.surfaceVariant,
-                modifier = Modifier.padding(vertical = 4.dp),
+                modifier = Modifier.padding(vertical = 4.dp)
             )
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column {
                     Text(
                         text = stringResource(R.string.activity_days_trained),
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
                         text = pluralStringResource(R.plurals.activity_days, report.totalDaysTrained, report.totalDaysTrained),
                         style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold,
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
 
@@ -224,13 +220,13 @@ private fun StreaksHeroCard(report: ActivityHeatmapStatsReport) {
                     Text(
                         text = stringResource(R.string.activity_yearly_consistency),
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
                         text = "${report.consistencyPercentage.formatOneDecimal()}%",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.primary,
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             }
@@ -247,18 +243,18 @@ private fun HeatmapCard(report: ActivityHeatmapStatsReport) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(16.dp)
         ) {
             Text(
                 text = stringResource(R.string.activity_frequency),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = pluralStringResource(R.plurals.activity_sessions_last_year, report.totalSessions, report.totalSessions),
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -267,7 +263,7 @@ private fun HeatmapCard(report: ActivityHeatmapStatsReport) {
                 data = report.activityByDay,
                 modifier = Modifier.fillMaxWidth(),
                 baseColor = baseColor,
-                highlightColor = highlightColor,
+                highlightColor = highlightColor
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -276,12 +272,12 @@ private fun HeatmapCard(report: ActivityHeatmapStatsReport) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = stringResource(R.string.activity_less),
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.width(6.dp))
 
@@ -291,7 +287,7 @@ private fun HeatmapCard(report: ActivityHeatmapStatsReport) {
                             .padding(horizontal = 2.dp)
                             .size(11.dp)
                             .clip(RoundedCornerShape(2.dp))
-                            .background(lerp(baseColor, highlightColor, fraction)),
+                            .background(lerp(baseColor, highlightColor, fraction))
                     )
                 }
 
@@ -299,7 +295,7 @@ private fun HeatmapCard(report: ActivityHeatmapStatsReport) {
                 Text(
                     text = stringResource(R.string.activity_more),
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -313,27 +309,27 @@ private fun DayOfWeekDistributionCard(report: ActivityHeatmapStatsReport) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.CalendarMonth,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp),
+                        modifier = Modifier.size(20.dp)
                     )
                     Text(
                         text = stringResource(R.string.activity_weekly_distribution),
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.Bold
                     )
                 }
 
@@ -342,13 +338,13 @@ private fun DayOfWeekDistributionCard(report: ActivityHeatmapStatsReport) {
                         modifier = Modifier
                             .clip(RoundedCornerShape(8.dp))
                             .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f))
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
                     ) {
                         Text(
                             text = stringResource(R.string.activity_favorite, weekdayName(favoriteDay)),
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                     }
                 }
@@ -359,7 +355,7 @@ private fun DayOfWeekDistributionCard(report: ActivityHeatmapStatsReport) {
                     val isFavorite = stat.dayOfWeek == report.favoriteDayOfWeek
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
                             text = weekdayName(stat.dayOfWeek),
@@ -367,7 +363,7 @@ private fun DayOfWeekDistributionCard(report: ActivityHeatmapStatsReport) {
                             fontWeight = if (isFavorite) FontWeight.Bold else FontWeight.Normal,
                             color = if (isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                             // Room for the longest weekday name ("Wednesday", "Miércoles") plus a gap.
-                            modifier = Modifier.width(108.dp),
+                            modifier = Modifier.width(108.dp)
                         )
 
                         LinearProgressIndicator(
@@ -376,8 +372,14 @@ private fun DayOfWeekDistributionCard(report: ActivityHeatmapStatsReport) {
                                 .weight(1f)
                                 .height(8.dp)
                                 .clip(RoundedCornerShape(4.dp)),
-                            color = if (isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
-                            trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                            color = if (isFavorite) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.primary.copy(
+                                    alpha = 0.6f
+                                )
+                            },
+                            trackColor = MaterialTheme.colorScheme.surfaceVariant
                         )
 
                         Spacer(modifier = Modifier.width(8.dp))
@@ -387,7 +389,7 @@ private fun DayOfWeekDistributionCard(report: ActivityHeatmapStatsReport) {
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.End,
-                            modifier = Modifier.width(64.dp),
+                            modifier = Modifier.width(64.dp)
                         )
                     }
                 }
@@ -403,27 +405,27 @@ private fun TimeSlotDistributionCard(report: ActivityHeatmapStatsReport) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Schedule,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp),
+                        modifier = Modifier.size(20.dp)
                     )
                     Text(
                         text = stringResource(R.string.activity_time_slots),
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.Bold
                     )
                 }
 
@@ -432,13 +434,13 @@ private fun TimeSlotDistributionCard(report: ActivityHeatmapStatsReport) {
                         modifier = Modifier
                             .clip(RoundedCornerShape(8.dp))
                             .background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f))
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
                     ) {
                         Text(
                             text = stringResource(R.string.activity_usual, stringResource(favorite.nameRes)),
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
                         )
                     }
                 }
@@ -449,19 +451,19 @@ private fun TimeSlotDistributionCard(report: ActivityHeatmapStatsReport) {
                     val isFavorite = slot.slot == report.favoriteTimeSlot
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(modifier = Modifier.width(115.dp)) {
                             Text(
                                 text = stringResource(slot.slot.nameRes),
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = if (isFavorite) FontWeight.Bold else FontWeight.Normal,
-                                color = if (isFavorite) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurface,
+                                color = if (isFavorite) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurface
                             )
                             Text(
                                 text = "%02d:00 - %02d:00".format(slot.slot.startHour, slot.slot.endHour),
                                 style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
 
@@ -471,8 +473,14 @@ private fun TimeSlotDistributionCard(report: ActivityHeatmapStatsReport) {
                                 .weight(1f)
                                 .height(8.dp)
                                 .clip(RoundedCornerShape(4.dp)),
-                            color = if (isFavorite) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.secondary.copy(alpha = 0.6f),
-                            trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                            color = if (isFavorite) {
+                                MaterialTheme.colorScheme.secondary
+                            } else {
+                                MaterialTheme.colorScheme.secondary.copy(
+                                    alpha = 0.6f
+                                )
+                            },
+                            trackColor = MaterialTheme.colorScheme.surfaceVariant
                         )
 
                         Spacer(modifier = Modifier.width(8.dp))
@@ -482,7 +490,7 @@ private fun TimeSlotDistributionCard(report: ActivityHeatmapStatsReport) {
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.End,
-                            modifier = Modifier.width(64.dp),
+                            modifier = Modifier.width(64.dp)
                         )
                     }
                 }
@@ -499,71 +507,71 @@ private fun OverviewMetricsCard(report: ActivityHeatmapStatsReport) {
                 .fillMaxWidth()
                 .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(4.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.Timer,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(22.dp),
+                    modifier = Modifier.size(22.dp)
                 )
                 Text(
                     text = "${report.totalHoursTrained.formatOneDecimal()} h",
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.Bold
                 )
                 Text(
                     text = stringResource(R.string.activity_total_hours),
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(4.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.Schedule,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(22.dp),
+                    modifier = Modifier.size(22.dp)
                 )
                 Text(
                     text = stringResource(R.string.duration_minutes, report.avgMinutesPerSession),
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.Bold
                 )
                 Text(
                     text = stringResource(R.string.activity_avg_session),
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(4.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.DateRange,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(22.dp),
+                    modifier = Modifier.size(22.dp)
                 )
                 Text(
                     text = "${report.activeWeeksCount}/${report.totalWeeksInWindow}",
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.Bold
                 )
                 Text(
                     text = stringResource(R.string.activity_active_weeks),
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }

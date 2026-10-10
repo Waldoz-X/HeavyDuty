@@ -7,7 +7,7 @@ data class ExerciseSetSummaryRow(
     val bestOneRepMaxKg: Double?,
     val bestSetWeightKg: Float?,
     val bestSetReps: Int?,
-    val bestSetAt: Long?,
+    val bestSetAt: Long?
 )
 
 /** Row of WorkoutDao.getLastHardSetTimes. */

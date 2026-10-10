@@ -4,23 +4,23 @@ import android.content.Context
 import com.example.heavyduty.feature.timer.domain.model.TimerMode
 import com.example.heavyduty.feature.timer.presentation.TimerUiEffect
 import com.example.heavyduty.feature.timer.presentation.TimerUiEvent
+import com.example.heavyduty.feature.timer.service.TimerNotifications
+import com.example.heavyduty.feature.timer.service.TimerService
 import io.mockk.mockk
 import io.mockk.verify
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.advanceTimeBy
-import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.advanceUntilIdle
-import com.example.heavyduty.feature.timer.service.TimerNotifications
-import com.example.heavyduty.feature.timer.service.TimerService
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import kotlin.time.Duration.Companion.seconds
 
 /**
  * [context] is a relaxed mock: TimerEngine only uses it to start/stop [TimerService] and to

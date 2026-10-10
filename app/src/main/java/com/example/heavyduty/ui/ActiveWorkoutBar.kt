@@ -47,11 +47,7 @@ import kotlinx.coroutines.delay
  * While resting it shows the rest countdown instead of the session clock.
  */
 @Composable
-fun ActiveWorkoutBar(
-    workout: ActiveWorkoutSummary,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+fun ActiveWorkoutBar(workout: ActiveWorkoutSummary, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val openLabel = stringResource(R.string.active_workout_bar_open)
     Surface(
         onClick = onClick,
@@ -61,47 +57,52 @@ fun ActiveWorkoutBar(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp, vertical = 6.dp)
-            .semantics { contentDescription = openLabel },
+            .semantics { contentDescription = openLabel }
     ) {
         Row(
             modifier = Modifier.padding(start = 12.dp, end = 8.dp, top = 10.dp, bottom = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Box(
                 modifier = Modifier
                     .size(36.dp)
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.primary),
-                contentAlignment = Alignment.Center,
+                contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.FitnessCenter,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.size(20.dp),
+                    modifier = Modifier.size(20.dp)
                 )
             }
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = stringResource(R.string.active_workout_bar_label),
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
+                    color = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    text = pluralStringResource(R.plurals.active_workout_bar_sets, workout.setsLogged, workout.sessionName, workout.setsLogged),
+                    text = pluralStringResource(
+                        R.plurals.active_workout_bar_sets,
+                        workout.setsLogged,
+                        workout.sessionName,
+                        workout.setsLogged
+                    ),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
             // Swaps between the session clock and the rest countdown with a quick crossfade.
             AnimatedContent(
                 targetState = workout.rest != null,
                 transitionSpec = { fadeIn() togetherWith fadeOut() },
-                label = "barClock",
+                label = "barClock"
             ) { resting ->
                 if (resting) {
                     RestCountdown(remainingSeconds = workout.rest?.remainingSeconds ?: 0)
@@ -112,7 +113,7 @@ fun ActiveWorkoutBar(
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -132,7 +133,7 @@ private fun SessionClock(startTime: Long) {
         text = formatClock(elapsedSeconds),
         style = MaterialTheme.typography.titleMedium,
         fontWeight = FontWeight.Bold,
-        color = MaterialTheme.colorScheme.primary,
+        color = MaterialTheme.colorScheme.primary
     )
 }
 
@@ -144,13 +145,13 @@ private fun RestCountdown(remainingSeconds: Int) {
                 imageVector = Icons.Default.Timer,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.tertiary,
-                modifier = Modifier.size(14.dp),
+                modifier = Modifier.size(14.dp)
             )
             Spacer(modifier = Modifier.width(4.dp))
             Text(
                 text = stringResource(R.string.active_workout_bar_rest),
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.tertiary,
+                color = MaterialTheme.colorScheme.tertiary
             )
         }
         HdRollingText(
@@ -158,13 +159,12 @@ private fun RestCountdown(remainingSeconds: Int) {
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.tertiary,
-            countingDown = true,
+            countingDown = true
         )
     }
 }
 
-private fun secondsSince(startTime: Long): Int =
-    ((System.currentTimeMillis() - startTime) / 1_000L).toInt().coerceAtLeast(0)
+private fun secondsSince(startTime: Long): Int = ((System.currentTimeMillis() - startTime) / 1_000L).toInt().coerceAtLeast(0)
 
 private fun formatClock(totalSeconds: Int): String {
     val hours = totalSeconds / 3600

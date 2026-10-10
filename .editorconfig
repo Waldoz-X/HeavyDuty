@@ -1,0 +1,19 @@
+# Shared formatting for every editor and for ktlint (./gradlew spotlessApply).
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{kt,kts}]
+indent_size = 4
+ktlint_code_style = android_studio
+# Composables are named like types (UpperCamelCase).
+ktlint_function_naming_ignore_when_annotated_with = Composable
+# The codebase is written for wide lines; 100 (android_studio's default) would rewrap most files.
+max_line_length = 140
+# Deliberate app-wide CompositionLocals: the weight unit and the shared-element transition scopes.
+compose_allowed_composition_locals = LocalWeightUnit,LocalSharedTransitionScope,LocalNavAnimatedVisibilityScope

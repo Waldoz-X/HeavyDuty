@@ -62,7 +62,7 @@ interface WorkoutDao {
      */
     @Query(
         "SELECT s.* FROM workout_sets s INNER JOIN workout_sessions w ON s.sessionId = w.id " +
-            "WHERE s.isCompleted = 1 AND w.status = 'COMPLETED'",
+            "WHERE s.isCompleted = 1 AND w.status = 'COMPLETED'"
     )
     fun getAllCompletedSets(): Flow<List<WorkoutSetEntity>>
 
@@ -74,7 +74,7 @@ interface WorkoutDao {
      */
     @Query(
         "SELECT s.* FROM workout_sets s INNER JOIN workout_sessions w ON s.sessionId = w.id " +
-            "WHERE s.isCompleted = 1 AND w.status = 'COMPLETED' AND w.startTime BETWEEN :startTime AND :endTime",
+            "WHERE s.isCompleted = 1 AND w.status = 'COMPLETED' AND w.startTime BETWEEN :startTime AND :endTime"
     )
     fun getCompletedSetsByDateRange(startTime: Long, endTime: Long): Flow<List<WorkoutSetEntity>>
 
@@ -109,7 +109,7 @@ interface WorkoutDao {
              s.weight AS bestSetWeightKg, s.reps AS bestSetReps, s.completedAt AS bestSetAt
            FROM workout_sets s INNER JOIN workout_sessions w ON s.sessionId = w.id
            WHERE s.isCompleted = 1 AND w.status = 'COMPLETED' AND s.isWarmup = 0
-           GROUP BY s.exerciseId""",
+           GROUP BY s.exerciseId"""
     )
     fun getExerciseSetSummaries(): Flow<List<ExerciseSetSummaryRow>>
 
@@ -126,7 +126,7 @@ interface WorkoutDao {
            SELECT c.exerciseId AS exerciseId, MAX(c.completedAt) AS lastHardSetAt
            FROM counted c INNER JOIN best b ON b.exerciseId = c.exerciseId
            WHERE c.completedAt IS NOT NULL AND b.oneRepMax > 0 AND COALESCE(c.weight, 0) >= :intensity * b.oneRepMax
-           GROUP BY c.exerciseId""",
+           GROUP BY c.exerciseId"""
     )
     fun getLastHardSetTimes(intensity: Float): Flow<List<LastHardSetRow>>
 
@@ -135,17 +135,19 @@ interface WorkoutDao {
            FROM workout_sets s INNER JOIN workout_sessions w ON s.sessionId = w.id
            WHERE s.isCompleted = 1 AND w.status = 'COMPLETED' AND s.isWarmup = 0
              AND s.weight IS NOT NULL AND s.completedAt IS NOT NULL AND w.startTime < :time
-           GROUP BY s.exerciseId""",
+           GROUP BY s.exerciseId"""
     )
     fun getBestWeightsBefore(time: Long): Flow<List<ExerciseWeightRow>>
 
-    @Query("SELECT COUNT(*) AS workouts, COALESCE(SUM(totalDurationSecs), 0) AS durationSecs FROM workout_sessions WHERE status = 'COMPLETED'")
+    @Query(
+        "SELECT COUNT(*) AS workouts, COALESCE(SUM(totalDurationSecs), 0) AS durationSecs FROM workout_sessions WHERE status = 'COMPLETED'"
+    )
     fun getCompletedSessionTotals(): Flow<SessionTotalsRow>
 
     @Query(
         """SELECT COUNT(*) AS sets, COALESCE(SUM(COALESCE(s.reps, 0) * COALESCE(s.weight, 0)), 0) AS volumeKg
            FROM workout_sets s INNER JOIN workout_sessions w ON s.sessionId = w.id
-           WHERE s.isCompleted = 1 AND w.status = 'COMPLETED' AND s.isWarmup = 0""",
+           WHERE s.isCompleted = 1 AND w.status = 'COMPLETED' AND s.isWarmup = 0"""
     )
     fun getWorkingSetTotals(): Flow<SetTotalsRow>
 

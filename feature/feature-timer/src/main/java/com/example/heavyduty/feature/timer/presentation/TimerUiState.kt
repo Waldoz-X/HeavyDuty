@@ -13,7 +13,7 @@ data class TimerUiState(
     val isRunning: Boolean = false,
     val isPaused: Boolean = false,
     val rounds: Int = 1,
-    val currentRound: Int = 1,
+    val currentRound: Int = 1
 )
 
 /**

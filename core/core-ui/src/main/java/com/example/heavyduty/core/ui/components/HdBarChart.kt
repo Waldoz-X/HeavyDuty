@@ -1,8 +1,5 @@
 package com.example.heavyduty.core.ui.components
 
-import com.example.heavyduty.core.common.extensions.formatOneDecimal
-import com.example.heavyduty.core.common.R
-import androidx.compose.ui.res.stringResource
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -26,9 +23,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.example.heavyduty.core.common.R
+import com.example.heavyduty.core.common.extensions.formatOneDecimal
 
 /**
  * A premium animated bar chart. Bars grow from 0 to their value on first composition.
@@ -42,19 +42,19 @@ fun HdBarChart(
     trackColor: Color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
     labelColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
     valueColor: Color = MaterialTheme.colorScheme.onSurface,
-    valueFormatter: (Float) -> String = { value -> "${value.formatOneDecimal()} h" },
+    valueFormatter: (Float) -> String = { value -> "${value.formatOneDecimal()} h" }
 ) {
     if (data.isEmpty()) {
         Box(
             modifier = modifier
                 .fillMaxWidth()
                 .height(barMaxHeight),
-            contentAlignment = Alignment.Center,
+            contentAlignment = Alignment.Center
         ) {
             Text(
                 text = stringResource(R.string.state_no_data_yet),
                 style = MaterialTheme.typography.bodyMedium,
-                color = labelColor,
+                color = labelColor
             )
         }
         return
@@ -64,7 +64,7 @@ fun HdBarChart(
 
     Row(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly,
+        horizontalArrangement = Arrangement.SpaceEvenly
     ) {
         data.forEach { (label, value) ->
             val targetFraction = (value / maxValue).coerceIn(0f, 1f)
@@ -77,7 +77,7 @@ fun HdBarChart(
                 Text(
                     text = valueFormatter(value),
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                    color = valueColor,
+                    color = valueColor
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Box(
@@ -86,7 +86,7 @@ fun HdBarChart(
                         .height(barMaxHeight)
                         .clip(RoundedCornerShape(10.dp))
                         .background(trackColor),
-                    contentAlignment = Alignment.BottomCenter,
+                    contentAlignment = Alignment.BottomCenter
                 ) {
                     Box(
                         modifier = Modifier
@@ -95,16 +95,16 @@ fun HdBarChart(
                             .clip(RoundedCornerShape(10.dp))
                             .background(
                                 brush = Brush.verticalGradient(
-                                    colors = listOf(barColor, barColor.copy(alpha = 0.6f)),
-                                ),
-                            ),
+                                    colors = listOf(barColor, barColor.copy(alpha = 0.6f))
+                                )
+                            )
                     )
                 }
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
                     text = label,
                     style = MaterialTheme.typography.labelSmall,
-                    color = labelColor,
+                    color = labelColor
                 )
             }
         }

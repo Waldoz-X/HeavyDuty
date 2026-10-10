@@ -1,7 +1,5 @@
 package com.example.heavyduty.core.ui.components
 
-import com.example.heavyduty.core.common.R
-import androidx.compose.ui.res.stringResource
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -22,6 +20,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
@@ -29,6 +28,7 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.heavyduty.core.common.R
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -53,17 +53,17 @@ fun HdLineChart(
         SimpleDateFormat("MMM", Locale.Builder().setLanguage("es").setRegion("ES").build())
             .format(Date(millis))
             .replaceFirstChar { it.uppercase() }
-    },
+    }
 ) {
     if (data.size < 2) {
         Box(
             modifier = modifier.fillMaxWidth().height(height),
-            contentAlignment = Alignment.Center,
+            contentAlignment = Alignment.Center
         ) {
             Text(
                 text = stringResource(R.string.state_no_data_yet),
                 style = MaterialTheme.typography.bodyMedium,
-                color = labelColor,
+                color = labelColor
             )
         }
         return
@@ -82,7 +82,7 @@ fun HdLineChart(
     Canvas(
         modifier = modifier
             .fillMaxWidth()
-            .height(height),
+            .height(height)
     ) {
         val bottomLabelHeight = 18.dp.toPx()
         val leftLabelWidth = 34.dp.toPx()
@@ -111,7 +111,7 @@ fun HdLineChart(
                 textMeasurer = textMeasurer,
                 text = valueLabelFormatter(value),
                 style = labelStyle,
-                topLeft = Offset(0f, mappedY(value) - 6.sp.toPx()),
+                topLeft = Offset(0f, mappedY(value) - 6.sp.toPx())
             )
         }
 
@@ -123,7 +123,7 @@ fun HdLineChart(
                 textMeasurer = textMeasurer,
                 text = text,
                 style = labelStyle,
-                topLeft = Offset(mappedX(timestamp) - layout.size.width / 2f, chartBottom + 4.dp.toPx()),
+                topLeft = Offset(mappedX(timestamp) - layout.size.width / 2f, chartBottom + 4.dp.toPx())
             )
         }
 
@@ -135,7 +135,7 @@ fun HdLineChart(
                 start = Offset(chartLeft, goalY),
                 end = Offset(chartRight, goalY),
                 strokeWidth = 1.5.dp.toPx(),
-                pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 8f)),
+                pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 8f))
             )
             val goalText = valueLabelFormatter(goalValue)
             val goalLayout = textMeasurer.measure(goalText, style = goalStyle)
@@ -143,7 +143,7 @@ fun HdLineChart(
                 textMeasurer = textMeasurer,
                 text = goalText,
                 style = goalStyle,
-                topLeft = Offset(chartRight - goalLayout.size.width, goalY - goalLayout.size.height - 2.dp.toPx()),
+                topLeft = Offset(chartRight - goalLayout.size.width, goalY - goalLayout.size.height - 2.dp.toPx())
             )
         }
 
@@ -172,9 +172,9 @@ fun HdLineChart(
             brush = Brush.verticalGradient(
                 colors = listOf(fillColor.copy(alpha = 0.3f), fillColor.copy(alpha = 0f)),
                 startY = chartTop,
-                endY = chartBottom,
+                endY = chartBottom
             ),
-            style = Fill,
+            style = Fill
         )
         drawPath(path = linePath, color = lineColor, style = Stroke(width = 2.5.dp.toPx()))
         drawCircle(color = lineColor, radius = 4.dp.toPx(), center = points.last())

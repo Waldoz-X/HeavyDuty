@@ -1,15 +1,15 @@
 package com.example.heavyduty.feature.routines.presentation.editor
 
-import com.example.heavyduty.core.domain.model.Clock
-import com.example.heavyduty.core.domain.model.displayName
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.heavyduty.core.common.R
+import com.example.heavyduty.core.domain.model.Clock
 import com.example.heavyduty.core.domain.model.Exercise
 import com.example.heavyduty.core.domain.model.Routine
 import com.example.heavyduty.core.domain.model.RoutineExercise
 import com.example.heavyduty.core.domain.model.WeightUnit
+import com.example.heavyduty.core.domain.model.displayName
 import com.example.heavyduty.core.domain.model.pairWithNext
 import com.example.heavyduty.core.domain.model.unpair
 import com.example.heavyduty.core.domain.repository.ExerciseRepository
@@ -18,6 +18,7 @@ import com.example.heavyduty.feature.routines.domain.usecase.GetRoutineVolumeHis
 import com.example.heavyduty.feature.routines.domain.usecase.GetRoutineWithExercisesUseCase
 import com.example.heavyduty.feature.routines.domain.usecase.UpdateRoutineUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -29,7 +30,6 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * Key used to hand exercise ids back from the exercise-picker route to this destination's
@@ -48,7 +48,7 @@ class RoutineEditorViewModel @Inject constructor(
     private val getRoutineVolumeHistoryUseCase: GetRoutineVolumeHistoryUseCase,
     private val exerciseRepository: ExerciseRepository,
     savedStateHandle: SavedStateHandle,
-    private val clock: Clock,
+    private val clock: Clock
 ) : ViewModel() {
 
     private val routineId: Long? = savedStateHandle.get<Long>("routineId")
@@ -83,19 +83,33 @@ class RoutineEditorViewModel @Inject constructor(
             is RoutineEditorUiEvent.OnNameChange -> _uiState.update {
                 it.copy(name = event.name, showNameError = it.showNameError && event.name.isBlank())
             }
+
             is RoutineEditorUiEvent.OnDescriptionChange -> _uiState.update { it.copy(description = event.description) }
+
             is RoutineEditorUiEvent.OnTypeChange -> _uiState.update { it.copy(type = event.type) }
+
             is RoutineEditorUiEvent.OnUpdateExercise -> updateExercise(event.index, event.updated)
+
             is RoutineEditorUiEvent.OnMoveExercise -> moveExercise(event.from, event.to)
+
             is RoutineEditorUiEvent.OnRemoveExercise -> removeExercise(event.index)
+
             RoutineEditorUiEvent.OnUndoRemove -> undoRemove()
+
             is RoutineEditorUiEvent.OnDuplicateExercise -> duplicateExercise(event.index)
+
             is RoutineEditorUiEvent.OnPairWithNext -> _uiState.update { it.copy(exercises = it.exercises.pairWithNext(event.index)) }
+
             is RoutineEditorUiEvent.OnUnpair -> _uiState.update { it.copy(exercises = it.exercises.unpair(event.index)) }
+
             is RoutineEditorUiEvent.OnOpenExercise -> _uiState.update { it.copy(editingIndex = event.index) }
+
             RoutineEditorUiEvent.OnCloseExercise -> _uiState.update { it.copy(editingIndex = null) }
+
             is RoutineEditorUiEvent.OnSetAllUnits -> setAllUnits(event.unit)
+
             RoutineEditorUiEvent.OnSave -> saveRoutine()
+
             is RoutineEditorUiEvent.OnExercisesPicked -> viewModelScope.launch { addExercises(event.exerciseIds) }
         }
     }
@@ -119,7 +133,7 @@ class RoutineEditorViewModel @Inject constructor(
         exercise = exercise,
         targetSets = DEFAULT_SETS,
         targetReps = DEFAULT_REPS,
-        restBetweenSetsSecs = DEFAULT_REST_SECONDS,
+        restBetweenSetsSecs = DEFAULT_REST_SECONDS
     )
 
     private fun updateExercise(index: Int, updated: RoutineExercise) {
@@ -143,7 +157,7 @@ class RoutineEditorViewModel @Inject constructor(
         _uiState.update { state ->
             state.copy(
                 exercises = state.exercises.filterIndexed { i, _ -> i != index },
-                editingIndex = null,
+                editingIndex = null
             )
         }
         viewModelScope.launch {
@@ -192,7 +206,7 @@ class RoutineEditorViewModel @Inject constructor(
                             exercises = routine.exercises,
                             isEditMode = true,
                             isLoading = false,
-                            savedSnapshot = EditorSnapshot(routine.name, routine.description, routine.type, routine.exercises),
+                            savedSnapshot = EditorSnapshot(routine.name, routine.description, routine.type, routine.exercises)
                         )
                     }
                 }
@@ -219,12 +233,12 @@ class RoutineEditorViewModel @Inject constructor(
                     description = state.description.trim(),
                     type = state.type,
                     exercises = exercises,
-                    updatedAt = clock.nowMillis(),
+                    updatedAt = clock.nowMillis()
                 ) ?: Routine(
                     name = state.name.trim(),
                     description = state.description.trim(),
                     type = state.type,
-                    exercises = exercises,
+                    exercises = exercises
                 )
                 if (state.isEditMode) updateRoutineUseCase(routine) else createRoutineUseCase(routine)
                 _uiState.update {

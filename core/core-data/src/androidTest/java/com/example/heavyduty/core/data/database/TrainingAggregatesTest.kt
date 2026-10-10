@@ -39,18 +39,39 @@ class TrainingAggregatesTest {
         repository = WorkoutRepositoryImpl(db.workoutDao())
         val dao = db.workoutDao()
         val bench = db.exerciseDao().insertExercise(ExerciseEntity(name = "Banca", muscleGroup = "CHEST", exerciseType = "STRENGTH"))
-        val squat = db.exerciseDao().insertExercise(ExerciseEntity(name = "Sentadilla", muscleGroup = "QUADRICEPS", exerciseType = "STRENGTH"))
+        val squat = db.exerciseDao().insertExercise(
+            ExerciseEntity(name = "Sentadilla", muscleGroup = "QUADRICEPS", exerciseType = "STRENGTH")
+        )
         val plank = db.exerciseDao().insertExercise(ExerciseEntity(name = "Plancha", muscleGroup = "ABS", exerciseType = "STRENGTH"))
         val curl = db.exerciseDao().insertExercise(ExerciseEntity(name = "Curl", muscleGroup = "BICEPS", exerciseType = "STRENGTH"))
 
         suspend fun workout(start: Long, status: String = "COMPLETED", vararg sets: WorkoutSetEntity) {
             val id = dao.insertSession(
-                WorkoutSessionEntity(startTime = start, endTime = if (status == "COMPLETED") start + 3_600_000 else null, totalDurationSecs = 3600, status = status),
+                WorkoutSessionEntity(
+                    startTime = start,
+                    endTime = if (status ==
+                        "COMPLETED"
+                    ) {
+                        start + 3_600_000
+                    } else {
+                        null
+                    },
+                    totalDurationSecs = 3600,
+                    status = status
+                )
             )
             sets.forEachIndexed { i, set -> dao.insertSet(set.copy(sessionId = id, setNumber = i + 1)) }
         }
-        fun set(exercise: Long, reps: Int?, weight: Float?, at: Long, warmup: Boolean = false, done: Boolean = true) =
-            WorkoutSetEntity(sessionId = 0, exerciseId = exercise, setNumber = 1, reps = reps, weight = weight, isCompleted = done, completedAt = if (done) at else null, isWarmup = warmup)
+        fun set(exercise: Long, reps: Int?, weight: Float?, at: Long, warmup: Boolean = false, done: Boolean = true) = WorkoutSetEntity(
+            sessionId = 0,
+            exerciseId = exercise,
+            setNumber = 1,
+            reps = reps,
+            weight = weight,
+            isCompleted = done,
+            completedAt = if (done) at else null,
+            isWarmup = warmup
+        )
 
         workout(
             1_000_000,
@@ -60,8 +81,8 @@ class TrainingAggregatesTest {
                 set(bench, 1, 160f, 1_000_300, warmup = true), // warm-ups never count
                 set(squat, 15, 100f, 1_000_400), // over 12 reps: no estimate
                 set(plank, null, null, 1_000_500), // a timed set: counted, no weight
-                set(curl, 10, 20f, 1_000_600), // 26.7
-            ),
+                set(curl, 10, 20f, 1_000_600) // 26.7
+            )
         )
         workout(
             2_000_000,
@@ -70,8 +91,8 @@ class TrainingAggregatesTest {
                 set(bench, 10, 70f, 2_000_200), // 70 / 126.7 = 55 %: not hard
                 set(bench, 3, 95f, 2_000_300), // 75 %: hard, and the latest hard bench set
                 set(curl, 10, 10f, 2_000_400), // 37 %: not hard
-                set(bench, 12, 0f, 2_000_500), // no weight
-            ),
+                set(bench, 12, 0f, 2_000_500) // no weight
+            )
         )
         // None of these count: an unfinished and a cancelled workout, and an unchecked set.
         workout(3_000_000, "IN_PROGRESS", set(bench, 5, 200f, 3_000_100))
@@ -127,7 +148,11 @@ class TrainingAggregatesTest {
     @Test
     fun bestWeightsBeforeMatchTheReference() = runTest {
         for (time in listOf(0L, 1_500_000L, 2_500_000L, 10_000_000L)) {
-            assertEquals("before $time", bestWeightsBefore(sessions(), completedSets(), time), repository.getBestWeightsBefore(time).first())
+            assertEquals(
+                "before $time",
+                bestWeightsBefore(sessions(), completedSets(), time),
+                repository.getBestWeightsBefore(time).first()
+            )
         }
     }
 

@@ -18,7 +18,7 @@ data class ProgressionConfig(
     val targetSets: Int,
     val startingWeightKg: Float,
     /** Reps are logged as a total across both sides — the rep step must stay even. */
-    val isPerSide: Boolean = false,
+    val isPerSide: Boolean = false
 )
 
 fun RoutineExercise.toProgressionConfig(): ProgressionConfig = ProgressionConfig(
@@ -28,7 +28,7 @@ fun RoutineExercise.toProgressionConfig(): ProgressionConfig = ProgressionConfig
     stallThreshold = stallThreshold,
     targetSets = targetSets,
     startingWeightKg = targetWeight,
-    isPerSide = exercise?.isPerSide ?: false,
+    isPerSide = exercise?.isPerSide ?: false
 )
 
 /**
@@ -42,7 +42,7 @@ data class Prescription(
     val weightKg: Float? = null,
     val durationSecs: Int? = null,
     val isDeload: Boolean = false,
-    val reasonNote: String? = null,
+    val reasonNote: String? = null
 )
 
 /**
@@ -123,7 +123,7 @@ private fun linearPrescription(sessions: List<List<WorkoutSet>>, config: Progres
             reps = target,
             weightKg = (lastWeight * (1f - DELOAD_FRACTION)).roundToNearestIncrement(),
             isDeload = true,
-            reasonNote = "$failures fallos seguidos: deload del ${(DELOAD_FRACTION * 100).toInt()}%",
+            reasonNote = "$failures fallos seguidos: deload del ${(DELOAD_FRACTION * 100).toInt()}%"
         )
     } else {
         Prescription(sets = config.targetSets, reps = target, weightKg = lastWeight)
@@ -143,15 +143,17 @@ private fun greyskullPrescription(sessions: List<List<WorkoutSet>>, config: Prog
             sets = config.targetSets,
             reps = target,
             weightKg = lastWeight + WEIGHT_INCREMENT_KG * 2,
-            reasonNote = "Reps dobladas en la última serie: salto doble",
+            reasonNote = "Reps dobladas en la última serie: salto doble"
         )
+
         amrapReps >= target -> Prescription(sets = config.targetSets, reps = target, weightKg = lastWeight + WEIGHT_INCREMENT_KG)
+
         else -> Prescription(
             sets = config.targetSets,
             reps = target,
             weightKg = (lastWeight * (1f - DELOAD_FRACTION)).roundToNearestIncrement(),
             isDeload = true,
-            reasonNote = "Fallo en la última serie: deload del ${(DELOAD_FRACTION * 100).toInt()}%",
+            reasonNote = "Fallo en la última serie: deload del ${(DELOAD_FRACTION * 100).toInt()}%"
         )
     }
 }
@@ -181,9 +183,11 @@ private fun bodyweightPrescription(sessions: List<List<WorkoutSet>>, config: Pro
             sets = config.targetSets + 1,
             reps = config.repRangeLow,
             weightKg = null,
-            reasonNote = "Techo de reps alcanzado: se agrega una serie",
+            reasonNote = "Techo de reps alcanzado: se agrega una serie"
         )
+
         minReps >= config.repRangeLow -> Prescription(sets = config.targetSets, reps = minReps + repStep, weightKg = null)
+
         else -> Prescription(sets = config.targetSets, reps = minReps, weightKg = null)
     }
 }

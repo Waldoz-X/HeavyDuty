@@ -19,7 +19,7 @@ class GetBodyWeightStatsUseCaseTest {
     private val losing = listOf(
         BodyWeightEntry(id = 2, weightKg = 85f, loggedAt = 2 * DAY),
         BodyWeightEntry(id = 1, weightKg = 90f, loggedAt = 1 * DAY),
-        BodyWeightEntry(id = 3, weightKg = 80f, loggedAt = 3 * DAY),
+        BodyWeightEntry(id = 3, weightKg = 80f, loggedAt = 3 * DAY)
     )
 
     @Test

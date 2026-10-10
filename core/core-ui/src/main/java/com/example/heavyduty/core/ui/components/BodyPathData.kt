@@ -18,7 +18,7 @@ internal data class BodyView(
     val viewBoxWidth: Float,
     val viewBoxHeight: Float,
     val inertPaths: List<Path>,
-    val musclePaths: Map<MuscleGroup, List<Path>>,
+    val musclePaths: Map<MuscleGroup, List<Path>>
 )
 
 // Parts that are drawn as silhouette only — they carry no training load.
@@ -46,13 +46,13 @@ private val MUSCLE_GROUP: Map<String, MuscleGroup> = mapOf(
     "upper-back" to MuscleGroup.LATS,
     "lower-back" to MuscleGroup.BACK,
     "gluteal" to MuscleGroup.GLUTES,
-    "hamstring" to MuscleGroup.HAMSTRINGS,
+    "hamstring" to MuscleGroup.HAMSTRINGS
 )
 
 /** Which body figure [HdBodyDiagram] draws — a user-facing preference, not an assumption. */
 enum class BodyGender(val storageValue: String) {
     MALE("male"),
-    FEMALE("female"),
+    FEMALE("female")
     ;
 
     companion object {

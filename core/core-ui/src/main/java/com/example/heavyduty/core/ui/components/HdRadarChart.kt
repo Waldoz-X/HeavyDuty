@@ -1,7 +1,5 @@
 package com.example.heavyduty.core.ui.components
 
-import com.example.heavyduty.core.common.R
-import androidx.compose.ui.res.stringResource
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -21,12 +19,14 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.heavyduty.core.common.R
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -44,7 +44,7 @@ fun HdRadarChart(
     secondaryFillColor: Color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.25f),
     secondaryLineColor: Color = MaterialTheme.colorScheme.secondary,
     gridColor: Color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f),
-    textColor: Color = MaterialTheme.colorScheme.onSurface,
+    textColor: Color = MaterialTheme.colorScheme.onSurface
 ) {
     if (data.isEmpty() || data.size < 3) {
         Box(modifier = modifier.aspectRatio(1f), contentAlignment = Alignment.Center) {
@@ -63,7 +63,7 @@ fun HdRadarChart(
     // Ensure we have at least 3 points to draw a polygon
     val labels = data.keys.toList()
     val values = data.values.toList()
-    
+
     // Animate progress from 0 to 1
     val animationProgress = remember { Animatable(0f) }
     LaunchedEffect(data) {
@@ -103,7 +103,7 @@ fun HdRadarChart(
         // Draw axes and labels
         labels.indices.forEach { index ->
             val angle = (index * anglePerItem) - (PI / 2)
-            
+
             // Axis line
             val endX = center.x + radius * cos(angle).toFloat()
             val endY = center.y + radius * sin(angle).toFloat()
@@ -119,7 +119,7 @@ fun HdRadarChart(
             val labelRadius = radius * 1.25f // push label outside
             val labelX = center.x + labelRadius * cos(angle).toFloat() - textLayoutResult.size.width / 2
             val labelY = center.y + labelRadius * sin(angle).toFloat() - textLayoutResult.size.height / 2
-            
+
             drawText(
                 textMeasurer = textMeasurer,
                 text = labels[index],
@@ -141,7 +141,7 @@ fun HdRadarChart(
                 center = center,
                 anglePerItem = anglePerItem,
                 fillColor = secondaryFillColor,
-                lineColor = secondaryLineColor,
+                lineColor = secondaryLineColor
             )
         }
 
@@ -153,7 +153,7 @@ fun HdRadarChart(
             center = center,
             anglePerItem = anglePerItem,
             fillColor = fillColor,
-            lineColor = lineColor,
+            lineColor = lineColor
         )
     }
 }
@@ -166,7 +166,7 @@ private fun DrawScope.drawRadarPolygon(
     center: Offset,
     anglePerItem: Double,
     fillColor: Color,
-    lineColor: Color,
+    lineColor: Color
 ) {
     val dataPath = Path()
     values.indices.forEach { index ->

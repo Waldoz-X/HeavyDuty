@@ -13,7 +13,7 @@ data class WorkoutSession(
     val status: WorkoutStatus = WorkoutStatus.IN_PROGRESS,
     val notes: String = "",
     val type: WorkoutType = WorkoutType.GYM,
-    val sets: List<WorkoutSet> = emptyList(),
+    val sets: List<WorkoutSet> = emptyList()
 )
 
 /**
@@ -38,5 +38,5 @@ data class WorkoutSet(
     /** Optional perceived-effort rating — see [Effort] doc for why it's never rewritten. */
     val effort: Effort? = null,
     /** Unit the weight was entered in (shown back that way); [weight] itself is always kg. */
-    val weightUnit: WeightUnit? = null,
+    val weightUnit: WeightUnit? = null
 )

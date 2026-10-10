@@ -19,7 +19,7 @@ class WorkoutRangeQueryTest {
 
     private val database = Room.inMemoryDatabaseBuilder(
         InstrumentationRegistry.getInstrumentation().targetContext,
-        HeavyDutyDatabase::class.java,
+        HeavyDutyDatabase::class.java
     ).build()
     private val dao = database.workoutDao()
 
@@ -28,15 +28,52 @@ class WorkoutRangeQueryTest {
 
     @Test
     fun aWorkoutPastMidnightKeepsAllItsSetsInThePeriodItStarted() = runTest {
-        val exercise = database.exerciseDao().insertExercise(ExerciseEntity(name = "Sentadilla", muscleGroup = "QUADRICEPS", exerciseType = "STRENGTH"))
+        val exercise = database.exerciseDao().insertExercise(
+            ExerciseEntity(name = "Sentadilla", muscleGroup = "QUADRICEPS", exerciseType = "STRENGTH")
+        )
         val midnight = 10 * 86_400_000L
         val late = dao.insertSession(WorkoutSessionEntity(sessionName = "Pierna", startTime = midnight - 20 * 60_000, status = "COMPLETED"))
-        dao.insertSet(WorkoutSetEntity(sessionId = late, exerciseId = exercise, setNumber = 1, reps = 5, weight = 100f, isCompleted = true, completedAt = midnight - 60_000))
-        dao.insertSet(WorkoutSetEntity(sessionId = late, exerciseId = exercise, setNumber = 2, reps = 5, weight = 100f, isCompleted = true, completedAt = midnight + 60_000))
+        dao.insertSet(
+            WorkoutSetEntity(
+                sessionId = late,
+                exerciseId = exercise,
+                setNumber = 1,
+                reps = 5,
+                weight = 100f,
+                isCompleted = true,
+                completedAt =
+                    midnight - 60_000
+            )
+        )
+        dao.insertSet(
+            WorkoutSetEntity(
+                sessionId = late,
+                exerciseId = exercise,
+                setNumber = 2,
+                reps = 5,
+                weight = 100f,
+                isCompleted = true,
+                completedAt =
+                    midnight + 60_000
+            )
+        )
         // Not counted: unfinished set, unfinished workout.
-        dao.insertSet(WorkoutSetEntity(sessionId = late, exerciseId = exercise, setNumber = 3, reps = 5, weight = 100f, isCompleted = false))
+        dao.insertSet(
+            WorkoutSetEntity(sessionId = late, exerciseId = exercise, setNumber = 3, reps = 5, weight = 100f, isCompleted = false)
+        )
         val running = dao.insertSession(WorkoutSessionEntity(sessionName = "Pierna", startTime = midnight - 10_000, status = "IN_PROGRESS"))
-        dao.insertSet(WorkoutSetEntity(sessionId = running, exerciseId = exercise, setNumber = 1, reps = 5, weight = 100f, isCompleted = true, completedAt = midnight - 5_000))
+        dao.insertSet(
+            WorkoutSetEntity(
+                sessionId = running,
+                exerciseId = exercise,
+                setNumber = 1,
+                reps = 5,
+                weight = 100f,
+                isCompleted = true,
+                completedAt =
+                    midnight - 5_000
+            )
+        )
 
         val dayBefore = 0L until midnight
         val dayAfter = midnight until 2 * midnight

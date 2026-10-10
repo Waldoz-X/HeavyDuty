@@ -51,7 +51,6 @@ fun NavHostController.popBackStackIfResumed() {
     if (isCurrentEntryResumed() && previousBackStackEntry != null) popBackStack()
 }
 
-private fun NavHostController.isCurrentEntryResumed(): Boolean =
-    currentBackStackEntry?.lifecycle?.currentState == Lifecycle.State.RESUMED
+private fun NavHostController.isCurrentEntryResumed(): Boolean = currentBackStackEntry?.lifecycle?.currentState == Lifecycle.State.RESUMED
 
 fun workoutRoute(routineId: Long): String = "${TopLevelDestination.WORKOUT.route}?routineId=$routineId"

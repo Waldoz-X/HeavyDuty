@@ -34,7 +34,12 @@ class BackupImportRobustnessTest {
         backups = BackupRepositoryImpl(db, db.exerciseDao(), db.routineDao(), db.workoutDao(), db.bodyWeightDao(), Clock.System)
         // What the user already has; a refused import must leave exactly this.
         db.exerciseDao().insertExercise(
-            ExerciseEntity(name = "Press de banca con barra", nameEn = "barbell bench press", muscleGroup = "CHEST", exerciseType = "STRENGTH"),
+            ExerciseEntity(
+                name = "Press de banca con barra",
+                nameEn = "barbell bench press",
+                muscleGroup = "CHEST",
+                exerciseType = "STRENGTH"
+            )
         )
         db.routineDao().insertRoutine(RoutineEntity(name = "Mi rutina"))
     }
@@ -47,7 +52,7 @@ class BackupImportRobustnessTest {
         db.routineDao().getAllRoutines().first().size,
         db.workoutDao().getAllSessions().first().size,
         db.workoutDao().getAllLoggedSets().first().size,
-        db.bodyWeightDao().getAllEntries().first().size,
+        db.bodyWeightDao().getAllEntries().first().size
     )
 
     /** Everything the app's screens read, through the same mappers they use. */
@@ -79,7 +84,7 @@ class BackupImportRobustnessTest {
         sessions: String = validSession,
         customExercises: String = "",
         routines: String = """{"name":"Torso","exercises":[{"exerciseName":"barbell bench press","orderIndex":0}]}""",
-        version: Int = 1,
+        version: Int = 1
     ) = """{"version":$version,"exportedAt":1,"customExercises":[$customExercises],"routines":[$routines],
            "sessions":[$sessions],"bodyWeightEntries":[{"weightKg":82.5,"loggedAt":1000}]}"""
 
@@ -126,7 +131,9 @@ class BackupImportRobustnessTest {
         assertRefused(backup(customExercises = """{"name":"Mío","muscleGroup":"WINGS","exerciseType":"STRENGTH"}"""))
         assertRefused(backup(customExercises = """{"name":"Mío","exerciseType":"STRENGTH"}"""))
         assertRefused(backup(routines = """{"name":"Torso","type":"YOGA","exercises":[]}"""))
-        assertRefused(backup(routines = """{"name":"Torso","exercises":[{"exerciseName":"barbell bench press","progressionPolicy":"MAGIC"}]}"""))
+        assertRefused(
+            backup(routines = """{"name":"Torso","exercises":[{"exerciseName":"barbell bench press","progressionPolicy":"MAGIC"}]}""")
+        )
         assertRefused(backup(sessions = validSession.replace("\"GYM\"", "\"SPACE\"")))
     }
 

@@ -32,7 +32,7 @@ fun HdRollingText(
     modifier: Modifier = Modifier,
     color: Color = LocalContentColor.current,
     fontWeight: FontWeight? = null,
-    countingDown: Boolean = false,
+    countingDown: Boolean = false
 ) {
     Row(modifier = modifier) {
         text.forEachIndexed { index, char ->
@@ -45,7 +45,7 @@ fun HdRollingText(
                             .togetherWith(slideOutVertically(tween(ROLL_MS)) { -direction * it } + fadeOut(tween(ROLL_MS)))
                             .using(SizeTransform(clip = true))
                     },
-                    label = "rollingChar",
+                    label = "rollingChar"
                 ) { shown ->
                     Text(text = shown.toString(), style = style, color = color, fontWeight = fontWeight)
                 }

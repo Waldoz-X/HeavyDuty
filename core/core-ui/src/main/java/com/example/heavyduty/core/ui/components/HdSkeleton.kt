@@ -29,27 +29,19 @@ import androidx.compose.ui.unit.dp
  * skeleton leaves the screen.
  */
 @Composable
-fun HdSkeletonBlock(
-    modifier: Modifier = Modifier,
-    shape: Shape = RoundedCornerShape(8.dp),
-) {
+fun HdSkeletonBlock(modifier: Modifier = Modifier, shape: Shape = RoundedCornerShape(8.dp)) {
     Box(modifier = modifier.clip(shape).shimmer())
 }
 
 /** A list of card-shaped rows: thumbnail plus two lines of text, like most of the app's lists. */
 @Composable
-fun HdCardListSkeleton(
-    modifier: Modifier = Modifier,
-    rows: Int = 6,
-    thumbnailSize: Dp = 64.dp,
-    contentPadding: Dp = 0.dp,
-) {
+fun HdCardListSkeleton(modifier: Modifier = Modifier, rows: Int = 6, thumbnailSize: Dp = 64.dp, contentPadding: Dp = 0.dp) {
     Column(
         // One unit for TalkBack instead of a dozen unlabeled boxes.
         modifier = modifier
             .padding(horizontal = contentPadding)
             .clearAndSetSemantics { },
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         repeat(rows) { index ->
             Row(
@@ -57,7 +49,7 @@ fun HdCardListSkeleton(
                     .fillMaxWidth()
                     .clip(MaterialTheme.shapes.large)
                     .padding(12.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 HdSkeletonBlock(modifier = Modifier.size(thumbnailSize), shape = RoundedCornerShape(14.dp))
                 Spacer(modifier = Modifier.width(16.dp))
@@ -74,20 +66,17 @@ fun HdCardListSkeleton(
 
 /** Stacked card placeholders for dashboard-style screens (summaries, charts). */
 @Composable
-fun HdCardsSkeleton(
-    modifier: Modifier = Modifier,
-    heights: List<Dp> = listOf(120.dp, 200.dp, 160.dp),
-) {
+fun HdCardsSkeleton(modifier: Modifier = Modifier, heights: List<Dp> = listOf(120.dp, 200.dp, 160.dp)) {
     Column(
         modifier = modifier.clearAndSetSemantics { },
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         heights.forEach { height ->
             HdSkeletonBlock(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(height),
-                shape = MaterialTheme.shapes.large,
+                shape = MaterialTheme.shapes.large
             )
         }
     }

@@ -17,7 +17,7 @@ data class ExerciseSetSummary(
     val bestOneRepMaxKg: Float?,
     val bestSetWeightKg: Float?,
     val bestSetReps: Int?,
-    val bestSetAt: Long?,
+    val bestSetAt: Long?
 )
 
 /*
@@ -38,7 +38,7 @@ fun exerciseSetSummaries(completedSets: List<WorkoutSet>): List<ExerciseSetSumma
             bestOneRepMaxKg = best?.first,
             bestSetWeightKg = best?.second?.weight,
             bestSetReps = best?.second?.reps,
-            bestSetAt = best?.second?.completedAt,
+            bestSetAt = best?.second?.completedAt
         )
     }
 

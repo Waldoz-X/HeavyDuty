@@ -40,7 +40,7 @@ fun HdActivityHeatmap(
     highlightColor: Color = MaterialTheme.colorScheme.primary,
     labelColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
     cellSpacing: Dp = 2.dp,
-    height: Dp = 120.dp,
+    height: Dp = 120.dp
 ) {
     val textMeasurer = rememberTextMeasurer()
     val labelStyle = TextStyle(color = labelColor, fontSize = 10.sp)
@@ -68,7 +68,7 @@ fun HdActivityHeatmap(
                     color = lerp(baseColor, highlightColor, value.coerceIn(0f, 1f)),
                     topLeft = Offset(x, y),
                     size = Size(cellWidthPx, cellHeightPx),
-                    cornerRadius = cornerRadius,
+                    cornerRadius = cornerRadius
                 )
                 if (dayIndex == 0) {
                     val month = monthOf(dayMillis)
@@ -82,14 +82,13 @@ fun HdActivityHeatmap(
     }
 }
 
-private fun startOfDayMillis(millis: Long): Long =
-    Calendar.getInstance().apply {
-        timeInMillis = millis
-        set(Calendar.HOUR_OF_DAY, 0)
-        set(Calendar.MINUTE, 0)
-        set(Calendar.SECOND, 0)
-        set(Calendar.MILLISECOND, 0)
-    }.timeInMillis
+private fun startOfDayMillis(millis: Long): Long = Calendar.getInstance().apply {
+    timeInMillis = millis
+    set(Calendar.HOUR_OF_DAY, 0)
+    set(Calendar.MINUTE, 0)
+    set(Calendar.SECOND, 0)
+    set(Calendar.MILLISECOND, 0)
+}.timeInMillis
 
 /** [weeks] columns of 7 Monday..Sunday days each, ending on today's week. Future days are null. */
 private fun buildWeekGrid(todayMillis: Long, weeks: Int): List<List<Long?>> {
@@ -110,7 +109,6 @@ private fun buildWeekGrid(todayMillis: Long, weeks: Int): List<List<Long?>> {
 
 private fun monthOf(millis: Long): Int = Calendar.getInstance().apply { timeInMillis = millis }.get(Calendar.MONTH)
 
-private fun monthLabel(millis: Long): String =
-    SimpleDateFormat("MMM", Locale.Builder().setLanguage("es").setRegion("ES").build())
-        .format(Date(millis))
-        .replaceFirstChar { it.uppercase() }
+private fun monthLabel(millis: Long): String = SimpleDateFormat("MMM", Locale.Builder().setLanguage("es").setRegion("ES").build())
+    .format(Date(millis))
+    .replaceFirstChar { it.uppercase() }

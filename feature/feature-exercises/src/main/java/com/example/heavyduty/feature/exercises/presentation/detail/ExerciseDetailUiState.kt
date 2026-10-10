@@ -11,7 +11,7 @@ data class ExerciseDetailUiState(
     val exerciseId: Long = 0,
     val exercise: Exercise? = null,
     val isLoading: Boolean = true,
-    val loadFailed: Boolean = false,
+    val loadFailed: Boolean = false
 )
 
 /**

@@ -10,7 +10,7 @@ data class Routine(
     val type: WorkoutType = WorkoutType.GYM,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
-    val exercises: List<RoutineExercise> = emptyList(),
+    val exercises: List<RoutineExercise> = emptyList()
 )
 
 /**
@@ -41,7 +41,7 @@ data class RoutineExercise(
      * kg/lb of the equipment used for this exercise in this routine — a machine can be in pounds
      * while the barbell next to it is in kilos. Null = the exercise's own default ([Exercise.weightUnit]).
      */
-    val weightUnit: WeightUnit? = null,
+    val weightUnit: WeightUnit? = null
 )
 
 /** The unit this routine exercise's weights are shown and typed in. */

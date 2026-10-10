@@ -1,15 +1,22 @@
 package com.example.heavyduty.core.domain.model
 
+import java.util.Locale
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import java.util.Locale
 
 class ExerciseDisplayNameTest {
 
     private val originalLocale = Locale.getDefault()
-    private val bench = Exercise(name = "Press de banca con barra", nameEn = "barbell bench press", muscleGroup = MuscleGroup.CHEST, exerciseType = ExerciseType.STRENGTH)
-    private val custom = Exercise(name = "Mi press raro", muscleGroup = MuscleGroup.CHEST, exerciseType = ExerciseType.STRENGTH, isCustom = true)
+    private val bench =
+        Exercise(
+            name = "Press de banca con barra",
+            nameEn = "barbell bench press",
+            muscleGroup = MuscleGroup.CHEST,
+            exerciseType = ExerciseType.STRENGTH
+        )
+    private val custom =
+        Exercise(name = "Mi press raro", muscleGroup = MuscleGroup.CHEST, exerciseType = ExerciseType.STRENGTH, isCustom = true)
 
     @After
     fun restoreLocale() = Locale.setDefault(originalLocale)

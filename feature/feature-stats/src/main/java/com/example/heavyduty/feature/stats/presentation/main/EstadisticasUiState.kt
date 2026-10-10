@@ -1,7 +1,7 @@
 package com.example.heavyduty.feature.stats.presentation.main
 
-import com.example.heavyduty.core.ui.components.BodyGender
 import com.example.heavyduty.core.domain.model.MuscleGroup
+import com.example.heavyduty.core.ui.components.BodyGender
 import com.example.heavyduty.feature.stats.domain.model.PeriodSummary
 
 data class EstadisticasUiState(
@@ -12,15 +12,10 @@ data class EstadisticasUiState(
     val summary: PeriodSummary = PeriodSummary(),
     val isLoading: Boolean = true,
     /** The data couldn't be read; the screen shows an error instead of looking empty. */
-    val loadFailed: Boolean = false,
+    val loadFailed: Boolean = false
 )
 
-data class DayChipUi(
-    val dateMillis: Long,
-    val dayLetter: String,
-    val dayNumber: String,
-    val isSelected: Boolean,
-)
+data class DayChipUi(val dateMillis: Long, val dayLetter: String, val dayNumber: String, val isSelected: Boolean)
 
 sealed interface EstadisticasUiEvent {
     data class OnDaySelected(val dateMillis: Long) : EstadisticasUiEvent

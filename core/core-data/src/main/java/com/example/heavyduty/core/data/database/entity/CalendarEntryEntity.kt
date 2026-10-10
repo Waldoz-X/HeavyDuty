@@ -12,10 +12,10 @@ import androidx.room.PrimaryKey
             entity = RoutineEntity::class,
             parentColumns = ["id"],
             childColumns = ["routineId"],
-            onDelete = ForeignKey.CASCADE,
-        ),
+            onDelete = ForeignKey.CASCADE
+        )
     ],
-    indices = [Index(value = ["routineId"])],
+    indices = [Index(value = ["routineId"])]
 )
 data class CalendarEntryEntity(
     @PrimaryKey(autoGenerate = true)
@@ -23,5 +23,5 @@ data class CalendarEntryEntity(
     val routineId: Long,
     val dayOfWeek: Int = 1,
     val recurrence: String = "WEEKLY",
-    val isActive: Boolean = true,
+    val isActive: Boolean = true
 )

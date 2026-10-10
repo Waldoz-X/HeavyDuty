@@ -12,21 +12,19 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.example.heavyduty.core.domain.model.WeightUnit
 import com.example.heavyduty.core.domain.repository.UserPreferencesRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.map
 import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.map
 
 private val Context.userPreferencesDataStore: DataStore<Preferences> by preferencesDataStore(
-    name = "user_preferences",
+    name = "user_preferences"
 )
 
 @Singleton
-class UserPreferencesRepositoryImpl @Inject constructor(
-    @ApplicationContext private val context: Context,
-) : UserPreferencesRepository {
+class UserPreferencesRepositoryImpl @Inject constructor(@ApplicationContext private val context: Context) : UserPreferencesRepository {
 
     private object Keys {
         val DISPLAY_NAME = stringPreferencesKey("display_name")

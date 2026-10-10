@@ -7,5 +7,5 @@ data class ProfileStats(
     val totalWorkouts: Int = 0,
     val totalSets: Int = 0,
     val totalVolumeKg: Float = 0f,
-    val memberSinceMillis: Long? = null,
+    val memberSinceMillis: Long? = null
 )

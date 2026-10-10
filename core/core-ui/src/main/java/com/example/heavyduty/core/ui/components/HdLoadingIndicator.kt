@@ -30,36 +30,33 @@ import kotlinx.coroutines.delay
  * a skeleton (see HdSkeleton.kt) so the layout doesn't jump when the data arrives.
  */
 @Composable
-fun HdLoadingIndicator(
-    modifier: Modifier = Modifier,
-    message: String? = null,
-) {
+fun HdLoadingIndicator(modifier: Modifier = Modifier, message: String? = null) {
     val visible by produceState(initialValue = false) {
         delay(SHOW_DELAY_MS)
         value = true
     }
     Box(
         modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center,
+        contentAlignment = Alignment.Center
     ) {
         AnimatedVisibility(visible = visible, enter = fadeIn(tween(FADE_IN_MS))) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
+                verticalArrangement = Arrangement.Center
             ) {
                 // Indeterminate: animates on its own, without recomposing this screen.
                 CircularProgressIndicator(
                     modifier = Modifier.size(48.dp),
                     color = MaterialTheme.colorScheme.primary,
                     strokeWidth = 3.dp,
-                    strokeCap = StrokeCap.Round,
+                    strokeCap = StrokeCap.Round
                 )
                 if (message != null) {
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         text = message,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }

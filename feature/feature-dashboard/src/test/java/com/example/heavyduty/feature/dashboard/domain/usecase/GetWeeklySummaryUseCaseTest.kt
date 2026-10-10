@@ -17,10 +17,8 @@ import org.junit.Test
 
 class GetWeeklySummaryUseCaseTest {
 
-    private class FakeWorkoutRepository(
-        private val sessions: List<WorkoutSession>,
-        private val sets: List<WorkoutSet>,
-    ) : WorkoutRepository {
+    private class FakeWorkoutRepository(private val sessions: List<WorkoutSession>, private val sets: List<WorkoutSet>) :
+        WorkoutRepository {
         var requestedSessionRange: LongRange? = null
         var requestedSetRange: LongRange? = null
 
@@ -63,12 +61,12 @@ class GetWeeklySummaryUseCaseTest {
         val repo = FakeWorkoutRepository(
             sessions = listOf(
                 WorkoutSession(id = 1, totalDurationSecs = 1800, status = WorkoutStatus.COMPLETED),
-                WorkoutSession(id = 2, status = WorkoutStatus.IN_PROGRESS),
+                WorkoutSession(id = 2, status = WorkoutStatus.IN_PROGRESS)
             ),
             sets = listOf(
                 WorkoutSet(sessionId = 1, reps = 5, weight = 100f, isCompleted = true),
-                WorkoutSet(sessionId = 2, reps = 5, weight = 100f, isCompleted = true),
-            ),
+                WorkoutSet(sessionId = 2, reps = 5, weight = 100f, isCompleted = true)
+            )
         )
 
         val totals = GetWeeklySummaryUseCase(repo)(0L..Long.MAX_VALUE).first()
@@ -85,9 +83,9 @@ class GetWeeklySummaryUseCaseTest {
             sessions = listOf(
                 WorkoutSession(id = 1, endTime = 1_000L, status = WorkoutStatus.COMPLETED),
                 WorkoutSession(id = 2, endTime = 5_000L, status = WorkoutStatus.COMPLETED),
-                WorkoutSession(id = 3, startTime = 9_000L, status = WorkoutStatus.IN_PROGRESS),
+                WorkoutSession(id = 3, startTime = 9_000L, status = WorkoutStatus.IN_PROGRESS)
             ),
-            sets = emptyList(),
+            sets = emptyList()
         )
 
         assertEquals(2L, GetRecentWorkoutUseCase(repo)().first()?.id)
@@ -110,12 +108,12 @@ class GetWeeklySummaryUseCaseTest {
         val repo = FakeWorkoutRepository(
             sessions = listOf(
                 WorkoutSession(id = 1, status = WorkoutStatus.COMPLETED),
-                WorkoutSession(id = 2, status = WorkoutStatus.IN_PROGRESS),
+                WorkoutSession(id = 2, status = WorkoutStatus.IN_PROGRESS)
             ),
             sets = listOf(
                 WorkoutSet(sessionId = 1, exerciseId = 10, reps = 5, weight = 100f, isCompleted = true),
-                WorkoutSet(sessionId = 2, exerciseId = 10, reps = 5, weight = 100f, isCompleted = true),
-            ),
+                WorkoutSet(sessionId = 2, exerciseId = 10, reps = 5, weight = 100f, isCompleted = true)
+            )
         )
 
         val radar = GetWeeklyMuscleVolumeUseCase(repo, FakeExerciseRepository(listOf(bench)))(0L, Long.MAX_VALUE).first()

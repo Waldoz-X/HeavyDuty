@@ -5,7 +5,7 @@ import com.example.heavyduty.core.domain.model.MuscleGroup
 data class MuscleVolumeContribution(
     val muscleGroup: MuscleGroup,
     val volumeKg: Float,
-    val percentage: Float, // 0.0 to 100.0
+    val percentage: Float // 0.0 to 100.0
 )
 
 data class TopExerciseMonthly(
@@ -14,7 +14,7 @@ data class TopExerciseMonthly(
     val muscleGroup: MuscleGroup,
     val totalSets: Int,
     val totalVolumeKg: Float,
-    val maxWeightKg: Float,
+    val maxWeightKg: Float
 )
 
 /**
@@ -45,5 +45,5 @@ data class MonthlyReport(
 
     // Desglose semanal, por número de semana del mes (1, 2, …); la UI pone la etiqueta.
     val workoutsPerWeek: List<Pair<Int, Int>> = emptyList(),
-    val volumePerWeek: List<Pair<Int, Float>> = emptyList(),
+    val volumePerWeek: List<Pair<Int, Float>> = emptyList()
 )

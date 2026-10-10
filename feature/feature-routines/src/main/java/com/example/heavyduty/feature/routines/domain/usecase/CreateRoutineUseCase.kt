@@ -7,9 +7,6 @@ import javax.inject.Inject
 /**
  * Use case to create a new routine.
  */
-class CreateRoutineUseCase @Inject constructor(
-    private val routineRepository: RoutineRepository,
-) {
-    suspend operator fun invoke(routine: Routine): Long =
-        routineRepository.insertRoutine(routine)
+class CreateRoutineUseCase @Inject constructor(private val routineRepository: RoutineRepository) {
+    suspend operator fun invoke(routine: Routine): Long = routineRepository.insertRoutine(routine)
 }

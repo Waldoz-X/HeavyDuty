@@ -39,19 +39,19 @@ fun HdStatCard(
     modifier: Modifier = Modifier,
     deltaText: String? = null,
     isPositive: Boolean = true,
-    subtext: String? = null,
+    subtext: String? = null
 ) {
     HdCard(modifier = modifier) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(22.dp),
+                modifier = Modifier.size(22.dp)
             )
             if (deltaText != null) {
                 Row(
@@ -59,23 +59,26 @@ fun HdStatCard(
                     modifier = Modifier
                         .clip(RoundedCornerShape(12.dp))
                         .background(
-                            if (isPositive) Color(0xFF4CAF50).copy(alpha = 0.15f)
-                            else Color(0xFFE53935).copy(alpha = 0.15f),
+                            if (isPositive) {
+                                Color(0xFF4CAF50).copy(alpha = 0.15f)
+                            } else {
+                                Color(0xFFE53935).copy(alpha = 0.15f)
+                            }
                         )
-                        .padding(horizontal = 6.dp, vertical = 2.dp),
+                        .padding(horizontal = 6.dp, vertical = 2.dp)
                 ) {
                     Icon(
                         imageVector = if (isPositive) Icons.AutoMirrored.Filled.TrendingUp else Icons.AutoMirrored.Filled.TrendingDown,
                         contentDescription = null,
                         tint = if (isPositive) Color(0xFF4CAF50) else Color(0xFFE53935),
-                        modifier = Modifier.size(12.dp),
+                        modifier = Modifier.size(12.dp)
                     )
                     Spacer(modifier = Modifier.width(2.dp))
                     Text(
                         text = deltaText,
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
-                        color = if (isPositive) Color(0xFF4CAF50) else Color(0xFFE53935),
+                        color = if (isPositive) Color(0xFF4CAF50) else Color(0xFFE53935)
                     )
                 }
             }
@@ -86,12 +89,12 @@ fun HdStatCard(
         Text(
             text = value,
             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.onSurface,
+            color = MaterialTheme.colorScheme.onSurface
         )
         Text(
             text = label,
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
         if (subtext != null) {
@@ -99,7 +102,7 @@ fun HdStatCard(
             Text(
                 text = subtext,
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
             )
         }
     }

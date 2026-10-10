@@ -30,20 +30,20 @@ fun HdButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     isLoading: Boolean = false,
-    icon: ImageVector? = null,
+    icon: ImageVector? = null
 ) {
     Button(
         onClick = onClick,
         modifier = modifier.animateContentSize(),
         enabled = enabled && !isLoading,
         shape = MaterialTheme.shapes.medium,
-        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 14.dp),
+        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 14.dp)
     ) {
         if (isLoading) {
             CircularProgressIndicator(
                 modifier = Modifier.size(20.dp),
                 color = MaterialTheme.colorScheme.onPrimary,
-                strokeWidth = 2.dp,
+                strokeWidth = 2.dp
             )
             Spacer(modifier = Modifier.width(8.dp))
         }
@@ -51,7 +51,7 @@ fun HdButton(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                modifier = Modifier.size(20.dp),
+                modifier = Modifier.size(20.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
         }
@@ -63,25 +63,19 @@ fun HdButton(
  * Secondary/tonal button variant.
  */
 @Composable
-fun HdTonalButton(
-    text: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true,
-    icon: ImageVector? = null,
-) {
+fun HdTonalButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, icon: ImageVector? = null) {
     FilledTonalButton(
         onClick = onClick,
         modifier = modifier,
         enabled = enabled,
         shape = MaterialTheme.shapes.medium,
-        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 14.dp),
+        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 14.dp)
     ) {
         if (icon != null) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                modifier = Modifier.size(20.dp),
+                modifier = Modifier.size(20.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
         }
@@ -93,23 +87,17 @@ fun HdTonalButton(
  * Ghost/text button variant.
  */
 @Composable
-fun HdTextButton(
-    text: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true,
-    icon: ImageVector? = null,
-) {
+fun HdTextButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, icon: ImageVector? = null) {
     TextButton(
         onClick = onClick,
         modifier = modifier,
-        enabled = enabled,
+        enabled = enabled
     ) {
         if (icon != null) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                modifier = Modifier.size(18.dp),
+                modifier = Modifier.size(18.dp)
             )
             Spacer(modifier = Modifier.width(6.dp))
         }

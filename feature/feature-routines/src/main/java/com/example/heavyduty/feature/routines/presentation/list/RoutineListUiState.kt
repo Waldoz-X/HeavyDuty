@@ -6,11 +6,7 @@ import com.example.heavyduty.core.domain.model.Routine
 /**
  * Immutable UI state for the routine list screen.
  */
-data class RoutineListUiState(
-    val routines: List<Routine> = emptyList(),
-    val isLoading: Boolean = true,
-    val loadFailed: Boolean = false,
-)
+data class RoutineListUiState(val routines: List<Routine> = emptyList(), val isLoading: Boolean = true, val loadFailed: Boolean = false)
 
 /**
  * User-initiated events from the routine list screen.
@@ -19,6 +15,7 @@ sealed interface RoutineListUiEvent {
     data class OnRoutineClick(val routineId: Long) : RoutineListUiEvent
     data object OnCreateRoutine : RoutineListUiEvent
     data class OnStartRoutine(val routineId: Long) : RoutineListUiEvent
+
     /** Sent once the user confirmed the deletion dialog. */
     data class OnDeleteRoutine(val routine: Routine) : RoutineListUiEvent
 }

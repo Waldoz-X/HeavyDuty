@@ -18,6 +18,6 @@ fun HdErrorState(modifier: Modifier = Modifier) {
         icon = Icons.Outlined.ErrorOutline,
         title = stringResource(R.string.error_load_title),
         description = stringResource(R.string.error_load_desc),
-        modifier = modifier,
+        modifier = modifier
     )
 }

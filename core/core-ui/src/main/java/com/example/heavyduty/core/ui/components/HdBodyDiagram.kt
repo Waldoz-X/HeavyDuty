@@ -47,7 +47,7 @@ fun HdBodyDiagram(
     highlightColor: Color = MaterialTheme.colorScheme.primary,
     categoryColors: Map<MuscleGroup, Color>? = null,
     frontLabel: String = stringResource(R.string.body_front),
-    backLabel: String = stringResource(R.string.body_back),
+    backLabel: String = stringResource(R.string.body_back)
 ) {
     val context = LocalContext.current
     val (front, back) = remember(gender) { loadBodyPaths(context, gender) }
@@ -60,11 +60,11 @@ fun HdBodyDiagram(
 
     Row(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Column(
             modifier = Modifier.weight(1f).fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Canvas(modifier = Modifier.fillMaxWidth().weight(1f)) {
                 drawBodyView(front, muscleValues, maxValue, baseColor, highlightColor, categoryColors)
@@ -73,12 +73,12 @@ fun HdBodyDiagram(
             Text(
                 text = frontLabel,
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
         Column(
             modifier = Modifier.weight(1f).fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Canvas(modifier = Modifier.fillMaxWidth().weight(1f)) {
                 drawBodyView(back, muscleValues, maxValue, baseColor, highlightColor, categoryColors)
@@ -87,7 +87,7 @@ fun HdBodyDiagram(
             Text(
                 text = backLabel,
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -99,7 +99,7 @@ private fun DrawScope.drawBodyView(
     maxValue: Float,
     baseColor: Color,
     highlightColor: Color,
-    categoryColors: Map<MuscleGroup, Color>?,
+    categoryColors: Map<MuscleGroup, Color>?
 ) {
     // Fit the SVG viewBox into the available canvas, preserving aspect ratio and centered.
     val fitScale = minOf(size.width / view.viewBoxWidth, size.height / view.viewBoxHeight)

@@ -1,17 +1,24 @@
 package com.example.heavyduty.feature.profile.presentation
 
-import com.example.heavyduty.core.common.flow.whileSubscribed
-import com.example.heavyduty.core.domain.model.Clock
-import com.example.heavyduty.core.domain.model.WorkoutSet
-import com.example.heavyduty.core.domain.model.displayName
 import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.heavyduty.core.common.R
+import com.example.heavyduty.core.common.flow.whileSubscribed
+import com.example.heavyduty.core.domain.model.Clock
+import com.example.heavyduty.core.domain.model.WeightUnit
+import com.example.heavyduty.core.domain.model.WorkoutSet
+import com.example.heavyduty.core.domain.model.currentStreakDays
+import com.example.heavyduty.core.domain.model.displayName
+import com.example.heavyduty.core.domain.model.excludeWarmups
+import com.example.heavyduty.core.domain.repository.ExerciseRepository
+import com.example.heavyduty.core.domain.repository.UserPreferencesRepository
+import com.example.heavyduty.core.domain.repository.WorkoutRepository
+import com.example.heavyduty.core.ui.components.WorkoutFeedItem
 import com.example.heavyduty.feature.profile.domain.model.ProfileStats
 import com.example.heavyduty.feature.profile.domain.model.personalRecordSetIds
 import com.example.heavyduty.feature.profile.domain.model.weeklyTrainingHours
-import com.example.heavyduty.core.domain.model.currentStreakDays
 import com.example.heavyduty.feature.profile.domain.usecase.ExportBackupUseCase
 import com.example.heavyduty.feature.profile.domain.usecase.GetBodyDiagramGenderUseCase
 import com.example.heavyduty.feature.profile.domain.usecase.GetDisplayNameUseCase
@@ -25,7 +32,11 @@ import com.example.heavyduty.feature.profile.domain.usecase.SetEffortTrackingEna
 import com.example.heavyduty.feature.profile.domain.usecase.SetPreferredEffortScaleUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import java.text.SimpleDateFormat
+import java.util.Locale
+import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -34,22 +45,10 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.Dispatchers
-import javax.inject.Inject
-
-import com.example.heavyduty.core.domain.model.excludeWarmups
-import com.example.heavyduty.core.domain.repository.WorkoutRepository
-import com.example.heavyduty.core.domain.model.WeightUnit
-import com.example.heavyduty.core.domain.repository.ExerciseRepository
-import com.example.heavyduty.core.domain.repository.UserPreferencesRepository
-import com.example.heavyduty.core.ui.components.WorkoutFeedItem
-import com.example.heavyduty.core.common.R
-import java.text.SimpleDateFormat
-import java.util.Locale
 
 /** Workouts shown in the profile's activity feed; the full list lives in the history screen. */
 private const val FEED_SIZE = 30
@@ -72,10 +71,11 @@ class ProfileViewModel @Inject constructor(
     exerciseRepository: ExerciseRepository,
     private val userPreferencesRepository: UserPreferencesRepository,
     @param:ApplicationContext private val appContext: Context,
-    private val clock: Clock,
+    private val clock: Clock
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileUiState())
+
     /** Loads only while the screen is watching — see [whileSubscribed]. */
     val uiState: StateFlow<ProfileUiState> = _uiState.whileSubscribed(viewModelScope) {
         val sessionsFlow = workoutRepository.getAllSessions()
@@ -90,7 +90,7 @@ class ProfileViewModel @Inject constructor(
                 } else {
                     combine(
                         workoutRepository.getCompletedSetsByDateRange(since, Long.MAX_VALUE),
-                        workoutRepository.getBestWeightsBefore(since),
+                        workoutRepository.getBestWeightsBefore(since)
                     ) { sets, earlierBests -> sets to earlierBests }
                 }
             }
@@ -149,7 +149,7 @@ class ProfileViewModel @Inject constructor(
                 stats = stats,
                 feedItems = feedItems,
                 chartData = chartData,
-                streak = currentStreakDays(sessions, clock.nowMillis()),
+                streak = currentStreakDays(sessions, clock.nowMillis())
             )
         }.flowOn(Dispatchers.Default)
 
@@ -157,7 +157,7 @@ class ProfileViewModel @Inject constructor(
             getBodyDiagramGenderUseCase(),
             getEffortTrackingEnabledUseCase(),
             getPreferredEffortScaleUseCase(),
-            userPreferencesRepository.preferredWeightUnit,
+            userPreferencesRepository.preferredWeightUnit
         ) { gender, effortEnabled, effortScale, weightUnit ->
             ProfileSettings(gender, effortEnabled, effortScale, weightUnit)
         }
@@ -175,7 +175,7 @@ class ProfileViewModel @Inject constructor(
                         effortTrackingEnabled = settings.effortTrackingEnabled,
                         preferredEffortScale = settings.preferredEffortScale,
                         preferredWeightUnit = settings.preferredWeightUnit,
-                        isLoading = false,
+                        isLoading = false
                     )
                 }
             }.catch { _uiState.update { it.copy(isLoading = false, loadFailed = true) } }
@@ -188,14 +188,14 @@ class ProfileViewModel @Inject constructor(
         val stats: ProfileStats,
         val feedItems: List<WorkoutFeedItem>,
         val chartData: List<Pair<String, Float>>,
-        val streak: Int,
+        val streak: Int
     )
 
     private data class ProfileSettings(
         val bodyDiagramGender: String,
         val effortTrackingEnabled: Boolean,
         val preferredEffortScale: String,
-        val preferredWeightUnit: WeightUnit,
+        val preferredWeightUnit: WeightUnit
     )
 
     private fun formatRelativeTime(timestamp: Long): String {
@@ -214,27 +214,37 @@ class ProfileViewModel @Inject constructor(
             ProfileUiEvent.OnStartEditingName -> {
                 _uiState.update { it.copy(isEditingName = true, nameInput = it.displayName) }
             }
+
             is ProfileUiEvent.OnNameInputChange -> {
                 _uiState.update { it.copy(nameInput = event.name) }
             }
+
             ProfileUiEvent.OnCancelEditingName -> {
                 _uiState.update { it.copy(isEditingName = false, nameInput = "") }
             }
+
             ProfileUiEvent.OnSaveName -> saveName()
+
             is ProfileUiEvent.OnBodyDiagramGenderChange -> {
                 viewModelScope.launch { setBodyDiagramGenderUseCase(event.gender) }
             }
+
             is ProfileUiEvent.OnEffortTrackingEnabledChange -> {
                 viewModelScope.launch { setEffortTrackingEnabledUseCase(event.enabled) }
             }
+
             is ProfileUiEvent.OnPreferredEffortScaleChange -> {
                 viewModelScope.launch { setPreferredEffortScaleUseCase(event.scale) }
             }
+
             is ProfileUiEvent.OnPreferredWeightUnitChange -> {
                 viewModelScope.launch { userPreferencesRepository.setPreferredWeightUnit(event.unit) }
             }
+
             is ProfileUiEvent.OnExportDataRequested -> exportData(event.uri)
+
             is ProfileUiEvent.OnImportDataRequested -> importData(event.uri)
+
             ProfileUiEvent.OnDismissBackupMessage -> {
                 _uiState.update { it.copy(backupMessage = null) }
             }
@@ -266,19 +276,41 @@ class ProfileViewModel @Inject constructor(
                     ?: throw IllegalStateException(appContext.getString(R.string.backup_import_error_read))
                 val result = importBackupUseCase(json)
                 val message = buildString {
-                    append(appContext.getString(R.string.backup_imported_stats, result.routinesImported, result.sessionsImported, result.bodyWeightEntriesImported, result.customExercisesImported))
+                    append(
+                        appContext.getString(
+                            R.string.backup_imported_stats,
+                            result.routinesImported,
+                            result.sessionsImported,
+                            result.bodyWeightEntriesImported,
+                            result.customExercisesImported
+                        )
+                    )
                     if (result.skippedReferences > 0) {
-                        append(appContext.resources.getQuantityString(R.plurals.backup_imported_skipped, result.skippedReferences, result.skippedReferences))
+                        append(
+                            appContext.resources.getQuantityString(
+                                R.plurals.backup_imported_skipped,
+                                result.skippedReferences,
+                                result.skippedReferences
+                            )
+                        )
                     }
                     if (result.alreadyPresent > 0) {
-                        append(appContext.resources.getQuantityString(R.plurals.backup_imported_already_present, result.alreadyPresent, result.alreadyPresent))
+                        append(
+                            appContext.resources.getQuantityString(
+                                R.plurals.backup_imported_already_present,
+                                result.alreadyPresent,
+                                result.alreadyPresent
+                            )
+                        )
                     }
                 }
                 _uiState.update { it.copy(isImportingData = false, backupMessage = message) }
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Exception) {
-                _uiState.update { it.copy(isImportingData = false, backupMessage = appContext.getString(R.string.backup_import_error_invalid)) }
+                _uiState.update {
+                    it.copy(isImportingData = false, backupMessage = appContext.getString(R.string.backup_import_error_invalid))
+                }
             }
         }
     }

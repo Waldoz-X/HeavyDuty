@@ -12,9 +12,7 @@ import com.example.heavyduty.feature.exercises.presentation.list.ExerciseListScr
 /**
  * Registers the exercise list composable in the NavHost.
  */
-fun NavGraphBuilder.exerciseListScreen(
-    onExerciseClick: (Long) -> Unit,
-) {
+fun NavGraphBuilder.exerciseListScreen(onExerciseClick: (Long) -> Unit) {
     composable(route = "exercises_graph") {
         // Lets the list's images grow into the detail screen (see core.ui.hdSharedBounds).
         CompositionLocalProvider(LocalNavAnimatedVisibilityScope provides this) {
@@ -28,16 +26,13 @@ fun NavGraphBuilder.exerciseListScreen(
  * images) as [exerciseListScreen], but in multi-select mode so a caller (e.g. the routine
  * editor) can send exercises into itself instead of navigating to exercise detail.
  */
-fun NavGraphBuilder.exercisePickerScreen(
-    onExercisesSelected: (List<Long>) -> Unit,
-    onCancel: () -> Unit,
-) {
+fun NavGraphBuilder.exercisePickerScreen(onExercisesSelected: (List<Long>) -> Unit, onCancel: () -> Unit) {
     composable(route = "exercise_picker") {
         ExerciseListScreen(
             onExerciseClick = {},
             selectionMode = true,
             onConfirmSelection = onExercisesSelected,
-            onCancelSelection = onCancel,
+            onCancelSelection = onCancel
         )
     }
 }
@@ -45,15 +40,12 @@ fun NavGraphBuilder.exercisePickerScreen(
 /**
  * Registers the exercise detail composable in the NavHost.
  */
-fun NavGraphBuilder.exerciseDetailScreen(
-    onNavigateBack: () -> Unit,
-    onViewProgress: (Long) -> Unit,
-) {
+fun NavGraphBuilder.exerciseDetailScreen(onNavigateBack: () -> Unit, onViewProgress: (Long) -> Unit) {
     composable(
         route = "exercise_detail/{exerciseId}",
         arguments = listOf(
-            navArgument("exerciseId") { type = NavType.LongType },
-        ),
+            navArgument("exerciseId") { type = NavType.LongType }
+        )
     ) {
         CompositionLocalProvider(LocalNavAnimatedVisibilityScope provides this) {
             ExerciseDetailScreen(onNavigateBack = onNavigateBack, onViewProgress = onViewProgress)

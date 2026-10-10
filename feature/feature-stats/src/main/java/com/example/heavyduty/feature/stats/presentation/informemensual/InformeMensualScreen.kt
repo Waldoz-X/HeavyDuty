@@ -1,12 +1,5 @@
 package com.example.heavyduty.feature.stats.presentation.informemensual
 
-import com.example.heavyduty.core.ui.components.HdCardsSkeleton
-import com.example.heavyduty.core.ui.components.HdErrorState
-import kotlin.math.roundToInt
-import androidx.compose.ui.platform.LocalConfiguration
-import com.example.heavyduty.core.common.R
-import androidx.compose.ui.res.pluralStringResource
-import com.example.heavyduty.core.common.extensions.formatOneDecimal
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -46,31 +39,34 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.heavyduty.core.ui.components.HdBarChart
-import com.example.heavyduty.core.ui.components.HdCard
-import com.example.heavyduty.core.ui.components.HdEmptyState
-import com.example.heavyduty.core.ui.components.HdStatCard
-import com.example.heavyduty.core.ui.nameResId
-import com.example.heavyduty.feature.stats.domain.model.MuscleVolumeContribution
-import com.example.heavyduty.feature.stats.domain.model.TopExerciseMonthly
+import com.example.heavyduty.core.common.R
+import com.example.heavyduty.core.common.extensions.formatOneDecimal
 import com.example.heavyduty.core.domain.model.kgTo
 import com.example.heavyduty.core.ui.LocalWeightUnit
-import com.example.heavyduty.core.ui.weightUnitLabel
-import com.example.heavyduty.core.ui.formatWeight
+import com.example.heavyduty.core.ui.components.HdBarChart
+import com.example.heavyduty.core.ui.components.HdCard
+import com.example.heavyduty.core.ui.components.HdCardsSkeleton
+import com.example.heavyduty.core.ui.components.HdEmptyState
+import com.example.heavyduty.core.ui.components.HdErrorState
+import com.example.heavyduty.core.ui.components.HdStatCard
 import com.example.heavyduty.core.ui.formatTotalWeight
+import com.example.heavyduty.core.ui.formatWeight
+import com.example.heavyduty.core.ui.nameResId
+import com.example.heavyduty.core.ui.weightUnitLabel
+import com.example.heavyduty.feature.stats.domain.model.MuscleVolumeContribution
+import com.example.heavyduty.feature.stats.domain.model.TopExerciseMonthly
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun InformeMensualScreen(
-    onNavigateBack: () -> Unit,
-    modifier: Modifier = Modifier,
-    viewModel: InformeMensualViewModel = hiltViewModel(),
-) {
+fun InformeMensualScreen(onNavigateBack: () -> Unit, modifier: Modifier = Modifier, viewModel: InformeMensualViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
@@ -81,22 +77,22 @@ fun InformeMensualScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
-                },
+                }
             )
         },
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize()
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding),
+                .padding(innerPadding)
         ) {
             // Cabecera interactiva con selector de meses (< Mes Año >)
             MonthSelectorHeader(
                 monthLabel = monthName(uiState.report.monthStartMillis),
                 hasNextMonth = uiState.hasNextMonth,
                 onPreviousMonth = { viewModel.selectPreviousMonth() },
-                onNextMonth = { viewModel.selectNextMonth() },
+                onNextMonth = { viewModel.selectNextMonth() }
             )
 
             if (uiState.isLoading) {
@@ -115,26 +111,26 @@ fun InformeMensualScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(16.dp),
-                    contentAlignment = Alignment.Center,
+                    contentAlignment = Alignment.Center
                 ) {
                     HdEmptyState(
                         icon = Icons.Default.FitnessCenter,
                         title = stringResource(R.string.monthly_empty_title),
-                        description = stringResource(R.string.monthly_empty_desc, monthName(report.monthStartMillis).lowercase()),
+                        description = stringResource(R.string.monthly_empty_desc, monthName(report.monthStartMillis).lowercase())
                     )
                 }
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 32.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     // 1. Tarjetas de métricas principales con badges comparativos
                     item {
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
                                 HdStatCard(
                                     icon = Icons.Default.FitnessCenter,
@@ -145,7 +141,7 @@ fun InformeMensualScreen(
                                         stringResource(R.string.monthly_vs_last_month, "$sign${it.formatOneDecimal()}%")
                                     },
                                     isPositive = (report.prevMonthVolumeDeltaPercent ?: 0f) >= 0,
-                                    modifier = Modifier.weight(1f),
+                                    modifier = Modifier.weight(1f)
                                 )
                                 HdStatCard(
                                     icon = Icons.Default.CalendarMonth,
@@ -156,31 +152,40 @@ fun InformeMensualScreen(
                                         stringResource(R.string.monthly_vs_last_month, "$sign$it")
                                     },
                                     isPositive = (report.prevMonthWorkoutsDelta ?: 0) >= 0,
-                                    modifier = Modifier.weight(1f),
+                                    modifier = Modifier.weight(1f)
                                 )
                             }
 
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
                                 val hours = report.totalDurationMinutes / 60
                                 val mins = report.totalDurationMinutes % 60
-                                val durationStr = if (hours > 0) stringResource(R.string.duration_hours_minutes, hours, mins) else stringResource(R.string.duration_minutes, mins)
+                                val durationStr = if (hours >
+                                    0
+                                ) {
+                                    stringResource(R.string.duration_hours_minutes, hours, mins)
+                                } else {
+                                    stringResource(R.string.duration_minutes, mins)
+                                }
 
                                 HdStatCard(
                                     icon = Icons.Default.Timer,
                                     label = stringResource(R.string.monthly_total_time),
                                     value = durationStr,
                                     subtext = stringResource(R.string.monthly_avg_session, report.avgSessionDurationMinutes),
-                                    modifier = Modifier.weight(1f),
+                                    modifier = Modifier.weight(1f)
                                 )
                                 HdStatCard(
                                     icon = Icons.Default.Repeat,
                                     label = stringResource(R.string.monthly_effective_sets),
                                     value = "${report.totalSets}",
-                                    subtext = stringResource(R.string.monthly_sessions_per_week, report.workoutsPerWeekAverage.formatOneDecimal()),
-                                    modifier = Modifier.weight(1f),
+                                    subtext = stringResource(
+                                        R.string.monthly_sessions_per_week,
+                                        report.workoutsPerWeekAverage.formatOneDecimal()
+                                    ),
+                                    modifier = Modifier.weight(1f)
                                 )
                             }
                         }
@@ -191,7 +196,7 @@ fun InformeMensualScreen(
                         item {
                             MuscleDistributionCard(
                                 contributions = report.muscleContributions,
-                                topMuscle = report.topMuscleGroup,
+                                topMuscle = report.topMuscleGroup
                             )
                         }
                     }
@@ -211,7 +216,7 @@ fun InformeMensualScreen(
                                     text = stringResource(R.string.monthly_workouts_per_week),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.onSurface,
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Spacer(modifier = Modifier.height(16.dp))
                                 HdBarChart(
@@ -220,7 +225,7 @@ fun InformeMensualScreen(
                                     },
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .height(180.dp),
+                                        .height(180.dp)
                                 )
                             }
                         }
@@ -234,7 +239,7 @@ fun InformeMensualScreen(
                                     text = stringResource(R.string.monthly_volume_per_week, weightUnitLabel()),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.onSurface,
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Spacer(modifier = Modifier.height(16.dp))
                                 val unit = LocalWeightUnit.current
@@ -244,7 +249,7 @@ fun InformeMensualScreen(
                                     },
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .height(180.dp),
+                                        .height(180.dp)
                                 )
                             }
                         }
@@ -261,20 +266,20 @@ private fun MonthSelectorHeader(
     hasNextMonth: Boolean,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
+        verticalAlignment = Alignment.CenterVertically
     ) {
         IconButton(onClick = onPreviousMonth) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
                 contentDescription = stringResource(R.string.monthly_prev_month),
-                tint = MaterialTheme.colorScheme.primary,
+                tint = MaterialTheme.colorScheme.primary
             )
         }
 
@@ -282,17 +287,23 @@ private fun MonthSelectorHeader(
             text = monthLabel,
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface,
+            color = MaterialTheme.colorScheme.onSurface
         )
 
         IconButton(
             onClick = onNextMonth,
-            enabled = hasNextMonth,
+            enabled = hasNextMonth
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 contentDescription = stringResource(R.string.monthly_next_month),
-                tint = if (hasNextMonth) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
+                tint = if (hasNextMonth) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                        alpha = 0.3f
+                    )
+                }
             )
         }
     }
@@ -302,26 +313,26 @@ private fun MonthSelectorHeader(
 private fun MuscleDistributionCard(
     contributions: List<MuscleVolumeContribution>,
     topMuscle: com.example.heavyduty.core.domain.model.MuscleGroup?,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
     HdCard(modifier = modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = stringResource(R.string.monthly_muscle_distribution),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = MaterialTheme.colorScheme.onSurface
             )
             if (topMuscle != null) {
                 Text(
                     text = stringResource(R.string.monthly_top_muscle, stringResource(topMuscle.nameResId)),
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.primary,
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
         }
@@ -333,18 +344,18 @@ private fun MuscleDistributionCard(
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
                             text = stringResource(item.muscleGroup.nameResId),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onSurface,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
                             text = "${item.volumeKg.formatTotalWeight()} (${item.percentage.roundToInt()}%)",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     Spacer(modifier = Modifier.height(4.dp))
@@ -355,7 +366,7 @@ private fun MuscleDistributionCard(
                             .height(6.dp)
                             .clip(RoundedCornerShape(3.dp)),
                         color = MaterialTheme.colorScheme.primary,
-                        trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                        trackColor = MaterialTheme.colorScheme.surfaceVariant
                     )
                 }
             }
@@ -364,27 +375,24 @@ private fun MuscleDistributionCard(
 }
 
 @Composable
-private fun TopExercisesCard(
-    exercises: List<TopExerciseMonthly>,
-    modifier: Modifier = Modifier,
-) {
+private fun TopExercisesCard(exercises: List<TopExerciseMonthly>, modifier: Modifier = Modifier) {
     HdCard(modifier = modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 imageVector = Icons.Default.EmojiEvents,
                 contentDescription = null,
                 tint = Color(0xFFFFB300),
-                modifier = Modifier.size(20.dp),
+                modifier = Modifier.size(20.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = stringResource(R.string.monthly_top_exercises),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
 
@@ -394,7 +402,7 @@ private fun TopExercisesCard(
             exercises.forEachIndexed { index, exercise ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Box(
                         modifier = Modifier
@@ -408,7 +416,7 @@ private fun TopExercisesCard(
                                     else -> MaterialTheme.colorScheme.surfaceVariant
                                 }
                             ),
-                        contentAlignment = Alignment.Center,
+                        contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = "${index + 1}",
@@ -419,7 +427,7 @@ private fun TopExercisesCard(
                                 1 -> Color(0xFF90A4AE)
                                 2 -> Color(0xFFCD7F32)
                                 else -> MaterialTheme.colorScheme.onSurfaceVariant
-                            },
+                            }
                         )
                     }
 
@@ -430,12 +438,16 @@ private fun TopExercisesCard(
                             text = exercise.exerciseName,
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurface,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = stringResource(R.string.monthly_exercise_detail, pluralStringResource(R.plurals.stats_set_count, exercise.totalSets, exercise.totalSets), exercise.maxWeightKg.formatWeight()),
+                            text = stringResource(
+                                R.string.monthly_exercise_detail,
+                                pluralStringResource(R.plurals.stats_set_count, exercise.totalSets, exercise.totalSets),
+                                exercise.maxWeightKg.formatWeight()
+                            ),
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
 
@@ -444,12 +456,12 @@ private fun TopExercisesCard(
                             text = exercise.totalVolumeKg.formatTotalWeight(),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary,
+                            color = MaterialTheme.colorScheme.primary
                         )
                         Text(
                             text = stringResource(R.string.monthly_volume_lower),
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }

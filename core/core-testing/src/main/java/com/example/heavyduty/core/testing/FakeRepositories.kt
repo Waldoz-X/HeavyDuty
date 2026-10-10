@@ -30,10 +30,7 @@ import kotlinx.coroutines.flow.update
  * act and then read back.
  */
 
-class FakeWorkoutRepository(
-    sessions: List<WorkoutSession> = emptyList(),
-    sets: List<WorkoutSet> = emptyList(),
-) : WorkoutRepository {
+class FakeWorkoutRepository(sessions: List<WorkoutSession> = emptyList(), sets: List<WorkoutSet> = emptyList()) : WorkoutRepository {
     val sessions = MutableStateFlow(sessions)
     val sets = MutableStateFlow(sets)
 
@@ -72,7 +69,17 @@ class FakeWorkoutRepository(
         sessions.update { list -> list.filter { it.id != id } + session.copy(id = id) }
         return id
     }
-    override suspend fun updateSession(session: WorkoutSession) = sessions.update { list -> list.map { if (it.id == session.id) session else it } }
+    override suspend fun updateSession(session: WorkoutSession) = sessions.update { list ->
+        list.map {
+            if (it.id ==
+                session.id
+            ) {
+                session
+            } else {
+                it
+            }
+        }
+    }
     override suspend fun deleteSession(session: WorkoutSession) {
         sessions.update { list -> list.filter { it.id != session.id } }
         sets.update { list -> list.filter { it.sessionId != session.id } }
@@ -91,7 +98,8 @@ class FakeExerciseRepository(exercises: List<Exercise> = emptyList()) : Exercise
 
     override fun getAllExercises(): Flow<List<Exercise>> = exercises
     override fun getExerciseById(id: Long): Flow<Exercise?> = exercises.map { list -> list.firstOrNull { it.id == id } }
-    override fun getExercisesByMuscleGroup(muscleGroup: MuscleGroup) = exercises.map { list -> list.filter { it.muscleGroup == muscleGroup } }
+    override fun getExercisesByMuscleGroup(muscleGroup: MuscleGroup) =
+        exercises.map { list -> list.filter { it.muscleGroup == muscleGroup } }
     override fun getExercisesByType(type: ExerciseType) = exercises.map { list -> list.filter { it.exerciseType == type } }
     override fun searchExercises(query: String) = exercises.map { list -> list.filter { it.name.contains(query, ignoreCase = true) } }
     override suspend fun insertExercise(exercise: Exercise): Long {
@@ -99,7 +107,17 @@ class FakeExerciseRepository(exercises: List<Exercise> = emptyList()) : Exercise
         exercises.update { it + exercise.copy(id = id) }
         return id
     }
-    override suspend fun updateExercise(exercise: Exercise) = exercises.update { list -> list.map { if (it.id == exercise.id) exercise else it } }
+    override suspend fun updateExercise(exercise: Exercise) = exercises.update { list ->
+        list.map {
+            if (it.id ==
+                exercise.id
+            ) {
+                exercise
+            } else {
+                it
+            }
+        }
+    }
     override suspend fun deleteExercise(exercise: Exercise) = exercises.update { list -> list.filter { it.id != exercise.id } }
 }
 
@@ -147,7 +165,12 @@ class FakeBodyWeightRepository(entries: List<BodyWeightEntry> = emptyList()) : B
     val entries = MutableStateFlow(entries)
 
     override fun getAllEntries(): Flow<List<BodyWeightEntry>> = entries.map { list -> list.sortedByDescending { it.loggedAt } }
-    override fun getEntriesByDateRange(startTime: Long, endTime: Long) = entries.map { list -> list.filter { it.loggedAt in startTime..endTime } }
+    override fun getEntriesByDateRange(startTime: Long, endTime: Long) = entries.map { list ->
+        list.filter {
+            it.loggedAt in
+                startTime..endTime
+        }
+    }
     override fun getLatestEntry(): Flow<BodyWeightEntry?> = entries.map { list -> list.maxByOrNull { it.loggedAt } }
     override suspend fun logEntry(weightKg: Float, loggedAt: Long): Long {
         val id = (entries.value.maxOfOrNull { it.id } ?: 0) + 1
@@ -165,10 +188,22 @@ class FakeUserPreferencesRepository(goalWeightKg: Float? = null) : UserPreferenc
     override val preferredEffortScale = MutableStateFlow("RIR")
     override val preferredWeightUnit = MutableStateFlow(WeightUnit.KG)
 
-    override suspend fun setDisplayName(name: String) { displayName.value = name }
-    override suspend fun setBodyDiagramGender(gender: String) { bodyDiagramGender.value = gender }
-    override suspend fun setGoalWeightKg(kg: Float?) { goalWeightKg.value = kg }
-    override suspend fun setEffortTrackingEnabled(enabled: Boolean) { effortTrackingEnabled.value = enabled }
-    override suspend fun setPreferredEffortScale(scale: String) { preferredEffortScale.value = scale }
-    override suspend fun setPreferredWeightUnit(unit: WeightUnit) { preferredWeightUnit.value = unit }
+    override suspend fun setDisplayName(name: String) {
+        displayName.value = name
+    }
+    override suspend fun setBodyDiagramGender(gender: String) {
+        bodyDiagramGender.value = gender
+    }
+    override suspend fun setGoalWeightKg(kg: Float?) {
+        goalWeightKg.value = kg
+    }
+    override suspend fun setEffortTrackingEnabled(enabled: Boolean) {
+        effortTrackingEnabled.value = enabled
+    }
+    override suspend fun setPreferredEffortScale(scale: String) {
+        preferredEffortScale.value = scale
+    }
+    override suspend fun setPreferredWeightUnit(unit: WeightUnit) {
+        preferredWeightUnit.value = unit
+    }
 }

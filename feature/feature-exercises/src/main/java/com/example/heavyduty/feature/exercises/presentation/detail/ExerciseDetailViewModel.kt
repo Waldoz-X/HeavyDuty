@@ -7,6 +7,7 @@ import com.example.heavyduty.core.domain.model.WeightUnit
 import com.example.heavyduty.core.domain.repository.ExerciseRepository
 import com.example.heavyduty.feature.exercises.domain.usecase.GetExerciseDetailUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,13 +17,12 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 @HiltViewModel
 class ExerciseDetailViewModel @Inject constructor(
     private val getExerciseDetailUseCase: GetExerciseDetailUseCase,
     private val exerciseRepository: ExerciseRepository,
-    savedStateHandle: SavedStateHandle,
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     private val exerciseId: Long = checkNotNull(savedStateHandle["exerciseId"])
@@ -46,6 +46,7 @@ class ExerciseDetailViewModel @Inject constructor(
                     _uiEffect.send(ExerciseDetailUiEffect.NavigateBack)
                 }
             }
+
             is ExerciseDetailUiEvent.OnWeightUnitChange -> changeWeightUnit(event.unit)
         }
     }
