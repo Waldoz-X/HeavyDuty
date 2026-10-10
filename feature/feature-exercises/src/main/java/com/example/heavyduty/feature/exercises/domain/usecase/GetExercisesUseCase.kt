@@ -5,7 +5,6 @@ import com.example.heavyduty.core.domain.model.MuscleGroup
 import com.example.heavyduty.core.domain.repository.ExerciseRepository
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 
 /**
  * Use case to retrieve all exercises, optionally filtered by muscle group.

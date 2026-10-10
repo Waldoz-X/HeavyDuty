@@ -275,18 +275,33 @@ class BackupRepositoryImpl @Inject constructor(
     }
 
     private suspend fun write(snapshot: BackupSnapshotDto): BackupImportResult {
-        var skipped = 0
         // Importing a backup twice (or onto the phone it came from) must not duplicate anything:
         // a routine is the same if it has the same name and creation time, a workout if it
         // started at the same millisecond, a weigh-in if it's the same weight at the same time.
-        var alreadyPresent = 0
-        val existingRoutines = routineDao.getAllRoutines().first().mapTo(HashSet()) { it.routine.name to it.routine.createdAt }
-        val existingSessionStarts = workoutDao.getAllSessions().first().mapTo(HashSet()) { it.startTime }
-        val existingWeighIns = bodyWeightDao.getAllEntries().first().mapTo(HashSet()) { it.loggedAt to it.weightKg }
+        val tally = ImportTally()
+        val customExercisesImported = importCustomExercises(snapshot.customExercises.orEmpty())
+        val exerciseIdByName = exerciseIdsByName()
+        return BackupImportResult(
+            customExercisesImported = customExercisesImported,
+            routinesImported = importRoutines(snapshot.routines.orEmpty(), exerciseIdByName, tally),
+            sessionsImported = importSessions(snapshot.sessions.orEmpty(), exerciseIdByName, tally),
+            bodyWeightEntriesImported = importBodyWeight(snapshot.bodyWeightEntries.orEmpty(), tally),
+            skippedReferences = tally.skipped,
+            alreadyPresent = tally.alreadyPresent
+        )
+    }
 
+    /** What the import left alone: references to unknown exercises, and rows already here. */
+    private class ImportTally {
+        var skipped = 0
+        var alreadyPresent = 0
+    }
+
+    /** Custom exercises not already present by name. */
+    private suspend fun importCustomExercises(dtos: List<ExerciseDto>): Int {
         val existingNames = exerciseDao.getAllExercises().first().map { it.name }.toMutableSet()
-        var customExercisesImported = 0
-        for (dto in snapshot.customExercises.orEmpty()) {
+        var imported = 0
+        for (dto in dtos) {
             val name = dto.name!!
             if (name in existingNames) continue
             exerciseDao.insertExercise(
@@ -302,28 +317,34 @@ class BackupRepositoryImpl @Inject constructor(
                 )
             )
             existingNames.add(name)
-            customExercisesImported++
+            imported++
         }
+        return imported
+    }
 
+    private suspend fun exerciseIdsByName(): Map<String, Long> {
         // Re-read so newly-inserted custom exercises resolve by name below.
         // Backups name exercises in English (catalog key) or by their displayed name (older
         // backups, custom exercises) — accept either.
-        val exerciseIdByName = exerciseDao.getAllExercises().first().flatMap { exercise ->
+        return exerciseDao.getAllExercises().first().flatMap { exercise ->
             listOfNotNull(exercise.name to exercise.id, exercise.nameEn.takeIf { it.isNotBlank() }?.let { it to exercise.id })
         }.toMap()
+    }
 
-        var routinesImported = 0
-        for (routineDto in snapshot.routines.orEmpty()) {
+    private suspend fun importRoutines(dtos: List<RoutineDto>, exerciseIdByName: Map<String, Long>, tally: ImportTally): Int {
+        val existingRoutines = routineDao.getAllRoutines().first().mapTo(HashSet()) { it.routine.name to it.routine.createdAt }
+        var imported = 0
+        for (routineDto in dtos) {
             val now = clock.nowMillis()
             val createdAt = routineDto.createdAt ?: now
             if (!existingRoutines.add(routineDto.name!! to createdAt)) {
-                alreadyPresent++
+                tally.alreadyPresent++
                 continue
             }
             val routineExercises = routineDto.exercises.orEmpty().mapNotNull { reDto ->
                 val exerciseId = exerciseIdByName[reDto.exerciseName]
                 if (exerciseId == null) {
-                    skipped++
+                    tally.skipped++
                     return@mapNotNull null
                 }
                 RoutineExerciseEntity(
@@ -354,14 +375,18 @@ class BackupRepositoryImpl @Inject constructor(
                 )
             )
             routineExercises.forEach { routineDao.insertRoutineExercise(it.copy(routineId = routineId)) }
-            routinesImported++
+            imported++
         }
+        return imported
+    }
 
-        var sessionsImported = 0
-        for (sessionDto in snapshot.sessions.orEmpty()) {
+    private suspend fun importSessions(dtos: List<SessionDto>, exerciseIdByName: Map<String, Long>, tally: ImportTally): Int {
+        val existingSessionStarts = workoutDao.getAllSessions().first().mapTo(HashSet()) { it.startTime }
+        var imported = 0
+        for (sessionDto in dtos) {
             val startTime = sessionDto.startTime!!
             if (!existingSessionStarts.add(startTime)) {
-                alreadyPresent++
+                tally.alreadyPresent++
                 continue
             }
             val sets = sessionDto.sets.orEmpty()
@@ -392,7 +417,7 @@ class BackupRepositoryImpl @Inject constructor(
             sets.forEach { setDto ->
                 val exerciseId = exerciseIdByName[setDto.exerciseName]
                 if (exerciseId == null) {
-                    skipped++
+                    tally.skipped++
                     return@forEach
                 }
                 workoutDao.insertSet(
@@ -414,26 +439,22 @@ class BackupRepositoryImpl @Inject constructor(
                     )
                 )
             }
-            sessionsImported++
+            imported++
         }
+        return imported
+    }
 
-        var bodyWeightImported = 0
-        snapshot.bodyWeightEntries.orEmpty().forEach { dto ->
+    private suspend fun importBodyWeight(dtos: List<BodyWeightDto>, tally: ImportTally): Int {
+        val existingWeighIns = bodyWeightDao.getAllEntries().first().mapTo(HashSet()) { it.loggedAt to it.weightKg }
+        var imported = 0
+        for (dto in dtos) {
             if (!existingWeighIns.add(dto.loggedAt!! to dto.weightKg!!)) {
-                alreadyPresent++
-                return@forEach
+                tally.alreadyPresent++
+                continue
             }
             bodyWeightDao.insertEntry(BodyWeightEntity(weightKg = dto.weightKg!!, loggedAt = dto.loggedAt!!))
-            bodyWeightImported++
+            imported++
         }
-
-        return BackupImportResult(
-            customExercisesImported = customExercisesImported,
-            routinesImported = routinesImported,
-            sessionsImported = sessionsImported,
-            bodyWeightEntriesImported = bodyWeightImported,
-            skippedReferences = skipped,
-            alreadyPresent = alreadyPresent
-        )
+        return imported
     }
 }

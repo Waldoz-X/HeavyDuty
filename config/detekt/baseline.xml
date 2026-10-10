@@ -10,44 +10,29 @@
     <ID>ConstructorParameterNaming:SeedData.kt:SeedData.ExerciseDto$val media_id: String?</ID>
     <ID>ConstructorParameterNaming:SeedData.kt:SeedData.ExerciseDto$val muscle_group: String?</ID>
     <ID>ConstructorParameterNaming:SeedData.kt:SeedData.ExerciseDto$val secondary_muscles: List&lt;String&gt;?</ID>
-    <ID>CyclomaticComplexMethod:ActiveWorkoutScreen.kt:@Composable internal fun ActiveWorkoutContent</ID>
     <ID>CyclomaticComplexMethod:ActiveWorkoutViewModel.kt:ActiveWorkoutViewModel$fun onEvent</ID>
     <ID>CyclomaticComplexMethod:ActiveWorkoutViewModel.kt:ActiveWorkoutViewModel$private fun logSet</ID>
-    <ID>CyclomaticComplexMethod:BackupRepositoryImpl.kt:BackupRepositoryImpl$private suspend fun write: BackupImportResult</ID>
+    <ID>CyclomaticComplexMethod:BackupRepositoryImpl.kt:BackupRepositoryImpl$private suspend fun importRoutines: Int</ID>
+    <ID>CyclomaticComplexMethod:BackupRepositoryImpl.kt:BackupRepositoryImpl$private suspend fun importSessions: Int</ID>
     <ID>CyclomaticComplexMethod:BackupRepositoryImpl.kt:private fun BackupSnapshotDto.validate</ID>
-    <ID>CyclomaticComplexMethod:CalendarScreen.kt:@Composable fun CalendarScreen</ID>
     <ID>CyclomaticComplexMethod:ExerciseListScreen.kt:@Composable private fun ExerciseListContent</ID>
+    <ID>CyclomaticComplexMethod:ExerciseSettingsSheet.kt:@Composable private fun NumberStepper</ID>
     <ID>CyclomaticComplexMethod:GetMonthlyReportUseCase.kt:GetMonthlyReportUseCase$operator fun invoke: Flow&lt;MonthlyReport&gt;</ID>
     <ID>CyclomaticComplexMethod:GetTrainingActivityHeatmapUseCase.kt:GetTrainingActivityHeatmapUseCase$operator fun invoke: Flow&lt;ActivityHeatmapStatsReport&gt;</ID>
-    <ID>CyclomaticComplexMethod:InformeMensualScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun InformeMensualScreen</ID>
     <ID>CyclomaticComplexMethod:MainActivity.kt:@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class) @Composable private fun HeavyDutyMainScreen</ID>
-    <ID>CyclomaticComplexMethod:ProgressScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun ProgressScreen</ID>
-    <ID>CyclomaticComplexMethod:RoutineEditorScreen.kt:@Composable private fun EditorContent</ID>
-    <ID>CyclomaticComplexMethod:RoutineEditorScreen.kt:@Composable private fun NumberStepper</ID>
     <ID>CyclomaticComplexMethod:RoutineEditorScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun RoutineEditorScreen</ID>
     <ID>CyclomaticComplexMethod:RoutineEditorViewModel.kt:RoutineEditorViewModel$fun onEvent</ID>
     <ID>CyclomaticComplexMethod:SeedData.kt:SeedData$suspend fun populateExercises</ID>
-    <ID>CyclomaticComplexMethod:TimerScreen.kt:@Composable fun TimerScreen</ID>
     <ID>DestructuringDeclarationWithTooManyEntries:BodyPathData.kt:val (minX, minY, width, height) = viewJson.getString("vb").split(" ").map { it.toFloat() }</ID>
-    <ID>ForEachOnRange:CalendarScreen.kt:1..7</ID>
     <ID>LongMethod:ActiveWorkoutBar.kt:@Composable fun ActiveWorkoutBar</ID>
     <ID>LongMethod:ActiveWorkoutScreen.kt:@Composable fun ActiveWorkoutScreen</ID>
-    <ID>LongMethod:ActiveWorkoutScreen.kt:@Composable internal fun ActiveWorkoutContent</ID>
-    <ID>LongMethod:ActiveWorkoutScreen.kt:@Composable private fun ActiveSetRow</ID>
-    <ID>LongMethod:ActiveWorkoutScreen.kt:@Composable private fun ExerciseStrip</ID>
     <ID>LongMethod:ActiveWorkoutScreen.kt:@Composable private fun PersonalRecordBanner</ID>
-    <ID>LongMethod:ActiveWorkoutScreen.kt:@Composable private fun RestTimerBanner</ID>
-    <ID>LongMethod:ActiveWorkoutScreen.kt:@Composable private fun WorkoutHeader</ID>
-    <ID>LongMethod:ActiveWorkoutScreen.kt:@Composable private fun WorkoutStartScreen</ID>
     <ID>LongMethod:ActiveWorkoutViewModel.kt:ActiveWorkoutViewModel$private fun logSet</ID>
     <ID>LongMethod:BackupRepositoryImpl.kt:BackupRepositoryImpl$override suspend fun exportSnapshot: String</ID>
-    <ID>LongMethod:BackupRepositoryImpl.kt:BackupRepositoryImpl$private suspend fun write: BackupImportResult</ID>
+    <ID>LongMethod:BackupRepositoryImpl.kt:BackupRepositoryImpl$private suspend fun importSessions: Int</ID>
     <ID>LongMethod:BodyWeightStatsScreen.kt:@Composable private fun HistoryEntryCard</ID>
-    <ID>LongMethod:BodyWeightStatsScreen.kt:@Composable private fun WeightGoalHeroCard</ID>
     <ID>LongMethod:BodyWeightStatsScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun BodyWeightStatsScreen</ID>
-    <ID>LongMethod:CalendarScreen.kt:@Composable fun CalendarScreen</ID>
     <ID>LongMethod:DashboardScreen.kt:@Composable private fun BodyWeightCard</ID>
-    <ID>LongMethod:DashboardScreen.kt:@Composable private fun DashboardContent</ID>
     <ID>LongMethod:DashboardScreen.kt:@Composable private fun TodayCard</ID>
     <ID>LongMethod:DistribucionCorporalScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun DistribucionCorporalScreen</ID>
     <ID>LongMethod:DistribucionMuscularScreen.kt:@Composable private fun PeriodTotals</ID>
@@ -57,6 +42,8 @@
     <ID>LongMethod:ExerciseListScreen.kt:@Composable private fun ExerciseListItem</ID>
     <ID>LongMethod:ExerciseListScreen.kt:@Composable private fun SelectableExerciseRow</ID>
     <ID>LongMethod:ExerciseListScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun ExerciseListScreen</ID>
+    <ID>LongMethod:ExerciseSettingsSheet.kt:@Composable private fun AdvancedSection</ID>
+    <ID>LongMethod:ExerciseSettingsSheet.kt:@Composable private fun NumberStepper</ID>
     <ID>LongMethod:GetMonthlyReportUseCase.kt:GetMonthlyReportUseCase$operator fun invoke: Flow&lt;MonthlyReport&gt;</ID>
     <ID>LongMethod:GetTrainingActivityHeatmapUseCase.kt:GetTrainingActivityHeatmapUseCase$operator fun invoke: Flow&lt;ActivityHeatmapStatsReport&gt;</ID>
     <ID>LongMethod:HdBarChart.kt:@Composable fun HdBarChart</ID>
@@ -65,6 +52,7 @@
     <ID>LongMethod:HdStatCard.kt:@Composable fun HdStatCard</ID>
     <ID>LongMethod:HeavyDutyNavHost.kt:@Composable fun HeavyDutyNavHost</ID>
     <ID>LongMethod:HistoryListScreen.kt:@Composable fun HistoryListScreen</ID>
+    <ID>LongMethod:InformeMensualScreen.kt:@Composable private fun MonthlyStatsGrid</ID>
     <ID>LongMethod:InformeMensualScreen.kt:@Composable private fun TopExercisesCard</ID>
     <ID>LongMethod:InformeMensualScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun InformeMensualScreen</ID>
     <ID>LongMethod:MainActivity.kt:@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class) @Composable private fun HeavyDutyMainScreen</ID>
@@ -74,16 +62,19 @@
     <ID>LongMethod:MapaActividadScreen.kt:@Composable private fun TimeSlotDistributionCard</ID>
     <ID>LongMethod:ProfileScreen.kt:@Composable private fun ProfileContent</ID>
     <ID>LongMethod:ProfileScreen.kt:@Composable private fun ProfileHeader</ID>
-    <ID>LongMethod:ProgressScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun ProgressScreen</ID>
     <ID>LongMethod:RoutineEditorScreen.kt:@Composable private fun EditorContent</ID>
-    <ID>LongMethod:RoutineEditorScreen.kt:@Composable private fun NumberStepper</ID>
     <ID>LongMethod:RoutineEditorScreen.kt:@Composable private fun sh.calvin.reorderable.ReorderableCollectionItemScope.ExerciseRow</ID>
     <ID>LongMethod:RoutineEditorScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun RoutineEditorScreen</ID>
-    <ID>LongMethod:RoutineEditorScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable private fun ExerciseSettingsSheet</ID>
     <ID>LongMethod:RoutineListScreen.kt:@Composable fun RoutineListScreen</ID>
     <ID>LongMethod:RoutineListScreen.kt:@Composable private fun RoutineListItem</ID>
     <ID>LongMethod:SeedData.kt:SeedData$suspend fun populateExercises</ID>
+    <ID>LongMethod:SetTable.kt:@Composable private fun ActiveSetRow</ID>
     <ID>LongMethod:TimerScreen.kt:@Composable fun TimerScreen</ID>
+    <ID>LongMethod:TimerScreen.kt:@Composable private fun TimerDial</ID>
+    <ID>LongMethod:WorkoutHeader.kt:@Composable internal fun ExerciseStrip</ID>
+    <ID>LongMethod:WorkoutHeader.kt:@Composable internal fun RestTimerBanner</ID>
+    <ID>LongMethod:WorkoutHeader.kt:@Composable internal fun WorkoutHeader</ID>
+    <ID>LongMethod:WorkoutStartScreen.kt:@Composable internal fun WorkoutStartScreen</ID>
     <ID>LoopWithTooManyJumpStatements:ExerciseHistory.kt:for</ID>
     <ID>MagicNumber:ActiveWorkoutBar.kt:1_000L</ID>
     <ID>MagicNumber:Effort.kt:10</ID>
@@ -140,13 +131,11 @@
     <ID>TooGenericExceptionCaught:BackupRepositoryImpl.kt:BackupRepositoryImpl$e: Exception</ID>
     <ID>TooGenericExceptionCaught:CalendarViewModel.kt:CalendarViewModel$e: Exception</ID>
     <ID>TooGenericExceptionCaught:SeedData.kt:SeedData$e: Exception</ID>
-    <ID>TooManyFunctions:ActiveWorkoutScreen.kt:com.example.heavyduty.feature.workout.presentation.ActiveWorkoutScreen.kt</ID>
     <ID>TooManyFunctions:ActiveWorkoutViewModel.kt:ActiveWorkoutViewModel : ViewModel</ID>
     <ID>TooManyFunctions:EntityMappers.kt:com.example.heavyduty.core.data.database.mapper.EntityMappers.kt</ID>
     <ID>TooManyFunctions:ExerciseDao.kt:ExerciseDao</ID>
     <ID>TooManyFunctions:FakeRepositories.kt:FakeWorkoutRepository : WorkoutRepository</ID>
     <ID>TooManyFunctions:RoutineDao.kt:RoutineDao</ID>
-    <ID>TooManyFunctions:RoutineEditorScreen.kt:com.example.heavyduty.feature.routines.presentation.editor.RoutineEditorScreen.kt</ID>
     <ID>TooManyFunctions:TimerEngine.kt:TimerEngine : RestTimerController</ID>
     <ID>TooManyFunctions:WorkoutDao.kt:WorkoutDao</ID>
     <ID>TooManyFunctions:WorkoutRepository.kt:WorkoutRepository</ID>

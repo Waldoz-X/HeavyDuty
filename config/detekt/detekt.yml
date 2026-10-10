@@ -10,6 +10,12 @@ style:
     ignorePropertyDeclaration: true
     ignoreCompanionObjectPropertyDeclaration: true
 
+complexity:
+  TooManyFunctions:
+    # Screens are meant to be split into small composables; counting each one would push
+    # toward the opposite — few, long functions.
+    ignoreAnnotatedFunctions: ['Composable', 'Preview']
+
 naming:
   FunctionNaming:
     # Composables are named like types.

@@ -10,7 +10,6 @@ import com.example.heavyduty.feature.dashboard.domain.model.DayStatus
 import com.example.heavyduty.feature.dashboard.domain.model.PlannedRoutineUi
 import java.time.DayOfWeek
 import java.time.Instant
-import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.TextStyle
 import java.util.Locale

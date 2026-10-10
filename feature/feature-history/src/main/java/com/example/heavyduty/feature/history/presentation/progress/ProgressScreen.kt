@@ -36,6 +36,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.heavyduty.core.common.R
 import com.example.heavyduty.core.common.extensions.formatDecimal
 import com.example.heavyduty.core.domain.model.WeightUnit
+import com.example.heavyduty.core.domain.model.WorkoutSet
 import com.example.heavyduty.core.domain.model.kgTo
 import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdCardsSkeleton
@@ -106,115 +107,133 @@ fun ProgressScreen(onNavigateBack: () -> Unit, modifier: Modifier = Modifier, vi
                 )
             }
 
-            else -> {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding)
-                        .padding(16.dp)
-                ) {
-                    val unitLabel = if (uiState.weightUnit == WeightUnit.LB) "lb" else "kg"
+            else -> ProgressContent(uiState = uiState, modifier = Modifier.padding(innerPadding))
+        }
+    }
+}
 
-                    if (uiState.personalRecords.hasRecords) {
-                        PersonalRecordsCard(records = uiState.personalRecords, weightUnit = uiState.weightUnit)
-                        Spacer(modifier = Modifier.height(16.dp))
-                    }
+@Composable
+private fun ProgressContent(uiState: ProgressUiState, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        val unitLabel = if (uiState.weightUnit == WeightUnit.LB) "lb" else "kg"
 
-                    val chronologicalWeights = uiState.sets
-                        .filter { (it.weight ?: 0f) > 0f }
-                        .sortedBy { it.completedAt ?: 0L }
-                        .map { it.weight!!.kgTo(uiState.weightUnit) }
+        if (uiState.personalRecords.hasRecords) {
+            PersonalRecordsCard(records = uiState.personalRecords, weightUnit = uiState.weightUnit)
+            Spacer(modifier = Modifier.height(16.dp))
+        }
 
-                    if (chronologicalWeights.size >= 2) {
-                        HdCard {
-                            Text(
-                                text = stringResource(R.string.progress_weight_over_time),
-                                style = MaterialTheme.typography.titleSmall,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                            Spacer(modifier = Modifier.height(12.dp))
-                            WeightProgressChart(
-                                weights = chronologicalWeights,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(180.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(16.dp))
-                    }
+        val chronologicalWeights = uiState.sets
+            .filter { (it.weight ?: 0f) > 0f }
+            .sortedBy { it.completedAt ?: 0L }
+            .map { it.weight!!.kgTo(uiState.weightUnit) }
 
-                    // Weight progress summary
-                    HdCard {
-                        Text(
-                            text = stringResource(R.string.progress_weight),
-                            style = MaterialTheme.typography.titleSmall,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
+        if (chronologicalWeights.size >= 2) {
+            WeightOverTimeCard(weights = chronologicalWeights)
+            Spacer(modifier = Modifier.height(16.dp))
+        }
 
-                        val weightSets = uiState.sets.filter { (it.weight ?: 0f) > 0f }
-                        if (weightSets.isNotEmpty()) {
-                            val maxWeight = weightSets.maxOf { it.weight ?: 0f }.kgTo(uiState.weightUnit)
-                            val latestWeight = (weightSets.first().weight ?: 0f).kgTo(uiState.weightUnit)
-                            Text(
-                                text = stringResource(
-                                    R.string.progress_max_latest,
-                                    "${maxWeight.formatDecimal()} $unitLabel",
-                                    "${latestWeight.formatDecimal()} $unitLabel"
-                                ),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Text(
-                                text = pluralStringResource(R.plurals.progress_sets_logged, weightSets.size, weightSets.size),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        } else {
-                            Text(
-                                text = stringResource(R.string.progress_no_weight_data),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
+        WeightSummaryCard(sets = uiState.sets, weightUnit = uiState.weightUnit, unitLabel = unitLabel)
 
-                    Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-                    // Volume progress summary
-                    HdCard {
-                        Text(
-                            text = stringResource(R.string.progress_volume),
-                            style = MaterialTheme.typography.titleSmall,
-                            color = MaterialTheme.colorScheme.secondary
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
+        VolumeSummaryCard(sets = uiState.sets, weightUnit = uiState.weightUnit, unitLabel = unitLabel)
+    }
+}
 
-                        val repSets = uiState.sets.filter { (it.reps ?: 0) > 0 }
-                        if (repSets.isNotEmpty()) {
-                            val totalReps = repSets.sumOf { it.reps ?: 0 }
-                            val totalVolume = repSets.sumOf { ((it.reps ?: 0) * (it.weight ?: 0f)).toDouble() }
-                                .toFloat()
-                                .kgTo(uiState.weightUnit)
-                            Text(
-                                text = stringResource(
-                                    R.string.progress_reps_volume,
-                                    totalReps,
-                                    "${totalVolume.formatDecimal()} $unitLabel"
-                                ),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        } else {
-                            Text(
-                                text = stringResource(R.string.progress_no_reps_data),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                }
-            }
+/** The working weight set by set, oldest first. */
+@Composable
+private fun WeightOverTimeCard(weights: List<Float>) {
+    HdCard {
+        Text(
+            text = stringResource(R.string.progress_weight_over_time),
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        WeightProgressChart(
+            weights = weights,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(180.dp)
+        )
+    }
+}
+
+/** Heaviest and latest weight, and how many sets carried one. */
+@Composable
+private fun WeightSummaryCard(sets: List<WorkoutSet>, weightUnit: WeightUnit, unitLabel: String) {
+    HdCard {
+        Text(
+            text = stringResource(R.string.progress_weight),
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+
+        val weightSets = sets.filter { (it.weight ?: 0f) > 0f }
+        if (weightSets.isNotEmpty()) {
+            val maxWeight = weightSets.maxOf { it.weight ?: 0f }.kgTo(weightUnit)
+            val latestWeight = (weightSets.first().weight ?: 0f).kgTo(weightUnit)
+            Text(
+                text = stringResource(
+                    R.string.progress_max_latest,
+                    "${maxWeight.formatDecimal()} $unitLabel",
+                    "${latestWeight.formatDecimal()} $unitLabel"
+                ),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = pluralStringResource(R.plurals.progress_sets_logged, weightSets.size, weightSets.size),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        } else {
+            Text(
+                text = stringResource(R.string.progress_no_weight_data),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+/** Total reps and volume across every logged set. */
+@Composable
+private fun VolumeSummaryCard(sets: List<WorkoutSet>, weightUnit: WeightUnit, unitLabel: String) {
+    HdCard {
+        Text(
+            text = stringResource(R.string.progress_volume),
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.secondary
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+
+        val repSets = sets.filter { (it.reps ?: 0) > 0 }
+        if (repSets.isNotEmpty()) {
+            val totalReps = repSets.sumOf { it.reps ?: 0 }
+            val totalVolume = repSets.sumOf { ((it.reps ?: 0) * (it.weight ?: 0f)).toDouble() }
+                .toFloat()
+                .kgTo(weightUnit)
+            Text(
+                text = stringResource(
+                    R.string.progress_reps_volume,
+                    totalReps,
+                    "${totalVolume.formatDecimal()} $unitLabel"
+                ),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        } else {
+            Text(
+                text = stringResource(R.string.progress_no_reps_data),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }

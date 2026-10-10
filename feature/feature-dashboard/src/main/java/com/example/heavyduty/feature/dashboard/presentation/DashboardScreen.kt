@@ -59,7 +59,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.heavyduty.core.common.R
-import com.example.heavyduty.core.common.extensions.formatCompact
+import com.example.heavyduty.core.domain.model.MuscleGroup
 import com.example.heavyduty.core.domain.model.kgTo
 import com.example.heavyduty.core.domain.model.label
 import com.example.heavyduty.core.domain.model.toKgFrom
@@ -127,21 +127,7 @@ private fun DashboardContent(uiState: DashboardUiState, onEvent: (DashboardUiEve
     ) {
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Header
-        Text(
-            text = stringResource(R.string.dashboard_welcome_title),
-            style = MaterialTheme.typography.headlineLarge.copy(
-                fontWeight = FontWeight.ExtraBold,
-                letterSpacing = (-0.5).sp
-            ),
-            color = MaterialTheme.colorScheme.onBackground
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = stringResource(R.string.dashboard_welcome_subtitle),
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        WelcomeHeader()
 
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -161,30 +147,7 @@ private fun DashboardContent(uiState: DashboardUiState, onEvent: (DashboardUiEve
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Quick Stats Row
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Workouts this week
-            StatCard(
-                title = stringResource(R.string.dashboard_this_week),
-                value = "${uiState.weeklyWorkoutsCount}",
-                subtitle = stringResource(R.string.dashboard_workouts),
-                icon = Icons.Default.FitnessCenter,
-                modifier = Modifier.weight(1f)
-            )
-
-            // Time trained this week
-            val minutes = uiState.totalTimeSeconds / 60
-            StatCard(
-                title = stringResource(R.string.dashboard_total_time),
-                value = "$minutes",
-                subtitle = stringResource(R.string.dashboard_minutes),
-                icon = Icons.Default.Timer,
-                modifier = Modifier.weight(1f)
-            )
-        }
+        QuickStatsRow(uiState = uiState)
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -199,73 +162,14 @@ private fun DashboardContent(uiState: DashboardUiState, onEvent: (DashboardUiEve
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Muscle Distribution Radar Chart
-        if (uiState.weeklyMuscleVolume.isNotEmpty() && uiState.weeklyMuscleVolume.size >= 3) {
-            Text(
-                text = stringResource(R.string.dashboard_muscle_distribution),
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.onBackground
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            HdCard(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                // Map the MuscleGroup enum to localized display strings
-                val chartData = uiState.weeklyMuscleVolume
-                    .mapKeys { stringResource(it.key.nameResId) }
-                com.example.heavyduty.core.ui.components.HdRadarChart(
-                    data = chartData,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-            Spacer(modifier = Modifier.height(32.dp))
+        if (uiState.weeklyMuscleVolume.size >= 3) {
+            MuscleDistributionSection(weeklyMuscleVolume = uiState.weeklyMuscleVolume)
         }
 
-        // Quick Actions
-        Text(
-            text = stringResource(R.string.dashboard_quick_actions),
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.onBackground
-        )
+        SectionTitle(stringResource(R.string.dashboard_quick_actions))
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Gradient CTA Button
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(80.dp)
-                .clip(RoundedCornerShape(24.dp)),
-            onClick = { onEvent(DashboardUiEvent.OnStartFreeWorkout) }
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        brush = Brush.horizontalGradient(
-                            colors = listOf(GradientCyanStart, GradientCyanEnd)
-                        )
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.PlayArrow,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(32.dp)
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = stringResource(R.string.dashboard_start_free_workout),
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                        color = Color.White
-                    )
-                }
-            }
-        }
+        StartFreeWorkoutButton(onClick = { onEvent(DashboardUiEvent.OnStartFreeWorkout) })
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -278,51 +182,172 @@ private fun DashboardContent(uiState: DashboardUiState, onEvent: (DashboardUiEve
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Recent Activity
-        if (uiState.recentWorkoutEndTime != null) {
-            Text(
-                text = stringResource(R.string.dashboard_recent_activity),
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.onBackground
-            )
-            Spacer(modifier = Modifier.height(16.dp))
+        uiState.recentWorkoutEndTime?.let { endTime ->
+            RecentActivitySection(workoutName = uiState.recentWorkoutName, endTime = endTime)
+        }
+    }
+}
 
-            HdCard(
+@Composable
+private fun WelcomeHeader() {
+    Column {
+        Text(
+            text = stringResource(R.string.dashboard_welcome_title),
+            style = MaterialTheme.typography.headlineLarge.copy(
+                fontWeight = FontWeight.ExtraBold,
+                letterSpacing = (-0.5).sp
+            ),
+            color = MaterialTheme.colorScheme.onBackground
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = stringResource(R.string.dashboard_welcome_subtitle),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+/** Workouts and minutes trained this week. */
+@Composable
+private fun QuickStatsRow(uiState: DashboardUiState) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // Workouts this week
+        StatCard(
+            title = stringResource(R.string.dashboard_this_week),
+            value = "${uiState.weeklyWorkoutsCount}",
+            subtitle = stringResource(R.string.dashboard_workouts),
+            icon = Icons.Default.FitnessCenter,
+            modifier = Modifier.weight(1f)
+        )
+
+        // Time trained this week
+        val minutes = uiState.totalTimeSeconds / 60
+        StatCard(
+            title = stringResource(R.string.dashboard_total_time),
+            value = "$minutes",
+            subtitle = stringResource(R.string.dashboard_minutes),
+            icon = Icons.Default.Timer,
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+/** This week's volume per muscle as a radar — only drawn with three muscles or more. */
+@Composable
+private fun MuscleDistributionSection(weeklyMuscleVolume: Map<MuscleGroup, Float>) {
+    Column {
+        SectionTitle(stringResource(R.string.dashboard_muscle_distribution))
+        Spacer(modifier = Modifier.height(16.dp))
+        HdCard(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            // Map the MuscleGroup enum to localized display strings
+            val chartData = weeklyMuscleVolume
+                .mapKeys { stringResource(it.key.nameResId) }
+            com.example.heavyduty.core.ui.components.HdRadarChart(
+                data = chartData,
                 modifier = Modifier.fillMaxWidth()
+            )
+        }
+        Spacer(modifier = Modifier.height(32.dp))
+    }
+}
+
+@Composable
+private fun StartFreeWorkoutButton(onClick: () -> Unit) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(80.dp)
+            .clip(RoundedCornerShape(24.dp)),
+        onClick = onClick
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    brush = Brush.horizontalGradient(
+                        colors = listOf(GradientCyanStart, GradientCyanEnd)
+                    )
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
+                Icon(
+                    imageVector = Icons.Default.PlayArrow,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(32.dp)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = stringResource(R.string.dashboard_start_free_workout),
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                    color = Color.White
+                )
+            }
+        }
+    }
+}
+
+/** The last finished workout and how long ago it was. */
+@Composable
+private fun RecentActivitySection(workoutName: String?, endTime: Long) {
+    Column {
+        SectionTitle(stringResource(R.string.dashboard_recent_activity))
+        Spacer(modifier = Modifier.height(16.dp))
+
+        HdCard(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Surface(
+                    modifier = Modifier.size(48.dp),
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primaryContainer
                 ) {
-                    Surface(
-                        modifier = Modifier.size(48.dp),
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.primaryContainer
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.History,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(12.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Column {
-                        Text(
-                            text = uiState.recentWorkoutName
-                                ?: stringResource(R.string.dashboard_recent_workout_default),
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = relativeDayLabel(uiState.recentWorkoutEndTime),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.Default.History,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(12.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                Column {
+                    Text(
+                        text = workoutName
+                            ?: stringResource(R.string.dashboard_recent_workout_default),
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = relativeDayLabel(endTime),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
         }
     }
+}
+
+@Composable
+private fun SectionTitle(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+        color = MaterialTheme.colorScheme.onBackground
+    )
 }
 
 @Composable

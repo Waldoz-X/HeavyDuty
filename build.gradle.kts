@@ -19,14 +19,14 @@ spotless {
         target("app/src/**/*.kt", "baselineprofile/src/**/*.kt", "core/*/src/**/*.kt", "feature/*/src/**/*.kt")
         ktlint(libs.versions.ktlint.get())
             .setEditorConfigPath(rootProject.file(".editorconfig"))
-            .editorConfigOverride(mapOf("max_line_length" to 140))
+            .editorConfigOverride(mapOf("max_line_length" to 140, "ktlint_standard_no-unused-imports" to "enabled"))
             .customRuleSets(listOf("io.nlopez.compose.rules:ktlint:${libs.versions.composeRules.get()}"))
     }
     kotlinGradle {
         target("*.kts", "app/*.kts", "baselineprofile/*.kts", "core/*/*.kts", "feature/*/*.kts")
         ktlint(libs.versions.ktlint.get())
             .setEditorConfigPath(rootProject.file(".editorconfig"))
-            .editorConfigOverride(mapOf("max_line_length" to 140))
+            .editorConfigOverride(mapOf("max_line_length" to 140, "ktlint_standard_no-unused-imports" to "enabled"))
     }
 }
 

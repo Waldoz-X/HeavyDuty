@@ -60,6 +60,7 @@ import com.example.heavyduty.core.ui.formatTotalWeight
 import com.example.heavyduty.core.ui.formatWeight
 import com.example.heavyduty.core.ui.nameResId
 import com.example.heavyduty.core.ui.weightUnitLabel
+import com.example.heavyduty.feature.stats.domain.model.MonthlyReport
 import com.example.heavyduty.feature.stats.domain.model.MuscleVolumeContribution
 import com.example.heavyduty.feature.stats.domain.model.TopExerciseMonthly
 import kotlin.math.roundToInt
@@ -107,91 +108,16 @@ fun InformeMensualScreen(onNavigateBack: () -> Unit, modifier: Modifier = Modifi
             val report = uiState.report
 
             if (report.totalWorkouts == 0) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    HdEmptyState(
-                        icon = Icons.Default.FitnessCenter,
-                        title = stringResource(R.string.monthly_empty_title),
-                        description = stringResource(R.string.monthly_empty_desc, monthName(report.monthStartMillis).lowercase())
-                    )
-                }
+                MonthlyEmptyState(monthStartMillis = report.monthStartMillis)
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 32.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    // 1. Tarjetas de métricas principales con badges comparativos
                     item {
-                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                HdStatCard(
-                                    icon = Icons.Default.FitnessCenter,
-                                    label = stringResource(R.string.monthly_total_volume),
-                                    value = report.totalVolumeKg.formatTotalWeight(),
-                                    deltaText = report.prevMonthVolumeDeltaPercent?.let {
-                                        val sign = if (it >= 0) "+" else ""
-                                        stringResource(R.string.monthly_vs_last_month, "$sign${it.formatOneDecimal()}%")
-                                    },
-                                    isPositive = (report.prevMonthVolumeDeltaPercent ?: 0f) >= 0,
-                                    modifier = Modifier.weight(1f)
-                                )
-                                HdStatCard(
-                                    icon = Icons.Default.CalendarMonth,
-                                    label = stringResource(R.string.stats_workouts),
-                                    value = "${report.totalWorkouts}",
-                                    deltaText = report.prevMonthWorkoutsDelta?.let {
-                                        val sign = if (it >= 0) "+" else ""
-                                        stringResource(R.string.monthly_vs_last_month, "$sign$it")
-                                    },
-                                    isPositive = (report.prevMonthWorkoutsDelta ?: 0) >= 0,
-                                    modifier = Modifier.weight(1f)
-                                )
-                            }
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                val hours = report.totalDurationMinutes / 60
-                                val mins = report.totalDurationMinutes % 60
-                                val durationStr = if (hours >
-                                    0
-                                ) {
-                                    stringResource(R.string.duration_hours_minutes, hours, mins)
-                                } else {
-                                    stringResource(R.string.duration_minutes, mins)
-                                }
-
-                                HdStatCard(
-                                    icon = Icons.Default.Timer,
-                                    label = stringResource(R.string.monthly_total_time),
-                                    value = durationStr,
-                                    subtext = stringResource(R.string.monthly_avg_session, report.avgSessionDurationMinutes),
-                                    modifier = Modifier.weight(1f)
-                                )
-                                HdStatCard(
-                                    icon = Icons.Default.Repeat,
-                                    label = stringResource(R.string.monthly_effective_sets),
-                                    value = "${report.totalSets}",
-                                    subtext = stringResource(
-                                        R.string.monthly_sessions_per_week,
-                                        report.workoutsPerWeekAverage.formatOneDecimal()
-                                    ),
-                                    modifier = Modifier.weight(1f)
-                                )
-                            }
-                        }
+                        MonthlyStatsGrid(report = report)
                     }
-
-                    // 2. Desglose de distribución muscular
                     if (report.muscleContributions.isNotEmpty()) {
                         item {
                             MuscleDistributionCard(
@@ -200,63 +126,141 @@ fun InformeMensualScreen(onNavigateBack: () -> Unit, modifier: Modifier = Modifi
                             )
                         }
                     }
-
-                    // 3. Top ejercicios del mes
                     if (report.topExercises.isNotEmpty()) {
                         item {
                             TopExercisesCard(exercises = report.topExercises)
                         }
                     }
 
-                    // 4. Gráfica de Entrenamientos por semana
                     if (report.workoutsPerWeek.isNotEmpty()) {
                         item {
-                            HdCard(modifier = Modifier.fillMaxWidth()) {
-                                Text(
-                                    text = stringResource(R.string.monthly_workouts_per_week),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                Spacer(modifier = Modifier.height(16.dp))
-                                HdBarChart(
-                                    data = report.workoutsPerWeek.map { (week, count) ->
-                                        stringResource(R.string.monthly_week_label, week) to count.toFloat()
-                                    },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(180.dp)
-                                )
-                            }
+                            WeeklyBarChartCard(
+                                title = stringResource(R.string.monthly_workouts_per_week),
+                                data = report.workoutsPerWeek.map { (week, count) ->
+                                    stringResource(R.string.monthly_week_label, week) to count.toFloat()
+                                }
+                            )
                         }
                     }
 
-                    // 5. Gráfica de Volumen por semana
                     if (report.volumePerWeek.isNotEmpty()) {
                         item {
-                            HdCard(modifier = Modifier.fillMaxWidth()) {
-                                Text(
-                                    text = stringResource(R.string.monthly_volume_per_week, weightUnitLabel()),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                Spacer(modifier = Modifier.height(16.dp))
-                                val unit = LocalWeightUnit.current
-                                HdBarChart(
-                                    data = report.volumePerWeek.map { (week, kg) ->
-                                        stringResource(R.string.monthly_week_label, week) to kg.kgTo(unit)
-                                    },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(180.dp)
-                                )
-                            }
+                            val unit = LocalWeightUnit.current
+                            WeeklyBarChartCard(
+                                title = stringResource(R.string.monthly_volume_per_week, weightUnitLabel()),
+                                data = report.volumePerWeek.map { (week, kg) ->
+                                    stringResource(R.string.monthly_week_label, week) to kg.kgTo(unit)
+                                }
+                            )
                         }
                     }
                 }
             }
         }
+    }
+}
+
+/** A month with no finished workouts. */
+@Composable
+private fun MonthlyEmptyState(monthStartMillis: Long) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        HdEmptyState(
+            icon = Icons.Default.FitnessCenter,
+            title = stringResource(R.string.monthly_empty_title),
+            description = stringResource(R.string.monthly_empty_desc, monthName(monthStartMillis).lowercase())
+        )
+    }
+}
+
+/** Volume, workouts, time and sets, with the change against last month where it applies. */
+@Composable
+private fun MonthlyStatsGrid(report: MonthlyReport) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            HdStatCard(
+                icon = Icons.Default.FitnessCenter,
+                label = stringResource(R.string.monthly_total_volume),
+                value = report.totalVolumeKg.formatTotalWeight(),
+                deltaText = report.prevMonthVolumeDeltaPercent?.let {
+                    val sign = if (it >= 0) "+" else ""
+                    stringResource(R.string.monthly_vs_last_month, "$sign${it.formatOneDecimal()}%")
+                },
+                isPositive = (report.prevMonthVolumeDeltaPercent ?: 0f) >= 0,
+                modifier = Modifier.weight(1f)
+            )
+            HdStatCard(
+                icon = Icons.Default.CalendarMonth,
+                label = stringResource(R.string.stats_workouts),
+                value = "${report.totalWorkouts}",
+                deltaText = report.prevMonthWorkoutsDelta?.let {
+                    val sign = if (it >= 0) "+" else ""
+                    stringResource(R.string.monthly_vs_last_month, "$sign$it")
+                },
+                isPositive = (report.prevMonthWorkoutsDelta ?: 0) >= 0,
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            val hours = report.totalDurationMinutes / 60
+            val mins = report.totalDurationMinutes % 60
+            val durationStr = if (hours >
+                0
+            ) {
+                stringResource(R.string.duration_hours_minutes, hours, mins)
+            } else {
+                stringResource(R.string.duration_minutes, mins)
+            }
+
+            HdStatCard(
+                icon = Icons.Default.Timer,
+                label = stringResource(R.string.monthly_total_time),
+                value = durationStr,
+                subtext = stringResource(R.string.monthly_avg_session, report.avgSessionDurationMinutes),
+                modifier = Modifier.weight(1f)
+            )
+            HdStatCard(
+                icon = Icons.Default.Repeat,
+                label = stringResource(R.string.monthly_effective_sets),
+                value = "${report.totalSets}",
+                subtext = stringResource(
+                    R.string.monthly_sessions_per_week,
+                    report.workoutsPerWeekAverage.formatOneDecimal()
+                ),
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
+
+/** One value per week of the month as bars. */
+@Composable
+private fun WeeklyBarChartCard(title: String, data: List<Pair<String, Float>>) {
+    HdCard(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        HdBarChart(
+            data = data,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(180.dp)
+        )
     }
 }
 

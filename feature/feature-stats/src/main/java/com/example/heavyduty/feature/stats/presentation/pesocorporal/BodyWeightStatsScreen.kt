@@ -58,7 +58,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.heavyduty.core.common.R
 import com.example.heavyduty.core.common.extensions.formatOneDecimal
 import com.example.heavyduty.core.common.extensions.toFormattedDateTime
-import com.example.heavyduty.core.common.extensions.toWeightString
 import com.example.heavyduty.core.domain.model.kgTo
 import com.example.heavyduty.core.domain.model.label
 import com.example.heavyduty.core.domain.model.toKgFrom
@@ -132,138 +131,21 @@ fun BodyWeightStatsScreen(
         val report = uiState.report
 
         if (report == null || report.chartPoints.isEmpty()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                HdEmptyState(
-                    icon = Icons.Default.MonitorWeight,
-                    title = stringResource(R.string.bw_empty_title),
-                    description = stringResource(R.string.bw_empty_desc)
-                )
-                Spacer(modifier = Modifier.height(24.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Button(onClick = { showAddWeightDialog = true }) {
-                        Icon(Icons.Default.Add, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(stringResource(R.string.bw_log_first))
-                    }
-                    OutlinedButton(onClick = { showGoalDialog = true }) {
-                        Icon(Icons.Default.Flag, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(stringResource(R.string.bw_fix_goal))
-                    }
-                }
-            }
+            BodyWeightEmptyState(
+                onLogWeight = { showAddWeightDialog = true },
+                onSetGoal = { showGoalDialog = true },
+                modifier = Modifier.padding(innerPadding)
+            )
         } else {
-            LazyColumn(
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 96.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-            ) {
-                // 1. Tarjeta Hero de Meta de Peso
-                item {
-                    WeightGoalHeroCard(
-                        report = report,
-                        onEditGoal = { showGoalDialog = true }
-                    )
-                }
-
-                // 2. Gráfica de Progreso Histórico
-                item {
-                    HdCard(modifier = Modifier.fillMaxWidth()) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = stringResource(R.string.bw_over_time),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            if (report.goalWeightKg != null) {
-                                Text(
-                                    text = stringResource(R.string.bw_goal_value, report.goalWeightKg.formatWeight()),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(16.dp))
-                        val unit = LocalWeightUnit.current
-                        HdLineChart(
-                            data = report.chartPoints.map { (time, kg) -> time to kg.kgTo(unit) },
-                            goalValue = report.goalWeightKg?.kgTo(unit),
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                }
-
-                // 3. Tarjetas de métricas estadísticas resumidas
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        MetricCard(
-                            title = stringResource(R.string.metric_min),
-                            value = report.minWeightKg,
-                            modifier = Modifier.weight(1f)
-                        )
-                        MetricCard(
-                            title = stringResource(R.string.metric_max),
-                            value = report.maxWeightKg,
-                            modifier = Modifier.weight(1f)
-                        )
-                        MetricCard(
-                            title = stringResource(R.string.bw_average),
-                            value = report.avgWeightKg,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                }
-
-                // 4. Título del Historial
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = stringResource(R.string.bw_history),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = pluralStringResource(R.plurals.bw_entries, report.history.size, report.history.size),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
-                // 5. Lista de Registros con Variación
-                items(report.history, key = { it.id }) { entry ->
-                    HistoryEntryCard(
-                        entry = entry,
-                        onDelete = { entryToDelete = entry }
-                    )
-                }
-            }
+            BodyWeightContent(
+                report = report,
+                onEditGoal = { showGoalDialog = true },
+                onDelete = { entryToDelete = it },
+                modifier = Modifier.padding(innerPadding)
+            )
         }
     }
 
-    // Diálogo para definir o editar la meta de peso
     if (showGoalDialog) {
         GoalWeightDialog(
             currentGoal = uiState.report?.goalWeightKg,
@@ -275,7 +157,6 @@ fun BodyWeightStatsScreen(
         )
     }
 
-    // Diálogo para registrar un nuevo peso corporal
     if (showAddWeightDialog) {
         val lastWeight = uiState.report?.currentWeightKg
         AddWeightDialog(
@@ -288,210 +169,386 @@ fun BodyWeightStatsScreen(
         )
     }
 
-    // Diálogo de confirmación para eliminar registro
-    if (entryToDelete != null) {
-        AlertDialog(
-            onDismissRequest = { entryToDelete = null },
-            title = { Text(stringResource(R.string.bw_delete_title)) },
-            text = {
-                Text(
-                    stringResource(
-                        R.string.bw_delete_message,
-                        entryToDelete?.weightKg?.formatWeight().orEmpty(),
-                        entryToDelete?.loggedAt?.toFormattedDateTime().orEmpty()
-                    )
-                )
+    entryToDelete?.let { entry ->
+        DeleteEntryDialog(
+            entry = entry,
+            onConfirm = {
+                viewModel.deleteWeight(entry)
+                entryToDelete = null
             },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        entryToDelete?.let { viewModel.deleteWeight(it) }
-                        entryToDelete = null
-                    }
-                ) {
-                    Text(stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { entryToDelete = null }) {
-                    Text(stringResource(R.string.action_cancel))
-                }
-            }
+            onDismiss = { entryToDelete = null }
         )
     }
 }
 
+/** Goal, chart, min/max/average and the history of weigh-ins. */
 @Composable
-private fun WeightGoalHeroCard(report: BodyWeightStatsReport, onEditGoal: () -> Unit, modifier: Modifier = Modifier) {
-    HdCard(modifier = modifier.fillMaxWidth()) {
+private fun BodyWeightContent(
+    report: BodyWeightStatsReport,
+    onEditGoal: () -> Unit,
+    onDelete: (BodyWeightHistoryItem) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    LazyColumn(
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 96.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        modifier = modifier
+            .fillMaxSize()
+    ) {
+        item {
+            WeightGoalHeroCard(
+                report = report,
+                onEditGoal = onEditGoal
+            )
+        }
+
+        item {
+            WeightChartCard(report = report)
+        }
+
+        item {
+            WeightMetricsRow(report = report)
+        }
+
+        item {
+            HistoryHeader(entryCount = report.history.size)
+        }
+
+        items(report.history, key = { it.id }) { entry ->
+            HistoryEntryCard(
+                entry = entry,
+                onDelete = { onDelete(entry) }
+            )
+        }
+    }
+}
+
+/** No weigh-ins yet: what this screen is for, and the two ways to start. */
+@Composable
+private fun BodyWeightEmptyState(onLogWeight: () -> Unit, onSetGoal: () -> Unit, modifier: Modifier = Modifier) {
+    // The buttons go in HdEmptyState's action slot: placed after it in a Column they were pushed
+    // off-screen, since the empty state fills all the height it's given.
+    HdEmptyState(
+        icon = Icons.Default.MonitorWeight,
+        title = stringResource(R.string.bw_empty_title),
+        description = stringResource(R.string.bw_empty_desc),
+        modifier = modifier.padding(16.dp),
+        action = {
+            // Stacked: side by side they don't fit a phone's width in either language.
+            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(onClick = onLogWeight) {
+                    Icon(Icons.Default.Add, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(stringResource(R.string.bw_log_first))
+                }
+                OutlinedButton(onClick = onSetGoal) {
+                    Icon(Icons.Default.Flag, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(stringResource(R.string.bw_fix_goal))
+                }
+            }
+        }
+    )
+}
+
+/** Weight over time, with the goal drawn as a line when there is one. */
+@Composable
+private fun WeightChartCard(report: BodyWeightStatsReport) {
+    HdCard(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Default.Flag,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = stringResource(R.string.bw_over_time),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            if (report.goalWeightKg != null) {
                 Text(
-                    text = stringResource(R.string.bw_goal_title),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
-            IconButton(onClick = onEditGoal) {
-                Icon(
-                    imageVector = Icons.Default.Edit,
-                    contentDescription = stringResource(R.string.bw_edit_goal),
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(18.dp)
+                    text = stringResource(R.string.bw_goal_value, report.goalWeightKg.formatWeight()),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
         }
+        Spacer(modifier = Modifier.height(16.dp))
+        val unit = LocalWeightUnit.current
+        HdLineChart(
+            data = report.chartPoints.map { (time, kg) -> time to kg.kgTo(unit) },
+            goalValue = report.goalWeightKg?.kgTo(unit),
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
+/** Lowest, highest and average weight. */
+@Composable
+private fun WeightMetricsRow(report: BodyWeightStatsReport) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        MetricCard(
+            title = stringResource(R.string.metric_min),
+            value = report.minWeightKg,
+            modifier = Modifier.weight(1f)
+        )
+        MetricCard(
+            title = stringResource(R.string.metric_max),
+            value = report.maxWeightKg,
+            modifier = Modifier.weight(1f)
+        )
+        MetricCard(
+            title = stringResource(R.string.bw_average),
+            value = report.avgWeightKg,
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+@Composable
+private fun HistoryHeader(entryCount: Int) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = stringResource(R.string.bw_history),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Text(
+            text = pluralStringResource(R.plurals.bw_entries, entryCount, entryCount),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+private fun DeleteEntryDialog(entry: BodyWeightHistoryItem, onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.bw_delete_title)) },
+        text = {
+            Text(
+                stringResource(
+                    R.string.bw_delete_message,
+                    entry.weightKg.formatWeight(),
+                    entry.loggedAt.toFormattedDateTime()
+                )
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.action_cancel))
+            }
+        }
+    )
+}
+
+@Composable
+private fun WeightGoalHeroCard(report: BodyWeightStatsReport, onEditGoal: () -> Unit, modifier: Modifier = Modifier) {
+    HdCard(modifier = modifier.fillMaxWidth()) {
+        GoalCardHeader(onEditGoal = onEditGoal)
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        if (report.goalWeightKg != null && report.currentWeightKg != null) {
-            val progress = report.progressPercentage ?: 0f
-            val remaining = report.remainingToGoalKg ?: 0f
-
+        val goalKg = report.goalWeightKg
+        val currentKg = report.currentWeightKg
+        if (goalKg != null && currentKg != null) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Bottom
             ) {
-                Column {
-                    Text(
-                        text = stringResource(R.string.bw_current),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Row(verticalAlignment = Alignment.Bottom) {
-                        Text(
-                            text = report.currentWeightKg.formatWeightValue(),
-                            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = weightUnitLabel(),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(bottom = 4.dp)
-                        )
-                    }
-                }
-
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        text = stringResource(R.string.bw_target),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Row(verticalAlignment = Alignment.Bottom) {
-                        Text(
-                            text = report.goalWeightKg.formatWeightValue(),
-                            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = weightUnitLabel(),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(bottom = 4.dp)
-                        )
-                    }
-                }
+                WeightFigure(
+                    label = stringResource(R.string.bw_current),
+                    weightKg = currentKg,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    unitColor = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                WeightFigure(
+                    label = stringResource(R.string.bw_target),
+                    weightKg = goalKg,
+                    color = MaterialTheme.colorScheme.primary,
+                    unitColor = MaterialTheme.colorScheme.primary,
+                    alignment = Alignment.End
+                )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Barra de progreso hacia la meta
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    val statusText = if (kotlin.math.abs(remaining) <= 0.2f) {
-                        stringResource(R.string.bw_goal_reached)
-                    } else if (remaining > 0) {
-                        stringResource(R.string.bw_remaining, remaining.formatWeight())
-                    } else {
-                        stringResource(R.string.bw_over, (-remaining).formatWeight())
-                    }
+            GoalProgress(progress = report.progressPercentage ?: 0f, remainingKg = report.remainingToGoalKg ?: 0f)
 
-                    Text(
-                        text = statusText,
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = "${(progress * 100).toInt()}%",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                LinearProgressIndicator(
-                    progress = { progress },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(10.dp)
-                        .clip(RoundedCornerShape(5.dp)),
-                    color = MaterialTheme.colorScheme.primary,
-                    trackColor = MaterialTheme.colorScheme.surfaceVariant
-                )
-            }
-
-            if (report.startWeightKg != null) {
+            report.startWeightKg?.let { startKg ->
                 Spacer(modifier = Modifier.height(12.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = stringResource(R.string.bw_start, report.startWeightKg.formatWeight()),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    val totalChange = report.currentWeightKg - report.startWeightKg
-                    val sign = if (totalChange > 0) "+" else ""
-                    Text(
-                        text = stringResource(R.string.bw_total_change, "$sign${totalChange.formatWeight()}"),
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.Medium,
-                        color = if (totalChange <= 0) Color(0xFF4CAF50) else MaterialTheme.colorScheme.primary
-                    )
-                }
+                StartAndChangeRow(startKg = startKg, currentKg = currentKg)
             }
         } else {
-            // No hay meta fijada
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = stringResource(R.string.bw_no_goal),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-                Button(onClick = onEditGoal) {
-                    Icon(Icons.Default.Flag, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(stringResource(R.string.bw_define_goal))
-                }
+            NoGoalPrompt(onDefineGoal = onEditGoal)
+        }
+    }
+}
+
+@Composable
+private fun GoalCardHeader(onEditGoal: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = Icons.Default.Flag,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = stringResource(R.string.bw_goal_title),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+        IconButton(onClick = onEditGoal) {
+            Icon(
+                imageVector = Icons.Default.Edit,
+                contentDescription = stringResource(R.string.bw_edit_goal),
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(18.dp)
+            )
+        }
+    }
+}
+
+/** A labelled weight with its unit, e.g. "Actual 82.5 kg". */
+@Composable
+private fun WeightFigure(
+    label: String,
+    weightKg: Float,
+    color: Color,
+    unitColor: Color,
+    alignment: Alignment.Horizontal = Alignment.Start
+) {
+    Column(horizontalAlignment = alignment) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Row(verticalAlignment = Alignment.Bottom) {
+            Text(
+                text = weightKg.formatWeightValue(),
+                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                color = color
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = weightUnitLabel(),
+                style = MaterialTheme.typography.bodyMedium,
+                color = unitColor,
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
+        }
+    }
+}
+
+/** How far along the goal is: what's left (or past it) and a progress bar. */
+@Composable
+private fun GoalProgress(progress: Float, remainingKg: Float) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            val statusText = if (kotlin.math.abs(remainingKg) <= 0.2f) {
+                stringResource(R.string.bw_goal_reached)
+            } else if (remainingKg > 0) {
+                stringResource(R.string.bw_remaining, remainingKg.formatWeight())
+            } else {
+                stringResource(R.string.bw_over, (-remainingKg).formatWeight())
             }
+
+            Text(
+                text = statusText,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = "${(progress * 100).toInt()}%",
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        LinearProgressIndicator(
+            progress = { progress },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(10.dp)
+                .clip(RoundedCornerShape(5.dp)),
+            color = MaterialTheme.colorScheme.primary,
+            trackColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    }
+}
+
+/** Starting weight and the total change since then. */
+@Composable
+private fun StartAndChangeRow(startKg: Float, currentKg: Float) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = stringResource(R.string.bw_start, startKg.formatWeight()),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        val totalChange = currentKg - startKg
+        val sign = if (totalChange > 0) "+" else ""
+        Text(
+            text = stringResource(R.string.bw_total_change, "$sign${totalChange.formatWeight()}"),
+            style = MaterialTheme.typography.bodySmall,
+            fontWeight = FontWeight.Medium,
+            color = if (totalChange <= 0) Color(0xFF4CAF50) else MaterialTheme.colorScheme.primary
+        )
+    }
+}
+
+@Composable
+private fun NoGoalPrompt(onDefineGoal: () -> Unit) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = stringResource(R.string.bw_no_goal),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        Button(onClick = onDefineGoal) {
+            Icon(Icons.Default.Flag, contentDescription = null, modifier = Modifier.size(18.dp))
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(stringResource(R.string.bw_define_goal))
         }
     }
 }

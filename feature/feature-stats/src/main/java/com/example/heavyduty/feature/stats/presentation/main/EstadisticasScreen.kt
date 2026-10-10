@@ -48,7 +48,6 @@ import com.example.heavyduty.core.ui.components.HdCardsSkeleton
 import com.example.heavyduty.core.ui.components.HdChip
 import com.example.heavyduty.core.ui.components.HdErrorState
 import com.example.heavyduty.core.ui.formatTotalWeight
-import com.example.heavyduty.core.ui.nameResId
 import com.example.heavyduty.feature.stats.domain.model.PeriodSummary
 
 @OptIn(ExperimentalMaterial3Api::class)

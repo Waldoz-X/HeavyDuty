@@ -38,7 +38,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.heavyduty.core.common.R
-import com.example.heavyduty.core.common.extensions.formatCompact
 import com.example.heavyduty.core.domain.model.MuscleGroup
 import com.example.heavyduty.core.ui.components.HdBodyDiagram
 import com.example.heavyduty.core.ui.components.HdCardsSkeleton
@@ -47,7 +46,6 @@ import com.example.heavyduty.core.ui.components.HdErrorState
 import com.example.heavyduty.core.ui.components.HdPeriodSelector
 import com.example.heavyduty.core.ui.components.HdStatCard
 import com.example.heavyduty.core.ui.formatTotalWeight
-import com.example.heavyduty.core.ui.nameResId
 import com.example.heavyduty.feature.stats.domain.model.PeriodSummary
 
 @OptIn(ExperimentalMaterial3Api::class)

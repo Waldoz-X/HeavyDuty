@@ -11,6 +11,8 @@ trim_trailing_whitespace = true
 [*.{kt,kts}]
 indent_size = 4
 ktlint_code_style = android_studio
+# Off by default in ktlint; removes imports nothing uses (e.g. left behind when code moves).
+ktlint_standard_no-unused-imports = enabled
 # Composables are named like types (UpperCamelCase).
 ktlint_function_naming_ignore_when_annotated_with = Composable
 # The codebase is written for wide lines; 100 (android_studio's default) would rewrap most files.

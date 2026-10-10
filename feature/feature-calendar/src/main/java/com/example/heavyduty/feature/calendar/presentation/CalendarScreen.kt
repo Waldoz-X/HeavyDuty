@@ -103,173 +103,190 @@ fun CalendarScreen(onRoutineClick: (Long) -> Unit, modifier: Modifier = Modifier
                 uiState.loadFailed -> HdErrorState()
 
                 else -> {
-                    // Week day selector
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        (1..7).forEach { day ->
-                            val isSelected = uiState.selectedDay == day
-                            val hasEntries = uiState.weekSchedule[day]?.isNotEmpty() == true
-
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                modifier = Modifier
-                                    .clip(MaterialTheme.shapes.small)
-                                    .background(
-                                        if (isSelected) {
-                                            MaterialTheme.colorScheme.primary
-                                        } else {
-                                            MaterialTheme.colorScheme.surfaceContainerHigh
-                                        }
-                                    )
-                                    .clickable { viewModel.onEvent(CalendarUiEvent.OnDaySelect(day)) }
-                                    .padding(horizontal = 12.dp, vertical = 12.dp)
-                            ) {
-                                Text(
-                                    text = dayName(day),
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = if (isSelected) {
-                                        MaterialTheme.colorScheme.onPrimary
-                                    } else {
-                                        MaterialTheme.colorScheme.onSurface
-                                    },
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                                )
-                                if (hasEntries) {
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Box(
-                                        modifier = Modifier
-                                            .size(6.dp)
-                                            .clip(MaterialTheme.shapes.extraSmall)
-                                            .background(
-                                                if (isSelected) {
-                                                    MaterialTheme.colorScheme.onPrimary
-                                                } else {
-                                                    MaterialTheme.colorScheme.tertiary
-                                                }
-                                            )
-                                    )
-                                }
-                            }
-                        }
-                    }
+                    WeekDaySelector(selectedDay = uiState.selectedDay, weekSchedule = uiState.weekSchedule, onEvent = viewModel::onEvent)
 
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    // Day content
                     val selectedDay = uiState.selectedDay
                     if (selectedDay != null) {
-                        val entries = uiState.weekSchedule[selectedDay] ?: emptyList()
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = stringResource(
-                                    R.string.calendar_schedule_for,
-                                    // As the language writes it mid-sentence: "miércoles" / "Wednesday".
-                                    DayOfWeek.of(selectedDay).getDisplayName(TextStyle.FULL, LocalConfiguration.current.locales[0])
-                                ),
-                                style = MaterialTheme.typography.titleSmall,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            HdTonalButton(
-                                text = stringResource(R.string.calendar_assign_routine),
-                                onClick = { viewModel.onEvent(CalendarUiEvent.OnToggleRoutinePicker) },
-                                icon = Icons.Default.Add
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        if (uiState.isPickingRoutine) {
-                            RoutinePicker(
-                                routines = uiState.routines,
-                                onRoutinePick = {
-                                    viewModel.onEvent(CalendarUiEvent.OnAssignRoutine(it.id, selectedDay))
-                                }
-                            )
-                            Spacer(modifier = Modifier.height(12.dp))
-                        }
-
-                        if (entries.isEmpty()) {
-                            HdEmptyState(
-                                icon = Icons.Default.CalendarMonth,
-                                title = stringResource(R.string.calendar_rest_day),
-                                description = stringResource(R.string.calendar_rest_day_hint)
-                            )
-                        } else {
-                            LazyColumn(
-                                verticalArrangement = Arrangement.spacedBy(8.dp),
-                                contentPadding = PaddingValues(bottom = 16.dp)
-                            ) {
-                                items(entries, key = { it.id }) { entry ->
-                                    CalendarEntryItem(
-                                        routineName =
-                                            uiState.routines.find { it.id == entry.routineId }?.name
-                                                ?: stringResource(R.string.calendar_routine_fallback, entry.routineId.toInt()),
-                                        onClick = { viewModel.onEvent(CalendarUiEvent.OnRoutineClick(entry.routineId)) },
-                                        onRemove = { viewModel.onEvent(CalendarUiEvent.OnRemoveEntry(entry)) }
-                                    )
-                                }
-                            }
-                        }
+                        DaySchedule(day = selectedDay, uiState = uiState, onEvent = viewModel::onEvent)
                     } else {
-                        // Overview — show all days summary
-                        LazyColumn(
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
-                            contentPadding = PaddingValues(bottom = 16.dp)
-                        ) {
-                            items((1..7).toList()) { day ->
-                                val entries = uiState.weekSchedule[day] ?: emptyList()
-                                HdCard {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Text(
-                                            text = dayName(day),
-                                            style = MaterialTheme.typography.titleMedium,
-                                            color = MaterialTheme.colorScheme.onSurface,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                        Text(
-                                            text = if (entries.isEmpty()) {
-                                                stringResource(
-                                                    R.string.calendar_rest_day
-                                                )
-                                            } else {
-                                                pluralStringResource(R.plurals.calendar_routine_count, entries.size, entries.size)
-                                            },
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = if (entries.isEmpty()) {
-                                                MaterialTheme.colorScheme.onSurfaceVariant
-                                            } else {
-                                                MaterialTheme.colorScheme.tertiary
-                                            }
-                                        )
-                                    }
-                                    entries.forEach { entry ->
-                                        Spacer(modifier = Modifier.height(4.dp))
-                                        Text(
-                                            text = "• ${uiState.routines.find {
-                                                it.id == entry.routineId
-                                            }?.name ?: stringResource(R.string.calendar_routine_generic)}",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-                                }
-                            }
-                        }
+                        WeekOverview(uiState = uiState)
                     }
                 }
             }
         }
         SnackbarHost(hostState = snackbarHostState, modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp))
+    }
+}
+
+/** Monday to Sunday; a dot marks the days that have a routine. */
+@Composable
+private fun WeekDaySelector(selectedDay: Int?, weekSchedule: Map<Int, List<CalendarEntry>>, onEvent: (CalendarUiEvent) -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        for (day in 1..7) {
+            val isSelected = selectedDay == day
+            val hasEntries = weekSchedule[day]?.isNotEmpty() == true
+
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .clip(MaterialTheme.shapes.small)
+                    .background(
+                        if (isSelected) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.surfaceContainerHigh
+                        }
+                    )
+                    .clickable { onEvent(CalendarUiEvent.OnDaySelect(day)) }
+                    .padding(horizontal = 12.dp, vertical = 12.dp)
+            ) {
+                Text(
+                    text = dayName(day),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = if (isSelected) {
+                        MaterialTheme.colorScheme.onPrimary
+                    } else {
+                        MaterialTheme.colorScheme.onSurface
+                    },
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                )
+                if (hasEntries) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Box(
+                        modifier = Modifier
+                            .size(6.dp)
+                            .clip(MaterialTheme.shapes.extraSmall)
+                            .background(
+                                if (isSelected) {
+                                    MaterialTheme.colorScheme.onPrimary
+                                } else {
+                                    MaterialTheme.colorScheme.tertiary
+                                }
+                            )
+                    )
+                }
+            }
+        }
+    }
+}
+
+/** One day: its routines, and the way to assign another. */
+@Composable
+private fun DaySchedule(day: Int, uiState: CalendarUiState, onEvent: (CalendarUiEvent) -> Unit) {
+    Column {
+        val entries = uiState.weekSchedule[day] ?: emptyList()
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = stringResource(
+                    R.string.calendar_schedule_for,
+                    // As the language writes it mid-sentence: "miércoles" / "Wednesday".
+                    DayOfWeek.of(day).getDisplayName(TextStyle.FULL, LocalConfiguration.current.locales[0])
+                ),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            HdTonalButton(
+                text = stringResource(R.string.calendar_assign_routine),
+                onClick = { onEvent(CalendarUiEvent.OnToggleRoutinePicker) },
+                icon = Icons.Default.Add
+            )
+        }
+        Spacer(modifier = Modifier.height(12.dp))
+
+        if (uiState.isPickingRoutine) {
+            RoutinePicker(
+                routines = uiState.routines,
+                onRoutinePick = {
+                    onEvent(CalendarUiEvent.OnAssignRoutine(it.id, day))
+                }
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+
+        if (entries.isEmpty()) {
+            HdEmptyState(
+                icon = Icons.Default.CalendarMonth,
+                title = stringResource(R.string.calendar_rest_day),
+                description = stringResource(R.string.calendar_rest_day_hint)
+            )
+        } else {
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(bottom = 16.dp)
+            ) {
+                items(entries, key = { it.id }) { entry ->
+                    CalendarEntryItem(
+                        routineName =
+                            uiState.routines.find { it.id == entry.routineId }?.name
+                                ?: stringResource(R.string.calendar_routine_fallback, entry.routineId.toInt()),
+                        onClick = { onEvent(CalendarUiEvent.OnRoutineClick(entry.routineId)) },
+                        onRemove = { onEvent(CalendarUiEvent.OnRemoveEntry(entry)) }
+                    )
+                }
+            }
+        }
+    }
+}
+
+/** No day selected: every day of the week with its routines. */
+@Composable
+private fun WeekOverview(uiState: CalendarUiState) {
+    LazyColumn(
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        contentPadding = PaddingValues(bottom = 16.dp)
+    ) {
+        items((1..7).toList()) { day ->
+            val entries = uiState.weekSchedule[day] ?: emptyList()
+            HdCard {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = dayName(day),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = if (entries.isEmpty()) {
+                            stringResource(
+                                R.string.calendar_rest_day
+                            )
+                        } else {
+                            pluralStringResource(R.plurals.calendar_routine_count, entries.size, entries.size)
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (entries.isEmpty()) {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        } else {
+                            MaterialTheme.colorScheme.tertiary
+                        }
+                    )
+                }
+                entries.forEach { entry ->
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "• ${uiState.routines.find {
+                            it.id == entry.routineId
+                        }?.name ?: stringResource(R.string.calendar_routine_generic)}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
     }
 }
 
