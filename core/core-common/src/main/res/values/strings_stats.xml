@@ -16,7 +16,7 @@
     <string name="stats_monthly_title">Informe mensual</string>
     <string name="stats_monthly_desc">Resumen de tus entrenamientos y estadísticas mensuales.</string>
     <string name="stats_activity_title">Mapa de actividad</string>
-    <string name="stats_activity_desc">Vista de un año de entrenamientos, estilo GitHub.</string>
+    <string name="stats_activity_desc">Tu frecuencia de entrenamiento por semana, mes y año.</string>
     <string name="stats_bodyweight_title">Peso corporal</string>
     <string name="stats_bodyweight_desc">Gráfico y análisis de tu progreso de peso.</string>
     <string name="stats_muscles_by_day">Músculos trabajados por día</string>
@@ -77,11 +77,20 @@
     <string name="activity_days_trained">Días entrenados</string>
     <string name="activity_yearly_consistency">Constancia anual</string>
     <string name="activity_frequency">Frecuencia de entrenamientos</string>
-    <plurals name="activity_sessions_last_year">
-        <item quantity="one">%1$d entrenamiento completado en el último año</item>
-        <item quantity="other">%1$d entrenamientos completados en el último año</item>
-        <item quantity="many">%1$d entrenamientos completados en el último año</item>
+    <string name="frequency_view_week">Semana</string>
+    <string name="frequency_view_month">Mes</string>
+    <string name="frequency_view_year">Año</string>
+    <string name="frequency_previous">Periodo anterior</string>
+    <string name="frequency_next">Periodo siguiente</string>
+    <plurals name="frequency_sessions">
+        <item quantity="one">%1$d entrenamiento</item>
+        <item quantity="other">%1$d entrenamientos</item>
+        <item quantity="many">%1$d entrenamientos</item>
     </plurals>
+    <string name="frequency_week_caption">Tiempo entrenado por día</string>
+    <string name="frequency_hours">%1$s h</string>
+    <string name="frequency_year_caption">Días entrenados por mes</string>
+    <string name="frequency_empty">Sin entrenamientos en este periodo</string>
     <string name="activity_less">Menos</string>
     <string name="activity_more">Más</string>
     <string name="activity_weekly_distribution">Distribución semanal</string>

@@ -51,25 +51,28 @@ class GetTrainingActivityHeatmapUseCaseTest {
     }
 
     @Test
-    fun `a short day stays visible next to a very long one`() = runBlocking {
+    fun `daily totals cover the whole history, one entry per day`() = runBlocking {
         val cal = Calendar.getInstance().apply {
             clear()
             set(2026, Calendar.SEPTEMBER, 28, 10, 0)
         }
         val today = cal.timeInMillis
-        cal.add(Calendar.DAY_OF_YEAR, -2)
-        val twoDaysAgo = cal.timeInMillis
+        cal.add(Calendar.YEAR, -2) // well outside the 53-week streak window
+        val twoYearsAgo = cal.timeInMillis
         val sessions = listOf(
-            // A workout left running for 35 hours, then finished.
-            WorkoutSession(id = 1, startTime = twoDaysAgo, totalDurationSecs = 35 * 3600, status = WorkoutStatus.COMPLETED),
-            WorkoutSession(id = 2, startTime = today, totalDurationSecs = 3600, status = WorkoutStatus.COMPLETED)
+            WorkoutSession(id = 1, startTime = today, totalDurationSecs = 3600, status = WorkoutStatus.COMPLETED),
+            WorkoutSession(id = 2, startTime = today + 4 * 3600_000L, totalDurationSecs = 1800, status = WorkoutStatus.COMPLETED),
+            WorkoutSession(id = 3, startTime = twoYearsAgo, totalDurationSecs = 600, status = WorkoutStatus.COMPLETED),
+            WorkoutSession(id = 4, startTime = today, totalDurationSecs = 600, status = WorkoutStatus.IN_PROGRESS)
         )
 
-        val heat = GetTrainingActivityHeatmapUseCase(FakeWorkoutRepository(sessions), FakeClock(today)).invoke().first().activityByDay
+        val totals = GetTrainingActivityHeatmapUseCase(FakeWorkoutRepository(sessions), FakeClock(today)).invoke().first().dailyTotals
 
-        assertEquals(2, heat.size)
-        assertEquals(1f, heat.values.max(), 0.001f)
-        assertTrue("an hour's workout drew as ${heat.values.min()}", heat.values.min() >= MIN_TRAINED_DAY_INTENSITY)
+        assertEquals(2, totals.size)
+        val todayTotals = totals.getValue(totals.keys.max())
+        assertEquals(2, todayTotals.sessions)
+        assertEquals(90f, todayTotals.minutes, 0.01f)
+        assertEquals(10f, totals.getValue(totals.keys.min()).minutes, 0.01f)
     }
 
     @Test

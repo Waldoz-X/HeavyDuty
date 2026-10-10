@@ -38,7 +38,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -49,11 +48,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.heavyduty.core.common.R
 import com.example.heavyduty.core.common.extensions.formatOneDecimal
-import com.example.heavyduty.core.ui.components.HdActivityHeatmap
 import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdCardsSkeleton
 import com.example.heavyduty.core.ui.components.HdErrorState
-import com.example.heavyduty.core.ui.theme.raised
 import com.example.heavyduty.feature.stats.domain.usecase.ActivityHeatmapStatsReport
 import com.example.heavyduty.feature.stats.domain.usecase.TimeSlot
 import kotlin.math.roundToInt
@@ -102,9 +99,11 @@ fun MapaActividadScreen(onNavigateBack: () -> Unit, modifier: Modifier = Modifie
                 StreaksHeroCard(report = report)
             }
 
-            // Heatmap Card: Actividad Anual
-            item {
-                HeatmapCard(report = report)
+            // Frequency by week, month or year
+            uiState.frequency?.let { frequency ->
+                item {
+                    FrequencyCard(panel = frequency, onEvent = viewModel::onEvent)
+                }
             }
 
             // Day of week distribution
@@ -230,75 +229,6 @@ private fun StreaksHeroCard(report: ActivityHeatmapStatsReport) {
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
-            }
-        }
-    }
-}
-
-@Composable
-private fun HeatmapCard(report: ActivityHeatmapStatsReport) {
-    // One step above the card, or empty days (and the legend's "none" square) vanish into it.
-    val baseColor = MaterialTheme.colorScheme.raised
-    val highlightColor = MaterialTheme.colorScheme.primary
-
-    HdCard(modifier = Modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            Text(
-                text = stringResource(R.string.activity_frequency),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                text = pluralStringResource(R.plurals.activity_sessions_last_year, report.totalSessions, report.totalSessions),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            HdActivityHeatmap(
-                data = report.activityByDay,
-                modifier = Modifier.fillMaxWidth(),
-                baseColor = baseColor,
-                highlightColor = highlightColor
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Intensity legend
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = stringResource(R.string.activity_less),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-
-                listOf(0f, 0.25f, 0.5f, 0.75f, 1f).forEach { fraction ->
-                    Box(
-                        modifier = Modifier
-                            .padding(horizontal = 2.dp)
-                            .size(11.dp)
-                            .clip(RoundedCornerShape(2.dp))
-                            .background(lerp(baseColor, highlightColor, fraction))
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = stringResource(R.string.activity_more),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
             }
         }
     }

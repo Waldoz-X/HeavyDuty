@@ -1,6 +1,7 @@
 package com.example.heavyduty.feature.stats.domain.usecase
 
 import com.example.heavyduty.core.domain.model.Clock
+import com.example.heavyduty.core.domain.model.WorkoutSession
 import com.example.heavyduty.core.domain.model.WorkoutStatus
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
 import java.util.Calendar
@@ -34,8 +35,15 @@ enum class TimeSlot(val startHour: Int, val endHour: Int) {
 
 data class TimeSlotStat(val slot: TimeSlot, val count: Int, val percentage: Float)
 
+/** What was trained on one calendar day: finished workouts and their minutes. */
+data class DayTotals(val sessions: Int, val minutes: Float)
+
 data class ActivityHeatmapStatsReport(
-    val activityByDay: Map<Long, Float> = emptyMap(),
+    /**
+     * Every day with a finished workout, keyed by its local midnight — the whole history, not
+     * just the last year, so the frequency calendar can be browsed back to the first workout.
+     */
+    val dailyTotals: Map<Long, DayTotals> = emptyMap(),
     val totalDaysTrained: Int = 0,
     val totalSessions: Int = 0,
     val totalHoursTrained: Float = 0f,
@@ -56,12 +64,9 @@ data class ActivityHeatmapStatsReport(
 
 private const val HEATMAP_WEEKS = 53
 
-/** The lightest shade a day with any workout gets — the legend's first step past "none". */
-internal const val MIN_TRAINED_DAY_INTENSITY = 0.25f
-
 /**
  * Aggregates training activity over the last ~53 weeks:
- * - Normalized intensity grid for GitHub-style heatmap.
+ * - Workouts and minutes per day, over the whole history, for the frequency calendar.
  * - Current and longest daily streaks.
  * - Current and longest weekly streaks.
  * - Day of week frequency and time-of-day distribution.
@@ -109,13 +114,6 @@ class GetTrainingActivityHeatmapUseCase @Inject constructor(private val workoutR
             val hour = calendar.get(Calendar.HOUR_OF_DAY)
             val slot = TimeSlot.ofHour(hour)
             sessionsByTimeSlot[slot] = (sessionsByTimeSlot[slot] ?: 0) + 1
-        }
-
-        val maxMinutes = minutesByDay.values.maxOrNull()?.coerceAtLeast(1f) ?: 1f
-        // Any trained day starts at the legend's first shade: scaled straight by the longest day,
-        // an hour beside a forgotten 35-hour workout came out at 0.03 — the same as no workout.
-        val normalizedHeatmap = minutesByDay.mapValues { (_, minutes) ->
-            MIN_TRAINED_DAY_INTENSITY + (1f - MIN_TRAINED_DAY_INTENSITY) * (minutes / maxMinutes).coerceIn(0f, 1f)
         }
 
         // Racha diaria
@@ -247,7 +245,7 @@ class GetTrainingActivityHeatmapUseCase @Inject constructor(private val workoutR
         val consistencyPct = (trainedDays.size.toFloat() / 365f * 100f).coerceIn(0f, 100f)
 
         ActivityHeatmapStatsReport(
-            activityByDay = normalizedHeatmap,
+            dailyTotals = dailyTotals(sessions.filter { it.status == WorkoutStatus.COMPLETED }),
             totalDaysTrained = trainedDays.size,
             totalSessions = totalSessions,
             totalHoursTrained = totalHours,
@@ -265,4 +263,18 @@ class GetTrainingActivityHeatmapUseCase @Inject constructor(private val workoutR
             favoriteTimeSlot = favoriteSlot
         )
     }.distinctUntilChanged().flowOn(Dispatchers.Default)
+}
+
+private fun dailyTotals(completed: List<WorkoutSession>): Map<Long, DayTotals> {
+    val calendar = Calendar.getInstance()
+    return completed
+        .groupBy { session ->
+            calendar.timeInMillis = session.startTime
+            calendar.set(Calendar.HOUR_OF_DAY, 0)
+            calendar.set(Calendar.MINUTE, 0)
+            calendar.set(Calendar.SECOND, 0)
+            calendar.set(Calendar.MILLISECOND, 0)
+            calendar.timeInMillis
+        }
+        .mapValues { (_, day) -> DayTotals(sessions = day.size, minutes = day.sumOf { it.totalDurationSecs } / 60f) }
 }

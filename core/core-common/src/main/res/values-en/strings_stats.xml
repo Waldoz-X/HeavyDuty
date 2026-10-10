@@ -14,7 +14,7 @@
     <string name="stats_monthly_title">Monthly report</string>
     <string name="stats_monthly_desc">A summary of your workouts and stats for the month.</string>
     <string name="stats_activity_title">Activity map</string>
-    <string name="stats_activity_desc">A year of workouts at a glance, GitHub style.</string>
+    <string name="stats_activity_desc">Your training frequency by week, month and year.</string>
     <string name="stats_bodyweight_title">Body weight</string>
     <string name="stats_bodyweight_desc">Chart and analysis of your weight progress.</string>
     <string name="stats_muscles_by_day">Muscles trained per day</string>
@@ -70,10 +70,19 @@
     <string name="activity_days_trained">Days trained</string>
     <string name="activity_yearly_consistency">Yearly consistency</string>
     <string name="activity_frequency">Workout frequency</string>
-    <plurals name="activity_sessions_last_year">
-        <item quantity="one">%1$d workout finished in the last year</item>
-        <item quantity="other">%1$d workouts finished in the last year</item>
+    <string name="frequency_view_week">Week</string>
+    <string name="frequency_view_month">Month</string>
+    <string name="frequency_view_year">Year</string>
+    <string name="frequency_previous">Previous period</string>
+    <string name="frequency_next">Next period</string>
+    <plurals name="frequency_sessions">
+        <item quantity="one">%1$d workout</item>
+        <item quantity="other">%1$d workouts</item>
     </plurals>
+    <string name="frequency_week_caption">Time trained per day</string>
+    <string name="frequency_hours">%1$s h</string>
+    <string name="frequency_year_caption">Days trained per month</string>
+    <string name="frequency_empty">No workouts in this period</string>
     <string name="activity_less">Less</string>
     <string name="activity_more">More</string>
     <string name="activity_weekly_distribution">Weekly pattern</string>
