@@ -135,10 +135,7 @@ private fun StreaksHeroCard(report: ActivityHeatmapStatsReport) {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Icon(
                     imageVector = Icons.Default.LocalFireDepartment,
                     contentDescription = null,
@@ -152,86 +149,66 @@ private fun StreaksHeroCard(report: ActivityHeatmapStatsReport) {
                     color = MaterialTheme.colorScheme.onSurface
                 )
             }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = stringResource(R.string.activity_current_streak),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = pluralStringResource(R.plurals.activity_days, report.currentStreakDays, report.currentStreakDays),
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    Text(
-                        text = pluralStringResource(R.plurals.activity_record_days, report.longestStreakDays, report.longestStreakDays),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = stringResource(R.string.activity_active_weeks),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = pluralStringResource(R.plurals.activity_weeks, report.currentStreakWeeks, report.currentStreakWeeks),
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.secondary
-                    )
-                    Text(
-                        text = pluralStringResource(R.plurals.activity_record_weeks, report.longestStreakWeeks, report.longestStreakWeeks),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                StreakFigure(
+                    label = stringResource(R.string.activity_current_streak),
+                    value = pluralStringResource(R.plurals.activity_days, report.currentStreakDays, report.currentStreakDays),
+                    record = pluralStringResource(R.plurals.activity_record_days, report.longestStreakDays, report.longestStreakDays),
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.weight(1f)
+                )
+                StreakFigure(
+                    label = stringResource(R.string.activity_active_weeks),
+                    value = pluralStringResource(R.plurals.activity_weeks, report.currentStreakWeeks, report.currentStreakWeeks),
+                    record = pluralStringResource(R.plurals.activity_record_weeks, report.longestStreakWeeks, report.longestStreakWeeks),
+                    color = MaterialTheme.colorScheme.secondary,
+                    modifier = Modifier.weight(1f)
+                )
             }
+            HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.padding(vertical = 4.dp))
+            StreakTotals(report = report)
+        }
+    }
+}
 
-            HorizontalDivider(
-                color = MaterialTheme.colorScheme.surfaceVariant,
-                modifier = Modifier.padding(vertical = 4.dp)
+/** A streak now, big, with its record under it. */
+@Composable
+private fun StreakFigure(label: String, value: String, record: String, color: Color, modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {
+        Text(text = label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(text = value, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = color)
+        Text(text = record, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+/** Days trained in the last year, and the share of the year they are. */
+@Composable
+private fun StreakTotals(report: ActivityHeatmapStatsReport, modifier: Modifier = Modifier) {
+    Row(modifier = modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        Column {
+            Text(
+                text = stringResource(R.string.activity_days_trained),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Column {
-                    Text(
-                        text = stringResource(R.string.activity_days_trained),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = pluralStringResource(R.plurals.activity_days, report.totalDaysTrained, report.totalDaysTrained),
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        text = stringResource(R.string.activity_yearly_consistency),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = "${report.consistencyPercentage.formatOneDecimal()}%",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-            }
+            Text(
+                text = pluralStringResource(R.plurals.activity_days, report.totalDaysTrained, report.totalDaysTrained),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+        Column(horizontalAlignment = Alignment.End) {
+            Text(
+                text = stringResource(R.string.activity_yearly_consistency),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = "${report.consistencyPercentage.formatOneDecimal()}%",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.primary
+            )
         }
     }
 }
@@ -256,9 +233,11 @@ private fun DayOfWeekDistributionCard(report: ActivityHeatmapStatsReport) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 report.dayOfWeekDistribution.forEach { stat ->
                     val isFavorite = stat.dayOfWeek == report.favoriteDayOfWeek
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
+                    DistributionRow(
+                        count = stat.count,
+                        percentage = stat.percentage,
+                        color = MaterialTheme.colorScheme.primary,
+                        isFavorite = isFavorite
                     ) {
                         Text(
                             text = weekdayName(stat.dayOfWeek),
@@ -267,34 +246,6 @@ private fun DayOfWeekDistributionCard(report: ActivityHeatmapStatsReport) {
                             color = if (isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                             // Room for the longest weekday name ("Wednesday", "Miércoles") plus a gap.
                             modifier = Modifier.width(108.dp)
-                        )
-
-                        LinearProgressIndicator(
-                            progress = { (stat.percentage / 100f).coerceIn(0f, 1f) },
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(8.dp)
-                                .clip(RoundedCornerShape(4.dp)),
-                            color = if (isFavorite) {
-                                MaterialTheme.colorScheme.primary
-                            } else {
-                                MaterialTheme.colorScheme.primary.copy(
-                                    alpha = 0.6f
-                                )
-                            },
-                            trackColor = MaterialTheme.colorScheme.surfaceVariant
-                        )
-
-                        Spacer(modifier = Modifier.width(8.dp))
-
-                        Text(
-                            text = "${stat.count} (${stat.percentage.roundToInt()}%)",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.End,
-                            maxLines = 1,
-                            // A minimum, not a fixed width: with large text "1 (100%)" broke over two lines.
-                            modifier = Modifier.widthIn(min = 64.dp)
                         )
                     }
                 }
@@ -367,9 +318,11 @@ private fun TimeSlotDistributionCard(report: ActivityHeatmapStatsReport) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 report.timeSlotDistribution.forEach { slot ->
                     val isFavorite = slot.slot == report.favoriteTimeSlot
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
+                    DistributionRow(
+                        count = slot.count,
+                        percentage = slot.percentage,
+                        color = MaterialTheme.colorScheme.secondary,
+                        isFavorite = isFavorite
                     ) {
                         Column(modifier = Modifier.width(115.dp)) {
                             Text(
@@ -384,38 +337,44 @@ private fun TimeSlotDistributionCard(report: ActivityHeatmapStatsReport) {
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-
-                        LinearProgressIndicator(
-                            progress = { (slot.percentage / 100f).coerceIn(0f, 1f) },
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(8.dp)
-                                .clip(RoundedCornerShape(4.dp)),
-                            color = if (isFavorite) {
-                                MaterialTheme.colorScheme.secondary
-                            } else {
-                                MaterialTheme.colorScheme.secondary.copy(
-                                    alpha = 0.6f
-                                )
-                            },
-                            trackColor = MaterialTheme.colorScheme.surfaceVariant
-                        )
-
-                        Spacer(modifier = Modifier.width(8.dp))
-
-                        Text(
-                            text = "${slot.count} (${slot.percentage.roundToInt()}%)",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.End,
-                            maxLines = 1,
-                            // A minimum, not a fixed width: with large text "1 (100%)" broke over two lines.
-                            modifier = Modifier.widthIn(min = 64.dp)
-                        )
                     }
                 }
             }
         }
+    }
+}
+
+/** [label], then a bar of [percentage] (full colour for the favourite), then "count (pct%)". */
+@Composable
+private fun DistributionRow(
+    count: Int,
+    percentage: Float,
+    color: Color,
+    isFavorite: Boolean,
+    modifier: Modifier = Modifier,
+    label: @Composable () -> Unit
+) {
+    Row(modifier = modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        label()
+        LinearProgressIndicator(
+            progress = { (percentage / 100f).coerceIn(0f, 1f) },
+            modifier = Modifier
+                .weight(1f)
+                .height(8.dp)
+                .clip(RoundedCornerShape(4.dp)),
+            color = if (isFavorite) color else color.copy(alpha = 0.6f),
+            trackColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = "$count (${percentage.roundToInt()}%)",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.End,
+            maxLines = 1,
+            // A minimum, not a fixed width: with large text "1 (100%)" broke over two lines.
+            modifier = Modifier.widthIn(min = 64.dp)
+        )
     }
 }
 
@@ -429,72 +388,31 @@ private fun OverviewMetricsCard(report: ActivityHeatmapStatsReport) {
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Timer,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(22.dp)
-                )
-                Text(
-                    text = "${report.totalHoursTrained.formatOneDecimal()} h",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = stringResource(R.string.activity_total_hours),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Schedule,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(22.dp)
-                )
-                Text(
-                    text = stringResource(R.string.duration_minutes, report.avgMinutesPerSession),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = stringResource(R.string.activity_avg_session),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.DateRange,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(22.dp)
-                )
-                Text(
-                    text = "${report.activeWeeksCount}/${report.totalWeeksInWindow}",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = stringResource(R.string.activity_active_weeks),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+            OverviewMetric(
+                Icons.Default.Timer,
+                "${report.totalHoursTrained.formatOneDecimal()} h",
+                stringResource(R.string.activity_total_hours)
+            )
+            OverviewMetric(
+                Icons.Default.Schedule,
+                stringResource(R.string.duration_minutes, report.avgMinutesPerSession),
+                stringResource(R.string.activity_avg_session)
+            )
+            OverviewMetric(
+                Icons.Default.DateRange,
+                "${report.activeWeeksCount}/${report.totalWeeksInWindow}",
+                stringResource(R.string.activity_active_weeks)
+            )
         }
+    }
+}
+
+@Composable
+private fun OverviewMetric(icon: ImageVector, value: String, label: String, modifier: Modifier = Modifier) {
+    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Icon(imageVector = icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
+        Text(text = value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        Text(text = label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 

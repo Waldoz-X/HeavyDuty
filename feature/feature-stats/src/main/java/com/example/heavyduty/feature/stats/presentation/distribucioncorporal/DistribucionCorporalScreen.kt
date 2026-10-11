@@ -70,102 +70,113 @@ fun DistribucionCorporalScreen(
         },
         modifier = modifier.fillMaxSize()
     ) { innerPadding ->
-        if (uiState.isLoading) {
-            HdCardsSkeleton(modifier = Modifier.padding(innerPadding).padding(16.dp), heights = listOf(48.dp, 400.dp, 120.dp))
-            return@Scaffold
-        }
-        if (uiState.loadFailed) {
-            HdErrorState(modifier = Modifier.padding(innerPadding))
-            return@Scaffold
-        }
-
-        val baseColor = MaterialTheme.colorScheme.surfaceContainerHigh
-        val fatiguedColor = MaterialTheme.colorScheme.error
-        val strongColor = MaterialTheme.colorScheme.tertiary
-
-        val categoryColors: Map<MuscleGroup, Color>? = when (uiState.mode) {
-            BodyMapMode.FATIGUE -> uiState.fatigueByMuscle.entries.associate { (muscle, level) ->
-                muscle to lerp(baseColor, fatiguedColor, level.coerceIn(0f, 1f))
-            }
-
-            BodyMapMode.STRENGTH -> uiState.strengthByMuscle.entries.associate { (muscle, retention) ->
-                // Retention floors at 0.5 (see strengthRetention), so normalize that range to
-                // 0..1 before interpolating — otherwise the floor would never read as "base."
-                val fraction = ((retention - 0.5f) / 0.5f).coerceIn(0f, 1f)
-                muscle to lerp(baseColor, strongColor, fraction)
-            }
-
-            BodyMapMode.VOLUME -> null
-        }
-
-        Column(
-            modifier = Modifier
-                .padding(innerPadding)
-                .padding(16.dp)
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-        ) {
-            HdPeriodSelector(
-                selected = uiState.selectedPeriod,
-                onSelect = { viewModel.onEvent(DistribucionCorporalUiEvent.OnPeriodChange(it)) }
+        when {
+            uiState.isLoading -> HdCardsSkeleton(
+                modifier = Modifier.padding(innerPadding).padding(16.dp),
+                heights = listOf(48.dp, 400.dp, 120.dp)
             )
-            Spacer(modifier = Modifier.height(12.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                HdChip(
-                    text = stringResource(R.string.metric_volume),
-                    isSelected = uiState.mode == BodyMapMode.VOLUME,
-                    onClick = { viewModel.onEvent(DistribucionCorporalUiEvent.OnModeChange(BodyMapMode.VOLUME)) }
-                )
-                HdChip(
-                    text = stringResource(R.string.stats_fatigue),
-                    isSelected = uiState.mode == BodyMapMode.FATIGUE,
-                    onClick = { viewModel.onEvent(DistribucionCorporalUiEvent.OnModeChange(BodyMapMode.FATIGUE)) }
-                )
-                HdChip(
-                    text = stringResource(R.string.metric_strength),
-                    isSelected = uiState.mode == BodyMapMode.STRENGTH,
-                    onClick = { viewModel.onEvent(DistribucionCorporalUiEvent.OnModeChange(BodyMapMode.STRENGTH)) }
-                )
-            }
-            Spacer(modifier = Modifier.height(12.dp))
 
-            when (uiState.mode) {
-                BodyMapMode.FATIGUE -> {
-                    GradientLegend(
-                        startColor = baseColor,
-                        endColor = fatiguedColor,
-                        startLabel = stringResource(R.string.stats_fresh),
-                        endLabel = stringResource(R.string.stats_fatigued)
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                }
+            uiState.loadFailed -> HdErrorState(modifier = Modifier.padding(innerPadding))
 
-                BodyMapMode.STRENGTH -> {
-                    GradientLegend(
-                        startColor = baseColor,
-                        endColor = strongColor,
-                        startLabel = stringResource(R.string.stats_long_ago),
-                        endLabel = stringResource(R.string.stats_recently_trained)
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                }
-
-                BodyMapMode.VOLUME -> Unit
-            }
-
-            HdBodyDiagram(
-                muscleValues = uiState.volumeByMuscle,
-                gender = uiState.gender,
-                baseColor = baseColor,
-                categoryColors = categoryColors,
+            else -> BodyMapContent(
+                uiState = uiState,
+                onEvent = viewModel::onEvent,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(400.dp)
+                    .padding(innerPadding)
+                    .padding(16.dp)
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
             )
-            Spacer(modifier = Modifier.height(16.dp))
-            BodyPeriodTotals(summary = uiState.summary)
         }
     }
+}
+
+@Composable
+private fun BodyMapContent(
+    uiState: DistribucionCorporalUiState,
+    onEvent: (DistribucionCorporalUiEvent) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val baseColor = MaterialTheme.colorScheme.surfaceContainerHigh
+    val fatiguedColor = MaterialTheme.colorScheme.error
+    val strongColor = MaterialTheme.colorScheme.tertiary
+    Column(modifier = modifier) {
+        HdPeriodSelector(selected = uiState.selectedPeriod, onSelect = { onEvent(DistribucionCorporalUiEvent.OnPeriodChange(it)) })
+        Spacer(modifier = Modifier.height(12.dp))
+        ModeChips(mode = uiState.mode, onSelect = { onEvent(DistribucionCorporalUiEvent.OnModeChange(it)) })
+        Spacer(modifier = Modifier.height(12.dp))
+        when (uiState.mode) {
+            BodyMapMode.FATIGUE -> {
+                GradientLegend(
+                    startColor = baseColor,
+                    endColor = fatiguedColor,
+                    startLabel = stringResource(R.string.stats_fresh),
+                    endLabel = stringResource(R.string.stats_fatigued)
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            BodyMapMode.STRENGTH -> {
+                GradientLegend(
+                    startColor = baseColor,
+                    endColor = strongColor,
+                    startLabel = stringResource(R.string.stats_long_ago),
+                    endLabel = stringResource(R.string.stats_recently_trained)
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            BodyMapMode.VOLUME -> Unit
+        }
+        HdBodyDiagram(
+            muscleValues = uiState.volumeByMuscle,
+            gender = uiState.gender,
+            baseColor = baseColor,
+            categoryColors = muscleColors(uiState, baseColor = baseColor, fatiguedColor = fatiguedColor, strongColor = strongColor),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(400.dp)
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        BodyPeriodTotals(summary = uiState.summary)
+    }
+}
+
+@Composable
+private fun ModeChips(mode: BodyMapMode, onSelect: (BodyMapMode) -> Unit, modifier: Modifier = Modifier) {
+    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        listOf(
+            BodyMapMode.VOLUME to R.string.metric_volume,
+            BodyMapMode.FATIGUE to R.string.stats_fatigue,
+            BodyMapMode.STRENGTH to R.string.metric_strength
+        ).forEach { (option, label) ->
+            HdChip(text = stringResource(label), isSelected = mode == option, onClick = { onSelect(option) })
+        }
+    }
+}
+
+/**
+ * Each muscle's colour in the fatigue and strength modes, from [baseColor] towards the mode's
+ * colour; null in volume mode, where the diagram shades by volume itself.
+ */
+private fun muscleColors(
+    uiState: DistribucionCorporalUiState,
+    baseColor: Color,
+    fatiguedColor: Color,
+    strongColor: Color
+): Map<MuscleGroup, Color>? = when (uiState.mode) {
+    BodyMapMode.FATIGUE -> uiState.fatigueByMuscle.entries.associate { (muscle, level) ->
+        muscle to lerp(baseColor, fatiguedColor, level.coerceIn(0f, 1f))
+    }
+
+    BodyMapMode.STRENGTH -> uiState.strengthByMuscle.entries.associate { (muscle, retention) ->
+        // Retention floors at 0.5 (see strengthRetention), so normalize that range to
+        // 0..1 before interpolating — otherwise the floor would never read as "base."
+        val fraction = ((retention - 0.5f) / 0.5f).coerceIn(0f, 1f)
+        muscle to lerp(baseColor, strongColor, fraction)
+    }
+
+    BodyMapMode.VOLUME -> null
 }
 
 /** Workouts / duration / volume / sets tiles, each with a delta vs. the previous period. */

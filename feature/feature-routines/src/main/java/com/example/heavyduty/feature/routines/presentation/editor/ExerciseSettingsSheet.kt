@@ -38,6 +38,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,6 +51,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -269,43 +271,53 @@ private fun AdvancedSection(routineExercise: RoutineExercise, isTimeBased: Boole
                 }
                 if (routineExercise.progressionPolicy != ProgressionPolicy.OFF) {
                     Spacer(modifier = Modifier.height(12.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        NumberStepper(
-                            label = stringResource(
-                                if (isTimeBased) R.string.routine_time_range_min else R.string.routine_rep_range_min
-                            ),
-                            value = routineExercise.repRangeLow.toFloat(),
-                            step = if (isTimeBased) 5f else 1f,
-                            range = 1f..routineExercise.repRangeHigh.toFloat(),
-                            onValueChange = { onUpdate(routineExercise.copy(repRangeLow = it.roundToInt())) },
-                            modifier = Modifier.weight(1f)
-                        )
-                        NumberStepper(
-                            label = stringResource(
-                                if (isTimeBased) R.string.routine_time_range_max else R.string.routine_rep_range_max
-                            ),
-                            value = routineExercise.repRangeHigh.toFloat(),
-                            step = if (isTimeBased) 5f else 1f,
-                            range = routineExercise.repRangeLow.toFloat()..600f,
-                            onValueChange = { onUpdate(routineExercise.copy(repRangeHigh = it.roundToInt())) },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                    val showStall = routineExercise.progressionPolicy == ProgressionPolicy.LINEAR ||
-                        routineExercise.progressionPolicy == ProgressionPolicy.GREYSKULL_LP
-                    if (showStall) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        NumberStepper(
-                            label = stringResource(R.string.routine_stall_threshold),
-                            value = routineExercise.stallThreshold.toFloat(),
-                            step = 1f,
-                            range = 1f..10f,
-                            onValueChange = { onUpdate(routineExercise.copy(stallThreshold = it.roundToInt())) },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
+                    ProgressionSettings(routineExercise = routineExercise, isTimeBased = isTimeBased, onUpdate = onUpdate)
                 }
             }
+        }
+    }
+}
+
+/** The range the progression aims for and, for the linear ones, after how many misses it deloads. */
+@Composable
+private fun ProgressionSettings(
+    routineExercise: RoutineExercise,
+    isTimeBased: Boolean,
+    onUpdate: (RoutineExercise) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val step = if (isTimeBased) 5f else 1f
+    Column(modifier = modifier) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            NumberStepper(
+                label = stringResource(if (isTimeBased) R.string.routine_time_range_min else R.string.routine_rep_range_min),
+                value = routineExercise.repRangeLow.toFloat(),
+                step = step,
+                range = 1f..routineExercise.repRangeHigh.toFloat(),
+                onValueChange = { onUpdate(routineExercise.copy(repRangeLow = it.roundToInt())) },
+                modifier = Modifier.weight(1f)
+            )
+            NumberStepper(
+                label = stringResource(if (isTimeBased) R.string.routine_time_range_max else R.string.routine_rep_range_max),
+                value = routineExercise.repRangeHigh.toFloat(),
+                step = step,
+                range = routineExercise.repRangeLow.toFloat()..600f,
+                onValueChange = { onUpdate(routineExercise.copy(repRangeHigh = it.roundToInt())) },
+                modifier = Modifier.weight(1f)
+            )
+        }
+        val showStall = routineExercise.progressionPolicy == ProgressionPolicy.LINEAR ||
+            routineExercise.progressionPolicy == ProgressionPolicy.GREYSKULL_LP
+        if (showStall) {
+            Spacer(modifier = Modifier.height(8.dp))
+            NumberStepper(
+                label = stringResource(R.string.routine_stall_threshold),
+                value = routineExercise.stallThreshold.toFloat(),
+                step = 1f,
+                range = 1f..10f,
+                onValueChange = { onUpdate(routineExercise.copy(stallThreshold = it.roundToInt())) },
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 }
@@ -341,7 +353,7 @@ private fun UnitToggle(unit: WeightUnit, onUnitChange: (WeightUnit) -> Unit) {
  * exact number (e.g. 62.5).
  */
 @Composable
-private fun NumberStepper(
+internal fun NumberStepper(
     label: String?,
     value: Float,
     step: Float,
@@ -353,24 +365,18 @@ private fun NumberStepper(
     format: ((Float) -> String)? = null
 ) {
     val display: (Float) -> String = format ?: { if (decimals) it.formatDecimal() else it.roundToInt().toString() }
-    fun textOf(v: Float) = display(v).let { TextFieldValue(it, TextRange(it.length)) }
-    var field by remember { mutableStateOf(textOf(value)) }
-    var isFocused by remember { mutableStateOf(false) }
-    // The tap that focuses the field also places the cursor, after onFocusChanged runs — so the
-    // "select everything" is applied to that first cursor placement instead.
-    var selectAllOnTap by remember { mutableStateOf(false) }
+    val fieldState = remember { StepperFieldState(display(value)) }
     // Follow outside changes (a rest preset, a unit switch) — but never while the user is typing,
     // or the half-typed text would be replaced mid-keystroke.
-    LaunchedEffect(value, isFocused) {
-        if (!isFocused && field.text.replace(',', '.').toFloatOrNull() != value) field = textOf(value)
+    LaunchedEffect(value, fieldState.isFocused) {
+        if (!fieldState.isFocused && fieldState.field.text.replace(',', '.').toFloatOrNull() != value) fieldState.show(display(value))
     }
     // − / + set the number and the text together, focused or not.
     val stepBy: (Float) -> Unit = { delta ->
         val next = snap(value + delta, step).coerceIn(range)
-        field = textOf(next)
+        fieldState.show(display(next))
         onValueChange(next)
     }
-    val editable = format == null
 
     Column(modifier = modifier) {
         if (label != null) {
@@ -391,10 +397,7 @@ private fun NumberStepper(
                 .padding(4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            FilledTonalIconButton(
-                onClick = { stepBy(-step) },
-                enabled = value > range.start
-            ) {
+            FilledTonalIconButton(onClick = { stepBy(-step) }, enabled = value > range.start) {
                 Icon(Icons.Default.Remove, contentDescription = stringResource(R.string.routine_decrease))
             }
             Box(
@@ -403,67 +406,103 @@ private fun NumberStepper(
                     .fillMaxHeight(),
                 contentAlignment = Alignment.Center
             ) {
-                val style = MaterialTheme.typography.titleLarge.copy(
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontFeatureSettings = "tnum"
-                )
-                if (editable) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        BasicTextField(
-                            value = field,
-                            onValueChange = { input ->
-                                if (selectAllOnTap && input.text == field.text) {
-                                    selectAllOnTap = false
-                                    field = field.copy(selection = TextRange(0, field.text.length))
-                                    return@BasicTextField
-                                }
-                                selectAllOnTap = false
-                                val cleaned = input.text.filter { it.isDigit() || (decimals && (it == '.' || it == ',')) }.replace(',', '.')
-                                field = if (cleaned == input.text) input else TextFieldValue(cleaned, TextRange(cleaned.length))
-                                cleaned.toFloatOrNull()?.let { onValueChange(it.coerceIn(range)) }
-                            },
-                            singleLine = true,
-                            textStyle = style,
-                            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = if (decimals) KeyboardType.Decimal else KeyboardType.Number,
-                                imeAction = ImeAction.Done
-                            ),
-                            // Tapping selects the whole number, so typing replaces it instead of
-                            // landing mid-number ("0" + "180" used to become "1800").
-                            modifier = Modifier
-                                .width(IntrinsicTextWidth)
-                                .onFocusChanged { focus ->
-                                    if (focus.isFocused && !isFocused) {
-                                        field = field.copy(selection = TextRange(0, field.text.length))
-                                        selectAllOnTap = true
-                                    }
-                                    isFocused = focus.isFocused
-                                }
-                        )
-                        if (suffix != null) {
-                            Text(
-                                text = suffix,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
+                // A formatted value (a rest time like "1:30") is shown, not typed.
+                if (format == null) {
+                    StepperTextField(state = fieldState, decimals = decimals, suffix = suffix, onNumber = {
+                        onValueChange(it.coerceIn(range))
+                    })
                 } else {
-                    Text(text = display(value), style = style)
+                    Text(text = display(value), style = stepperValueStyle())
                 }
             }
-            FilledTonalIconButton(
-                onClick = { stepBy(step) },
-                enabled = value < range.endInclusive
-            ) {
+            FilledTonalIconButton(onClick = { stepBy(step) }, enabled = value < range.endInclusive) {
                 Icon(Icons.Default.Add, contentDescription = stringResource(R.string.routine_increase))
             }
         }
     }
 }
+
+/**
+ * What the stepper's text field shows, and how taps and typing change it. Tapping selects the
+ * whole number, so typing replaces it instead of landing mid-number ("0" + "180" used to become
+ * "1800"); only digits — and with [decimals], one separator, comma or point — get through.
+ */
+@Stable
+internal class StepperFieldState(initialText: String) {
+    var field by mutableStateOf(endCursor(initialText))
+        private set
+    var isFocused by mutableStateOf(false)
+        private set
+
+    // The tap that focuses the field also places the cursor, after onFocusChanged runs — so the
+    // "select everything" is applied to that first cursor placement instead.
+    private var selectAllOnTap = false
+
+    fun show(text: String) {
+        field = endCursor(text)
+    }
+
+    fun onFocusChange(focused: Boolean) {
+        if (focused && !isFocused) {
+            field = field.copy(selection = TextRange(0, field.text.length))
+            selectAllOnTap = true
+        }
+        isFocused = focused
+    }
+
+    /** Applies what was typed; returns the number it now reads, if any. */
+    fun onInput(input: TextFieldValue, decimals: Boolean): Float? {
+        if (selectAllOnTap && input.text == field.text) {
+            selectAllOnTap = false
+            field = field.copy(selection = TextRange(0, field.text.length))
+            return null
+        }
+        selectAllOnTap = false
+        val cleaned = input.text.filter { it.isDigit() || (decimals && (it == '.' || it == ',')) }.replace(',', '.')
+        field = if (cleaned == input.text) input else endCursor(cleaned)
+        return cleaned.toFloatOrNull()
+    }
+
+    private fun endCursor(text: String) = TextFieldValue(text, TextRange(text.length))
+}
+
+@Composable
+private fun StepperTextField(
+    state: StepperFieldState,
+    decimals: Boolean,
+    suffix: String?,
+    onNumber: (Float) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
+        BasicTextField(
+            value = state.field,
+            onValueChange = { input -> state.onInput(input, decimals)?.let(onNumber) },
+            singleLine = true,
+            textStyle = stepperValueStyle(),
+            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = if (decimals) KeyboardType.Decimal else KeyboardType.Number,
+                imeAction = ImeAction.Done
+            ),
+            modifier = Modifier
+                .width(IntrinsicTextWidth)
+                .onFocusChanged { state.onFocusChange(it.isFocused) }
+        )
+        if (suffix != null) {
+            Text(text = suffix, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
+/** Big, bold, centred, with digits of equal width so the number doesn't jitter as it changes. */
+@Composable
+private fun stepperValueStyle(): TextStyle = MaterialTheme.typography.titleLarge.copy(
+    fontWeight = FontWeight.Bold,
+    textAlign = TextAlign.Center,
+    color = MaterialTheme.colorScheme.onSurface,
+    fontFeatureSettings = "tnum"
+)
 
 private val IntrinsicTextWidth = 88.dp
 

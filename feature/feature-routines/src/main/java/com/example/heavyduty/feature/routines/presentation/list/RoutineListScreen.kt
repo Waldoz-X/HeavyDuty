@@ -52,6 +52,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.heavyduty.core.common.R
 import com.example.heavyduty.core.domain.model.Routine
+import com.example.heavyduty.core.domain.model.RoutineExercise
 import com.example.heavyduty.core.ui.components.HdButton
 import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdEmptyState
@@ -111,148 +112,92 @@ fun RoutineListScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         modifier = modifier
     ) { innerPadding ->
-        Column(
+        RoutineListContent(
+            uiState = uiState,
+            onEvent = viewModel::onEvent,
+            onDelete = { routineToDelete = it },
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
                 .padding(horizontal = 16.dp)
-        ) {
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = stringResource(R.string.routine_list_title),
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-
-            when {
-                uiState.isLoading -> {
-                    LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(3) { HdSkeletonCard() }
-                    }
-                }
-
-                uiState.loadFailed -> HdErrorState()
-
-                uiState.routines.isEmpty() -> {
-                    HdEmptyState(
-                        icon = Icons.AutoMirrored.Filled.ListAlt,
-                        title = stringResource(R.string.routine_list_empty_title),
-                        description = stringResource(R.string.routine_list_empty_description)
-                    )
-                }
-
-                else -> {
-                    LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(10.dp),
-                        contentPadding = PaddingValues(bottom = 96.dp)
-                    ) {
-                        items(items = uiState.routines, key = { it.id }) { routine ->
-                            RoutineListItem(
-                                routine = routine,
-                                onClick = { viewModel.onEvent(RoutineListUiEvent.OnRoutineClick(routine.id)) },
-                                onStart = { viewModel.onEvent(RoutineListUiEvent.OnStartRoutine(routine.id)) },
-                                onDelete = { routineToDelete = routine }
-                            )
-                        }
-                    }
-                }
-            }
-        }
+        )
     }
 
     routineToDelete?.let { routine ->
-        AlertDialog(
-            onDismissRequest = { routineToDelete = null },
-            title = { Text(stringResource(R.string.routine_delete_title, routine.name)) },
-            text = { Text(stringResource(R.string.routine_delete_message)) },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        routineToDelete = null
-                        viewModel.onEvent(RoutineListUiEvent.OnDeleteRoutine(routine))
-                    }
-                ) { Text(stringResource(R.string.routine_delete), color = MaterialTheme.colorScheme.error) }
+        DeleteRoutineDialog(
+            name = routine.name,
+            onConfirm = {
+                routineToDelete = null
+                viewModel.onEvent(RoutineListUiEvent.OnDeleteRoutine(routine))
             },
-            dismissButton = {
-                TextButton(onClick = { routineToDelete = null }) { Text(stringResource(R.string.routine_cancel)) }
-            }
+            onDismiss = { routineToDelete = null }
         )
     }
 }
 
 @Composable
-private fun RoutineListItem(routine: Routine, onClick: () -> Unit, onStart: () -> Unit, onDelete: () -> Unit) {
-    var showMenu by remember { mutableStateOf(false) }
-    HdCard(onClick = onClick) {
-        Row(verticalAlignment = Alignment.Top) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = routine.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                val details = buildList {
-                    add(stringResource(routine.type.nameResId))
-                    if (routine.exercises.isNotEmpty()) {
-                        add(pluralStringResource(R.plurals.workout_exercise_count, routine.exercises.size, routine.exercises.size))
-                        val totalSets = routine.exercises.sumOf { it.targetSets }
-                        add(pluralStringResource(R.plurals.routine_summary, totalSets, totalSets, estimatedMinutes(routine)))
-                    }
-                }
-                Text(
-                    text = details.joinToString(" · "),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            Box {
-                IconButton(onClick = { showMenu = true }) {
-                    Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.routine_more_options))
-                }
-                DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.routine_menu_edit)) },
-                        leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null) },
-                        onClick = {
-                            showMenu = false
-                            onClick()
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.routine_delete), color = MaterialTheme.colorScheme.error) },
-                        leadingIcon = {
-                            Icon(Icons.Default.DeleteOutline, contentDescription = null, tint = MaterialTheme.colorScheme.error)
-                        },
-                        onClick = {
-                            showMenu = false
-                            onDelete()
-                        }
+private fun RoutineListContent(
+    uiState: RoutineListUiState,
+    onEvent: (RoutineListUiEvent) -> Unit,
+    onDelete: (Routine) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = stringResource(R.string.routine_list_title),
+            style = MaterialTheme.typography.headlineMedium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        when {
+            uiState.isLoading -> LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) { items(3) { HdSkeletonCard() } }
+
+            uiState.loadFailed -> HdErrorState()
+
+            uiState.routines.isEmpty() -> HdEmptyState(
+                icon = Icons.AutoMirrored.Filled.ListAlt,
+                title = stringResource(R.string.routine_list_empty_title),
+                description = stringResource(R.string.routine_list_empty_description)
+            )
+
+            else -> LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(bottom = 96.dp)) {
+                items(items = uiState.routines, key = { it.id }) { routine ->
+                    RoutineListItem(
+                        routine = routine,
+                        onClick = { onEvent(RoutineListUiEvent.OnRoutineClick(routine.id)) },
+                        onStart = { onEvent(RoutineListUiEvent.OnStartRoutine(routine.id)) },
+                        onDelete = { onDelete(routine) }
                     )
                 }
             }
         }
+    }
+}
 
+@Composable
+private fun DeleteRoutineDialog(name: String, onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.routine_delete_title, name)) },
+        text = { Text(stringResource(R.string.routine_delete_message)) },
+        confirmButton = {
+            TextButton(onClick = onConfirm) { Text(stringResource(R.string.routine_delete), color = MaterialTheme.colorScheme.error) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.routine_cancel)) }
+        }
+    )
+}
+
+@Composable
+private fun RoutineListItem(routine: Routine, onClick: () -> Unit, onStart: () -> Unit, onDelete: () -> Unit) {
+    HdCard(onClick = onClick) {
+        RoutineItemHeader(routine = routine, onEdit = onClick, onDelete = onDelete)
         if (routine.exercises.isNotEmpty()) {
             Spacer(modifier = Modifier.height(10.dp))
-            // The first exercises at a glance, so routines are recognizable without opening them.
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                routine.exercises.take(MAX_THUMBNAILS).forEach { HdExerciseThumbnail(exercise = it.exercise, size = 40.dp) }
-                val remaining = routine.exercises.size - MAX_THUMBNAILS
-                if (remaining > 0) {
-                    Text(
-                        text = "+$remaining",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(start = 4.dp)
-                    )
-                }
-            }
+            ExerciseThumbnails(exercises = routine.exercises)
         }
-
         if (routine.description.isNotBlank()) {
             Spacer(modifier = Modifier.height(8.dp))
             Text(
@@ -263,7 +208,6 @@ private fun RoutineListItem(routine: Routine, onClick: () -> Unit, onStart: () -
                 overflow = TextOverflow.Ellipsis
             )
         }
-
         if (routine.exercises.isNotEmpty()) {
             Spacer(modifier = Modifier.height(12.dp))
             HdButton(
@@ -271,6 +215,77 @@ private fun RoutineListItem(routine: Routine, onClick: () -> Unit, onStart: () -
                 onClick = onStart,
                 icon = Icons.Default.PlayArrow,
                 modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
+
+/** Name, type and size of the routine, and its edit / delete menu. */
+@Composable
+private fun RoutineItemHeader(routine: Routine, onEdit: () -> Unit, onDelete: () -> Unit, modifier: Modifier = Modifier) {
+    var showMenu by remember { mutableStateOf(false) }
+    Row(modifier = modifier, verticalAlignment = Alignment.Top) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = routine.name,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            val details = buildList {
+                add(stringResource(routine.type.nameResId))
+                if (routine.exercises.isNotEmpty()) {
+                    add(pluralStringResource(R.plurals.workout_exercise_count, routine.exercises.size, routine.exercises.size))
+                    val totalSets = routine.exercises.sumOf { it.targetSets }
+                    add(pluralStringResource(R.plurals.routine_summary, totalSets, totalSets, estimatedMinutes(routine)))
+                }
+            }
+            Text(
+                text = details.joinToString(" · "),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Box {
+            IconButton(onClick = { showMenu = true }) {
+                Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.routine_more_options))
+            }
+            DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.routine_menu_edit)) },
+                    leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null) },
+                    onClick = {
+                        showMenu = false
+                        onEdit()
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.routine_delete), color = MaterialTheme.colorScheme.error) },
+                    leadingIcon = { Icon(Icons.Default.DeleteOutline, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+                    onClick = {
+                        showMenu = false
+                        onDelete()
+                    }
+                )
+            }
+        }
+    }
+}
+
+/** The first exercises at a glance, so routines are recognizable without opening them. */
+@Composable
+private fun ExerciseThumbnails(exercises: List<RoutineExercise>, modifier: Modifier = Modifier) {
+    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+        exercises.take(MAX_THUMBNAILS).forEach { HdExerciseThumbnail(exercise = it.exercise, size = 40.dp) }
+        val remaining = exercises.size - MAX_THUMBNAILS
+        if (remaining > 0) {
+            Text(
+                text = "+$remaining",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(start = 4.dp)
             )
         }
     }

@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.stats.presentation.main
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -42,6 +43,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.heavyduty.core.common.R
+import com.example.heavyduty.core.domain.model.MuscleGroup
+import com.example.heavyduty.core.ui.components.BodyGender
 import com.example.heavyduty.core.ui.components.HdBodyDiagram
 import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdCardsSkeleton
@@ -66,6 +69,18 @@ fun EstadisticasScreen(
     viewModel: EstadisticasViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val open: (AdvancedStat) -> Unit = { stat ->
+        when (stat) {
+            AdvancedStat.SERIES -> onNavigateToSeries()
+            AdvancedStat.RADAR -> onNavigateToDistribucionRadar()
+            AdvancedStat.BODY -> onNavigateToDistribucionCuerpo()
+            AdvancedStat.TOP -> onNavigateToPrincipales()
+            AdvancedStat.RECORDS -> onNavigateToClasificacion()
+            AdvancedStat.MONTHLY -> onNavigateToInformeMensual()
+            AdvancedStat.ACTIVITY -> onNavigateToMapaActividad()
+            AdvancedStat.BODY_WEIGHT -> onNavigateToPesoCorporal()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -80,152 +95,107 @@ fun EstadisticasScreen(
         },
         modifier = modifier.fillMaxSize()
     ) { innerPadding ->
-        if (uiState.isLoading) {
-            HdCardsSkeleton(
+        when {
+            uiState.isLoading -> HdCardsSkeleton(
                 modifier = Modifier
                     .padding(innerPadding)
                     .padding(16.dp),
                 heights = listOf(140.dp, 220.dp, 120.dp, 120.dp)
             )
-            return@Scaffold
-        }
-        if (uiState.loadFailed) {
-            HdErrorState(modifier = Modifier.padding(innerPadding))
-            return@Scaffold
-        }
 
-        val advancedStats = listOf(
-            AdvancedStatRow(
-                icon = Icons.Default.Timeline,
-                title = stringResource(R.string.stats_series_title),
-                description = stringResource(R.string.stats_series_desc),
-                onClick = onNavigateToSeries
-            ),
-            AdvancedStatRow(
-                icon = Icons.Default.PieChart,
-                title = stringResource(R.string.stats_radar_title),
-                description = stringResource(R.string.stats_radar_desc),
-                onClick = onNavigateToDistribucionRadar
-            ),
-            AdvancedStatRow(
-                icon = Icons.Default.Accessibility,
-                title = stringResource(R.string.stats_body_title),
-                description = stringResource(R.string.stats_body_desc),
-                onClick = onNavigateToDistribucionCuerpo
-            ),
-            AdvancedStatRow(
-                icon = Icons.Default.EmojiEvents,
-                title = stringResource(R.string.stats_top_title),
-                description = stringResource(R.string.stats_top_desc),
-                onClick = onNavigateToPrincipales
-            ),
-            AdvancedStatRow(
-                icon = Icons.Default.Leaderboard,
-                title = stringResource(R.string.stats_records_title),
-                description = stringResource(R.string.stats_records_desc),
-                onClick = onNavigateToClasificacion
-            ),
-            AdvancedStatRow(
-                icon = Icons.Default.CalendarMonth,
-                title = stringResource(R.string.stats_monthly_title),
-                description = stringResource(R.string.stats_monthly_desc),
-                onClick = onNavigateToInformeMensual
-            ),
-            AdvancedStatRow(
-                icon = Icons.Default.DateRange,
-                title = stringResource(R.string.stats_activity_title),
-                description = stringResource(R.string.stats_activity_desc),
-                onClick = onNavigateToMapaActividad
-            ),
-            AdvancedStatRow(
-                icon = Icons.Default.Timeline,
-                title = stringResource(R.string.stats_bodyweight_title),
-                description = stringResource(R.string.stats_bodyweight_desc),
-                onClick = onNavigateToPesoCorporal
+            uiState.loadFailed -> HdErrorState(modifier = Modifier.padding(innerPadding))
+
+            else -> StatsContent(
+                uiState = uiState,
+                onDaySelect = { viewModel.onEvent(EstadisticasUiEvent.OnDaySelected(it)) },
+                onOpen = open,
+                // The top bar's height: without it the first cards sat hidden under the title.
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
             )
-        )
+        }
+    }
+}
 
-        LazyColumn(
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            // The top bar's height: without it the first cards sat hidden under the title.
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
-            item {
-                SummaryCard(summary = uiState.summary)
-            }
+@Composable
+private fun StatsContent(
+    uiState: EstadisticasUiState,
+    onDaySelect: (Long) -> Unit,
+    onOpen: (AdvancedStat) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    LazyColumn(
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        modifier = modifier
+    ) {
+        item { SummaryCard(summary = uiState.summary) }
+        item {
+            Text(
+                text = stringResource(R.string.stats_muscles_by_day),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+        item { DayPicker(days = uiState.days, onSelect = onDaySelect) }
+        item { DayBodyDiagram(volumeByMuscle = uiState.selectedDayVolumeByMuscle, gender = uiState.gender) }
+        item {
+            Text(
+                text = stringResource(R.string.stats_advanced),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+        items(AdvancedStat.entries) { stat -> AdvancedStatCard(stat = stat, onClick = { onOpen(stat) }) }
+    }
+}
 
-            item {
-                Text(
-                    text = stringResource(R.string.stats_muscles_by_day),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
-
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    uiState.days.forEach { day ->
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            HdChip(
-                                text = day.dayLetter,
-                                isSelected = day.isSelected,
-                                onClick = { viewModel.onEvent(EstadisticasUiEvent.OnDaySelected(day.dateMillis)) }
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = day.dayNumber,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                }
-            }
-
-            item {
-                val volumeByMuscle = uiState.selectedDayVolumeByMuscle
-                HdBodyDiagram(
-                    muscleValues = volumeByMuscle,
-                    gender = uiState.gender,
-                    modifier = Modifier.fillMaxWidth().height(240.dp)
-                )
-                if (volumeByMuscle.isEmpty()) {
-                    Text(
-                        text = stringResource(R.string.stats_no_workout_day),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
-
-            item {
-                Text(
-                    text = stringResource(R.string.stats_advanced),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-
-            items(advancedStats) { stat ->
-                AdvancedStatCard(stat)
+/** The last seven days; the selected one's muscles show on the diagram below. */
+@Composable
+private fun DayPicker(days: List<DayChipUi>, onSelect: (Long) -> Unit, modifier: Modifier = Modifier) {
+    Row(modifier = modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        days.forEach { day ->
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                HdChip(text = day.dayLetter, isSelected = day.isSelected, onClick = { onSelect(day.dateMillis) })
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(text = day.dayNumber, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
 }
 
-private data class AdvancedStatRow(val icon: ImageVector, val title: String, val description: String, val onClick: () -> Unit)
+@Composable
+private fun DayBodyDiagram(volumeByMuscle: Map<MuscleGroup, Float>, gender: BodyGender, modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {
+        HdBodyDiagram(muscleValues = volumeByMuscle, gender = gender, modifier = Modifier.fillMaxWidth().height(240.dp))
+        if (volumeByMuscle.isEmpty()) {
+            Text(
+                text = stringResource(R.string.stats_no_workout_day),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+/** The deeper statistics, each a screen of its own. */
+private enum class AdvancedStat(val icon: ImageVector, @param:StringRes val title: Int, @param:StringRes val description: Int) {
+    SERIES(Icons.Default.Timeline, R.string.stats_series_title, R.string.stats_series_desc),
+    RADAR(Icons.Default.PieChart, R.string.stats_radar_title, R.string.stats_radar_desc),
+    BODY(Icons.Default.Accessibility, R.string.stats_body_title, R.string.stats_body_desc),
+    TOP(Icons.Default.EmojiEvents, R.string.stats_top_title, R.string.stats_top_desc),
+    RECORDS(Icons.Default.Leaderboard, R.string.stats_records_title, R.string.stats_records_desc),
+    MONTHLY(Icons.Default.CalendarMonth, R.string.stats_monthly_title, R.string.stats_monthly_desc),
+    ACTIVITY(Icons.Default.DateRange, R.string.stats_activity_title, R.string.stats_activity_desc),
+    BODY_WEIGHT(Icons.Default.Timeline, R.string.stats_bodyweight_title, R.string.stats_bodyweight_desc)
+}
 
 @Composable
-private fun AdvancedStatCard(stat: AdvancedStatRow, modifier: Modifier = Modifier) {
-    HdCard(modifier = modifier, onClick = stat.onClick) {
+private fun AdvancedStatCard(stat: AdvancedStat, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    HdCard(modifier = modifier, onClick = onClick) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
                 imageVector = stat.icon,
@@ -236,13 +206,13 @@ private fun AdvancedStatCard(stat: AdvancedStatRow, modifier: Modifier = Modifie
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = stat.title,
+                    text = stringResource(stat.title),
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    text = stat.description,
+                    text = stringResource(stat.description),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

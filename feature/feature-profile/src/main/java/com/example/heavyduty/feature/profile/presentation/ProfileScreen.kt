@@ -3,7 +3,6 @@ package com.example.heavyduty.feature.profile.presentation
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,13 +15,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.FileDownload
-import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.MonitorWeight
@@ -49,15 +47,12 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.heavyduty.core.common.R
 import com.example.heavyduty.core.domain.model.HealthConnectStatus
-import com.example.heavyduty.core.domain.model.WeightUnit
 import com.example.heavyduty.core.ui.components.HdBarChart
 import com.example.heavyduty.core.ui.components.HdButton
 import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdCardsSkeleton
-import com.example.heavyduty.core.ui.components.HdChip
 import com.example.heavyduty.core.ui.components.HdErrorState
 import com.example.heavyduty.core.ui.components.HdTextButton
-import com.example.heavyduty.core.ui.components.HdTonalButton
 import com.example.heavyduty.core.ui.components.WorkoutFeedCard
 import com.example.heavyduty.core.ui.formatTotalWeight
 import com.example.heavyduty.feature.profile.presentation.health.HealthConnectCard
@@ -144,7 +139,6 @@ private fun ProfileContent(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item { Spacer(modifier = Modifier.height(16.dp)) }
-
         item {
             Text(
                 text = stringResource(R.string.profile_title),
@@ -152,243 +146,22 @@ private fun ProfileContent(
                 color = MaterialTheme.colorScheme.onSurface
             )
         }
-
-        item {
-            ProfileHeader(uiState = uiState, onEvent = onEvent)
-        }
-
+        item { ProfileHeader(uiState = uiState, onEvent = onEvent) }
         if (uiState.weeklyHoursChartData.isNotEmpty()) {
-            item {
-                HdCard(modifier = Modifier.fillMaxWidth()) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            text = stringResource(R.string.profile_hours_trained),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        HdBarChart(
-                            data = uiState.weeklyHoursChartData,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                }
-            }
+            item { WeeklyHoursCard(data = uiState.weeklyHoursChartData) }
         }
-
+        item { GlobalStats(uiState = uiState) }
+        item { StatsLinkCard(onClick = onNavigateToStats) }
+        settingsItems(uiState = uiState, onEvent = onEvent, healthConnectCard = healthConnectCard)
         item {
-            Text(
-                text = stringResource(R.string.profile_global_stats),
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                StatCard(
-                    icon = Icons.Default.FitnessCenter,
-                    label = stringResource(R.string.profile_workouts),
-                    value = uiState.stats.totalWorkouts.toString(),
-                    modifier = Modifier.weight(1f)
-                )
-                StatCard(
-                    icon = Icons.Default.MonitorWeight,
-                    label = stringResource(R.string.metric_volume),
-                    value = uiState.stats.totalVolumeKg.formatTotalWeight(),
-                    modifier = Modifier.weight(1f)
-                )
-                StatCard(
-                    icon = Icons.Default.LocalFireDepartment,
-                    label = stringResource(R.string.profile_current_streak),
-                    value = stringResource(R.string.profile_streak_days, uiState.currentStreakDays),
-                    modifier = Modifier.weight(1f)
-                )
-            }
-        }
-
-        item {
-            HdCard(modifier = Modifier.fillMaxWidth(), onClick = onNavigateToStats) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.QueryStats,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = stringResource(R.string.profile_view_stats),
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        }
-
-        item {
-            HdCard(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    text = stringResource(R.string.profile_body_figure),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = stringResource(R.string.profile_body_figure_hint),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    HdChip(
-                        text = stringResource(R.string.profile_body_male),
-                        isSelected = uiState.bodyDiagramGender == "male",
-                        onClick = { onEvent(ProfileUiEvent.OnBodyDiagramGenderChange("male")) }
-                    )
-                    HdChip(
-                        text = stringResource(R.string.profile_body_female),
-                        isSelected = uiState.bodyDiagramGender == "female",
-                        onClick = { onEvent(ProfileUiEvent.OnBodyDiagramGenderChange("female")) }
-                    )
-                }
-            }
-        }
-
-        item {
-            HdCard(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    text = stringResource(R.string.profile_effort),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = stringResource(R.string.profile_effort_hint),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    HdChip(
-                        text = stringResource(R.string.profile_off),
-                        isSelected = !uiState.effortTrackingEnabled,
-                        onClick = { onEvent(ProfileUiEvent.OnEffortTrackingEnabledChange(false)) }
-                    )
-                    HdChip(
-                        text = stringResource(R.string.profile_on),
-                        isSelected = uiState.effortTrackingEnabled,
-                        onClick = { onEvent(ProfileUiEvent.OnEffortTrackingEnabledChange(true)) }
-                    )
-                }
-                if (uiState.effortTrackingEnabled) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        HdChip(
-                            text = "RIR",
-                            isSelected = uiState.preferredEffortScale == "RIR",
-                            onClick = { onEvent(ProfileUiEvent.OnPreferredEffortScaleChange("RIR")) }
-                        )
-                        HdChip(
-                            text = "RPE",
-                            isSelected = uiState.preferredEffortScale == "RPE",
-                            onClick = { onEvent(ProfileUiEvent.OnPreferredEffortScaleChange("RPE")) }
-                        )
-                    }
-                }
-            }
-        }
-
-        item {
-            ThemeModeCard(selected = uiState.themeMode, onSelect = { onEvent(ProfileUiEvent.OnThemeModeChange(it)) })
-        }
-
-        item {
-            TrainingReminderCard(
-                reminder = uiState.reminder,
-                onEnabledChange = { onEvent(ProfileUiEvent.OnReminderEnabledChange(it)) },
-                onTimeChange = { hour, minute -> onEvent(ProfileUiEvent.OnReminderTimeChange(hour, minute)) }
+            YourDataCard(
+                isBusy = uiState.isExportingData || uiState.isImportingData,
+                message = uiState.backupMessage,
+                onExportClick = onExportClick,
+                onImportClick = onImportClick,
+                onDismissMessage = { onEvent(ProfileUiEvent.OnDismissBackupMessage) }
             )
         }
-
-        item { healthConnectCard() }
-
-        item {
-            HdCard(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    text = stringResource(R.string.profile_weight_unit),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = stringResource(R.string.profile_weight_unit_hint),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    HdChip(
-                        text = stringResource(R.string.profile_unit_kg),
-                        isSelected = uiState.preferredWeightUnit == WeightUnit.KG,
-                        onClick = { onEvent(ProfileUiEvent.OnPreferredWeightUnitChange(WeightUnit.KG)) }
-                    )
-                    HdChip(
-                        text = stringResource(R.string.profile_unit_lb),
-                        isSelected = uiState.preferredWeightUnit == WeightUnit.LB,
-                        onClick = { onEvent(ProfileUiEvent.OnPreferredWeightUnitChange(WeightUnit.LB)) }
-                    )
-                }
-            }
-        }
-
-        item {
-            HdCard(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    text = stringResource(R.string.profile_your_data),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = stringResource(R.string.profile_your_data_hint),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    HdTonalButton(
-                        text = stringResource(R.string.profile_export),
-                        onClick = onExportClick,
-                        icon = Icons.Default.FileDownload,
-                        enabled = !uiState.isExportingData && !uiState.isImportingData
-                    )
-                    HdTonalButton(
-                        text = stringResource(R.string.profile_import),
-                        onClick = onImportClick,
-                        icon = Icons.Default.FileUpload,
-                        enabled = !uiState.isExportingData && !uiState.isImportingData
-                    )
-                }
-                if (uiState.isExportingData || uiState.isImportingData) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = stringResource(R.string.profile_processing),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                uiState.backupMessage?.let { message ->
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = message,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.clickable { onEvent(ProfileUiEvent.OnDismissBackupMessage) }
-                    )
-                }
-            }
-        }
-
         item {
             Spacer(modifier = Modifier.height(16.dp))
             Text(
@@ -397,15 +170,107 @@ private fun ProfileContent(
                 color = MaterialTheme.colorScheme.onSurface
             )
         }
-
-        items(uiState.feedItems) { feedItem ->
-            WorkoutFeedCard(item = feedItem)
-        }
-
+        items(uiState.feedItems) { feedItem -> WorkoutFeedCard(item = feedItem) }
         item { Spacer(modifier = Modifier.height(32.dp)) }
     }
 }
 
+/** The settings cards, in the order Perfil lists them. */
+private fun LazyListScope.settingsItems(
+    uiState: ProfileUiState,
+    onEvent: (ProfileUiEvent) -> Unit,
+    healthConnectCard: @Composable () -> Unit
+) {
+    item { BodyFigureSetting(gender = uiState.bodyDiagramGender, onChange = { onEvent(ProfileUiEvent.OnBodyDiagramGenderChange(it)) }) }
+    item {
+        EffortSetting(
+            enabled = uiState.effortTrackingEnabled,
+            scale = uiState.preferredEffortScale,
+            onEnabledChange = { onEvent(ProfileUiEvent.OnEffortTrackingEnabledChange(it)) },
+            onScaleChange = { onEvent(ProfileUiEvent.OnPreferredEffortScaleChange(it)) }
+        )
+    }
+    item { ThemeModeCard(selected = uiState.themeMode, onSelect = { onEvent(ProfileUiEvent.OnThemeModeChange(it)) }) }
+    item {
+        TrainingReminderCard(
+            reminder = uiState.reminder,
+            onEnabledChange = { onEvent(ProfileUiEvent.OnReminderEnabledChange(it)) },
+            onTimeChange = { hour, minute -> onEvent(ProfileUiEvent.OnReminderTimeChange(hour, minute)) }
+        )
+    }
+    item { healthConnectCard() }
+    item { WeightUnitSetting(unit = uiState.preferredWeightUnit, onChange = { onEvent(ProfileUiEvent.OnPreferredWeightUnitChange(it)) }) }
+}
+
+@Composable
+private fun WeeklyHoursCard(data: List<Pair<String, Float>>, modifier: Modifier = Modifier) {
+    HdCard(modifier = modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = stringResource(R.string.profile_hours_trained),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            HdBarChart(data = data, modifier = Modifier.fillMaxWidth())
+        }
+    }
+}
+
+@Composable
+private fun GlobalStats(uiState: ProfileUiState, modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {
+        Text(
+            text = stringResource(R.string.profile_global_stats),
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            StatCard(
+                icon = Icons.Default.FitnessCenter,
+                label = stringResource(R.string.profile_workouts),
+                value = uiState.stats.totalWorkouts.toString(),
+                modifier = Modifier.weight(1f)
+            )
+            StatCard(
+                icon = Icons.Default.MonitorWeight,
+                label = stringResource(R.string.metric_volume),
+                value = uiState.stats.totalVolumeKg.formatTotalWeight(),
+                modifier = Modifier.weight(1f)
+            )
+            StatCard(
+                icon = Icons.Default.LocalFireDepartment,
+                label = stringResource(R.string.profile_current_streak),
+                value = stringResource(R.string.profile_streak_days, uiState.currentStreakDays),
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
+
+@Composable
+private fun StatsLinkCard(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    HdCard(modifier = modifier.fillMaxWidth(), onClick = onClick) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(imageVector = Icons.Default.QueryStats, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = stringResource(R.string.profile_view_stats),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f)
+            )
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+/** The initial, the name, and editing it in place. */
 @Composable
 private fun ProfileHeader(uiState: ProfileUiState, onEvent: (ProfileUiEvent) -> Unit, modifier: Modifier = Modifier) {
     HdCard(modifier = modifier.fillMaxWidth()) {
@@ -423,34 +288,9 @@ private fun ProfileHeader(uiState: ProfileUiState, onEvent: (ProfileUiEvent) -> 
                     color = MaterialTheme.colorScheme.onPrimary
                 )
             }
-
             Spacer(modifier = Modifier.width(16.dp))
-
             if (uiState.isEditingName) {
-                Column(modifier = Modifier.weight(1f)) {
-                    OutlinedTextField(
-                        value = uiState.nameInput,
-                        onValueChange = { onEvent(ProfileUiEvent.OnNameInputChange(it)) },
-                        placeholder = { Text(stringResource(R.string.profile_name_placeholder)) },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary
-                        )
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row {
-                        HdButton(
-                            text = stringResource(R.string.action_save),
-                            onClick = { onEvent(ProfileUiEvent.OnSaveName) }
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        HdTextButton(
-                            text = stringResource(R.string.action_cancel),
-                            onClick = { onEvent(ProfileUiEvent.OnCancelEditingName) }
-                        )
-                    }
-                }
+                NameEditor(name = uiState.nameInput, onEvent = onEvent, modifier = Modifier.weight(1f))
             } else {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
@@ -472,6 +312,26 @@ private fun ProfileHeader(uiState: ProfileUiState, onEvent: (ProfileUiEvent) -> 
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun NameEditor(name: String, onEvent: (ProfileUiEvent) -> Unit, modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {
+        OutlinedTextField(
+            value = name,
+            onValueChange = { onEvent(ProfileUiEvent.OnNameInputChange(it)) },
+            placeholder = { Text(stringResource(R.string.profile_name_placeholder)) },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = MaterialTheme.colorScheme.primary)
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Row {
+            HdButton(text = stringResource(R.string.action_save), onClick = { onEvent(ProfileUiEvent.OnSaveName) })
+            Spacer(modifier = Modifier.width(8.dp))
+            HdTextButton(text = stringResource(R.string.action_cancel), onClick = { onEvent(ProfileUiEvent.OnCancelEditingName) })
         }
     }
 }

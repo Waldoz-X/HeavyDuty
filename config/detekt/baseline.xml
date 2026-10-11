@@ -2,8 +2,6 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>CyclomaticComplexMethod:ExerciseListScreen.kt:@Composable private fun ExerciseListContent</ID>
-    <ID>CyclomaticComplexMethod:ExerciseSettingsSheet.kt:@Composable private fun NumberStepper</ID>
     <ID>CyclomaticComplexMethod:MainActivity.kt:@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class) @Composable private fun HeavyDutyMainScreen</ID>
     <ID>CyclomaticComplexMethod:SeedData.kt:SeedData$suspend fun populateExercises</ID>
     <ID>LongMethod:ActiveWorkoutBar.kt:@Composable fun ActiveWorkoutBar</ID>
@@ -13,16 +11,7 @@
     <ID>LongMethod:BodyWeightStatsScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun BodyWeightStatsScreen</ID>
     <ID>LongMethod:DashboardScreen.kt:@Composable private fun BodyWeightCard</ID>
     <ID>LongMethod:DashboardScreen.kt:@Composable private fun TodayCard</ID>
-    <ID>LongMethod:DistribucionCorporalScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun DistribucionCorporalScreen</ID>
     <ID>LongMethod:DistribucionMuscularScreen.kt:@Composable private fun PeriodTotals</ID>
-    <ID>LongMethod:EstadisticasScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun EstadisticasScreen</ID>
-    <ID>LongMethod:ExerciseDetailScreen.kt:@Composable private fun ExerciseDetailContent</ID>
-    <ID>LongMethod:ExerciseListScreen.kt:@Composable private fun ExerciseListContent</ID>
-    <ID>LongMethod:ExerciseListScreen.kt:@Composable private fun ExerciseListItem</ID>
-    <ID>LongMethod:ExerciseListScreen.kt:@Composable private fun SelectableExerciseRow</ID>
-    <ID>LongMethod:ExerciseListScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun ExerciseListScreen</ID>
-    <ID>LongMethod:ExerciseSettingsSheet.kt:@Composable private fun AdvancedSection</ID>
-    <ID>LongMethod:ExerciseSettingsSheet.kt:@Composable private fun NumberStepper</ID>
     <ID>LongMethod:HdBarChart.kt:@Composable fun HdBarChart</ID>
     <ID>LongMethod:HdLineChart.kt:@Composable fun HdLineChart</ID>
     <ID>LongMethod:HdRadarChart.kt:@Composable fun HdRadarChart</ID>
@@ -33,16 +22,8 @@
     <ID>LongMethod:InformeMensualScreen.kt:@Composable private fun TopExercisesCard</ID>
     <ID>LongMethod:InformeMensualScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun InformeMensualScreen</ID>
     <ID>LongMethod:MainActivity.kt:@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class) @Composable private fun HeavyDutyMainScreen</ID>
-    <ID>LongMethod:MapaActividadScreen.kt:@Composable private fun OverviewMetricsCard</ID>
-    <ID>LongMethod:MapaActividadScreen.kt:@Composable private fun StreaksHeroCard</ID>
-    <ID>LongMethod:MapaActividadScreen.kt:@Composable private fun TimeSlotDistributionCard</ID>
-    <ID>LongMethod:ProfileScreen.kt:@Composable private fun ProfileContent</ID>
-    <ID>LongMethod:ProfileScreen.kt:@Composable private fun ProfileHeader</ID>
     <ID>LongMethod:RoutineEditorScreen.kt:@Composable private fun EditorContent</ID>
-    <ID>LongMethod:RoutineEditorScreen.kt:@Composable private fun sh.calvin.reorderable.ReorderableCollectionItemScope.ExerciseRow</ID>
     <ID>LongMethod:RoutineEditorScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun RoutineEditorScreen</ID>
-    <ID>LongMethod:RoutineListScreen.kt:@Composable fun RoutineListScreen</ID>
-    <ID>LongMethod:RoutineListScreen.kt:@Composable private fun RoutineListItem</ID>
     <ID>LongMethod:SeedData.kt:SeedData$suspend fun populateExercises</ID>
     <ID>LongMethod:SetTable.kt:@Composable private fun ActiveSetRow</ID>
     <ID>LongMethod:TimerScreen.kt:@Composable fun TimerScreen</ID>

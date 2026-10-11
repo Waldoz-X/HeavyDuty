@@ -27,7 +27,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.AlertDialog
@@ -112,43 +111,10 @@ fun ExerciseListScreen(
     if (selectionMode) {
         Scaffold(
             modifier = modifier,
-            topBar = {
-                TopAppBar(
-                    title = {
-                        Text(
-                            text = if (uiState.selectedIds.isEmpty()) {
-                                stringResource(R.string.exercises_pick_title)
-                            } else {
-                                val count = uiState.selectedIds.size
-                                pluralStringResource(R.plurals.exercises_selected_count, count, count)
-                            }
-                        )
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = onCancelSelection) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = stringResource(R.string.action_cancel)
-                            )
-                        }
-                    }
-                )
-            },
+            topBar = { SelectionTopBar(selectedCount = uiState.selectedIds.size, onCancel = onCancelSelection) },
             bottomBar = {
                 if (uiState.selectedIds.isNotEmpty()) {
-                    Surface(shadowElevation = 8.dp) {
-                        HdButton(
-                            text = pluralStringResource(
-                                R.plurals.exercises_add_to_routine,
-                                uiState.selectedIds.size,
-                                uiState.selectedIds.size
-                            ),
-                            onClick = { onConfirmSelection(uiState.selectedIds.toList()) },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp)
-                        )
-                    }
+                    AddSelectionBar(count = uiState.selectedIds.size, onConfirm = { onConfirmSelection(uiState.selectedIds.toList()) })
                 }
             }
         ) { innerPadding ->
@@ -169,6 +135,41 @@ fun ExerciseListScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SelectionTopBar(selectedCount: Int, onCancel: () -> Unit, modifier: Modifier = Modifier) {
+    TopAppBar(
+        modifier = modifier,
+        title = {
+            Text(
+                text = if (selectedCount == 0) {
+                    stringResource(R.string.exercises_pick_title)
+                } else {
+                    pluralStringResource(R.plurals.exercises_selected_count, selectedCount, selectedCount)
+                }
+            )
+        },
+        navigationIcon = {
+            IconButton(onClick = onCancel) {
+                Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_cancel))
+            }
+        }
+    )
+}
+
+@Composable
+private fun AddSelectionBar(count: Int, onConfirm: () -> Unit, modifier: Modifier = Modifier) {
+    Surface(modifier = modifier, shadowElevation = 8.dp) {
+        HdButton(
+            text = pluralStringResource(R.plurals.exercises_add_to_routine, count, count),
+            onClick = onConfirm,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        )
+    }
+}
+
 @Composable
 private fun ExerciseListContent(
     uiState: ExerciseListUiState,
@@ -182,7 +183,6 @@ private fun ExerciseListContent(
             .padding(horizontal = 16.dp)
     ) {
         Spacer(modifier = Modifier.height(16.dp))
-
         if (!selectionMode) {
             Text(
                 text = stringResource(R.string.exercises_title),
@@ -191,16 +191,30 @@ private fun ExerciseListContent(
             )
             Spacer(modifier = Modifier.height(16.dp))
         }
-
         HdSearchBar(
             query = uiState.searchQuery,
             onQueryChange = { onEvent(ExerciseListUiEvent.OnSearchQueryChange(it)) },
             placeholder = stringResource(R.string.exercises_search_hint)
         )
-
         Spacer(modifier = Modifier.height(12.dp))
+        ExerciseFilters(uiState = uiState, onEvent = onEvent)
+        Spacer(modifier = Modifier.height(8.dp))
+        if (!uiState.isLoading) {
+            Text(
+                text = pluralStringResource(R.plurals.exercises_count, uiState.exercises.size, uiState.exercises.size),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+        ExerciseResults(uiState = uiState, onEvent = onEvent, selectionMode = selectionMode, modifier = Modifier.weight(1f))
+    }
+}
 
-        // Muscle group filter chips
+/** Muscle group chips, then — when the catalog has any — equipment chips. */
+@Composable
+private fun ExerciseFilters(uiState: ExerciseListUiState, onEvent: (ExerciseListUiEvent) -> Unit, modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             contentPadding = PaddingValues(vertical = 4.dp)
@@ -213,7 +227,6 @@ private fun ExerciseListContent(
                 )
             }
         }
-
         if (uiState.availableEquipment.isNotEmpty()) {
             Spacer(modifier = Modifier.height(8.dp))
             LazyRow(
@@ -229,240 +242,180 @@ private fun ExerciseListContent(
                 }
             }
         }
+    }
+}
 
-        Spacer(modifier = Modifier.height(8.dp))
-        if (!uiState.isLoading) {
-            Text(
-                text = pluralStringResource(R.plurals.exercises_count, uiState.exercises.size, uiState.exercises.size),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(modifier = Modifier.height(8.dp))
+/** Loading, failed, nothing matching — or the exercises. */
+@Composable
+private fun ExerciseResults(
+    uiState: ExerciseListUiState,
+    onEvent: (ExerciseListUiEvent) -> Unit,
+    selectionMode: Boolean,
+    modifier: Modifier = Modifier
+) {
+    when {
+        // Same shape as the rows that are coming, so nothing jumps when they arrive.
+        uiState.isLoading -> HdCardListSkeleton(modifier = modifier, rows = 5, thumbnailSize = if (selectionMode) 64.dp else 88.dp)
+
+        uiState.loadFailed -> HdErrorState(modifier = modifier)
+
+        uiState.exercises.isEmpty() -> NoExercisesFound(uiState = uiState, onEvent = onEvent, modifier = modifier)
+
+        else -> AnimatedVisibility(visible = true, enter = fadeIn(), exit = fadeOut(), modifier = modifier) {
+            ExerciseLazyList(uiState = uiState, onEvent = onEvent, selectionMode = selectionMode)
         }
+    }
+}
 
-        when {
-            uiState.isLoading -> {
-                // Same shape as the rows that are coming, so nothing jumps when they arrive.
-                HdCardListSkeleton(
-                    modifier = Modifier.weight(1f),
-                    rows = 5,
-                    thumbnailSize = if (selectionMode) 64.dp else 88.dp
-                )
-            }
-
-            uiState.loadFailed -> HdErrorState(modifier = Modifier.weight(1f))
-
-            uiState.exercises.isEmpty() -> {
-                val hasActiveFilters = uiState.searchQuery.isNotBlank() ||
-                    uiState.selectedFilter != null || uiState.selectedEquipment != null
-                HdEmptyState(
-                    icon = Icons.Default.FitnessCenter,
-                    title = stringResource(R.string.exercises_empty_title),
-                    description = if (uiState.searchQuery.isNotBlank()) {
-                        stringResource(R.string.exercises_empty_search)
-                    } else {
-                        stringResource(R.string.exercises_empty_default)
-                    },
-                    modifier = Modifier.weight(1f),
-                    action = if (hasActiveFilters) {
-                        {
-                            HdTonalButton(
-                                text = stringResource(R.string.exercises_clear_filters),
-                                onClick = {
-                                    onEvent(ExerciseListUiEvent.OnSearchQueryChange(""))
-                                    onEvent(ExerciseListUiEvent.OnFilterSelect(null))
-                                    onEvent(ExerciseListUiEvent.OnEquipmentFilterSelect(null))
-                                }
-                            )
-                        }
-                    } else {
-                        null
+@Composable
+private fun NoExercisesFound(uiState: ExerciseListUiState, onEvent: (ExerciseListUiEvent) -> Unit, modifier: Modifier = Modifier) {
+    val hasActiveFilters = uiState.searchQuery.isNotBlank() || uiState.selectedFilter != null || uiState.selectedEquipment != null
+    HdEmptyState(
+        icon = Icons.Default.FitnessCenter,
+        title = stringResource(R.string.exercises_empty_title),
+        description = stringResource(
+            if (uiState.searchQuery.isNotBlank()) R.string.exercises_empty_search else R.string.exercises_empty_default
+        ),
+        modifier = modifier,
+        action = if (hasActiveFilters) {
+            {
+                HdTonalButton(
+                    text = stringResource(R.string.exercises_clear_filters),
+                    onClick = {
+                        onEvent(ExerciseListUiEvent.OnSearchQueryChange(""))
+                        onEvent(ExerciseListUiEvent.OnFilterSelect(null))
+                        onEvent(ExerciseListUiEvent.OnEquipmentFilterSelect(null))
                     }
                 )
             }
+        } else {
+            null
+        }
+    )
+}
 
-            else -> {
-                AnimatedVisibility(
-                    visible = true,
-                    enter = fadeIn(),
-                    exit = fadeOut(),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    val listState = rememberLazyListState()
-                    // New results start at the top, not wherever the previous ones were scrolled to.
-                    // Keyed on the results themselves: keying on the query scrolled before the new
-                    // results arrived, and the list then kept its position by item key.
-                    LaunchedEffect(uiState.exercises) {
-                        listState.scrollToItem(0)
-                    }
-                    LazyColumn(
-                        state = listState,
-                        modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.spacedBy(if (selectionMode) 6.dp else 8.dp),
-                        contentPadding = PaddingValues(bottom = 16.dp)
-                    ) {
-                        items(
-                            items = uiState.exercises,
-                            key = { it.id }
-                        ) { exercise ->
-                            if (selectionMode) {
-                                val order = uiState.selectedIds.indexOf(exercise.id)
-                                SelectableExerciseRow(
-                                    exercise = exercise,
-                                    selectionOrder = if (order >= 0) order + 1 else null,
-                                    onToggle = { onEvent(ExerciseListUiEvent.OnToggleSelection(exercise.id)) },
-                                    onPreview = { onEvent(ExerciseListUiEvent.OnPreviewExercise(exercise)) }
-                                )
-                                return@items
-                            }
-                            ExerciseListItem(
-                                exercise = exercise,
-                                selectionMode = selectionMode,
-                                isSelected = exercise.id in uiState.selectedIds,
-                                onClick = {
-                                    if (selectionMode) {
-                                        onEvent(ExerciseListUiEvent.OnToggleSelection(exercise.id))
-                                    } else {
-                                        onEvent(ExerciseListUiEvent.OnExerciseClick(exercise.id))
-                                    }
-                                }
-                            )
-                        }
-                    }
-                }
+@Composable
+private fun ExerciseLazyList(
+    uiState: ExerciseListUiState,
+    onEvent: (ExerciseListUiEvent) -> Unit,
+    selectionMode: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val listState = rememberLazyListState()
+    // New results start at the top, not wherever the previous ones were scrolled to.
+    // Keyed on the results themselves: keying on the query scrolled before the new
+    // results arrived, and the list then kept its position by item key.
+    LaunchedEffect(uiState.exercises) {
+        listState.scrollToItem(0)
+    }
+    LazyColumn(
+        state = listState,
+        modifier = modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(if (selectionMode) 6.dp else 8.dp),
+        contentPadding = PaddingValues(bottom = 16.dp)
+    ) {
+        items(items = uiState.exercises, key = { it.id }) { exercise ->
+            if (selectionMode) {
+                val order = uiState.selectedIds.indexOf(exercise.id)
+                SelectableExerciseRow(
+                    exercise = exercise,
+                    selectionOrder = if (order >= 0) order + 1 else null,
+                    onToggle = { onEvent(ExerciseListUiEvent.OnToggleSelection(exercise.id)) },
+                    onPreview = { onEvent(ExerciseListUiEvent.OnPreviewExercise(exercise)) }
+                )
+            } else {
+                ExerciseListItem(exercise = exercise, onClick = { onEvent(ExerciseListUiEvent.OnExerciseClick(exercise.id)) })
             }
         }
     }
 }
 
 @Composable
-private fun ExerciseListItem(
-    exercise: Exercise,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    selectionMode: Boolean = false,
-    isSelected: Boolean = false
-) {
+private fun ExerciseListItem(exercise: Exercise, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val accent = exercise.muscleGroup.accentColor()
-
     Box(
         modifier = modifier
             .fillMaxWidth()
             .clip(MaterialTheme.shapes.large)
-            .background(
-                if (isSelected) accent.copy(alpha = 0.18f) else MaterialTheme.colorScheme.surfaceContainerHigh
-            )
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             // A thin accent outline instead of a colored drop shadow: on the dark theme the
             // shadow was barely visible, yet each card drew its own shadow layer, one of the
             // most expensive parts of scrolling this 1,300-item list.
-            .border(
-                width = if (isSelected) 2.dp else 1.dp,
-                color = if (isSelected) accent else accent.copy(alpha = 0.25f),
-                shape = MaterialTheme.shapes.large
-            )
+            .border(width = 1.dp, color = accent.copy(alpha = 0.25f), shape = MaterialTheme.shapes.large)
             .clickable(onClick = onClick)
             .padding(12.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(88.dp)
-                    // Grows into the detail screen's image when the exercise is opened.
-                    .hdSharedBounds(exerciseImageKey(exercise.id), RoundedCornerShape(14.dp))
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(
-                        Brush.linearGradient(
-                            listOf(accent.copy(alpha = 0.25f), accent.copy(alpha = 0.08f))
-                        )
-                    )
-            ) {
-                if (exercise.imageUrl.isNotBlank()) {
-                    AsyncImage(
-                        model = exercise.imageUrl,
-                        contentDescription = exercise.displayName,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                } else {
-                    Icon(
-                        imageVector = Icons.Default.FitnessCenter,
-                        contentDescription = null,
-                        tint = accent,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(24.dp)
-                    )
-                }
-                if (selectionMode && isSelected) {
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(4.dp)
-                            .size(22.dp)
-                            .clip(RoundedCornerShape(50))
-                            .background(accent)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = stringResource(R.string.exercises_selected),
-                            tint = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(3.dp)
-                        )
-                    }
-                }
-            }
-
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            ExerciseListThumbnail(exercise = exercise, accent = accent)
             Spacer(modifier = Modifier.width(16.dp))
+            ExerciseListItemInfo(exercise = exercise, modifier = Modifier.weight(1f))
+        }
+    }
+}
 
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
+@Composable
+private fun ExerciseListThumbnail(exercise: Exercise, accent: Color, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .size(88.dp)
+            // Grows into the detail screen's image when the exercise is opened.
+            .hdSharedBounds(exerciseImageKey(exercise.id), RoundedCornerShape(14.dp))
+            .clip(RoundedCornerShape(14.dp))
+            .background(Brush.linearGradient(listOf(accent.copy(alpha = 0.25f), accent.copy(alpha = 0.08f))))
+    ) {
+        if (exercise.imageUrl.isNotBlank()) {
+            AsyncImage(
+                model = exercise.imageUrl,
+                contentDescription = exercise.displayName,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+        } else {
+            Icon(
+                imageVector = Icons.Default.FitnessCenter,
+                contentDescription = null,
+                tint = accent,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp)
+            )
+        }
+    }
+}
+
+/** Name, muscle and type chips, and the equipment. */
+@Composable
+private fun ExerciseListItemInfo(exercise: Exercise, modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {
+        Text(
+            text = exercise.displayName,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            HdChip(text = stringResource(exercise.muscleGroup.nameResId), isSelected = true, onClick = {})
+            HdChip(text = stringResource(exercise.exerciseType.nameResId), isSelected = false, onClick = {})
+        }
+        if (exercise.equipment.isNotBlank()) {
+            Spacer(modifier = Modifier.height(6.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.Build,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(14.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = exercise.displayName,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 2,
+                    text = equipmentLabel(exercise.equipment),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    HdChip(
-                        text = stringResource(exercise.muscleGroup.nameResId),
-                        isSelected = true,
-                        onClick = {}
-                    )
-                    HdChip(
-                        text = stringResource(exercise.exerciseType.nameResId),
-                        isSelected = false,
-                        onClick = {}
-                    )
-                }
-                if (exercise.equipment.isNotBlank()) {
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Build,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(14.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = equipmentLabel(exercise.equipment),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                }
             }
         }
     }
@@ -515,22 +468,28 @@ private fun SelectableExerciseRow(exercise: Exercise, selectionOrder: Int?, onTo
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-        Box(
-            modifier = Modifier
-                .size(28.dp)
-                .clip(RoundedCornerShape(50))
-                .background(if (isSelected) accent else Color.Transparent)
-                .border(2.dp, if (isSelected) accent else MaterialTheme.colorScheme.outline, RoundedCornerShape(50)),
-            contentAlignment = Alignment.Center
-        ) {
-            if (selectionOrder != null) {
-                Text(
-                    text = selectionOrder.toString(),
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimary
-                )
-            }
+        SelectionOrderBadge(order = selectionOrder, accent = accent)
+    }
+}
+
+/** An empty ring, or the exercise's place (1, 2, 3…) in the order it'll be added. */
+@Composable
+private fun SelectionOrderBadge(order: Int?, accent: Color, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .size(28.dp)
+            .clip(RoundedCornerShape(50))
+            .background(if (order != null) accent else Color.Transparent)
+            .border(2.dp, if (order != null) accent else MaterialTheme.colorScheme.outline, RoundedCornerShape(50)),
+        contentAlignment = Alignment.Center
+    ) {
+        if (order != null) {
+            Text(
+                text = order.toString(),
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onPrimary
+            )
         }
     }
 }

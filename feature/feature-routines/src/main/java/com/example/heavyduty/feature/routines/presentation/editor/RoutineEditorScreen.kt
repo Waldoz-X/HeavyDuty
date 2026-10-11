@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -69,6 +71,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalResources
@@ -101,8 +105,11 @@ import com.example.heavyduty.core.ui.components.HdExerciseThumbnail
 import com.example.heavyduty.core.ui.components.HdLineChart
 import com.example.heavyduty.core.ui.components.HdTonalButton
 import com.example.heavyduty.core.ui.nameResId
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
+import sh.calvin.reorderable.ReorderableCollectionItemScope
 import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.ReorderableLazyListState
 import sh.calvin.reorderable.rememberReorderableLazyListState
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -118,51 +125,17 @@ fun RoutineEditorScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val onEvent = viewModel::onEvent
     val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
-    val resources = LocalResources.current
     val listState = rememberLazyListState()
     var showDiscardDialog by rememberSaveable { mutableStateOf(false) }
 
-    LaunchedEffect(navResults) {
-        navResults?.getStateFlow<LongArray?>(SELECTED_EXERCISE_IDS_KEY, null)?.collect { ids ->
-            if (ids != null) {
-                navResults[SELECTED_EXERCISE_IDS_KEY] = null
-                viewModel.onEvent(RoutineEditorUiEvent.OnExercisesPicked(ids.toList()))
-            }
-        }
-    }
-
-    val currentOnNavigateBack by rememberUpdatedState(onNavigateBack)
-    LaunchedEffect(Unit) {
-        viewModel.uiEffect.collect { effect ->
-            when (effect) {
-                RoutineEditorUiEffect.NavigateBack -> currentOnNavigateBack()
-
-                is RoutineEditorUiEffect.ShowMessage -> scope.launch {
-                    snackbarHostState.showSnackbar(resources.getString(effect.messageResId))
-                }
-
-                is RoutineEditorUiEffect.ShowUndoRemove -> scope.launch {
-                    snackbarHostState.currentSnackbarData?.dismiss()
-                    val result = snackbarHostState.showSnackbar(
-                        message = resources.getString(R.string.routine_removed, effect.exerciseName.capitalized()),
-                        actionLabel = resources.getString(R.string.routine_undo),
-                        duration = SnackbarDuration.Short
-                    )
-                    if (result == SnackbarResult.ActionPerformed) onEvent(RoutineEditorUiEvent.OnUndoRemove)
-                }
-
-                is RoutineEditorUiEffect.ExercisesAdded -> scope.launch {
-                    // The new rows are at the end: bring them into view.
-                    val lastIndex = listState.layoutInfo.totalItemsCount - 1
-                    if (lastIndex >= 0) listState.animateScrollToItem(lastIndex)
-                    snackbarHostState.showSnackbar(
-                        resources.getQuantityString(R.plurals.routine_exercises_added, effect.count, effect.count)
-                    )
-                }
-            }
-        }
-    }
+    PickedExercisesResult(navResults = navResults, onPick = { onEvent(RoutineEditorUiEvent.OnExercisesPicked(it)) })
+    EditorEffects(
+        effects = viewModel.uiEffect,
+        snackbarHostState = snackbarHostState,
+        listState = listState,
+        onNavigateBack = onNavigateBack,
+        onUndoRemove = { onEvent(RoutineEditorUiEvent.OnUndoRemove) }
+    )
 
     val handleBack = {
         if (uiState.hasUnsavedChanges && !uiState.isSaving) showDiscardDialog = true else onNavigateBack()
@@ -182,12 +155,16 @@ fun RoutineEditorScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         modifier = modifier
     ) { innerPadding ->
-        if (uiState.isLoading) {
-            HdCardListSkeleton(modifier = Modifier.padding(innerPadding).padding(16.dp), rows = 6, thumbnailSize = 48.dp)
-        } else if (uiState.loadFailed) {
-            HdErrorState(modifier = Modifier.padding(innerPadding))
-        } else {
-            EditorContent(
+        when {
+            uiState.isLoading -> HdCardListSkeleton(
+                modifier = Modifier.padding(innerPadding).padding(16.dp),
+                rows = 6,
+                thumbnailSize = 48.dp
+            )
+
+            uiState.loadFailed -> HdErrorState(modifier = Modifier.padding(innerPadding))
+
+            else -> EditorContent(
                 uiState = uiState,
                 onEvent = onEvent,
                 onOpenExercisePicker = onOpenExercisePicker,
@@ -218,6 +195,65 @@ fun RoutineEditorScreen(
             },
             onDismiss = { showDiscardDialog = false }
         )
+    }
+}
+
+/** The exercise picker leaves the chosen ids in this destination's [navResults]; each batch is taken once. */
+@Composable
+private fun PickedExercisesResult(navResults: SavedStateHandle?, onPick: (List<Long>) -> Unit) {
+    val currentOnPick by rememberUpdatedState(onPick)
+    LaunchedEffect(navResults) {
+        navResults?.getStateFlow<LongArray?>(SELECTED_EXERCISE_IDS_KEY, null)?.collect { ids ->
+            if (ids != null) {
+                navResults[SELECTED_EXERCISE_IDS_KEY] = null
+                currentOnPick(ids.toList())
+            }
+        }
+    }
+}
+
+/** What the editor reacts to once: leaving, messages, undo for a removed exercise, newly added rows. */
+@Composable
+private fun EditorEffects(
+    effects: Flow<RoutineEditorUiEffect>,
+    snackbarHostState: SnackbarHostState,
+    listState: LazyListState,
+    onNavigateBack: () -> Unit,
+    onUndoRemove: () -> Unit
+) {
+    val scope = rememberCoroutineScope()
+    val resources = LocalResources.current
+    val currentOnNavigateBack by rememberUpdatedState(onNavigateBack)
+    val currentOnUndoRemove by rememberUpdatedState(onUndoRemove)
+    LaunchedEffect(Unit) {
+        effects.collect { effect ->
+            when (effect) {
+                RoutineEditorUiEffect.NavigateBack -> currentOnNavigateBack()
+
+                is RoutineEditorUiEffect.ShowMessage -> scope.launch {
+                    snackbarHostState.showSnackbar(resources.getString(effect.messageResId))
+                }
+
+                is RoutineEditorUiEffect.ShowUndoRemove -> scope.launch {
+                    snackbarHostState.currentSnackbarData?.dismiss()
+                    val result = snackbarHostState.showSnackbar(
+                        message = resources.getString(R.string.routine_removed, effect.exerciseName.capitalized()),
+                        actionLabel = resources.getString(R.string.routine_undo),
+                        duration = SnackbarDuration.Short
+                    )
+                    if (result == SnackbarResult.ActionPerformed) currentOnUndoRemove()
+                }
+
+                is RoutineEditorUiEffect.ExercisesAdded -> scope.launch {
+                    // The new rows are at the end: bring them into view.
+                    val lastIndex = listState.layoutInfo.totalItemsCount - 1
+                    if (lastIndex >= 0) listState.animateScrollToItem(lastIndex)
+                    snackbarHostState.showSnackbar(
+                        resources.getQuantityString(R.plurals.routine_exercises_added, effect.count, effect.count)
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -312,7 +348,7 @@ private fun EditorContent(
     uiState: RoutineEditorUiState,
     onEvent: (RoutineEditorUiEvent) -> Unit,
     onOpenExercisePicker: () -> Unit,
-    listState: androidx.compose.foundation.lazy.LazyListState,
+    listState: LazyListState,
     modifier: Modifier = Modifier
 ) {
     val haptic = LocalHapticFeedback.current
@@ -374,52 +410,7 @@ private fun EditorContent(
             }
         }
 
-        itemsIndexed(uiState.exercises, key = { _, exercise -> exercise.id }) { index, routineExercise ->
-            ReorderableItem(reorderState, key = routineExercise.id) { isDragging ->
-                val previous = uiState.exercises.getOrNull(index - 1)
-                val next = uiState.exercises.getOrNull(index + 1)
-                val groupId = routineExercise.supersetGroupId
-                val linkedWithNext = groupId != null && groupId == next?.supersetGroupId
-                val inSuperset = groupId != null && (groupId == previous?.supersetGroupId || linkedWithNext)
-                ExerciseRow(
-                    routineExercise = routineExercise,
-                    position = index + 1,
-                    isDragging = isDragging,
-                    inSuperset = inSuperset,
-                    linkedWithNext = linkedWithNext,
-                    canMoveUp = index > 0,
-                    canMoveDown = index < uiState.exercises.lastIndex,
-                    hasNext = next != null,
-                    dragHandle = {
-                        Icon(
-                            imageVector = Icons.Default.DragIndicator,
-                            contentDescription = stringResource(R.string.routine_drag_handle),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier
-                                .draggableHandle(
-                                    onDragStarted = { haptic.performHapticFeedback(HapticFeedbackType.LongPress) }
-                                )
-                                .padding(horizontal = 4.dp, vertical = 12.dp)
-                        )
-                    },
-                    onOpen = { onEvent(RoutineEditorUiEvent.OnOpenExercise(index)) },
-                    onDuplicate = { onEvent(RoutineEditorUiEvent.OnDuplicateExercise(index)) },
-                    onMoveUp = { onEvent(RoutineEditorUiEvent.OnMoveExercise(index, index - 1)) },
-                    onMoveDown = { onEvent(RoutineEditorUiEvent.OnMoveExercise(index, index + 1)) },
-                    onToggleSuperset = {
-                        if (linkedWithNext) {
-                            onEvent(RoutineEditorUiEvent.OnUnpair(index))
-                        } else {
-                            onEvent(RoutineEditorUiEvent.OnPairWithNext(index))
-                        }
-                    },
-                    onRemove = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onEvent(RoutineEditorUiEvent.OnRemoveExercise(index))
-                    }
-                )
-            }
-        }
+        exerciseItems(exercises = uiState.exercises, reorderState = reorderState, onEvent = onEvent, haptic = haptic)
 
         item(key = "add") {
             HdTonalButton(
@@ -429,6 +420,65 @@ private fun EditorContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 8.dp)
+            )
+        }
+    }
+}
+
+/** One draggable row per exercise; neighbours sharing a superset group read as one superset. */
+private fun LazyListScope.exerciseItems(
+    exercises: List<RoutineExercise>,
+    reorderState: ReorderableLazyListState,
+    onEvent: (RoutineEditorUiEvent) -> Unit,
+    haptic: HapticFeedback
+) {
+    itemsIndexed(exercises, key = { _, exercise -> exercise.id }) { index, routineExercise ->
+        ReorderableItem(reorderState, key = routineExercise.id) { isDragging ->
+            val previous = exercises.getOrNull(index - 1)
+            val next = exercises.getOrNull(index + 1)
+            val groupId = routineExercise.supersetGroupId
+            val linkedWithNext = groupId != null && groupId == next?.supersetGroupId
+            val inSuperset = groupId != null && (groupId == previous?.supersetGroupId || linkedWithNext)
+            ExerciseRow(
+                routineExercise = routineExercise,
+                position = index + 1,
+                isDragging = isDragging,
+                inSuperset = inSuperset,
+                menu = ExerciseRowMenuOptions(
+                    canMoveUp = index > 0,
+                    canMoveDown = index < exercises.lastIndex,
+                    hasNext = next != null,
+                    linkedWithNext = linkedWithNext
+                ),
+                dragHandle = {
+                    Icon(
+                        imageVector = Icons.Default.DragIndicator,
+                        contentDescription = stringResource(R.string.routine_drag_handle),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier
+                            .draggableHandle(onDragStarted = { haptic.performHapticFeedback(HapticFeedbackType.LongPress) })
+                            .padding(horizontal = 4.dp, vertical = 12.dp)
+                    )
+                },
+                onOpen = { onEvent(RoutineEditorUiEvent.OnOpenExercise(index)) },
+                onMenuAction = { action ->
+                    when (action) {
+                        ExerciseRowAction.DUPLICATE -> onEvent(RoutineEditorUiEvent.OnDuplicateExercise(index))
+
+                        ExerciseRowAction.MOVE_UP -> onEvent(RoutineEditorUiEvent.OnMoveExercise(index, index - 1))
+
+                        ExerciseRowAction.MOVE_DOWN -> onEvent(RoutineEditorUiEvent.OnMoveExercise(index, index + 1))
+
+                        ExerciseRowAction.TOGGLE_SUPERSET -> onEvent(
+                            if (linkedWithNext) RoutineEditorUiEvent.OnUnpair(index) else RoutineEditorUiEvent.OnPairWithNext(index)
+                        )
+
+                        ExerciseRowAction.REMOVE -> {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onEvent(RoutineEditorUiEvent.OnRemoveExercise(index))
+                        }
+                    }
+                }
             )
         }
     }
@@ -560,26 +610,27 @@ private fun ExercisesHeader(uiState: RoutineEditorUiState) {
     }
 }
 
+/** What an exercise row's menu offers, besides edit and remove. */
+private data class ExerciseRowMenuOptions(
+    val canMoveUp: Boolean,
+    val canMoveDown: Boolean,
+    val hasNext: Boolean,
+    val linkedWithNext: Boolean
+)
+
+private enum class ExerciseRowAction { DUPLICATE, MOVE_UP, MOVE_DOWN, TOGGLE_SUPERSET, REMOVE }
+
 @Composable
-private fun sh.calvin.reorderable.ReorderableCollectionItemScope.ExerciseRow(
+private fun ReorderableCollectionItemScope.ExerciseRow(
     routineExercise: RoutineExercise,
     position: Int,
     isDragging: Boolean,
     inSuperset: Boolean,
-    linkedWithNext: Boolean,
-    canMoveUp: Boolean,
-    canMoveDown: Boolean,
-    hasNext: Boolean,
-    dragHandle: @Composable sh.calvin.reorderable.ReorderableCollectionItemScope.() -> Unit,
+    menu: ExerciseRowMenuOptions,
+    dragHandle: @Composable ReorderableCollectionItemScope.() -> Unit,
     onOpen: () -> Unit,
-    onDuplicate: () -> Unit,
-    onMoveUp: () -> Unit,
-    onMoveDown: () -> Unit,
-    onToggleSuperset: () -> Unit,
-    onRemove: () -> Unit
+    onMenuAction: (ExerciseRowAction) -> Unit
 ) {
-    var showMenu by remember { mutableStateOf(false) }
-    val exercise = routineExercise.exercise
     Surface(
         shape = MaterialTheme.shapes.medium,
         color = if (isDragging) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -599,93 +650,99 @@ private fun sh.calvin.reorderable.ReorderableCollectionItemScope.ExerciseRow(
                 modifier = Modifier
                     .width(4.dp)
                     .height(72.dp)
-                    .background(if (inSuperset) MaterialTheme.colorScheme.tertiary else androidx.compose.ui.graphics.Color.Transparent)
+                    .background(if (inSuperset) MaterialTheme.colorScheme.tertiary else Color.Transparent)
             )
             dragHandle()
-            HdExerciseThumbnail(exercise = exercise, size = 52.dp)
+            HdExerciseThumbnail(exercise = routineExercise.exercise, size = 52.dp)
             Spacer(modifier = Modifier.width(12.dp))
-            Column(
+            ExerciseRowText(
+                routineExercise = routineExercise,
+                position = position,
+                inSuperset = inSuperset,
                 modifier = Modifier
                     .weight(1f)
                     .padding(vertical = 10.dp)
-            ) {
+            )
+            ExerciseRowMenu(options = menu, onEdit = onOpen, onAction = onMenuAction)
+        }
+    }
+}
+
+/** "2. Press de banca", then "Superserie · 3 × 10 · 60 kg · 1:30". */
+@Composable
+private fun ExerciseRowText(routineExercise: RoutineExercise, position: Int, inSuperset: Boolean, modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {
+        Text(
+            text = "$position. ${routineExercise.exercise?.displayName.orEmpty().capitalized()}",
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+        )
+        Spacer(modifier = Modifier.height(2.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (inSuperset) {
                 Text(
-                    text = "$position. ${exercise?.displayName.orEmpty().capitalized()}",
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
+                    text = stringResource(R.string.routine_superset),
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.tertiary
                 )
-                Spacer(modifier = Modifier.height(2.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (inSuperset) {
-                        Text(
-                            text = stringResource(R.string.routine_superset),
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.tertiary
-                        )
-                        Text(
-                            text = " · ",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    Text(
-                        text = routineExercise.summary(),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                Text(text = " · ", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Text(
+                text = routineExercise.summary(),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+    }
+}
+
+@Composable
+private fun ExerciseRowMenu(
+    options: ExerciseRowMenuOptions,
+    onEdit: () -> Unit,
+    onAction: (ExerciseRowAction) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var showMenu by remember { mutableStateOf(false) }
+    val pick: (() -> Unit) -> Unit = { action ->
+        showMenu = false
+        action()
+    }
+    Box(modifier = modifier) {
+        IconButton(onClick = { showMenu = true }) {
+            Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.routine_more_options))
+        }
+        DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
+            MenuItem(Icons.Default.Edit, stringResource(R.string.routine_menu_edit)) { pick(onEdit) }
+            MenuItem(Icons.Default.ContentCopy, stringResource(R.string.routine_menu_duplicate)) {
+                pick { onAction(ExerciseRowAction.DUPLICATE) }
+            }
+            if (options.canMoveUp) {
+                MenuItem(Icons.Default.KeyboardArrowUp, stringResource(R.string.routine_menu_move_up)) {
+                    pick { onAction(ExerciseRowAction.MOVE_UP) }
                 }
             }
-            Box {
-                IconButton(onClick = { showMenu = true }) {
-                    Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.routine_more_options))
-                }
-                DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
-                    MenuItem(Icons.Default.Edit, stringResource(R.string.routine_menu_edit)) {
-                        showMenu = false
-                        onOpen()
-                    }
-                    MenuItem(Icons.Default.ContentCopy, stringResource(R.string.routine_menu_duplicate)) {
-                        showMenu = false
-                        onDuplicate()
-                    }
-                    if (canMoveUp) {
-                        MenuItem(Icons.Default.KeyboardArrowUp, stringResource(R.string.routine_menu_move_up)) {
-                            showMenu = false
-                            onMoveUp()
-                        }
-                    }
-                    if (canMoveDown) {
-                        MenuItem(Icons.Default.KeyboardArrowDown, stringResource(R.string.routine_menu_move_down)) {
-                            showMenu = false
-                            onMoveDown()
-                        }
-                    }
-                    if (hasNext) {
-                        MenuItem(
-                            icon = if (linkedWithNext) Icons.Default.LinkOff else Icons.Default.Link,
-                            text = stringResource(if (linkedWithNext) R.string.routine_menu_unpair else R.string.routine_menu_superset)
-                        ) {
-                            showMenu = false
-                            onToggleSuperset()
-                        }
-                    }
-                    HorizontalDivider()
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.routine_menu_remove), color = MaterialTheme.colorScheme.error) },
-                        leadingIcon = {
-                            Icon(Icons.Default.DeleteOutline, contentDescription = null, tint = MaterialTheme.colorScheme.error)
-                        },
-                        onClick = {
-                            showMenu = false
-                            onRemove()
-                        }
-                    )
+            if (options.canMoveDown) {
+                MenuItem(Icons.Default.KeyboardArrowDown, stringResource(R.string.routine_menu_move_down)) {
+                    pick { onAction(ExerciseRowAction.MOVE_DOWN) }
                 }
             }
+            if (options.hasNext) {
+                MenuItem(
+                    icon = if (options.linkedWithNext) Icons.Default.LinkOff else Icons.Default.Link,
+                    text = stringResource(if (options.linkedWithNext) R.string.routine_menu_unpair else R.string.routine_menu_superset)
+                ) { pick { onAction(ExerciseRowAction.TOGGLE_SUPERSET) } }
+            }
+            HorizontalDivider()
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.routine_menu_remove), color = MaterialTheme.colorScheme.error) },
+                leadingIcon = { Icon(Icons.Default.DeleteOutline, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+                onClick = { pick { onAction(ExerciseRowAction.REMOVE) } }
+            )
         }
     }
 }
