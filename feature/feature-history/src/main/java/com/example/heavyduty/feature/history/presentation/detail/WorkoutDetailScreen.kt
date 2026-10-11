@@ -17,6 +17,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -75,6 +76,7 @@ import kotlinx.coroutines.launch
 private sealed interface DetailDialog {
     data object Duration : DetailDialog
     data object DeleteWorkout : DetailDialog
+    data object Share : DetailDialog
     data class EditSet(val setId: Long) : DetailDialog
 }
 
@@ -101,6 +103,7 @@ fun WorkoutDetailScreen(onNavigateBack: () -> Unit, modifier: Modifier = Modifie
                 title = title,
                 showActions = session != null,
                 onNavigateBack = onNavigateBack,
+                onShare = { dialog = DetailDialog.Share },
                 onEditDuration = { dialog = DetailDialog.Duration },
                 onDelete = { dialog = DetailDialog.DeleteWorkout }
             )
@@ -166,6 +169,7 @@ private fun DetailTopBar(
     title: String,
     showActions: Boolean,
     onNavigateBack: () -> Unit,
+    onShare: () -> Unit,
     onEditDuration: () -> Unit,
     onDelete: () -> Unit
 ) {
@@ -178,6 +182,9 @@ private fun DetailTopBar(
         },
         actions = {
             if (showActions) {
+                IconButton(onClick = onShare) {
+                    Icon(Icons.Default.Share, contentDescription = stringResource(R.string.history_share))
+                }
                 IconButton(onClick = onEditDuration) {
                     Icon(Icons.Default.Schedule, contentDescription = stringResource(R.string.history_edit_duration))
                 }
@@ -215,6 +222,8 @@ private fun DetailDialogs(
             },
             onDismiss = onDismiss
         )
+
+        DetailDialog.Share -> ShareWorkoutDialog(uiState = uiState, title = title, onDismiss = onDismiss)
 
         DetailDialog.DeleteWorkout -> AlertDialog(
             onDismissRequest = onDismiss,

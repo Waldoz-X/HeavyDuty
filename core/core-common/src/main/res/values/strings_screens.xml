@@ -44,6 +44,20 @@
     <string name="history_invalid_set">Revisa el peso y las repeticiones</string>
     <string name="history_error_save">No se pudo guardar el cambio</string>
     <string name="history_delete_set">Eliminar serie %1$d</string>
+    <string name="history_share">Compartir</string>
+    <string name="history_share_title">Compartir entrenamiento</string>
+    <string name="history_share_button">Compartir imagen</string>
+    <string name="history_share_chooser">Compartir con</string>
+    <plurals name="history_share_sets">
+        <item quantity="one">%1$d serie</item>
+        <item quantity="other">%1$d series</item>
+        <item quantity="many">%1$d series</item>
+    </plurals>
+    <plurals name="history_share_more">
+        <item quantity="one">+%1$d ejercicio más</item>
+        <item quantity="other">+%1$d ejercicios más</item>
+        <item quantity="many">+%1$d ejercicios más</item>
+    </plurals>
     <string name="status_completed">Completado</string>
     <string name="status_in_progress">En progreso</string>
     <string name="status_cancelled">Cancelado</string>
