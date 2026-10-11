@@ -342,6 +342,28 @@ class ActiveWorkoutViewModelTest {
     }
 
     @Test
+    fun `the first exercise added to a free workout shows last time's sets`() {
+        // Last time: bench 62.5 × 10 in an earlier, finished workout.
+        workoutRepository.sessions.value = listOf(
+            WorkoutSession(id = 50, startTime = clock.now - 86_400_000, endTime = clock.now - 82_800_000, status = WorkoutStatus.COMPLETED)
+        )
+        workoutRepository.sets.value = listOf(
+            WorkoutSet(
+                id = 500, sessionId = 50, exerciseId = bench.id, exercise = bench, setNumber = 1, reps = 10, weight = 62.5f,
+                isCompleted = true, completedAt = clock.now - 85_000_000
+            )
+        )
+        val viewModel = createViewModel()
+        viewModel.onEvent(ActiveWorkoutUiEvent.OnStartFreeWorkout)
+
+        viewModel.onEvent(ActiveWorkoutUiEvent.OnAddExercise(bench))
+
+        val state = viewModel.uiState.value
+        assertEquals(62.5f, state.previousSets[1]?.weight)
+        assertEquals(SetHint(reps = 10, weightKg = 62.5f), state.currentSetHint)
+    }
+
+    @Test
     fun `a deleted set can be put back with its number`() {
         val viewModel = createViewModel()
         val effects = viewModel.collectEffects()

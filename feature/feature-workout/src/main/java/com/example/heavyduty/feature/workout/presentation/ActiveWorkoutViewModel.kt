@@ -607,7 +607,10 @@ class ActiveWorkoutViewModel @Inject constructor(
                 routineExercises = it.routineExercises + freeExercise(exercise, it.routineExercises.size)
             )
         }
-        selectExercise(_uiState.value.routineExercises.lastIndex)
+        val addedIndex = _uiState.value.routineExercises.lastIndex
+        // The first exercise of a free workout lands on the index already "selected" (0), where
+        // selectExercise would do nothing — its history (last time's sets, hints) still has to load.
+        if (addedIndex == _uiState.value.currentExerciseIndex) loadCurrentExerciseInfo() else selectExercise(addedIndex)
     }
 
     private fun showMessage(messageResId: Int) {
