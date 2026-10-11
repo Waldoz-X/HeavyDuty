@@ -86,28 +86,7 @@ fun BodyWeightStatsScreen(
     var entryToDelete by remember { mutableStateOf<BodyWeightHistoryItem?>(null) }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.stats_bodyweight_title)) },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.action_back)
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { showGoalDialog = true }) {
-                        Icon(
-                            imageVector = Icons.Default.Flag,
-                            contentDescription = stringResource(R.string.bw_set_goal),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
-            )
-        },
+        topBar = { BodyWeightTopBar(onNavigateBack = onNavigateBack, onSetGoal = { showGoalDialog = true }) },
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = { showAddWeightDialog = true },
@@ -119,31 +98,13 @@ fun BodyWeightStatsScreen(
         },
         modifier = modifier.fillMaxSize()
     ) { innerPadding ->
-        if (uiState.isLoading) {
-            HdCardsSkeleton(modifier = Modifier.padding(innerPadding).padding(16.dp), heights = listOf(160.dp, 240.dp, 200.dp))
-            return@Scaffold
-        }
-        if (uiState.loadFailed) {
-            HdErrorState(modifier = Modifier.padding(innerPadding))
-            return@Scaffold
-        }
-
-        val report = uiState.report
-
-        if (report == null || report.chartPoints.isEmpty()) {
-            BodyWeightEmptyState(
-                onLogWeight = { showAddWeightDialog = true },
-                onSetGoal = { showGoalDialog = true },
-                modifier = Modifier.padding(innerPadding)
-            )
-        } else {
-            BodyWeightContent(
-                report = report,
-                onEditGoal = { showGoalDialog = true },
-                onDelete = { entryToDelete = it },
-                modifier = Modifier.padding(innerPadding)
-            )
-        }
+        BodyWeightBody(
+            uiState = uiState,
+            onLogWeight = { showAddWeightDialog = true },
+            onSetGoal = { showGoalDialog = true },
+            onDelete = { entryToDelete = it },
+            modifier = Modifier.padding(innerPadding)
+        )
     }
 
     if (showGoalDialog) {
@@ -182,6 +143,53 @@ fun BodyWeightStatsScreen(
 }
 
 /** Goal, chart, min/max/average and the history of weigh-ins. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun BodyWeightTopBar(onNavigateBack: () -> Unit, onSetGoal: () -> Unit) {
+    TopAppBar(
+        title = { Text(stringResource(R.string.stats_bodyweight_title)) },
+        navigationIcon = {
+            IconButton(onClick = onNavigateBack) {
+                Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
+            }
+        },
+        actions = {
+            IconButton(onClick = onSetGoal) {
+                Icon(
+                    imageVector = Icons.Default.Flag,
+                    contentDescription = stringResource(R.string.bw_set_goal),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+    )
+}
+
+/** Loading, failed, nothing logged yet — or the goal, chart, figures and history. */
+@Composable
+private fun BodyWeightBody(
+    uiState: BodyWeightStatsUiState,
+    onLogWeight: () -> Unit,
+    onSetGoal: () -> Unit,
+    onDelete: (BodyWeightHistoryItem) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val report = uiState.report
+    when {
+        uiState.isLoading -> HdCardsSkeleton(modifier = modifier.padding(16.dp), heights = listOf(160.dp, 240.dp, 200.dp))
+
+        uiState.loadFailed -> HdErrorState(modifier = modifier)
+
+        report == null || report.chartPoints.isEmpty() -> BodyWeightEmptyState(
+            onLogWeight = onLogWeight,
+            onSetGoal = onSetGoal,
+            modifier = modifier
+        )
+
+        else -> BodyWeightContent(report = report, onEditGoal = onSetGoal, onDelete = onDelete, modifier = modifier)
+    }
+}
+
 @Composable
 private fun BodyWeightContent(
     report: BodyWeightStatsReport,
@@ -569,35 +577,9 @@ private fun HistoryEntryCard(entry: BodyWeightHistoryItem, onDelete: () -> Unit,
                 )
                 if (entry.deltaKg != null) {
                     Spacer(modifier = Modifier.height(4.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        val icon = when {
-                            entry.deltaKg > 0.05f -> Icons.AutoMirrored.Filled.TrendingUp
-                            entry.deltaKg < -0.05f -> Icons.AutoMirrored.Filled.TrendingDown
-                            else -> Icons.AutoMirrored.Filled.TrendingFlat
-                        }
-                        val color = when {
-                            entry.deltaKg > 0.05f -> Color(0xFFFF9800)
-                            entry.deltaKg < -0.05f -> Color(0xFF4CAF50)
-                            else -> MaterialTheme.colorScheme.onSurfaceVariant
-                        }
-                        val sign = if (entry.deltaKg > 0) "+" else ""
-                        Icon(
-                            imageVector = icon,
-                            contentDescription = null,
-                            tint = color,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "$sign${entry.deltaKg.formatWeight()}",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = color,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
+                    WeightTrend(deltaKg = entry.deltaKg)
                 }
             }
-
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = entry.weightKg.formatWeightValue(),
@@ -621,6 +603,27 @@ private fun HistoryEntryCard(entry: BodyWeightHistoryItem, onDelete: () -> Unit,
                 }
             }
         }
+    }
+}
+
+/** The change since the weigh-in before: up in orange, down in green, about the same in grey. */
+@Composable
+private fun WeightTrend(deltaKg: Float, modifier: Modifier = Modifier) {
+    val (icon, color) = when {
+        deltaKg > 0.05f -> Icons.AutoMirrored.Filled.TrendingUp to Color(0xFFFF9800)
+        deltaKg < -0.05f -> Icons.AutoMirrored.Filled.TrendingDown to Color(0xFF4CAF50)
+        else -> Icons.AutoMirrored.Filled.TrendingFlat to MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    val sign = if (deltaKg > 0) "+" else ""
+    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
+        Icon(imageVector = icon, contentDescription = null, tint = color, modifier = Modifier.size(16.dp))
+        Spacer(modifier = Modifier.width(4.dp))
+        Text(
+            text = "$sign${deltaKg.formatWeight()}",
+            style = MaterialTheme.typography.labelSmall,
+            color = color,
+            fontWeight = FontWeight.SemiBold
+        )
     }
 }
 
