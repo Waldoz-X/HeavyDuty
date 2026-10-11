@@ -1,6 +1,7 @@
 package com.example.heavyduty.feature.timer.presentation
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -57,99 +58,91 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.heavyduty.core.common.R
 import com.example.heavyduty.core.ui.components.HdChip
 import com.example.heavyduty.feature.timer.domain.model.TimerMode
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
 @Composable
 fun TimerScreen(modifier: Modifier = Modifier, viewModel: TimerViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
-    val coroutineScope = rememberCoroutineScope()
-    val resources = LocalResources.current
     val context = LocalContext.current
-
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = {}
     )
-
-    LaunchedEffect(Unit) {
-        viewModel.uiEffect.collect { effect ->
-            when (effect) {
-                TimerUiEffect.TimerFinished -> {
-                    coroutineScope.launch {
-                        snackbarHostState.showSnackbar(resources.getString(R.string.timer_finished))
-                    }
-                }
-
-                is TimerUiEffect.ShowMessage -> {
-                    coroutineScope.launch {
-                        snackbarHostState.showSnackbar(effect.message)
-                    }
-                }
-            }
-        }
-    }
+    TimerEffects(effects = viewModel.uiEffect, snackbarHostState = snackbarHostState)
 
     Scaffold(
         modifier = modifier,
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
-        Column(
+        TimerContent(
+            uiState = uiState,
+            onEvent = viewModel::onEvent,
+            onStartPause = {
+                // The countdown keeps going in a notification; on Android 13+ that needs the permission.
+                if (!uiState.isRunning && needsNotificationPermission(context)) {
+                    notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                }
+                viewModel.onEvent(TimerUiEvent.OnStartPause)
+            },
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Spacer(modifier = Modifier.height(16.dp))
+                .padding(horizontal = 16.dp)
+        )
+    }
+}
 
-            Text(
-                text = stringResource(R.string.timer_title),
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            TimerModeSelector(selected = uiState.mode, onEvent = viewModel::onEvent)
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = stringResource(uiState.mode.descriptionResId),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            TimerDial(uiState = uiState)
-
-            Spacer(modifier = Modifier.height(40.dp))
-
-            if (uiState.mode != TimerMode.STOPWATCH && !uiState.isRunning) {
-                DurationPresets(mode = uiState.mode, totalSeconds = uiState.totalSeconds, onEvent = viewModel::onEvent)
-                Spacer(modifier = Modifier.height(24.dp))
-            }
-
-            TimerControls(
-                isRunning = uiState.isRunning,
-                onReset = { viewModel.onEvent(TimerUiEvent.OnReset) },
-                onStartPause = {
-                    if (!uiState.isRunning &&
-                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-                        ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) !=
-                        PackageManager.PERMISSION_GRANTED
-                    ) {
-                        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                    }
-                    viewModel.onEvent(TimerUiEvent.OnStartPause)
+/** "Time's up" and other messages, each shown once. */
+@Composable
+private fun TimerEffects(effects: Flow<TimerUiEffect>, snackbarHostState: SnackbarHostState) {
+    val coroutineScope = rememberCoroutineScope()
+    val resources = LocalResources.current
+    LaunchedEffect(Unit) {
+        effects.collect { effect ->
+            when (effect) {
+                TimerUiEffect.TimerFinished -> coroutineScope.launch {
+                    snackbarHostState.showSnackbar(resources.getString(R.string.timer_finished))
                 }
-            )
+
+                is TimerUiEffect.ShowMessage -> coroutineScope.launch { snackbarHostState.showSnackbar(effect.message) }
+            }
         }
     }
 }
+
+@Composable
+private fun TimerContent(uiState: TimerUiState, onEvent: (TimerUiEvent) -> Unit, onStartPause: () -> Unit, modifier: Modifier = Modifier) {
+    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = stringResource(R.string.timer_title),
+            style = MaterialTheme.typography.headlineMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        TimerModeSelector(selected = uiState.mode, onEvent = onEvent)
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = stringResource(uiState.mode.descriptionResId),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(32.dp))
+        TimerDial(uiState = uiState)
+        Spacer(modifier = Modifier.height(40.dp))
+        if (uiState.mode != TimerMode.STOPWATCH && !uiState.isRunning) {
+            DurationPresets(mode = uiState.mode, totalSeconds = uiState.totalSeconds, onEvent = onEvent)
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+        TimerControls(isRunning = uiState.isRunning, onReset = { onEvent(TimerUiEvent.OnReset) }, onStartPause = onStartPause)
+    }
+}
+
+private fun needsNotificationPermission(context: Context): Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+    ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
 
 @Composable
 private fun TimerModeSelector(selected: TimerMode, onEvent: (TimerUiEvent) -> Unit) {
@@ -176,71 +169,68 @@ private fun TimerDial(uiState: TimerUiState) {
             .aspectRatio(1f),
         contentAlignment = Alignment.Center
     ) {
-        val primaryColor = MaterialTheme.colorScheme.primary
-        val trackColor = MaterialTheme.colorScheme.surfaceContainerHigh
-        val progress = if (uiState.mode == TimerMode.STOPWATCH) {
-            0f // No progress arc for stopwatch
-        } else {
-            if (uiState.totalSeconds > 0) {
-                uiState.remainingSeconds.toFloat() / uiState.totalSeconds.toFloat()
-            } else {
-                1f
-            }
-        }
+        DialRing(progress = dialProgress(uiState), modifier = Modifier.fillMaxSize())
+        DialTime(uiState = uiState)
+    }
+}
 
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            val strokeWidth = 12.dp.toPx()
-            val padding = strokeWidth / 2
-            val arcSize = Size(size.width - strokeWidth, size.height - strokeWidth)
+/** How full the ring is: the share of the countdown left; none for the stopwatch. */
+private fun dialProgress(uiState: TimerUiState): Float = when {
+    uiState.mode == TimerMode.STOPWATCH -> 0f
+    uiState.totalSeconds > 0 -> uiState.remainingSeconds.toFloat() / uiState.totalSeconds.toFloat()
+    else -> 1f
+}
 
-            // Background track
+@Composable
+private fun DialRing(progress: Float, modifier: Modifier = Modifier) {
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val trackColor = MaterialTheme.colorScheme.surfaceContainerHigh
+    Canvas(modifier = modifier) {
+        val strokeWidth = 12.dp.toPx()
+        val padding = strokeWidth / 2
+        val arcSize = Size(size.width - strokeWidth, size.height - strokeWidth)
+        val stroke = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+        // Background track, then what's left of the countdown on top.
+        drawArc(
+            color = trackColor,
+            startAngle = -90f,
+            sweepAngle = 360f,
+            useCenter = false,
+            topLeft = Offset(padding, padding),
+            size = arcSize,
+            style = stroke
+        )
+        if (progress > 0f) {
             drawArc(
-                color = trackColor,
+                color = primaryColor,
                 startAngle = -90f,
-                sweepAngle = 360f,
+                sweepAngle = 360f * progress,
                 useCenter = false,
                 topLeft = Offset(padding, padding),
                 size = arcSize,
-                style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+                style = stroke
             )
-
-            // Progress arc
-            if (progress > 0f) {
-                drawArc(
-                    color = primaryColor,
-                    startAngle = -90f,
-                    sweepAngle = 360f * progress,
-                    useCenter = false,
-                    topLeft = Offset(padding, padding),
-                    size = arcSize,
-                    style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
-                )
-            }
         }
+    }
+}
 
-        // Time text
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            val displaySeconds = if (uiState.mode == TimerMode.STOPWATCH) {
-                uiState.elapsedSeconds
-            } else {
-                uiState.remainingSeconds
-            }
+/** The time — left, or elapsed for the stopwatch — and the round when there are several. */
+@Composable
+private fun DialTime(uiState: TimerUiState, modifier: Modifier = Modifier) {
+    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        val displaySeconds = if (uiState.mode == TimerMode.STOPWATCH) uiState.elapsedSeconds else uiState.remainingSeconds
+        Text(
+            text = formatTime(displaySeconds),
+            style = MaterialTheme.typography.displayLarge.copy(fontWeight = FontWeight.Bold, letterSpacing = 2.sp),
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlign = TextAlign.Center
+        )
+        if (uiState.rounds > 1) {
             Text(
-                text = formatTime(displaySeconds),
-                style = MaterialTheme.typography.displayLarge.copy(
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 2.sp
-                ),
-                color = MaterialTheme.colorScheme.onSurface,
-                textAlign = TextAlign.Center
+                text = stringResource(R.string.timer_round, uiState.currentRound, uiState.rounds),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary
             )
-            if (uiState.rounds > 1) {
-                Text(
-                    text = stringResource(R.string.timer_round, uiState.currentRound, uiState.rounds),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
         }
     }
 }

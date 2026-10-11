@@ -23,8 +23,6 @@
     <ID>LongMethod:RoutineEditorScreen.kt:@Composable private fun EditorContent</ID>
     <ID>LongMethod:RoutineEditorScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun RoutineEditorScreen</ID>
     <ID>LongMethod:SeedData.kt:SeedData$suspend fun populateExercises</ID>
-    <ID>LongMethod:TimerScreen.kt:@Composable fun TimerScreen</ID>
-    <ID>LongMethod:TimerScreen.kt:@Composable private fun TimerDial</ID>
     <ID>TooManyFunctions:ActiveWorkoutViewModel.kt:ActiveWorkoutViewModel : ViewModel</ID>
     <ID>TooManyFunctions:FakeRepositories.kt:FakeWorkoutRepository : WorkoutRepository</ID>
     <ID>TooManyFunctions:TimerEngine.kt:TimerEngine : RestTimerController</ID>
