@@ -23,6 +23,8 @@ import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
@@ -88,8 +90,19 @@ fun HdLineChart(
         animationProgress.animateTo(1f, animationSpec = tween(durationMillis = 700))
     }
 
+    val readValue = valueFormatter(valueLabelFormatter, data.map { it.second })
+    val description = stringResource(
+        R.string.a11y_line_chart,
+        data.size,
+        formatX(data.first().first),
+        formatX(data.last().first),
+        readValue(data.minOf { it.second }),
+        readValue(data.maxOf { it.second }),
+        readValue(data.last().second)
+    )
     Canvas(
         modifier = modifier
+            .semantics { contentDescription = description }
             .fillMaxWidth()
             .height(height)
     ) {

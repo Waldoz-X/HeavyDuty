@@ -21,9 +21,12 @@ import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.dp
 import com.example.heavyduty.core.common.R
 import com.example.heavyduty.core.domain.model.MuscleGroup
+import com.example.heavyduty.core.ui.nameResId
 
 /**
  * A front + back humanoid silhouette used to visualize how much volume was trained per
@@ -58,8 +61,15 @@ fun HdBodyDiagram(
         ?.coerceAtLeast(1f)
         ?: 1f
 
+    val worked = workedMuscles(muscleValues).map { stringResource(it.nameResId) }
+    val description = if (worked.isEmpty()) {
+        stringResource(R.string.a11y_body_diagram_none)
+    } else {
+        stringResource(R.string.a11y_body_diagram, worked.joinToString(", "))
+    }
     Row(
-        modifier = modifier,
+        // One sentence for the whole map; its "Front"/"Back" captions add nothing read aloud.
+        modifier = modifier.clearAndSetSemantics { contentDescription = description },
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Column(

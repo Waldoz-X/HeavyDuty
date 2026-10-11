@@ -97,6 +97,11 @@
     <!-- Dashboard -->
     <string name="dashboard_welcome_title">¡Bienvenido de nuevo, Atleta!</string>
     <string name="dashboard_welcome_title_named">¡Bienvenido de nuevo, %1$s!</string>
+    <string name="a11y_line_chart">Gráfica con %1$d registros, del %2$s al %3$s. Mínimo %4$s, máximo %5$s, último %6$s.</string>
+    <string name="a11y_radar_chart">Distribución: %1$s</string>
+    <string name="a11y_body_diagram">Músculos trabajados, de más a menos: %1$s</string>
+    <string name="a11y_body_diagram_none">Ningún músculo trabajado en este periodo</string>
+    <string name="a11y_rest_day">descanso</string>
     <string name="dashboard_welcome_subtitle">Vamos a lograr tus metas hoy.</string>
     <string name="dashboard_this_week">Esta Semana</string>
     <string name="dashboard_workouts">Entrenamientos</string>

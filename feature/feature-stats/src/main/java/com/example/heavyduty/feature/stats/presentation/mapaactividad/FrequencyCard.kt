@@ -46,6 +46,8 @@ import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -221,6 +223,8 @@ private fun WeekBars(week: FrequencyContent.Week) {
         Row(modifier = Modifier.fillMaxWidth()) {
             week.days.forEachIndexed { index, day ->
                 BarColumn(
+                    description = "${DayOfWeek.of(index + 1).getDisplayName(TextStyle.FULL, locale)} ${day.dayOfMonth}: " +
+                        if (day.minutes > 0f) shortDuration(day.minutes) else stringResource(R.string.a11y_rest_day),
                     value = if (day.minutes > 0f) shortDuration(day.minutes) else "",
                     fraction = barFraction(day.minutes, longest),
                     label = weekdayLabel(DayOfWeek.of(index + 1), locale),
@@ -292,8 +296,10 @@ private fun DayCell(day: FrequencyDay) {
     val colors = MaterialTheme.colorScheme
     val fill = if (day.intensity > 0f) lerp(colors.raised, colors.primary, day.intensity) else colors.raised
     val shape = RoundedCornerShape(10.dp)
+    val description = dayDescription(day)
     Box(
         modifier = Modifier
+            .clearAndSetSemantics { contentDescription = description }
             .fillMaxHeight()
             .fillMaxWidth()
             .alpha(if (day.isFuture) FUTURE_ALPHA else 1f)
@@ -308,6 +314,18 @@ private fun DayCell(day: FrequencyDay) {
             fontWeight = if (day.intensity > 0f || day.isToday) FontWeight.Bold else FontWeight.Normal,
             color = if (day.intensity >= LIGHT_TEXT_INTENSITY) colors.onPrimary else colors.onSurface
         )
+    }
+}
+
+/** "9 octubre: 1 entrenamiento, 35 h", "8 octubre: descanso", or just the date for days still ahead. */
+@Composable
+private fun dayDescription(day: FrequencyDay): String {
+    val locale = LocalConfiguration.current.locales[0]
+    val date = SimpleDateFormat("d MMMM", locale).format(Date(day.dayStart))
+    return when {
+        day.isFuture -> date
+        day.sessions == 0 -> "$date: ${stringResource(R.string.a11y_rest_day)}"
+        else -> "$date: ${pluralStringResource(R.plurals.frequency_sessions, day.sessions, day.sessions)}, ${shortDuration(day.minutes)}"
     }
 }
 
@@ -347,6 +365,9 @@ private fun YearBars(year: FrequencyContent.Year) {
         Row(modifier = Modifier.fillMaxWidth()) {
             year.months.forEach { month ->
                 BarColumn(
+                    description = Month.of(monthNumber(month.monthStart)).getDisplayName(TextStyle.FULL_STANDALONE, locale)
+                        .replaceFirstChar { it.titlecase(locale) } + ": " +
+                        pluralStringResource(R.plurals.activity_days, month.trainedDays, month.trainedDays),
                     value = if (month.trainedDays > 0) month.trainedDays.toString() else "",
                     fraction = barFraction(month.trainedDays.toFloat(), most),
                     label = Month.of(monthNumber(month.monthStart)).getDisplayName(TextStyle.NARROW, locale).uppercase(locale),
@@ -388,12 +409,16 @@ private fun BarColumn(
     sublabel: String?,
     highlighted: Boolean,
     faded: Boolean,
+    description: String,
     modifier: Modifier = Modifier
 ) {
     val colors = MaterialTheme.colorScheme
     val animated by animateFloatAsState(targetValue = fraction, label = "bar")
     Column(
-        modifier = modifier.alpha(if (faded) FUTURE_ALPHA else 1f),
+        // Read as one sentence ("Viernes 9: 35 h"), not as a number, a letter and a date apart.
+        modifier = modifier
+            .alpha(if (faded) FUTURE_ALPHA else 1f)
+            .clearAndSetSemantics { contentDescription = description },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(

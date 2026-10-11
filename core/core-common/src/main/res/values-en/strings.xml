@@ -90,6 +90,11 @@
     <!-- Dashboard -->
     <string name="dashboard_welcome_title">Welcome back, athlete!</string>
     <string name="dashboard_welcome_title_named">Welcome back, %1$s!</string>
+    <string name="a11y_line_chart">Chart with %1$d entries, from %2$s to %3$s. Lowest %4$s, highest %5$s, latest %6$s.</string>
+    <string name="a11y_radar_chart">Distribution: %1$s</string>
+    <string name="a11y_body_diagram">Muscles worked, most first: %1$s</string>
+    <string name="a11y_body_diagram_none">No muscles worked in this period</string>
+    <string name="a11y_rest_day">rest</string>
     <string name="dashboard_welcome_subtitle">Let\'s hit your goals today.</string>
     <string name="dashboard_this_week">This Week</string>
     <string name="dashboard_workouts">Workouts</string>

@@ -20,6 +20,8 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
@@ -71,8 +73,13 @@ fun HdRadarChart(
         animationProgress.animateTo(1f, animationSpec = tween(durationMillis = 800))
     }
 
+    val description = stringResource(
+        R.string.a11y_radar_chart,
+        shareOfTotal(data).joinToString(", ") { (label, percent) -> "$label $percent%" }
+    )
     Canvas(
         modifier = modifier
+            .semantics { contentDescription = description }
             .fillMaxSize()
             .aspectRatio(1f)
             .padding(16.dp)

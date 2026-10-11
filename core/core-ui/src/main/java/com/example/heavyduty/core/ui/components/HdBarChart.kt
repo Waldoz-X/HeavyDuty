@@ -24,6 +24,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -73,7 +75,12 @@ fun HdBarChart(
                 animatedFraction.animateTo(targetFraction, animationSpec = tween(durationMillis = 700))
             }
 
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            // Read as one item, "Lu: 1.5 h", rather than the value then its label separately.
+            val description = "$label: ${valueFormatter(value)}"
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.clearAndSetSemantics { contentDescription = description }
+            ) {
                 Text(
                     text = valueFormatter(value),
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
