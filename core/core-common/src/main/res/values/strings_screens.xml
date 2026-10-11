@@ -80,6 +80,15 @@
     <string name="profile_current_streak">Racha actual</string>
     <string name="profile_streak_days">%1$d d</string>
     <string name="profile_view_stats">Ver estadísticas</string>
+    <string name="profile_reminder">Recordatorio de entrenamiento</string>
+    <string name="profile_reminder_hint">Te avisa a esta hora los días que tu calendario tiene una rutina, si aún no la entrenaste.</string>
+    <string name="profile_reminder_time">Hora del aviso: %1$s</string>
+    <string name="profile_reminder_change_time">Cambiar hora</string>
+    <string name="profile_reminder_time_title">Hora del recordatorio</string>
+    <string name="reminder_channel_name">Recordatorios de entrenamiento</string>
+    <string name="reminder_channel_description">Avisa los días que tu calendario tiene una rutina pendiente.</string>
+    <string name="reminder_title">Hoy toca: %1$s</string>
+    <string name="reminder_text">Toca para empezar tu entrenamiento.</string>
     <string name="profile_body_figure">Figura corporal</string>
     <string name="profile_body_figure_hint">Usada en los mapas musculares de Estadísticas</string>
     <string name="profile_body_male">Hombre</string>

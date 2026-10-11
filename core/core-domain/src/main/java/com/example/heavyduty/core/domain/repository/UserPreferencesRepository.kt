@@ -1,5 +1,6 @@
 package com.example.heavyduty.core.domain.repository
 
+import com.example.heavyduty.core.domain.model.ReminderSettings
 import com.example.heavyduty.core.domain.model.WeightUnit
 import kotlinx.coroutines.flow.Flow
 
@@ -32,4 +33,8 @@ interface UserPreferencesRepository {
      */
     val preferredWeightUnit: Flow<WeightUnit>
     suspend fun setPreferredWeightUnit(unit: WeightUnit)
+
+    /** The daily training reminder; see [ReminderSettings]. */
+    val trainingReminder: Flow<ReminderSettings>
+    suspend fun setTrainingReminder(settings: ReminderSettings)
 }

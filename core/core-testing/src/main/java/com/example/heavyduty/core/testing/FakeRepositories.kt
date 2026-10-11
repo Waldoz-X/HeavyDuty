@@ -5,6 +5,7 @@ import com.example.heavyduty.core.domain.model.CalendarEntry
 import com.example.heavyduty.core.domain.model.Exercise
 import com.example.heavyduty.core.domain.model.ExerciseType
 import com.example.heavyduty.core.domain.model.MuscleGroup
+import com.example.heavyduty.core.domain.model.ReminderSettings
 import com.example.heavyduty.core.domain.model.Routine
 import com.example.heavyduty.core.domain.model.RoutineExercise
 import com.example.heavyduty.core.domain.model.WeightUnit
@@ -187,6 +188,7 @@ class FakeUserPreferencesRepository(goalWeightKg: Float? = null) : UserPreferenc
     override val effortTrackingEnabled = MutableStateFlow(false)
     override val preferredEffortScale = MutableStateFlow("RIR")
     override val preferredWeightUnit = MutableStateFlow(WeightUnit.KG)
+    override val trainingReminder = MutableStateFlow(ReminderSettings())
 
     override suspend fun setDisplayName(name: String) {
         displayName.value = name
@@ -205,5 +207,8 @@ class FakeUserPreferencesRepository(goalWeightKg: Float? = null) : UserPreferenc
     }
     override suspend fun setPreferredWeightUnit(unit: WeightUnit) {
         preferredWeightUnit.value = unit
+    }
+    override suspend fun setTrainingReminder(settings: ReminderSettings) {
+        trainingReminder.value = settings
     }
 }

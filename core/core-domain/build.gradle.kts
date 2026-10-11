@@ -15,10 +15,13 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+        // java.time (the training reminder's schedule) on API 24-25.
+        isCoreLibraryDesugaringEnabled = true
     }
 }
 
 dependencies {
+    coreLibraryDesugaring(libs.desugar.jdk.libs)
     // Coroutines for Flow in repository interfaces
     implementation(libs.kotlinx.coroutines.core)
 

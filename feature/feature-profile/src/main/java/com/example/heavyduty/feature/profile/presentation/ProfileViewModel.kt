@@ -7,12 +7,14 @@ import androidx.lifecycle.viewModelScope
 import com.example.heavyduty.core.common.R
 import com.example.heavyduty.core.common.flow.whileSubscribed
 import com.example.heavyduty.core.domain.model.Clock
+import com.example.heavyduty.core.domain.model.ReminderSettings
 import com.example.heavyduty.core.domain.model.WeightUnit
 import com.example.heavyduty.core.domain.model.WorkoutSet
 import com.example.heavyduty.core.domain.model.currentStreakDays
 import com.example.heavyduty.core.domain.model.displayName
 import com.example.heavyduty.core.domain.model.excludeWarmups
 import com.example.heavyduty.core.domain.repository.ExerciseRepository
+import com.example.heavyduty.core.domain.repository.TrainingReminderScheduler
 import com.example.heavyduty.core.domain.repository.UserPreferencesRepository
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
 import com.example.heavyduty.core.ui.components.WorkoutFeedItem
@@ -68,6 +70,7 @@ class ProfileViewModel @Inject constructor(
     workoutRepository: WorkoutRepository,
     exerciseRepository: ExerciseRepository,
     private val userPreferencesRepository: UserPreferencesRepository,
+    private val reminderScheduler: TrainingReminderScheduler,
     @param:ApplicationContext private val appContext: Context,
     private val clock: Clock
 ) : ViewModel() {
@@ -160,6 +163,10 @@ class ProfileViewModel @Inject constructor(
         }
 
         launch {
+            userPreferencesRepository.trainingReminder.collect { reminder -> _uiState.update { it.copy(reminder = reminder) } }
+        }
+
+        launch {
             combine(profileDataFlow, settingsFlow) { data, settings ->
                 _uiState.update {
                     it.copy(
@@ -234,6 +241,10 @@ class ProfileViewModel @Inject constructor(
                 viewModelScope.launch { setPreferredEffortScaleUseCase(event.scale) }
             }
 
+            is ProfileUiEvent.OnReminderEnabledChange -> updateReminder { it.copy(enabled = event.enabled) }
+
+            is ProfileUiEvent.OnReminderTimeChange -> updateReminder { it.copy(hour = event.hour, minute = event.minute) }
+
             is ProfileUiEvent.OnPreferredWeightUnitChange -> {
                 viewModelScope.launch { userPreferencesRepository.setPreferredWeightUnit(event.unit) }
             }
@@ -245,6 +256,16 @@ class ProfileViewModel @Inject constructor(
             ProfileUiEvent.OnDismissBackupMessage -> {
                 _uiState.update { it.copy(backupMessage = null) }
             }
+        }
+    }
+
+    /** Saves the change and moves (or clears) the alarm to match. */
+    private fun updateReminder(change: (ReminderSettings) -> ReminderSettings) {
+        val updated = change(_uiState.value.reminder)
+        _uiState.update { it.copy(reminder = updated) }
+        viewModelScope.launch {
+            userPreferencesRepository.setTrainingReminder(updated)
+            reminderScheduler.schedule(updated)
         }
     }
 

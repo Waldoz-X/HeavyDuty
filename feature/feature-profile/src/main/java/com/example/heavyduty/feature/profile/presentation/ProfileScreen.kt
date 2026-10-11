@@ -264,6 +264,10 @@ private fun ProfileContent(
         }
 
         item {
+            TrainingReminderCard(reminder = uiState.reminder, onEvent = onEvent)
+        }
+
+        item {
             HdCard(modifier = Modifier.fillMaxWidth()) {
                 Text(
                     text = stringResource(R.string.profile_weight_unit),

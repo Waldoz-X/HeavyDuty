@@ -7,8 +7,11 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.floatPreferencesKey
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.example.heavyduty.core.domain.model.DEFAULT_REMINDER_HOUR
+import com.example.heavyduty.core.domain.model.ReminderSettings
 import com.example.heavyduty.core.domain.model.WeightUnit
 import com.example.heavyduty.core.domain.repository.UserPreferencesRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -33,6 +36,8 @@ class UserPreferencesRepositoryImpl @Inject constructor(@ApplicationContext priv
         val EFFORT_TRACKING_ENABLED = booleanPreferencesKey("effort_tracking_enabled")
         val PREFERRED_EFFORT_SCALE = stringPreferencesKey("preferred_effort_scale")
         val PREFERRED_WEIGHT_UNIT = stringPreferencesKey("preferred_weight_unit")
+        val REMINDER_ENABLED = booleanPreferencesKey("training_reminder_enabled")
+        val REMINDER_MINUTE_OF_DAY = intPreferencesKey("training_reminder_minute_of_day")
     }
 
     private val safeData: Flow<Preferences> = context.userPreferencesDataStore.data
@@ -89,4 +94,22 @@ class UserPreferencesRepositoryImpl @Inject constructor(@ApplicationContext priv
     override suspend fun setPreferredWeightUnit(unit: WeightUnit) {
         context.userPreferencesDataStore.edit { prefs -> prefs[Keys.PREFERRED_WEIGHT_UNIT] = unit.name }
     }
+
+    override val trainingReminder: Flow<ReminderSettings> = safeData.map { prefs ->
+        val minuteOfDay = prefs[Keys.REMINDER_MINUTE_OF_DAY] ?: (DEFAULT_REMINDER_HOUR * MINUTES_PER_HOUR)
+        ReminderSettings(
+            enabled = prefs[Keys.REMINDER_ENABLED] ?: false,
+            hour = minuteOfDay / MINUTES_PER_HOUR,
+            minute = minuteOfDay % MINUTES_PER_HOUR
+        )
+    }
+
+    override suspend fun setTrainingReminder(settings: ReminderSettings) {
+        context.userPreferencesDataStore.edit { prefs ->
+            prefs[Keys.REMINDER_ENABLED] = settings.enabled
+            prefs[Keys.REMINDER_MINUTE_OF_DAY] = settings.hour * MINUTES_PER_HOUR + settings.minute
+        }
+    }
 }
+
+private const val MINUTES_PER_HOUR = 60

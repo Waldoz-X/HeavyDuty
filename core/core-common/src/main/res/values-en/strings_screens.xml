@@ -75,6 +75,15 @@
     <string name="profile_current_streak">Current streak</string>
     <string name="profile_streak_days">%1$d d</string>
     <string name="profile_view_stats">View stats</string>
+    <string name="profile_reminder">Training reminder</string>
+    <string name="profile_reminder_hint">Reminds you at this time on days your calendar has a routine, if you haven\'t trained it yet.</string>
+    <string name="profile_reminder_time">Reminder time: %1$s</string>
+    <string name="profile_reminder_change_time">Change time</string>
+    <string name="profile_reminder_time_title">Reminder time</string>
+    <string name="reminder_channel_name">Training reminders</string>
+    <string name="reminder_channel_description">Lets you know on days your calendar has a routine still to do.</string>
+    <string name="reminder_title">Today: %1$s</string>
+    <string name="reminder_text">Tap to start your workout.</string>
     <string name="profile_body_figure">Body figure</string>
     <string name="profile_body_figure_hint">Used in the muscle maps in Stats</string>
     <string name="profile_body_male">Male</string>
