@@ -140,14 +140,18 @@ fun HistoryListScreen(
                     ) { session ->
                         HistorySessionItem(
                             session = session,
-                            // One still running is opened where it can be continued, not edited.
-                            onClick = { if (session.status == WorkoutStatus.IN_PROGRESS) onStartWorkout() else onSessionClick(session.id) }
+                            onClick = { openHistorySession(session, onContinueWorkout = onStartWorkout, onOpenDetail = onSessionClick) }
                         )
                     }
                 }
             }
         }
     }
+}
+
+/** A finished workout opens its detail; one still running opens where it can be continued, not edited. */
+internal fun openHistorySession(session: WorkoutSession, onContinueWorkout: () -> Unit, onOpenDetail: (Long) -> Unit) {
+    if (session.status == WorkoutStatus.IN_PROGRESS) onContinueWorkout() else onOpenDetail(session.id)
 }
 
 @Composable

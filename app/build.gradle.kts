@@ -19,6 +19,11 @@ val keystoreProperties = Properties().apply {
 }
 
 android {
+    testOptions {
+        // Robolectric needs the merged resources (strings, theme) to render composables.
+        unitTests.isIncludeAndroidResources = true
+    }
+
     namespace = "com.example.heavyduty"
     compileSdk {
         version = release(37)
@@ -155,6 +160,13 @@ dependencies {
     // Testing
     testImplementation(libs.junit)
     testImplementation(project(":core:core-testing"))
+
+    // Compose UI tests on the JVM (Robolectric): no device needed, run with the unit tests.
+    testImplementation(platform(libs.androidx.compose.bom))
+    testImplementation(libs.androidx.compose.ui.test.junit4)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.junit)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

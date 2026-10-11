@@ -92,7 +92,25 @@ fun WorkoutDetailScreen(onNavigateBack: () -> Unit, modifier: Modifier = Modifie
         onNavigateBack = onNavigateBack,
         onUndoDeleteSet = { viewModel.onEvent(WorkoutDetailUiEvent.OnUndoDeleteSet(it)) }
     )
+    WorkoutDetailScaffold(
+        uiState = uiState,
+        onEvent = viewModel::onEvent,
+        onNavigateBack = onNavigateBack,
+        snackbarHostState = snackbarHostState,
+        modifier = modifier
+    )
+}
 
+/** Everything the screen draws, from a plain state: internal so UI tests can drive it without Hilt. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun WorkoutDetailScaffold(
+    uiState: WorkoutDetailUiState,
+    onEvent: (WorkoutDetailUiEvent) -> Unit,
+    onNavigateBack: () -> Unit,
+    modifier: Modifier = Modifier,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
+) {
     var dialog by remember { mutableStateOf<DetailDialog?>(null) }
     val session = uiState.session
     val title = session?.sessionName?.ifBlank { null } ?: stringResource(R.string.history_workout_default)
@@ -119,13 +137,13 @@ fun WorkoutDetailScreen(onNavigateBack: () -> Unit, modifier: Modifier = Modifie
             else -> WorkoutDetailContent(
                 uiState = uiState,
                 onEditSet = { dialog = DetailDialog.EditSet(it.id) },
-                onDeleteSet = { viewModel.onEvent(WorkoutDetailUiEvent.OnDeleteSet(it)) },
+                onDeleteSet = { onEvent(WorkoutDetailUiEvent.OnDeleteSet(it)) },
                 modifier = Modifier.padding(innerPadding)
             )
         }
     }
 
-    DetailDialogs(dialog = dialog, uiState = uiState, title = title, onDismiss = { dialog = null }, onEvent = viewModel::onEvent)
+    DetailDialogs(dialog = dialog, uiState = uiState, title = title, onDismiss = { dialog = null }, onEvent = onEvent)
 }
 
 /** Navigates back when the workout is deleted; messages and the set-deleted undo go to [snackbarHostState]. */

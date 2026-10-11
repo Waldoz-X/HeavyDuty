@@ -370,7 +370,7 @@ private fun isCompactHeight(): Boolean {
 }
 
 @Composable
-private fun HeavyDutyNavigationBar(isSelected: (TopLevelDestination) -> Boolean, onNavigate: (TopLevelDestination) -> Unit) {
+internal fun HeavyDutyNavigationBar(isSelected: (TopLevelDestination) -> Boolean, onNavigate: (TopLevelDestination) -> Unit) {
     NavigationBar {
         TopLevelDestination.entries.forEach { destination ->
             val selected = isSelected(destination)
@@ -389,7 +389,7 @@ private fun HeavyDutyNavigationBar(isSelected: (TopLevelDestination) -> Boolean,
  * so all four fit the short height), and the workout-in-progress shortcut at the bottom.
  */
 @Composable
-private fun HeavyDutyNavigationRail(
+internal fun HeavyDutyNavigationRail(
     isSelected: (TopLevelDestination) -> Boolean,
     onNavigate: (TopLevelDestination) -> Unit,
     onOpenMenu: () -> Unit,
