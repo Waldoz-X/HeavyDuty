@@ -50,96 +50,96 @@ internal fun WorkoutStartScreen(routines: List<Routine>, onEvent: (ActiveWorkout
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        item {
-            Text(
-                text = stringResource(R.string.workout_start_title),
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-            Text(
-                text = stringResource(R.string.workout_start_subtitle),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-
-        item {
-            HdCard(
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                onClick = { onEvent(ActiveWorkoutUiEvent.OnStartFreeWorkout) }
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconBadge(icon = Icons.Default.FitnessCenter)
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = stringResource(R.string.workout_free_title),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                        Text(
-                            text = stringResource(R.string.workout_free_description),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    }
-                    Icon(
-                        imageVector = Icons.Default.PlayArrow,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                }
-            }
-        }
-
-        item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = stringResource(R.string.workout_your_routines),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-                if (routines.isNotEmpty()) {
-                    HdTextButton(
-                        text = stringResource(R.string.workout_manage_routines),
-                        onClick = { onEvent(ActiveWorkoutUiEvent.OnNavigateToRoutines) }
-                    )
-                }
-            }
-        }
-
+        item { StartTitle() }
+        item { FreeWorkoutCard(onClick = { onEvent(ActiveWorkoutUiEvent.OnStartFreeWorkout) }) }
+        item { RoutinesHeader(showManage = routines.isNotEmpty(), onManage = { onEvent(ActiveWorkoutUiEvent.OnNavigateToRoutines) }) }
         if (routines.isEmpty()) {
-            item {
-                HdEmptyState(
-                    icon = Icons.Default.FitnessCenter,
-                    title = stringResource(R.string.workout_no_routines_title),
-                    description = stringResource(R.string.workout_no_routines_description)
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-                HdTonalButton(
-                    text = stringResource(R.string.workout_create_routine),
-                    onClick = { onEvent(ActiveWorkoutUiEvent.OnNavigateToRoutines) },
-                    icon = Icons.Default.Add,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
+            item { NoRoutines(onCreate = { onEvent(ActiveWorkoutUiEvent.OnNavigateToRoutines) }) }
         } else {
             items(items = routines, key = { it.id }) { routine ->
-                RoutineStartCard(
-                    routine = routine,
-                    onStart = { onEvent(ActiveWorkoutUiEvent.OnStartRoutine(routine.id)) }
-                )
+                RoutineStartCard(routine = routine, onStart = { onEvent(ActiveWorkoutUiEvent.OnStartRoutine(routine.id)) })
             }
         }
+    }
+}
+
+@Composable
+private fun StartTitle(modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {
+        Text(
+            text = stringResource(R.string.workout_start_title),
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+        Text(
+            text = stringResource(R.string.workout_start_subtitle),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+private fun FreeWorkoutCard(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    HdCard(modifier = modifier, containerColor = MaterialTheme.colorScheme.primaryContainer, onClick = onClick) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            IconBadge(icon = Icons.Default.FitnessCenter)
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.workout_free_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+                Text(
+                    text = stringResource(R.string.workout_free_description),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+            Icon(imageVector = Icons.Default.PlayArrow, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimaryContainer)
+        }
+    }
+}
+
+@Composable
+private fun RoutinesHeader(showManage: Boolean, onManage: () -> Unit, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = stringResource(R.string.workout_your_routines),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+        if (showManage) {
+            HdTextButton(text = stringResource(R.string.workout_manage_routines), onClick = onManage)
+        }
+    }
+}
+
+@Composable
+private fun NoRoutines(onCreate: () -> Unit, modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {
+        HdEmptyState(
+            icon = Icons.Default.FitnessCenter,
+            title = stringResource(R.string.workout_no_routines_title),
+            description = stringResource(R.string.workout_no_routines_description)
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        HdTonalButton(
+            text = stringResource(R.string.workout_create_routine),
+            onClick = onCreate,
+            icon = Icons.Default.Add,
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
 

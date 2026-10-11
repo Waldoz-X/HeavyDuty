@@ -5,8 +5,6 @@
     <ID>CyclomaticComplexMethod:MainActivity.kt:@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class) @Composable private fun HeavyDutyMainScreen</ID>
     <ID>CyclomaticComplexMethod:SeedData.kt:SeedData$suspend fun populateExercises</ID>
     <ID>LongMethod:ActiveWorkoutBar.kt:@Composable fun ActiveWorkoutBar</ID>
-    <ID>LongMethod:ActiveWorkoutScreen.kt:@Composable fun ActiveWorkoutScreen</ID>
-    <ID>LongMethod:ActiveWorkoutScreen.kt:@Composable private fun PersonalRecordBanner</ID>
     <ID>LongMethod:BodyWeightStatsScreen.kt:@Composable private fun HistoryEntryCard</ID>
     <ID>LongMethod:BodyWeightStatsScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun BodyWeightStatsScreen</ID>
     <ID>LongMethod:DashboardScreen.kt:@Composable private fun BodyWeightCard</ID>
@@ -25,13 +23,8 @@
     <ID>LongMethod:RoutineEditorScreen.kt:@Composable private fun EditorContent</ID>
     <ID>LongMethod:RoutineEditorScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun RoutineEditorScreen</ID>
     <ID>LongMethod:SeedData.kt:SeedData$suspend fun populateExercises</ID>
-    <ID>LongMethod:SetTable.kt:@Composable private fun ActiveSetRow</ID>
     <ID>LongMethod:TimerScreen.kt:@Composable fun TimerScreen</ID>
     <ID>LongMethod:TimerScreen.kt:@Composable private fun TimerDial</ID>
-    <ID>LongMethod:WorkoutHeader.kt:@Composable internal fun ExerciseStrip</ID>
-    <ID>LongMethod:WorkoutHeader.kt:@Composable internal fun RestTimerBanner</ID>
-    <ID>LongMethod:WorkoutHeader.kt:@Composable internal fun WorkoutHeader</ID>
-    <ID>LongMethod:WorkoutStartScreen.kt:@Composable internal fun WorkoutStartScreen</ID>
     <ID>TooManyFunctions:ActiveWorkoutViewModel.kt:ActiveWorkoutViewModel : ViewModel</ID>
     <ID>TooManyFunctions:FakeRepositories.kt:FakeWorkoutRepository : WorkoutRepository</ID>
     <ID>TooManyFunctions:TimerEngine.kt:TimerEngine : RestTimerController</ID>

@@ -364,55 +364,63 @@ private fun ActiveSetRow(
                     width = ValueColumnWidth
                 )
             }
-            // Squeezes and springs back on tap; the new row's arrival confirms the set.
-            val haptic = LocalHapticFeedback.current
-            val scope = rememberCoroutineScope()
-            val press = remember { Animatable(1f) }
-            FilledIconButton(
-                onClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
-                    scope.launch {
-                        press.snapTo(0.8f)
-                        press.animateTo(1f, spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium))
-                    }
-                    onEvent(ActiveWorkoutUiEvent.OnLogSet)
-                },
-                enabled = !uiState.isLoggingSet,
-                modifier = Modifier
-                    .size(ActionColumnWidth)
-                    .graphicsLayer {
-                        scaleX = press.value
-                        scaleY = press.value
-                    }
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Check,
-                    contentDescription = stringResource(R.string.workout_log_set)
-                )
-            }
+            LogSetButton(enabled = !uiState.isLoggingSet, onLog = { onEvent(ActiveWorkoutUiEvent.OnLogSet) })
         }
         if (uiState.effortTrackingEnabled) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = SetColumnWidth + 6.dp, top = 4.dp, end = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = uiState.preferredEffortScale,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                CompactNumberInput(
-                    value = uiState.effortInput,
-                    onValueChange = { onEvent(ActiveWorkoutUiEvent.OnEffortInputChange(it)) },
-                    placeholder = "—",
-                    keyboardType = KeyboardType.Decimal,
-                    width = 64.dp
-                )
-            }
+            EffortInputRow(
+                scale = uiState.preferredEffortScale,
+                value = uiState.effortInput,
+                onValueChange = { onEvent(ActiveWorkoutUiEvent.OnEffortInputChange(it)) }
+            )
         }
+    }
+}
+
+/** Squeezes and springs back on tap; the new row's arrival confirms the set. */
+@Composable
+private fun LogSetButton(enabled: Boolean, onLog: () -> Unit, modifier: Modifier = Modifier) {
+    val haptic = LocalHapticFeedback.current
+    val scope = rememberCoroutineScope()
+    val press = remember { Animatable(1f) }
+    FilledIconButton(
+        onClick = {
+            haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
+            scope.launch {
+                press.snapTo(0.8f)
+                press.animateTo(1f, spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium))
+            }
+            onLog()
+        },
+        enabled = enabled,
+        modifier = modifier
+            .size(ActionColumnWidth)
+            .graphicsLayer {
+                scaleX = press.value
+                scaleY = press.value
+            }
+    ) {
+        Icon(imageVector = Icons.Default.Check, contentDescription = stringResource(R.string.workout_log_set))
+    }
+}
+
+/** The RIR / RPE field under the set, when effort tracking is on. */
+@Composable
+private fun EffortInputRow(scale: String, value: String, onValueChange: (String) -> Unit, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(start = SetColumnWidth + 6.dp, top = 4.dp, end = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(text = scale, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Spacer(modifier = Modifier.width(8.dp))
+        CompactNumberInput(
+            value = value,
+            onValueChange = onValueChange,
+            placeholder = "—",
+            keyboardType = KeyboardType.Decimal,
+            width = 64.dp
+        )
     }
 }
 

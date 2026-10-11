@@ -57,6 +57,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.pluralStringResource
@@ -91,60 +92,69 @@ internal fun WorkoutHeader(uiState: ActiveWorkoutUiState, onFinish: () -> Unit, 
                 .padding(horizontal = 16.dp, vertical = 12.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = uiState.sessionName.ifBlank { stringResource(R.string.workout_default_name) },
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Text(
-                        text = formatDuration(uiState.elapsedSeconds),
-                        style = MaterialTheme.typography.headlineSmall.tabular(),
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-                HdButton(
-                    text = stringResource(R.string.workout_finish),
-                    onClick = onFinish,
-                    icon = Icons.Default.Check
-                )
+                SessionTitleAndClock(name = uiState.sessionName, elapsedSeconds = uiState.elapsedSeconds, modifier = Modifier.weight(1f))
+                HdButton(text = stringResource(R.string.workout_finish), onClick = onFinish, icon = Icons.Default.Check)
                 WorkoutOptionsMenu(onDiscard = onDiscard)
             }
             Spacer(modifier = Modifier.height(8.dp))
-            val planned = uiState.plannedSetCount
-            if (planned > 0) {
-                val done = uiState.completedPlannedSetCount
-                val progress by animateFloatAsState(
-                    targetValue = done.toFloat() / planned,
-                    animationSpec = spring(stiffness = Spring.StiffnessLow),
-                    label = "workoutProgress"
-                )
-                LinearProgressIndicator(
-                    progress = { progress },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(CircleShape),
-                    // A muted track, so 0/6 reads as empty rather than as a full bar.
-                    trackColor = MaterialTheme.colorScheme.surfaceContainerHighest
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                HdRollingText(
-                    text = stringResource(R.string.workout_sets_progress, done, planned),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            } else {
-                val logged = uiState.completedSets.count { !it.isWarmup }
-                Text(
-                    text = pluralStringResource(R.plurals.workout_sets_logged, logged, logged),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+            WorkoutProgress(uiState = uiState)
+        }
+    }
+}
+
+@Composable
+private fun SessionTitleAndClock(name: String, elapsedSeconds: Int, modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {
+        Text(
+            text = name.ifBlank { stringResource(R.string.workout_default_name) },
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        Text(
+            text = formatDuration(elapsedSeconds),
+            style = MaterialTheme.typography.headlineSmall.tabular(),
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary
+        )
+    }
+}
+
+/** Planned sets done, as a bar and "3/6 series" — or, in a free workout, just how many were logged. */
+@Composable
+private fun WorkoutProgress(uiState: ActiveWorkoutUiState, modifier: Modifier = Modifier) {
+    val planned = uiState.plannedSetCount
+    Column(modifier = modifier) {
+        if (planned > 0) {
+            val done = uiState.completedPlannedSetCount
+            val progress by animateFloatAsState(
+                targetValue = done.toFloat() / planned,
+                animationSpec = spring(stiffness = Spring.StiffnessLow),
+                label = "workoutProgress"
+            )
+            LinearProgressIndicator(
+                progress = { progress },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(CircleShape),
+                // A muted track, so 0/6 reads as empty rather than as a full bar.
+                trackColor = MaterialTheme.colorScheme.surfaceContainerHighest
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            HdRollingText(
+                text = stringResource(R.string.workout_sets_progress, done, planned),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        } else {
+            val logged = uiState.completedSets.count { !it.isWarmup }
+            Text(
+                text = pluralStringResource(R.plurals.workout_sets_logged, logged, logged),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
@@ -207,26 +217,7 @@ internal fun RestTimerBanner(rest: RestTimerState, onAdjust: (Int) -> Unit, onSk
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 10.dp)
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = stringResource(R.string.workout_rest),
-                        style = MaterialTheme.typography.labelMedium
-                    )
-                    HdRollingText(
-                        text = formatDuration(rest.remainingSeconds),
-                        style = MaterialTheme.typography.titleLarge.tabular(),
-                        fontWeight = FontWeight.Bold,
-                        countingDown = true
-                    )
-                }
-                SmallTonalButton(text = stringResource(R.string.workout_rest_minus), onClick = { onAdjust(-REST_STEP_SECONDS) })
-                Spacer(modifier = Modifier.width(6.dp))
-                SmallTonalButton(text = stringResource(R.string.workout_rest_plus), onClick = { onAdjust(REST_STEP_SECONDS) })
-                TextButton(onClick = onSkip) {
-                    Text(stringResource(R.string.workout_rest_skip), color = contentColor)
-                }
-            }
+            RestCountdown(remainingSeconds = rest.remainingSeconds, contentColor = contentColor, onAdjust = onAdjust, onSkip = onSkip)
             Spacer(modifier = Modifier.height(6.dp))
             LinearProgressIndicator(
                 progress = { progress },
@@ -242,6 +233,34 @@ internal fun RestTimerBanner(rest: RestTimerState, onAdjust: (Int) -> Unit, onSk
 }
 
 private const val REST_WARNING_SECONDS = 3
+
+/** "Descanso 1:15", then −15 s / +15 s and skip. */
+@Composable
+private fun RestCountdown(
+    remainingSeconds: Int,
+    contentColor: Color,
+    onAdjust: (Int) -> Unit,
+    onSkip: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = stringResource(R.string.workout_rest), style = MaterialTheme.typography.labelMedium)
+            HdRollingText(
+                text = formatDuration(remainingSeconds),
+                style = MaterialTheme.typography.titleLarge.tabular(),
+                fontWeight = FontWeight.Bold,
+                countingDown = true
+            )
+        }
+        SmallTonalButton(text = stringResource(R.string.workout_rest_minus), onClick = { onAdjust(-REST_STEP_SECONDS) })
+        Spacer(modifier = Modifier.width(6.dp))
+        SmallTonalButton(text = stringResource(R.string.workout_rest_plus), onClick = { onAdjust(REST_STEP_SECONDS) })
+        TextButton(onClick = onSkip) {
+            Text(stringResource(R.string.workout_rest_skip), color = contentColor)
+        }
+    }
+}
 
 /** A compact pill tinted from the surrounding content color, so it follows the banner's color. */
 @Composable
@@ -272,55 +291,70 @@ internal fun ExerciseStrip(uiState: ActiveWorkoutUiState, onSelect: (Int) -> Uni
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         itemsIndexed(uiState.routineExercises) { index, exercise ->
-            val isSelected = index == uiState.currentExerciseIndex
             val done = uiState.setsFor(exercise.exerciseId).count { !it.isWarmup }
-            val isDone = uiState.isDone(exercise)
-            val containerColor by animateColorAsState(
-                if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh,
-                label = "stripContainer"
+            ExerciseStripChip(
+                name = exercise.exercise?.displayName.orEmpty(),
+                progress = if (exercise.targetSets > 0) "$done/${exercise.targetSets}" else "$done",
+                isSelected = index == uiState.currentExerciseIndex,
+                isDone = uiState.isDone(exercise),
+                onClick = { onSelect(index) }
             )
-            val contentColor by animateColorAsState(
-                if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
-                label = "stripContent"
+        }
+    }
+}
+
+/** One exercise in the strip: its name and sets done, highlighted when it's the current one. */
+@Composable
+private fun ExerciseStripChip(
+    name: String,
+    progress: String,
+    isSelected: Boolean,
+    isDone: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val containerColor by animateColorAsState(
+        if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh,
+        label = "stripContainer"
+    )
+    val contentColor by animateColorAsState(
+        if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+        label = "stripContent"
+    )
+    Surface(
+        onClick = onClick,
+        modifier = modifier,
+        shape = MaterialTheme.shapes.small,
+        color = containerColor,
+        contentColor = contentColor
+    ) {
+        Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
+            Text(
+                text = name,
+                style = MaterialTheme.typography.labelLarge,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.widthIn(max = 150.dp)
             )
-            Surface(
-                onClick = { onSelect(index) },
-                shape = MaterialTheme.shapes.small,
-                color = containerColor,
-                contentColor = contentColor
-            ) {
-                Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
-                    Text(
-                        text = exercise.exercise?.displayName.orEmpty(),
-                        style = MaterialTheme.typography.labelLarge,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.widthIn(max = 150.dp)
-                    )
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        // The check pops in when the last planned set is logged.
-                        AnimatedVisibility(
-                            visible = isDone,
-                            enter = expandHorizontally() +
-                                scaleIn(spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMediumLow)) +
-                                fadeIn(),
-                            exit = shrinkHorizontally() + fadeOut()
-                        ) {
-                            Row {
-                                Icon(
-                                    imageVector = Icons.Default.CheckCircle,
-                                    contentDescription = stringResource(R.string.workout_done),
-                                    modifier = Modifier.size(12.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                            }
-                        }
-                        HdRollingText(
-                            text = if (exercise.targetSets > 0) "$done/${exercise.targetSets}" else "$done",
-                            style = MaterialTheme.typography.labelSmall
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                // The check pops in when the last planned set is logged.
+                AnimatedVisibility(
+                    visible = isDone,
+                    enter = expandHorizontally() +
+                        scaleIn(spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMediumLow)) +
+                        fadeIn(),
+                    exit = shrinkHorizontally() + fadeOut()
+                ) {
+                    Row {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = stringResource(R.string.workout_done),
+                            modifier = Modifier.size(12.dp)
                         )
+                        Spacer(modifier = Modifier.width(4.dp))
                     }
                 }
+                HdRollingText(text = progress, style = MaterialTheme.typography.labelSmall)
             }
         }
     }

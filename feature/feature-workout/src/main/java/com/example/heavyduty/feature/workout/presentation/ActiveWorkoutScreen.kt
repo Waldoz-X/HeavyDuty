@@ -104,7 +104,6 @@ fun ActiveWorkoutScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
-    val context = LocalContext.current
     val resources = LocalResources.current
     val scope = rememberCoroutineScope()
     val haptic = LocalHapticFeedback.current
@@ -146,24 +145,7 @@ fun ActiveWorkoutScreen(
         }
     }
 
-    // The rest countdown lives in a notification while the phone is pocketed or in another
-    // app; on Android 13+ that needs the permission, so ask once when a workout starts.
-    val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
-    var askedForNotifications by rememberSaveable { mutableStateOf(false) }
-    LaunchedEffect(uiState.isActive) {
-        if (uiState.isActive && !askedForNotifications && needsNotificationPermission(context)) {
-            askedForNotifications = true
-            notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
-        }
-    }
-
-    // Keep the screen on while a session is active, so a rest period between sets doesn't
-    // lock the phone and lose the lifter's place.
-    val view = LocalView.current
-    DisposableEffect(uiState.isActive) {
-        view.keepScreenOn = uiState.isActive
-        onDispose { view.keepScreenOn = false }
-    }
+    WorkoutSessionSideEffects(isActive = uiState.isActive)
 
     Box(modifier = modifier.fillMaxSize()) {
         when {
@@ -184,6 +166,30 @@ fun ActiveWorkoutScreen(
                 .align(Alignment.BottomCenter)
                 .padding(16.dp)
         )
+    }
+}
+
+/** What a running workout asks of the phone: notifications for the rest countdown, and the screen on. */
+@Composable
+private fun WorkoutSessionSideEffects(isActive: Boolean) {
+    val context = LocalContext.current
+    // The rest countdown lives in a notification while the phone is pocketed or in another
+    // app; on Android 13+ that needs the permission, so ask once when a workout starts.
+    val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
+    var askedForNotifications by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(isActive) {
+        if (isActive && !askedForNotifications && needsNotificationPermission(context)) {
+            askedForNotifications = true
+            notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
+
+    // Keep the screen on while a session is active, so a rest period between sets doesn't
+    // lock the phone and lose the lifter's place.
+    val view = LocalView.current
+    DisposableEffect(isActive) {
+        view.keepScreenOn = isActive
+        onDispose { view.keepScreenOn = false }
     }
 }
 
@@ -211,54 +217,60 @@ private fun PersonalRecordBanner(record: ActiveWorkoutUiEffect.PersonalRecord?, 
         exit = slideOutVertically { -it } + fadeOut()
     ) {
         val pr = shown ?: return@AnimatedVisibility
-        Surface(
-            onClick = onDismiss,
-            shape = MaterialTheme.shapes.large,
-            color = MaterialTheme.colorScheme.tertiaryContainer,
-            contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-            shadowElevation = 6.dp
+        PersonalRecordCard(record = pr, onClick = onDismiss)
+    }
+}
+
+@Composable
+private fun PersonalRecordCard(record: ActiveWorkoutUiEffect.PersonalRecord, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Surface(
+        onClick = onClick,
+        modifier = modifier,
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.tertiaryContainer,
+        contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+        shadowElevation = 6.dp
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
+            // The trophy pops once the banner has landed.
+            val trophyScale = remember(record) { Animatable(0.3f) }
+            LaunchedEffect(record) {
+                trophyScale.animateTo(1f, spring(dampingRatio = Spring.DampingRatioHighBouncy, stiffness = Spring.StiffnessLow))
+            }
+            Icon(
+                imageVector = Icons.Default.EmojiEvents,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.tertiary,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // The trophy pops once the banner has landed.
-                val trophyScale = remember(pr) { Animatable(0.3f) }
-                LaunchedEffect(pr) {
-                    trophyScale.animateTo(1f, spring(dampingRatio = Spring.DampingRatioHighBouncy, stiffness = Spring.StiffnessLow))
-                }
-                Icon(
-                    imageVector = Icons.Default.EmojiEvents,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.tertiary,
-                    modifier = Modifier
-                        .size(36.dp)
-                        .graphicsLayer {
-                            scaleX = trophyScale.value
-                            scaleY = trophyScale.value
-                        }
+                    .size(36.dp)
+                    .graphicsLayer {
+                        scaleX = trophyScale.value
+                        scaleY = trophyScale.value
+                    }
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Column {
+                Text(
+                    text = stringResource(R.string.workout_pr_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
                 )
-                Spacer(modifier = Modifier.width(12.dp))
-                Column {
-                    Text(
-                        text = stringResource(R.string.workout_pr_title),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = stringResource(
-                            R.string.workout_pr_detail,
-                            pr.exerciseName,
-                            pr.estimatedOneRepMaxKg.kgToRounded(pr.unit).formatDecimal(),
-                            pr.unit.label
-                        ),
-                        style = MaterialTheme.typography.bodyMedium,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
+                Text(
+                    text = stringResource(
+                        R.string.workout_pr_detail,
+                        record.exerciseName,
+                        record.estimatedOneRepMaxKg.kgToRounded(record.unit).formatDecimal(),
+                        record.unit.label
+                    ),
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
         }
     }
