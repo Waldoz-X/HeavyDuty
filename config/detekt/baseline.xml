@@ -7,8 +7,6 @@
     <ID>LongMethod:ActiveWorkoutBar.kt:@Composable fun ActiveWorkoutBar</ID>
     <ID>LongMethod:BodyWeightStatsScreen.kt:@Composable private fun HistoryEntryCard</ID>
     <ID>LongMethod:BodyWeightStatsScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun BodyWeightStatsScreen</ID>
-    <ID>LongMethod:DashboardScreen.kt:@Composable private fun BodyWeightCard</ID>
-    <ID>LongMethod:DashboardScreen.kt:@Composable private fun TodayCard</ID>
     <ID>LongMethod:DistribucionMuscularScreen.kt:@Composable private fun PeriodTotals</ID>
     <ID>LongMethod:HdBarChart.kt:@Composable fun HdBarChart</ID>
     <ID>LongMethod:HdLineChart.kt:@Composable fun HdLineChart</ID>

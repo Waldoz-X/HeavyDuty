@@ -462,19 +462,7 @@ private fun TodayCard(uiState: DashboardUiState, onEvent: (DashboardUiEvent) -> 
             Spacer(modifier = Modifier.height(4.dp))
             if (today.routines.isEmpty()) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(MaterialTheme.colorScheme.primaryContainer),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.DirectionsRun,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
+                    DayIcon()
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
                         text = stringResource(R.string.dashboard_rest_day),
@@ -487,42 +475,50 @@ private fun TodayCard(uiState: DashboardUiState, onEvent: (DashboardUiEvent) -> 
                 // its own row so finishing one doesn't hide the option to start the others.
                 today.routines.forEachIndexed { index, planned ->
                     if (index > 0) Spacer(modifier = Modifier.height(12.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(MaterialTheme.colorScheme.primaryContainer),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.DirectionsRun,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(
-                            text = planned.routineName,
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                            color = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.weight(1f)
-                        )
-                        if (planned.isCompleted) {
-                            Icon(
-                                imageVector = Icons.Default.CheckCircle,
-                                contentDescription = stringResource(R.string.dashboard_completed),
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                        } else {
-                            HdButton(
-                                text = stringResource(R.string.dashboard_start),
-                                onClick = { onEvent(DashboardUiEvent.OnStartTodayRoutine(planned.routineId)) }
-                            )
-                        }
-                    }
+                    PlannedRoutineRow(
+                        name = planned.routineName,
+                        isCompleted = planned.isCompleted,
+                        onStart = { onEvent(DashboardUiEvent.OnStartTodayRoutine(planned.routineId)) }
+                    )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun DayIcon(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .size(40.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.primaryContainer),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(imageVector = Icons.AutoMirrored.Filled.DirectionsRun, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+    }
+}
+
+/** A routine planned for today: start it, or a check once it's done. */
+@Composable
+private fun PlannedRoutineRow(name: String, isCompleted: Boolean, onStart: () -> Unit, modifier: Modifier = Modifier) {
+    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
+        DayIcon()
+        Spacer(modifier = Modifier.width(12.dp))
+        Text(
+            text = name,
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f)
+        )
+        if (isCompleted) {
+            Icon(
+                imageVector = Icons.Default.CheckCircle,
+                contentDescription = stringResource(R.string.dashboard_completed),
+                tint = MaterialTheme.colorScheme.primary
+            )
+        } else {
+            HdButton(text = stringResource(R.string.dashboard_start), onClick = onStart)
         }
     }
 }
@@ -545,43 +541,9 @@ private fun BodyWeightCard(uiState: DashboardUiState, onEvent: (DashboardUiEvent
                 onEvent(DashboardUiEvent.OnOpenLogWeight)
             })
         }
-
         if (summary.currentKg != null) {
             Spacer(modifier = Modifier.height(4.dp))
-            Row(verticalAlignment = Alignment.Bottom) {
-                Text(
-                    text = summary.currentKg.formatWeightValue(),
-                    style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = weightUnitLabel(),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                if (summary.deltaKg != null) {
-                    Spacer(modifier = Modifier.width(8.dp))
-                    val deltaColor = if (summary.deltaKg <= 0f) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.error
-                    }
-                    val sign = if (summary.deltaKg >= 0f) "+" else ""
-                    Text(
-                        text = "$sign${summary.deltaKg.formatWeightValue()}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = deltaColor
-                    )
-                }
-            }
-            if (summary.goalKg != null) {
-                Text(
-                    text = stringResource(R.string.dashboard_weight_goal, summary.goalKg.formatWeight()),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+            CurrentWeight(currentKg = summary.currentKg, deltaKg = summary.deltaKg, goalKg = summary.goalKg)
             Spacer(modifier = Modifier.height(12.dp))
             val unit = LocalWeightUnit.current
             HdLineChart(
@@ -604,6 +566,35 @@ private fun BodyWeightCard(uiState: DashboardUiState, onEvent: (DashboardUiEvent
             onDismiss = { onEvent(DashboardUiEvent.OnDismissLogWeight) },
             onSave = { kg -> onEvent(DashboardUiEvent.OnLogWeight(kg)) }
         )
+    }
+}
+
+/** "81.1 kg −0.5", green when it went down, and the goal under it. */
+@Composable
+private fun CurrentWeight(currentKg: Float, deltaKg: Float?, goalKg: Float?, modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {
+        Row(verticalAlignment = Alignment.Bottom) {
+            Text(
+                text = currentKg.formatWeightValue(),
+                style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(text = weightUnitLabel(), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (deltaKg != null) {
+                Spacer(modifier = Modifier.width(8.dp))
+                val deltaColor = if (deltaKg <= 0f) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+                val sign = if (deltaKg >= 0f) "+" else ""
+                Text(text = "$sign${deltaKg.formatWeightValue()}", style = MaterialTheme.typography.bodyMedium, color = deltaColor)
+            }
+        }
+        if (goalKg != null) {
+            Text(
+                text = stringResource(R.string.dashboard_weight_goal, goalKg.formatWeight()),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
     }
 }
 
