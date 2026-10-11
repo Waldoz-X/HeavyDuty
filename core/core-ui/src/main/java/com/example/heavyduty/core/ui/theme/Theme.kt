@@ -26,6 +26,7 @@ private val HeavyDutyDarkColorScheme = darkColorScheme(
     onBackground = OnBackgroundDark,
     surface = SurfaceDark,
     onSurface = OnSurface,
+    surfaceVariant = SurfaceVariantDark,
     onSurfaceVariant = OnSurfaceVariant,
     surfaceDim = SurfaceDim,
     surfaceContainerLowest = SurfaceContainerLowest,

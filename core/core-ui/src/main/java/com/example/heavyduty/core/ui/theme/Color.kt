@@ -48,6 +48,9 @@ val SurfaceContainerLow = Color(0xFF1A1A1A)
 val SurfaceContainer = Color(0xFF1E1E1E)
 val SurfaceContainerHigh = Color(0xFF262626)
 val SurfaceContainerHighest = Color(0xFF303030)
+
+// Neutral like the rest: Material's default dark surfaceVariant is lavender, which tinted the stat cards.
+val SurfaceVariantDark = Color(0xFF2A2A2A)
 val SurfaceBright = Color(0xFF383838)
 val OnSurface = Color(0xFFE6E6E6)
 val OnSurfaceVariant = Color(0xFFB0B0B0)
