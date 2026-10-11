@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.heavyduty.core.common.R
+import com.example.heavyduty.core.common.extensions.formatCompact
 import com.example.heavyduty.core.common.extensions.formatOneDecimal
 import com.example.heavyduty.core.domain.model.kgTo
 import com.example.heavyduty.core.ui.LocalWeightUnit
@@ -139,7 +140,8 @@ private fun MonthlyReportList(report: MonthlyReport, modifier: Modifier = Modifi
                     data = report.workoutsPerWeek.map { (week, count) ->
                         stringResource(R.string.monthly_week_label, week) to
                             count.toFloat()
-                    }
+                    },
+                    valueFormatter = { it.roundToInt().toString() }
                 )
             }
         }
@@ -148,7 +150,9 @@ private fun MonthlyReportList(report: MonthlyReport, modifier: Modifier = Modifi
                 val unit = LocalWeightUnit.current
                 WeeklyBarChartCard(
                     title = stringResource(R.string.monthly_volume_per_week, weightUnitLabel()),
-                    data = report.volumePerWeek.map { (week, kg) -> stringResource(R.string.monthly_week_label, week) to kg.kgTo(unit) }
+                    data = report.volumePerWeek.map { (week, kg) -> stringResource(R.string.monthly_week_label, week) to kg.kgTo(unit) },
+                    // Already in the user's unit, which the title names: "1.3k".
+                    valueFormatter = { it.formatCompact() }
                 )
             }
         }
@@ -237,9 +241,9 @@ private fun TimeAndSets(report: MonthlyReport, modifier: Modifier = Modifier) {
     }
 }
 
-/** One value per week of the month as bars. */
+/** One value per week of the month as bars, each labelled by [valueFormatter]. */
 @Composable
-private fun WeeklyBarChartCard(title: String, data: List<Pair<String, Float>>) {
+private fun WeeklyBarChartCard(title: String, data: List<Pair<String, Float>>, valueFormatter: (Float) -> String) {
     HdCard(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = title,
@@ -250,6 +254,7 @@ private fun WeeklyBarChartCard(title: String, data: List<Pair<String, Float>>) {
         Spacer(modifier = Modifier.height(16.dp))
         HdBarChart(
             data = data,
+            valueFormatter = valueFormatter,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(180.dp)
