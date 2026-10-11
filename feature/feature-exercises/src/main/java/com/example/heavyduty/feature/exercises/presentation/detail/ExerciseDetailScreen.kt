@@ -44,6 +44,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -87,12 +88,11 @@ fun ExerciseDetailScreen(
     }
 
     Scaffold(modifier = modifier) { innerPadding ->
+        // The header runs under the status bar, full-bleed; only what's on it keeps clear of it.
+        val statusBar = innerPadding.calculateTopPadding()
         when {
             uiState.isLoading -> {
-                ExerciseDetailLoading(
-                    exerciseId = uiState.exerciseId,
-                    modifier = Modifier.padding(top = innerPadding.calculateTopPadding())
-                )
+                ExerciseDetailLoading(exerciseId = uiState.exerciseId, statusBar = statusBar)
             }
 
             uiState.exercise != null -> {
@@ -101,7 +101,7 @@ fun ExerciseDetailScreen(
                     onNavigateBack = onNavigateBack,
                     onViewProgress = onViewProgress,
                     onWeightUnitChange = { viewModel.onEvent(ExerciseDetailUiEvent.OnWeightUnitChange(it)) },
-                    modifier = Modifier.padding(top = innerPadding.calculateTopPadding())
+                    statusBar = statusBar
                 )
             }
 
@@ -117,17 +117,17 @@ fun ExerciseDetailScreen(
  * transition finding nothing to match and falling back to a plain slide.
  */
 @Composable
-private fun ExerciseDetailLoading(exerciseId: Long, modifier: Modifier = Modifier) {
+private fun ExerciseDetailLoading(exerciseId: Long, statusBar: Dp, modifier: Modifier = Modifier) {
     Column(modifier = modifier.fillMaxSize()) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(HeaderHeight),
+                .height(HeaderHeight + statusBar),
             contentAlignment = Alignment.Center
         ) {
             Box(
                 modifier = Modifier
-                    .padding(top = 12.dp)
+                    .padding(top = 12.dp + statusBar)
                     .size(208.dp)
                     .hdSharedBounds(exerciseImageKey(exerciseId), RoundedCornerShape(20.dp))
                     .clip(RoundedCornerShape(20.dp))
@@ -152,6 +152,7 @@ private fun ExerciseDetailContent(
     onNavigateBack: () -> Unit,
     onViewProgress: (Long) -> Unit,
     onWeightUnitChange: (WeightUnit) -> Unit,
+    statusBar: Dp,
     modifier: Modifier = Modifier
 ) {
     val accent = exercise.muscleGroup.accentColor()
@@ -167,7 +168,7 @@ private fun ExerciseDetailContent(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(HeaderHeight)
+                    .height(HeaderHeight + statusBar)
                     .clipToBounds()
             ) {
                 if (heroImage.isNotBlank()) {
@@ -193,7 +194,7 @@ private fun ExerciseDetailContent(
                     Box(
                         modifier = Modifier
                             .align(Alignment.Center)
-                            .padding(top = 12.dp)
+                            .padding(top = 12.dp + statusBar)
                             .size(208.dp)
                             .hdSharedBounds(exerciseImageKey(exercise.id), RoundedCornerShape(20.dp))
                             .graphicsLayer {
@@ -238,7 +239,8 @@ private fun ExerciseDetailContent(
                         .background(
                             Brush.verticalGradient(
                                 colors = listOf(
-                                    MaterialTheme.colorScheme.scrim.copy(alpha = 0.15f),
+                                    // Darker at the very top: the status bar's light icons sit on it.
+                                    MaterialTheme.colorScheme.scrim.copy(alpha = 0.45f),
                                     Color.Transparent,
                                     MaterialTheme.colorScheme.scrim.copy(alpha = 0.75f)
                                 )
@@ -249,6 +251,7 @@ private fun ExerciseDetailContent(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .padding(top = statusBar)
                         .padding(16.dp)
                 ) {
                     IconButton(

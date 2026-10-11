@@ -7,6 +7,7 @@ import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -119,7 +120,12 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        // The app is always dark, whatever the phone's theme: with the default (which follows the
+        // system) a phone in light mode drew dark status-bar icons on the black background.
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
+        )
         // A recreated activity (rotation…) already handled its launch intent.
         if (savedInstanceState == null) mainViewModel.openSection(intent.getStringExtra(AppSections.EXTRA_OPEN_SECTION))
         setContent {
