@@ -7,6 +7,7 @@ import com.example.heavyduty.core.testing.FakeWorkoutRepository
 import com.example.heavyduty.core.testing.MainDispatcherRule
 import com.example.heavyduty.feature.stats.domain.usecase.GetTrainingActivityHeatmapUseCase
 import java.util.Calendar
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
@@ -15,6 +16,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Rule
 import org.junit.Test
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class MapaActividadViewModelTest {
 
     @get:Rule

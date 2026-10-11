@@ -2,10 +2,10 @@ package com.example.heavyduty.navigation
 
 import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ListAlt
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.ListAlt
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.example.heavyduty.core.common.R
 
@@ -14,7 +14,7 @@ import com.example.heavyduty.core.common.R
  */
 enum class DrawerDestination(val icon: ImageVector, @param:StringRes val labelRes: Int, val route: String) {
     ROUTINES(
-        icon = Icons.Default.ListAlt,
+        icon = Icons.AutoMirrored.Filled.ListAlt,
         labelRes = R.string.nav_routines,
         route = "routines_graph"
     ),
