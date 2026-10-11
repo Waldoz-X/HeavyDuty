@@ -43,7 +43,12 @@ import java.time.format.FormatStyle
  * post notifications where Android requires it; without it the reminder simply doesn't show.
  */
 @Composable
-internal fun TrainingReminderCard(reminder: ReminderSettings, onEvent: (ProfileUiEvent) -> Unit, modifier: Modifier = Modifier) {
+internal fun TrainingReminderCard(
+    reminder: ReminderSettings,
+    onEnabledChange: (Boolean) -> Unit,
+    onTimeChange: (hour: Int, minute: Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
     val context = LocalContext.current
     val askPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
     var pickingTime by rememberSaveable { mutableStateOf(false) }
@@ -64,7 +69,7 @@ internal fun TrainingReminderCard(reminder: ReminderSettings, onEvent: (ProfileU
             HdChip(
                 text = stringResource(R.string.profile_off),
                 isSelected = !reminder.enabled,
-                onClick = { onEvent(ProfileUiEvent.OnReminderEnabledChange(false)) }
+                onClick = { onEnabledChange(false) }
             )
             HdChip(
                 text = stringResource(R.string.profile_on),
@@ -74,7 +79,7 @@ internal fun TrainingReminderCard(reminder: ReminderSettings, onEvent: (ProfileU
                         ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) !=
                         PackageManager.PERMISSION_GRANTED
                     if (needsPermission) askPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
-                    onEvent(ProfileUiEvent.OnReminderEnabledChange(true))
+                    onEnabledChange(true)
                 }
             )
         }
@@ -97,7 +102,7 @@ internal fun TrainingReminderCard(reminder: ReminderSettings, onEvent: (ProfileU
             reminder = reminder,
             onConfirm = { hour, minute ->
                 pickingTime = false
-                onEvent(ProfileUiEvent.OnReminderTimeChange(hour, minute))
+                onTimeChange(hour, minute)
             },
             onDismiss = { pickingTime = false }
         )

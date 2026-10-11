@@ -37,4 +37,8 @@ interface UserPreferencesRepository {
     /** The daily training reminder; see [ReminderSettings]. */
     val trainingReminder: Flow<ReminderSettings>
     suspend fun setTrainingReminder(settings: ReminderSettings)
+
+    /** Whether the first-run welcome was finished or skipped; it's shown only once. */
+    val onboardingCompleted: Flow<Boolean>
+    suspend fun setOnboardingCompleted()
 }

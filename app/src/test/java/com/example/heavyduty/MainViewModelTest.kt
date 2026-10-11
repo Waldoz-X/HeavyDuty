@@ -1,13 +1,18 @@
 package com.example.heavyduty
 
+import com.example.heavyduty.core.common.navigation.AppSections
+import com.example.heavyduty.core.domain.model.Routine
 import com.example.heavyduty.core.domain.model.WeightUnit
 import com.example.heavyduty.core.domain.model.WorkoutSession
 import com.example.heavyduty.core.domain.model.WorkoutSet
 import com.example.heavyduty.core.domain.model.WorkoutStatus
 import com.example.heavyduty.core.domain.repository.RestTimerController
 import com.example.heavyduty.core.domain.repository.RestTimerState
+import com.example.heavyduty.core.domain.repository.StoredDataCheck
 import com.example.heavyduty.core.domain.repository.UserPreferencesRepository
 import com.example.heavyduty.core.testing.FakeClock
+import com.example.heavyduty.core.testing.FakeRoutineRepository
+import com.example.heavyduty.core.testing.FakeUserPreferencesRepository
 import com.example.heavyduty.core.testing.FakeWorkoutRepository
 import com.example.heavyduty.core.testing.MainDispatcherRule
 import com.example.heavyduty.feature.workout.domain.usecase.CompleteWorkoutUseCase
@@ -44,10 +49,15 @@ class MainViewModelTest {
         WorkoutSet(id = id, sessionId = 1, exerciseId = 1, reps = 8, weight = 60f, isCompleted = true, completedAt = at)
 
     private fun viewModel(repository: FakeWorkoutRepository): MainViewModel {
-        val preferences = mockk<UserPreferencesRepository> { every { preferredWeightUnit } returns flowOf(WeightUnit.KG) }
+        val preferences = mockk<UserPreferencesRepository> {
+            every { preferredWeightUnit } returns flowOf(WeightUnit.KG)
+            every { onboardingCompleted } returns flowOf(true)
+        }
         return MainViewModel(
-            userPreferencesRepository = preferences,
+            userPreferences = preferences,
             workoutRepository = repository,
+            routineRepository = FakeRoutineRepository(),
+            storedDataCheck = StoredDataCheck { true },
             restTimerController = restTimer,
             completeWorkout = CompleteWorkoutUseCase(repository, clock),
             discardWorkout = DiscardWorkoutUseCase(repository),
@@ -133,6 +143,64 @@ class MainViewModelTest {
         aMinuteLater()
 
         assertNotNull(viewModel.forgottenWorkout.value)
+    }
+
+    private fun onboardingFor(
+        completed: Boolean,
+        routines: List<Routine>,
+        sessions: List<WorkoutSession>,
+        databaseExisted: Boolean = true
+    ): Boolean? {
+        val preferences = mockk<UserPreferencesRepository> {
+            every { preferredWeightUnit } returns flowOf(WeightUnit.KG)
+            every { onboardingCompleted } returns flowOf(completed)
+        }
+        val repository = FakeWorkoutRepository(sessions)
+        return MainViewModel(
+            userPreferences = preferences,
+            workoutRepository = repository,
+            routineRepository = FakeRoutineRepository(routines),
+            storedDataCheck = StoredDataCheck { databaseExisted },
+            restTimerController = restTimer,
+            completeWorkout = CompleteWorkoutUseCase(repository, clock),
+            discardWorkout = DiscardWorkoutUseCase(repository),
+            clock = clock
+        ).needsOnboarding.value
+    }
+
+    @Test
+    fun `the welcome is for a new install only`() {
+        assertEquals(true, onboardingFor(completed = false, routines = emptyList(), sessions = emptyList()))
+        // Already finished or skipped.
+        assertEquals(false, onboardingFor(completed = true, routines = emptyList(), sessions = emptyList()))
+        // Someone already using the app, from before the welcome existed.
+        assertEquals(false, onboardingFor(completed = false, routines = listOf(Routine(id = 1, name = "Torso")), sessions = emptyList()))
+        assertEquals(false, onboardingFor(completed = false, routines = emptyList(), sessions = listOf(session)))
+        // First launch ever: decided without waiting on the database.
+        assertEquals(true, onboardingFor(completed = false, routines = emptyList(), sessions = listOf(session), databaseExisted = false))
+    }
+
+    @Test
+    fun `finishing the welcome opens the routine editor first, then leaves the welcome for good`() {
+        val preferences = FakeUserPreferencesRepository()
+        val repository = FakeWorkoutRepository()
+        val viewModel = MainViewModel(
+            userPreferences = preferences,
+            workoutRepository = repository,
+            routineRepository = FakeRoutineRepository(),
+            storedDataCheck = StoredDataCheck { false },
+            restTimerController = restTimer,
+            completeWorkout = CompleteWorkoutUseCase(repository, clock),
+            discardWorkout = DiscardWorkoutUseCase(repository),
+            clock = clock
+        )
+        assertEquals(true, viewModel.needsOnboarding.value)
+
+        viewModel.completeOnboarding(createFirstRoutine = true)
+
+        assertEquals(AppSections.SECTION_NEW_ROUTINE, viewModel.pendingSection.value)
+        assertTrue(preferences.onboardingCompleted.value)
+        assertEquals(false, viewModel.needsOnboarding.value)
     }
 
     private class FakeRestTimer : RestTimerController {

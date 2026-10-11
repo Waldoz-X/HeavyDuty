@@ -8,4 +8,7 @@ object AppSections {
     const val EXTRA_OPEN_SECTION = "com.example.heavyduty.OPEN_SECTION"
     const val SECTION_WORKOUT = "workout"
     const val SECTION_TIMER = "timer"
+
+    /** The routine editor, empty: the welcome's "create my first routine". */
+    const val SECTION_NEW_ROUTINE = "new_routine"
 }

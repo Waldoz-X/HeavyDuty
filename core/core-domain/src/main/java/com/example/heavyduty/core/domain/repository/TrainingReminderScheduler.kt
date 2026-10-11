@@ -6,6 +6,6 @@ import com.example.heavyduty.core.domain.model.ReminderSettings
  * Keeps the system alarm for the daily training reminder in line with [ReminderSettings]:
  * (re)set to the next occurrence when enabled, cleared when not.
  */
-interface TrainingReminderScheduler {
+fun interface TrainingReminderScheduler {
     fun schedule(settings: ReminderSettings)
 }

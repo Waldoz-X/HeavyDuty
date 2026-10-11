@@ -37,6 +37,7 @@ class UserPreferencesRepositoryImpl @Inject constructor(@ApplicationContext priv
         val PREFERRED_EFFORT_SCALE = stringPreferencesKey("preferred_effort_scale")
         val PREFERRED_WEIGHT_UNIT = stringPreferencesKey("preferred_weight_unit")
         val REMINDER_ENABLED = booleanPreferencesKey("training_reminder_enabled")
+        val ONBOARDING_COMPLETED = booleanPreferencesKey("onboarding_completed")
         val REMINDER_MINUTE_OF_DAY = intPreferencesKey("training_reminder_minute_of_day")
     }
 
@@ -109,6 +110,12 @@ class UserPreferencesRepositoryImpl @Inject constructor(@ApplicationContext priv
             prefs[Keys.REMINDER_ENABLED] = settings.enabled
             prefs[Keys.REMINDER_MINUTE_OF_DAY] = settings.hour * MINUTES_PER_HOUR + settings.minute
         }
+    }
+
+    override val onboardingCompleted: Flow<Boolean> = safeData.map { prefs -> prefs[Keys.ONBOARDING_COMPLETED] ?: false }
+
+    override suspend fun setOnboardingCompleted() {
+        context.userPreferencesDataStore.edit { prefs -> prefs[Keys.ONBOARDING_COMPLETED] = true }
     }
 }
 

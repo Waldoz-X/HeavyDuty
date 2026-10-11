@@ -89,6 +89,7 @@
 
     <!-- Dashboard -->
     <string name="dashboard_welcome_title">Welcome back, athlete!</string>
+    <string name="dashboard_welcome_title_named">Welcome back, %1$s!</string>
     <string name="dashboard_welcome_subtitle">Let\'s hit your goals today.</string>
     <string name="dashboard_this_week">This Week</string>
     <string name="dashboard_workouts">Workouts</string>

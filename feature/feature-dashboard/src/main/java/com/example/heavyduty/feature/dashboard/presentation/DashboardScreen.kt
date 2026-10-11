@@ -54,6 +54,7 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -127,7 +128,7 @@ private fun DashboardContent(uiState: DashboardUiState, onEvent: (DashboardUiEve
     ) {
         Spacer(modifier = Modifier.height(16.dp))
 
-        WelcomeHeader()
+        WelcomeHeader(name = uiState.displayName)
 
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -189,10 +190,16 @@ private fun DashboardContent(uiState: DashboardUiState, onEvent: (DashboardUiEve
 }
 
 @Composable
-private fun WelcomeHeader() {
+private fun WelcomeHeader(name: String) {
     Column {
         Text(
-            text = stringResource(R.string.dashboard_welcome_title),
+            text = if (name.isBlank()) {
+                stringResource(R.string.dashboard_welcome_title)
+            } else {
+                stringResource(R.string.dashboard_welcome_title_named, name.trim())
+            },
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
             style = MaterialTheme.typography.headlineLarge.copy(
                 fontWeight = FontWeight.ExtraBold,
                 letterSpacing = (-0.5).sp

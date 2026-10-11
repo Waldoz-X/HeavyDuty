@@ -264,7 +264,11 @@ private fun ProfileContent(
         }
 
         item {
-            TrainingReminderCard(reminder = uiState.reminder, onEvent = onEvent)
+            TrainingReminderCard(
+                reminder = uiState.reminder,
+                onEnabledChange = { onEvent(ProfileUiEvent.OnReminderEnabledChange(it)) },
+                onTimeChange = { hour, minute -> onEvent(ProfileUiEvent.OnReminderTimeChange(hour, minute)) }
+            )
         }
 
         item {

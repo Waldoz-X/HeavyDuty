@@ -13,6 +13,7 @@ import com.example.heavyduty.core.data.database.dao.CalendarDao
 import com.example.heavyduty.core.data.database.dao.ExerciseDao
 import com.example.heavyduty.core.data.database.dao.RoutineDao
 import com.example.heavyduty.core.data.database.dao.WorkoutDao
+import com.example.heavyduty.core.domain.repository.StoredDataCheck
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -31,6 +32,12 @@ private const val FIRST_MIGRATED_VERSION = 15
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
 
+    private const val DATABASE_NAME = "heavyduty.db"
+
+    @Provides
+    fun provideStoredDataCheck(@ApplicationContext context: Context): StoredDataCheck =
+        StoredDataCheck { context.getDatabasePath(DATABASE_NAME).exists() }
+
     @Provides
     @Singleton
     fun provideDatabase(
@@ -40,7 +47,7 @@ object DatabaseModule {
     ): HeavyDutyDatabase = Room.databaseBuilder(
         context,
         HeavyDutyDatabase::class.java,
-        "heavyduty.db"
+        DATABASE_NAME
     )
         .addCallback(object : RoomDatabase.Callback() {
             override fun onCreate(db: SupportSQLiteDatabase) {

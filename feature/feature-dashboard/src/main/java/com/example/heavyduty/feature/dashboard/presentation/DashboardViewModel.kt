@@ -6,6 +6,7 @@ import com.example.heavyduty.core.common.flow.whileSubscribed
 import com.example.heavyduty.core.domain.model.Clock
 import com.example.heavyduty.core.domain.repository.BodyWeightRepository
 import com.example.heavyduty.core.domain.repository.CalendarRepository
+import com.example.heavyduty.core.domain.repository.UserPreferencesRepository
 import com.example.heavyduty.feature.dashboard.domain.model.currentWeekRanges
 import com.example.heavyduty.feature.dashboard.domain.usecase.GetBodyWeightSummaryUseCase
 import com.example.heavyduty.feature.dashboard.domain.usecase.GetCurrentStreakUseCase
@@ -37,6 +38,7 @@ class DashboardViewModel @Inject constructor(
     private val getRecentWorkout: GetRecentWorkoutUseCase,
     private val getBodyWeightSummary: GetBodyWeightSummaryUseCase,
     private val getCurrentStreak: GetCurrentStreakUseCase,
+    private val userPreferences: UserPreferencesRepository,
     private val clock: Clock
 ) : ViewModel() {
 
@@ -46,6 +48,7 @@ class DashboardViewModel @Inject constructor(
     val uiState: StateFlow<DashboardUiState> = _uiState.whileSubscribed(viewModelScope) {
         loadDashboardData()
         loadWeekPlan()
+        launch { userPreferences.displayName.collect { name -> _uiState.update { it.copy(displayName = name) } } }
     }
 
     // A Channel, not a SharedFlow: an effect sent while the screen isn't collecting (rotation,

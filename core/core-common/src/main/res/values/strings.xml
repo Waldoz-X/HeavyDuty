@@ -96,6 +96,7 @@
 
     <!-- Dashboard -->
     <string name="dashboard_welcome_title">¡Bienvenido de nuevo, Atleta!</string>
+    <string name="dashboard_welcome_title_named">¡Bienvenido de nuevo, %1$s!</string>
     <string name="dashboard_welcome_subtitle">Vamos a lograr tus metas hoy.</string>
     <string name="dashboard_this_week">Esta Semana</string>
     <string name="dashboard_workouts">Entrenamientos</string>

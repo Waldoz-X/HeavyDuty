@@ -2,12 +2,15 @@ package com.example.heavyduty
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.heavyduty.core.common.navigation.AppSections
 import com.example.heavyduty.core.domain.model.Clock
 import com.example.heavyduty.core.domain.model.WeightUnit
 import com.example.heavyduty.core.domain.model.isForgotten
 import com.example.heavyduty.core.domain.model.lastActivityAt
 import com.example.heavyduty.core.domain.repository.RestTimerController
 import com.example.heavyduty.core.domain.repository.RestTimerState
+import com.example.heavyduty.core.domain.repository.RoutineRepository
+import com.example.heavyduty.core.domain.repository.StoredDataCheck
 import com.example.heavyduty.core.domain.repository.UserPreferencesRepository
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
 import com.example.heavyduty.feature.workout.domain.usecase.CompleteWorkoutUseCase
@@ -33,15 +36,36 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    userPreferencesRepository: UserPreferencesRepository,
+    private val userPreferences: UserPreferencesRepository,
     workoutRepository: WorkoutRepository,
+    routineRepository: RoutineRepository,
+    storedDataCheck: StoredDataCheck,
     private val restTimerController: RestTimerController,
     private val completeWorkout: CompleteWorkoutUseCase,
     private val discardWorkout: DiscardWorkoutUseCase,
     private val clock: Clock
 ) : ViewModel() {
-    val preferredWeightUnit: StateFlow<WeightUnit> = userPreferencesRepository.preferredWeightUnit
+    val preferredWeightUnit: StateFlow<WeightUnit> = userPreferences.preferredWeightUnit
         .stateIn(viewModelScope, SharingStarted.Eagerly, WeightUnit.KG)
+
+    /**
+     * Whether to show the first-run welcome: never finished or skipped, and nothing in the app
+     * yet — so someone already using it never sees it. Null until known (the splash waits).
+     */
+    val needsOnboarding: StateFlow<Boolean?> = storedDataCheck.databaseExists().let { databaseExisted ->
+        userPreferences.onboardingCompleted.flatMapLatest { completed ->
+            when {
+                completed -> flowOf(false)
+
+                // A brand-new install: no need to wait (behind the splash) for the catalog seeding.
+                !databaseExisted -> flowOf(true)
+
+                else -> combine(routineRepository.getAllRoutines(), workoutRepository.getAllSessions()) { routines, sessions ->
+                    routines.isEmpty() && sessions.isEmpty()
+                }
+            }
+        }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+    }
 
     /** The running workout, for the "workout in progress" bar shown on every other screen. */
     val activeWorkout: StateFlow<ActiveWorkoutSummary?> = workoutRepository.getActiveSession()
@@ -104,6 +128,15 @@ class MainViewModel @Inject constructor(
             end(workout.sessionId)
             restTimerController.skipRest()
         }
+    }
+
+    /**
+     * The welcome is done: where to go is set first, then it's marked completed — which swaps it
+     * for the app, whose first screen then opens the routine editor if that was the choice.
+     */
+    fun completeOnboarding(createFirstRoutine: Boolean) {
+        if (createFirstRoutine) openSection(AppSections.SECTION_NEW_ROUTINE)
+        viewModelScope.launch { userPreferences.setOnboardingCompleted() }
     }
 
     private val _pendingSection = MutableStateFlow<String?>(null)

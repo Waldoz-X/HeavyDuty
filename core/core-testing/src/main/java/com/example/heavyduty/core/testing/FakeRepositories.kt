@@ -189,6 +189,7 @@ class FakeUserPreferencesRepository(goalWeightKg: Float? = null) : UserPreferenc
     override val preferredEffortScale = MutableStateFlow("RIR")
     override val preferredWeightUnit = MutableStateFlow(WeightUnit.KG)
     override val trainingReminder = MutableStateFlow(ReminderSettings())
+    override val onboardingCompleted = MutableStateFlow(false)
 
     override suspend fun setDisplayName(name: String) {
         displayName.value = name
@@ -210,5 +211,8 @@ class FakeUserPreferencesRepository(goalWeightKg: Float? = null) : UserPreferenc
     }
     override suspend fun setTrainingReminder(settings: ReminderSettings) {
         trainingReminder.value = settings
+    }
+    override suspend fun setOnboardingCompleted() {
+        onboardingCompleted.value = true
     }
 }

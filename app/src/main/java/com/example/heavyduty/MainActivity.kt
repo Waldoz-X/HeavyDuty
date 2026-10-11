@@ -81,6 +81,7 @@ import com.example.heavyduty.core.common.navigation.AppSections
 import com.example.heavyduty.core.ui.LocalSharedTransitionScope
 import com.example.heavyduty.core.ui.LocalWeightUnit
 import com.example.heavyduty.core.ui.theme.HeavyDutyTheme
+import com.example.heavyduty.feature.profile.presentation.onboarding.OnboardingScreen
 import com.example.heavyduty.navigation.DrawerDestination
 import com.example.heavyduty.navigation.HeavyDutyNavHost
 import com.example.heavyduty.navigation.TopLevelDestination
@@ -118,7 +119,8 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen()
+        // Held until it's known whether this is a first run, so the welcome doesn't flash in.
+        installSplashScreen().setKeepOnScreenCondition { mainViewModel.needsOnboarding.value == null }
         super.onCreate(savedInstanceState)
         // The app is always dark, whatever the phone's theme: with the default (which follows the
         // system) a phone in light mode drew dark status-bar icons on the black background.
@@ -133,8 +135,13 @@ class MainActivity : ComponentActivity() {
             val activeWorkout by mainViewModel.activeWorkout.collectAsStateWithLifecycle()
             val pendingSection by mainViewModel.pendingSection.collectAsStateWithLifecycle()
             val forgottenWorkout by mainViewModel.forgottenWorkout.collectAsStateWithLifecycle()
+            val needsOnboarding by mainViewModel.needsOnboarding.collectAsStateWithLifecycle()
             CompositionLocalProvider(LocalWeightUnit provides weightUnit) {
                 HeavyDutyTheme {
+                    if (needsOnboarding != false) {
+                        OnboardingScreen(onFinish = mainViewModel::completeOnboarding)
+                        return@HeavyDutyTheme
+                    }
                     HeavyDutyMainScreen(
                         activeWorkout = activeWorkout,
                         pendingSection = pendingSection,
@@ -196,12 +203,16 @@ private fun HeavyDutyMainScreen(activeWorkout: ActiveWorkoutSummary?, pendingSec
 
     val currentOnSectionOpen by rememberUpdatedState(onSectionOpen)
     LaunchedEffect(pendingSection) {
-        val route = when (pendingSection) {
-            AppSections.SECTION_WORKOUT -> TopLevelDestination.WORKOUT.route
-            AppSections.SECTION_TIMER -> TopLevelDestination.TIMER.route
+        when (pendingSection) {
+            AppSections.SECTION_WORKOUT -> navController.navigateToTopLevel(TopLevelDestination.WORKOUT.route)
+
+            AppSections.SECTION_TIMER -> navController.navigateToTopLevel(TopLevelDestination.TIMER.route)
+
+            // Pushed over the dashboard, so its back arrow leads into the app.
+            AppSections.SECTION_NEW_ROUTINE -> navController.navigate("routine_editor")
+
             else -> return@LaunchedEffect
         }
-        navController.navigateToTopLevel(route)
         currentOnSectionOpen()
     }
 

@@ -8,6 +8,8 @@ import com.example.heavyduty.feature.dashboard.domain.model.DayPlanUi
  */
 data class DashboardUiState(
     val isLoading: Boolean = true,
+    /** The name from Profile (or the welcome); blank greets a generic "athlete". */
+    val displayName: String = "",
     val weeklyWorkoutsCount: Int = 0,
     val totalTimeSeconds: Int = 0,
     val weeklyVolumeKg: Float = 0f,
