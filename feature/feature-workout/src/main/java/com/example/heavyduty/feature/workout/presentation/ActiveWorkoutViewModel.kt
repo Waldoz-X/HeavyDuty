@@ -6,22 +6,17 @@ import androidx.lifecycle.viewModelScope
 import com.example.heavyduty.core.common.R
 import com.example.heavyduty.core.common.extensions.formatOneDecimal
 import com.example.heavyduty.core.domain.model.Clock
-import com.example.heavyduty.core.domain.model.Effort
 import com.example.heavyduty.core.domain.model.Exercise
 import com.example.heavyduty.core.domain.model.RoutineExercise
 import com.example.heavyduty.core.domain.model.WeightUnit
 import com.example.heavyduty.core.domain.model.WorkoutSession
 import com.example.heavyduty.core.domain.model.WorkoutSet
 import com.example.heavyduty.core.domain.model.WorkoutStatus
-import com.example.heavyduty.core.domain.model.bestEstimatedOneRepMax
 import com.example.heavyduty.core.domain.model.displayName
 import com.example.heavyduty.core.domain.model.displayUnit
-import com.example.heavyduty.core.domain.model.estimatedOneRepMax
 import com.example.heavyduty.core.domain.model.kgToRounded
 import com.example.heavyduty.core.domain.model.nextPrescription
 import com.example.heavyduty.core.domain.model.other
-import com.example.heavyduty.core.domain.model.searchExercises
-import com.example.heavyduty.core.domain.model.toKgFrom
 import com.example.heavyduty.core.domain.model.toProgressionConfig
 import com.example.heavyduty.core.domain.repository.ExerciseRepository
 import com.example.heavyduty.core.domain.repository.RestTimerController
@@ -34,12 +29,10 @@ import com.example.heavyduty.feature.workout.domain.usecase.LogSetUseCase
 import com.example.heavyduty.feature.workout.domain.usecase.StartWorkoutUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
-import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -75,9 +68,6 @@ class ActiveWorkoutViewModel @Inject constructor(
     private val clock: Clock
 ) : ViewModel() {
 
-    private var cachedExercises: List<Exercise>? = null
-    private var workTimerJob: Job? = null
-    private var clockJob: Job? = null
     private var exerciseInfoJob: Job? = null
     private var isStartingSession = false
 
@@ -94,6 +84,9 @@ class ActiveWorkoutViewModel @Inject constructor(
     // background) waits for it instead of being dropped, and is delivered exactly once.
     private val _uiEffect = Channel<ActiveWorkoutUiEffect>(Channel.BUFFERED)
     val uiEffect: Flow<ActiveWorkoutUiEffect> = _uiEffect.receiveAsFlow()
+
+    private val clocks = WorkoutClocks(viewModelScope, clock, _uiState)
+    private val exercisePicker = ExercisePicker(viewModelScope, exerciseRepository, _uiState)
 
     init {
         observePreferences()
@@ -112,9 +105,13 @@ class ActiveWorkoutViewModel @Inject constructor(
 
             is ActiveWorkoutUiEvent.OnEffortInputChange -> updateInputs { it.copy(effortInput = event.value) }
 
-            ActiveWorkoutUiEvent.OnToggleTimedInput -> toggleTimedInput()
+            // Switches the current set between reps and a hold timer (planks, hangs, carries).
+            ActiveWorkoutUiEvent.OnToggleTimedInput -> {
+                clocks.resetHold()
+                _uiState.update { it.copy(isTimedInput = !it.isTimedInput) }
+            }
 
-            ActiveWorkoutUiEvent.OnToggleWorkTimer -> toggleWorkTimer()
+            ActiveWorkoutUiEvent.OnToggleWorkTimer -> clocks.toggleHold()
 
             is ActiveWorkoutUiEvent.OnSelectExercise -> selectExercise(event.index)
 
@@ -136,9 +133,9 @@ class ActiveWorkoutViewModel @Inject constructor(
                 viewModelScope.launch { _uiEffect.send(ActiveWorkoutUiEffect.NavigateToRoutines) }
             }
 
-            ActiveWorkoutUiEvent.OnToggleExercisePicker -> toggleExercisePicker()
+            ActiveWorkoutUiEvent.OnToggleExercisePicker -> exercisePicker.toggle()
 
-            is ActiveWorkoutUiEvent.OnExercisePickerQueryChange -> onExercisePickerQueryChange(event.query)
+            is ActiveWorkoutUiEvent.OnExercisePickerQueryChange -> exercisePicker.onQueryChange(event.query)
 
             is ActiveWorkoutUiEvent.OnAddExercise -> addExerciseToSession(event.exercise)
 
@@ -210,8 +207,7 @@ class ActiveWorkoutViewModel @Inject constructor(
         }
         if (isStartingSession) return
         loadedSessionId = null
-        clockJob?.cancel()
-        workTimerJob?.cancel()
+        clocks.stop()
         exerciseInfoJob?.cancel()
         _uiState.update { current ->
             ActiveWorkoutUiState(
@@ -256,7 +252,7 @@ class ActiveWorkoutViewModel @Inject constructor(
                     effortInput = savedStateHandle.get<String>(KEY_EFFORT_INPUT).takeIf { sameSession }.orEmpty()
                 )
             }
-            startClock(session.startTime)
+            clocks.startSession(session.startTime)
             loadCurrentExerciseInfo()
         } else {
             _uiState.update {
@@ -287,37 +283,6 @@ class ActiveWorkoutViewModel @Inject constructor(
                 ?: return@mapIndexedNotNull null
             freeExercise(exercise, index)
         }
-    }
-
-    /** A free-workout entry: no planned sets or reps, so nothing shows as "pending". */
-    private fun freeExercise(exercise: Exercise, orderIndex: Int) = RoutineExercise(
-        exerciseId = exercise.id,
-        exercise = exercise,
-        orderIndex = orderIndex,
-        targetSets = 0,
-        targetReps = 0
-    )
-
-    /** Appends exercises that have logged sets but aren't listed yet (free workouts). */
-    private fun mergeLoggedExercises(exercises: List<RoutineExercise>, sets: List<WorkoutSet>): List<RoutineExercise> {
-        val listed = exercises.map { it.exerciseId }.toSet()
-        val missing = sets.mapNotNull { it.exercise }
-            .distinctBy { it.id }
-            .filter { it.id !in listed }
-        if (missing.isEmpty()) return exercises
-        return exercises + missing.mapIndexed { offset, exercise -> freeExercise(exercise, exercises.size + offset) }
-    }
-
-    /**
-     * Which exercise to land on when (re)loading an already-running session — wherever the
-     * lifter last logged a set, not silently the first exercise.
-     */
-    private fun resumeExerciseIndex(exercises: List<RoutineExercise>, completedSets: List<WorkoutSet>): Int {
-        // Ties (two sets in the same millisecond) go to the one saved last.
-        val lastLoggedExerciseId = completedSets
-            .maxWithOrNull(compareBy<WorkoutSet>({ it.completedAt ?: 0L }, { it.id }))
-            ?.exerciseId ?: return 0
-        return exercises.indexOfFirst { it.exerciseId == lastLoggedExerciseId }.takeIf { it >= 0 } ?: 0
     }
 
     // ---------------------------------------------------------------- current exercise
@@ -435,46 +400,6 @@ class ActiveWorkoutViewModel @Inject constructor(
         }
     }
 
-    // ---------------------------------------------------------------- timers
-
-    /** Switches the current set between reps input and a hold timer (planks, hangs, carries). */
-    private fun toggleTimedInput() {
-        resetWorkTimer()
-        _uiState.update { it.copy(isTimedInput = !it.isTimedInput) }
-    }
-
-    private fun toggleWorkTimer() {
-        if (_uiState.value.isWorkTimerRunning) {
-            workTimerJob?.cancel()
-            _uiState.update { it.copy(isWorkTimerRunning = false) }
-        } else {
-            _uiState.update { it.copy(isWorkTimerRunning = true) }
-            workTimerJob = viewModelScope.launch {
-                while (true) {
-                    delay(1.seconds)
-                    _uiState.update { it.copy(workTimerElapsedSecs = it.workTimerElapsedSecs + 1) }
-                }
-            }
-        }
-    }
-
-    private fun resetWorkTimer() {
-        workTimerJob?.cancel()
-        _uiState.update { it.copy(isWorkTimerRunning = false, workTimerElapsedSecs = 0) }
-    }
-
-    /** The session clock always counts from the session's start time, never from this screen. */
-    private fun startClock(startTime: Long) {
-        clockJob?.cancel()
-        clockJob = viewModelScope.launch {
-            while (true) {
-                val elapsed = ((clock.nowMillis() - startTime) / 1000).toInt().coerceAtLeast(0)
-                _uiState.update { it.copy(elapsedSeconds = elapsed) }
-                delay(1.seconds)
-            }
-        }
-    }
-
     // ---------------------------------------------------------------- session lifecycle
 
     private fun startWorkoutFromRoutine(routineId: Long) {
@@ -530,71 +455,51 @@ class ActiveWorkoutViewModel @Inject constructor(
         val state = _uiState.value
         if (state.isLoggingSet) return
         val sessionId = state.sessionId ?: return
-        val currentExercise = state.currentExercise ?: return
-        val hint = state.currentSetHint
-        val unit = state.currentUnit
-
-        // Empty inputs fall back to the hint shown in them (suggestion, last time, or the plan).
-        val reps = if (state.isTimedInput) null else state.repsInput.toIntOrNull() ?: hint.reps
-        val durationSecs = if (state.isTimedInput) {
-            state.workTimerElapsedSecs.takeIf { it > 0 } ?: hint.durationSecs
-        } else {
-            null
-        }
-        if (reps == null && durationSecs == null) {
-            showMessage(if (state.isTimedInput) R.string.workout_error_enter_time else R.string.workout_error_enter_reps)
-            return
-        }
-        // weightInput is typed in the exercise's current unit — always stored in kg. A hint is
-        // stored as the rounded value the lifter saw in the field, not the raw conversion.
-        val weight = (state.weightInput.toFloatOrNull() ?: hint.weightKg?.kgToRounded(unit))?.toKgFrom(unit)
-        val effort = state.effortInput.toFloatOrNull()?.let { value ->
-            if (state.preferredEffortScale == "RPE") Effort.Rpe(value) else Effort.Rir(value.toInt())
-        }
-        val setNumber = state.currentSetNumber
+        val exercise = state.currentExercise ?: return
+        val entry = state.setEntry()
+            ?: return showMessage(if (state.isTimedInput) R.string.workout_error_enter_time else R.string.workout_error_enter_reps)
+        val set = WorkoutSet(
+            sessionId = sessionId,
+            exerciseId = exercise.exerciseId,
+            exercise = exercise.exercise,
+            setNumber = state.currentSetNumber,
+            reps = entry.reps,
+            weight = entry.weightKg,
+            durationSecs = entry.durationSecs,
+            isCompleted = true,
+            isWarmup = state.isWarmupInput,
+            effort = entry.effort,
+            weightUnit = state.currentUnit
+        )
 
         _uiState.update { it.copy(isLoggingSet = true) }
         viewModelScope.launch {
             try {
                 val setId = logSetUseCase(
                     sessionId = sessionId,
-                    exerciseId = currentExercise.exerciseId,
-                    setNumber = setNumber,
-                    reps = reps,
-                    weight = weight,
-                    durationSecs = durationSecs,
-                    isWarmup = state.isWarmupInput,
-                    effort = effort,
-                    restSeconds = currentExercise.restBetweenSetsSecs,
-                    weightUnit = unit
+                    exerciseId = set.exerciseId,
+                    setNumber = set.setNumber,
+                    reps = set.reps,
+                    weight = set.weight,
+                    durationSecs = set.durationSecs,
+                    isWarmup = set.isWarmup,
+                    effort = set.effort,
+                    restSeconds = exercise.restBetweenSetsSecs,
+                    weightUnit = state.currentUnit
                 )
-                val loggedSet = WorkoutSet(
-                    id = setId,
-                    sessionId = sessionId,
-                    exerciseId = currentExercise.exerciseId,
-                    exercise = currentExercise.exercise,
-                    setNumber = setNumber,
-                    reps = reps,
-                    weight = weight,
-                    durationSecs = durationSecs,
-                    isCompleted = true,
-                    completedAt = clock.nowMillis(),
-                    isWarmup = state.isWarmupInput,
-                    effort = effort,
-                    weightUnit = unit
-                )
-                resetWorkTimer()
+                val loggedSet = set.copy(id = setId, completedAt = clock.nowMillis())
+                clocks.resetHold()
                 // Shown right away; the database emission that follows carries the same set.
                 updateInputs {
                     it.copy(
-                        completedSets = it.completedSets.filter { set -> set.id != setId } + loggedSet,
+                        completedSets = it.completedSets.filter { logged -> logged.id != setId } + loggedSet,
                         repsInput = "",
                         weightInput = "",
                         isWarmupInput = false,
                         effortInput = ""
                     )
                 }
-                checkPersonalRecord(loggedSet, earlierToday = state.setsFor(currentExercise.exerciseId), unit = unit)
+                celebrateIfRecord(loggedSet, earlierToday = state.setsFor(exercise.exerciseId), unit = state.currentUnit)
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Exception) {
@@ -605,14 +510,8 @@ class ActiveWorkoutViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Celebrates a set that beats every earlier set of the exercise — from past sessions and
-     * earlier today — by estimated 1RM. The first time an exercise is done there's nothing to
-     * beat yet, so it isn't called a record.
-     */
-    private suspend fun checkPersonalRecord(set: WorkoutSet, earlierToday: List<WorkoutSet>, unit: WeightUnit) {
-        if (set.isWarmup) return
-        val estimate = estimatedOneRepMax(set.weight ?: return, set.reps ?: return) ?: return
+    /** Celebrates a set that beats every earlier set of the exercise (see [newRecordEstimate]). */
+    private suspend fun celebrateIfRecord(set: WorkoutSet, earlierToday: List<WorkoutSet>, unit: WeightUnit) {
         // Only a bonus: if history can't be read, the set is still logged, just not celebrated.
         val history = try {
             historyExcludingCurrentSession(set.exerciseId)
@@ -621,16 +520,14 @@ class ActiveWorkoutViewModel @Inject constructor(
         } catch (_: Exception) {
             return
         }
-        val previousBest = (history + earlierToday).bestEstimatedOneRepMax() ?: return
-        if (estimate > previousBest + PR_MIN_GAIN_KG) {
-            _uiEffect.send(
-                ActiveWorkoutUiEffect.PersonalRecord(
-                    exerciseName = set.exercise?.displayName.orEmpty(),
-                    estimatedOneRepMaxKg = estimate,
-                    unit = unit
-                )
+        val estimate = newRecordEstimate(set, earlierSets = history + earlierToday) ?: return
+        _uiEffect.send(
+            ActiveWorkoutUiEffect.PersonalRecord(
+                exerciseName = set.exercise?.displayName.orEmpty(),
+                estimatedOneRepMaxKg = estimate,
+                unit = unit
             )
-        }
+        )
     }
 
     private fun deleteSet(set: WorkoutSet) {
@@ -693,37 +590,10 @@ class ActiveWorkoutViewModel @Inject constructor(
 
     // ---------------------------------------------------------------- free workout exercises
 
-    private fun toggleExercisePicker() {
-        val opening = !_uiState.value.isPickingExercise
-        _uiState.update { it.copy(isPickingExercise = opening) }
-        if (opening && cachedExercises == null) {
-            viewModelScope.launch {
-                cachedExercises = exerciseRepository.getAllExercises().firstOrNull().orEmpty()
-                filterExercisePicker(_uiState.value.exercisePickerQuery)
-            }
-        }
-    }
-
-    private fun onExercisePickerQueryChange(query: String) {
-        _uiState.update { it.copy(exercisePickerQuery = query) }
-        filterExercisePicker(query)
-    }
-
-    private fun filterExercisePicker(query: String) {
-        val source = cachedExercises.orEmpty()
-        _uiState.update { it.copy(exercisePickerResults = source.searchExercises(query).take(PICKER_RESULTS)) }
-    }
-
     private fun addExerciseToSession(exercise: Exercise) {
         val state = _uiState.value
         val existingIndex = state.routineExercises.indexOfFirst { it.exerciseId == exercise.id }
-        _uiState.update {
-            it.copy(
-                isPickingExercise = false,
-                exercisePickerQuery = "",
-                exercisePickerResults = emptyList()
-            )
-        }
+        exercisePicker.close()
         if (existingIndex >= 0) {
             selectExercise(existingIndex)
             return
@@ -746,8 +616,7 @@ class ActiveWorkoutViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
-        clockJob?.cancel()
-        workTimerJob?.cancel()
+        clocks.stop()
     }
 
     private companion object {
@@ -760,10 +629,6 @@ class ActiveWorkoutViewModel @Inject constructor(
         const val KEY_WEIGHT_INPUT = "weightInput"
         const val KEY_EFFORT_INPUT = "effortInput"
         const val FREE_WORKOUT_NAME = "Entrenamiento libre"
-        const val PICKER_RESULTS = 50
-
-        /** Margin over the previous best e1RM for a set to count as a record (float noise). */
-        const val PR_MIN_GAIN_KG = 0.1f
 
         /** "62.5" stays "62.5", "60.0" becomes "60" — what a lifter would type. */
         fun formatInput(value: Float): String = if (value % 1f == 0f) value.toInt().toString() else value.formatOneDecimal()

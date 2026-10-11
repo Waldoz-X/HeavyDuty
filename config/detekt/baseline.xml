@@ -2,10 +2,6 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>CyclomaticComplexMethod:ActiveWorkoutViewModel.kt:ActiveWorkoutViewModel$private fun logSet</ID>
-    <ID>CyclomaticComplexMethod:BackupRepositoryImpl.kt:BackupRepositoryImpl$private suspend fun importRoutines: Int</ID>
-    <ID>CyclomaticComplexMethod:BackupRepositoryImpl.kt:BackupRepositoryImpl$private suspend fun importSessions: Int</ID>
-    <ID>CyclomaticComplexMethod:BackupRepositoryImpl.kt:private fun BackupSnapshotDto.validate</ID>
     <ID>CyclomaticComplexMethod:ExerciseListScreen.kt:@Composable private fun ExerciseListContent</ID>
     <ID>CyclomaticComplexMethod:ExerciseSettingsSheet.kt:@Composable private fun NumberStepper</ID>
     <ID>CyclomaticComplexMethod:MainActivity.kt:@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class) @Composable private fun HeavyDutyMainScreen</ID>
@@ -13,9 +9,6 @@
     <ID>LongMethod:ActiveWorkoutBar.kt:@Composable fun ActiveWorkoutBar</ID>
     <ID>LongMethod:ActiveWorkoutScreen.kt:@Composable fun ActiveWorkoutScreen</ID>
     <ID>LongMethod:ActiveWorkoutScreen.kt:@Composable private fun PersonalRecordBanner</ID>
-    <ID>LongMethod:ActiveWorkoutViewModel.kt:ActiveWorkoutViewModel$private fun logSet</ID>
-    <ID>LongMethod:BackupRepositoryImpl.kt:BackupRepositoryImpl$override suspend fun exportSnapshot: String</ID>
-    <ID>LongMethod:BackupRepositoryImpl.kt:BackupRepositoryImpl$private suspend fun importSessions: Int</ID>
     <ID>LongMethod:BodyWeightStatsScreen.kt:@Composable private fun HistoryEntryCard</ID>
     <ID>LongMethod:BodyWeightStatsScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun BodyWeightStatsScreen</ID>
     <ID>LongMethod:DashboardScreen.kt:@Composable private fun BodyWeightCard</ID>
@@ -59,12 +52,8 @@
     <ID>LongMethod:WorkoutHeader.kt:@Composable internal fun WorkoutHeader</ID>
     <ID>LongMethod:WorkoutStartScreen.kt:@Composable internal fun WorkoutStartScreen</ID>
     <ID>TooManyFunctions:ActiveWorkoutViewModel.kt:ActiveWorkoutViewModel : ViewModel</ID>
-    <ID>TooManyFunctions:EntityMappers.kt:com.example.heavyduty.core.data.database.mapper.EntityMappers.kt</ID>
-    <ID>TooManyFunctions:ExerciseDao.kt:ExerciseDao</ID>
     <ID>TooManyFunctions:FakeRepositories.kt:FakeWorkoutRepository : WorkoutRepository</ID>
-    <ID>TooManyFunctions:RoutineDao.kt:RoutineDao</ID>
     <ID>TooManyFunctions:TimerEngine.kt:TimerEngine : RestTimerController</ID>
-    <ID>TooManyFunctions:WorkoutDao.kt:WorkoutDao</ID>
     <ID>TooManyFunctions:WorkoutRepository.kt:WorkoutRepository</ID>
     <ID>TooManyFunctions:WorkoutRepositoryImpl.kt:WorkoutRepositoryImpl : WorkoutRepository</ID>
   </CurrentIssues>

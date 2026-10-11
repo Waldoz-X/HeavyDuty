@@ -23,6 +23,8 @@ complexity:
     # Screens are meant to be split into small composables; counting each one would push
     # toward the opposite — few, long functions.
     ignoreAnnotatedFunctions: ['Composable', 'Preview']
+    # A Room DAO is one function per query; splitting it would only scatter the queries.
+    ignoreAnnotated: ['Dao']
 
 naming:
   FunctionNaming:
