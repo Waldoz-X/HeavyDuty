@@ -74,12 +74,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.heavyduty.core.common.R
 import com.example.heavyduty.core.common.navigation.AppSections
 import com.example.heavyduty.core.domain.model.ThemeMode
+import com.example.heavyduty.core.domain.repository.HealthSync
 import com.example.heavyduty.core.ui.LocalSharedTransitionScope
 import com.example.heavyduty.core.ui.LocalWeightUnit
 import com.example.heavyduty.core.ui.theme.HeavyDutyTheme
@@ -93,11 +95,14 @@ import com.example.heavyduty.ui.ActiveWorkoutRailButton
 import com.example.heavyduty.ui.ForgottenWorkoutDialog
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.Locale
+import javax.inject.Inject
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private val mainViewModel: MainViewModel by viewModels()
+
+    @Inject lateinit var healthSync: HealthSync
 
     /**
      * Applies the app language (see HeavyDutyApp) to this activity's resources:
@@ -171,6 +176,12 @@ class MainActivity : ComponentActivity() {
         val transparent = android.graphics.Color.TRANSPARENT
         val style = if (darkTheme) SystemBarStyle.dark(transparent) else SystemBarStyle.light(transparent, transparent)
         enableEdgeToEdge(statusBarStyle = style, navigationBarStyle = style)
+    }
+
+    /** Weigh-ins from a scale arrive in Health Connect any time; each return to the app brings the new ones. */
+    override fun onStart() {
+        super.onStart()
+        lifecycleScope.launch { healthSync.importNewWeights() }
     }
 
     /** A notification tapped while the app is already open (see AppSections). */

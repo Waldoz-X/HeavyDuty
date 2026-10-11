@@ -9,6 +9,7 @@ import com.example.heavyduty.core.domain.model.WeightUnit
 import com.example.heavyduty.core.domain.model.WorkoutSession
 import com.example.heavyduty.core.domain.model.WorkoutSet
 import com.example.heavyduty.core.domain.model.WorkoutStatus
+import com.example.heavyduty.core.domain.repository.WorkoutHealthMirror
 import com.example.heavyduty.core.testing.FakeWorkoutRepository
 import com.example.heavyduty.core.testing.MainDispatcherRule
 import com.example.heavyduty.feature.history.domain.usecase.DeleteWorkoutUseCase
@@ -129,6 +130,26 @@ class WorkoutEditingTest {
 
         assertEquals(listOf(2L), repository.sessions.value.map { it.id })
         assertEquals(listOf(20L), repository.sets.value.map { it.id })
+    }
+
+    @Test
+    fun `a corrected or deleted workout is passed on to Health Connect`() = runTest {
+        val mirrored = mutableListOf<String>()
+        val mirror = object : WorkoutHealthMirror {
+            override suspend fun workoutSaved(sessionId: Long) {
+                mirrored += "saved $sessionId"
+            }
+
+            override suspend fun workoutDeleted(sessionId: Long) {
+                mirrored += "deleted $sessionId"
+            }
+        }
+
+        UpdateWorkoutDurationUseCase(repository, mirror)(sessionId = 1, minutes = 60)
+        UpdateWorkoutDurationUseCase(repository, mirror)(sessionId = 1, minutes = 0) // rejected: nothing to pass on
+        DeleteWorkoutUseCase(repository, mirror)(sessionId = 2)
+
+        assertEquals(listOf("saved 1", "deleted 2"), mirrored)
     }
 
     // ---------------------------------------------------------------- screen

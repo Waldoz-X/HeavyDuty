@@ -92,6 +92,28 @@
     <string name="profile_reminder_time">Reminder time: %1$s</string>
     <string name="profile_reminder_change_time">Change time</string>
     <string name="profile_reminder_time_title">Reminder time</string>
+    <string name="profile_health_title">Health Connect</string>
+    <string name="profile_health_hint">Send your finished workouts to Health Connect and bring in your weight from scales and other apps.</string>
+    <string name="profile_health_install_hint">Syncing needs the Health Connect app.</string>
+    <string name="profile_health_install">Install Health Connect</string>
+    <string name="profile_health_connect">Connect</string>
+    <string name="profile_health_connected">Connected</string>
+    <string name="profile_health_sync_now">Sync now</string>
+    <string name="profile_health_permissions">Permissions</string>
+    <string name="profile_health_disconnect">Disconnect</string>
+    <string name="profile_health_failed">Couldn\'t sync with Health Connect. Please try again.</string>
+    <string name="profile_health_denied">Without permissions there\'s nothing to sync. You can grant them in Health Connect.</string>
+    <plurals name="profile_health_workouts_sent">
+        <item quantity="one">%d workout sent</item>
+        <item quantity="other">%d workouts sent</item>
+    </plurals>
+    <plurals name="profile_health_weights_imported">
+        <item quantity="one">%d weigh-in imported</item>
+        <item quantity="other">%d weigh-ins imported</item>
+    </plurals>
+    <string name="health_rationale_title">HeavyDuty and Health Connect</string>
+    <string name="health_rationale_text">HeavyDuty uses Health Connect only if you connect it in Profile, and only for this:\n\n• Writing your finished workouts (name, start and duration) as strength training sessions. If you edit a workout\'s duration or delete it in HeavyDuty, it\'s updated there too.\n\n• Reading your body weight, from your scale or other apps, to show it in your progress.\n\nHeavyDuty doesn\'t send this data to any server: it stays on your phone. You can remove the permissions at any time in Health Connect, or stop syncing with “Disconnect” in Profile.</string>
+    <string name="health_rationale_close">Got it</string>
     <string name="profile_theme">Theme</string>
     <string name="profile_theme_hint">Dark, light or the same as your phone. Light reads better in bright light.</string>
     <string name="profile_theme_dark">Dark</string>

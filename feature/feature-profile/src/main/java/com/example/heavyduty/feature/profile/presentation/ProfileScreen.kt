@@ -39,12 +39,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.health.connect.client.PermissionController
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.heavyduty.core.common.R
+import com.example.heavyduty.core.domain.model.HealthConnectStatus
 import com.example.heavyduty.core.domain.model.WeightUnit
 import com.example.heavyduty.core.ui.components.HdBarChart
 import com.example.heavyduty.core.ui.components.HdButton
@@ -56,13 +60,33 @@ import com.example.heavyduty.core.ui.components.HdTextButton
 import com.example.heavyduty.core.ui.components.HdTonalButton
 import com.example.heavyduty.core.ui.components.WorkoutFeedCard
 import com.example.heavyduty.core.ui.formatTotalWeight
+import com.example.heavyduty.feature.profile.presentation.health.HealthConnectCard
+import com.example.heavyduty.feature.profile.presentation.health.HealthConnectViewModel
+import com.example.heavyduty.feature.profile.presentation.health.openHealthConnectInStore
+import com.example.heavyduty.feature.profile.presentation.health.openHealthConnectPermissions
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
 @Composable
-fun ProfileScreen(modifier: Modifier = Modifier, onNavigateToStats: () -> Unit = {}, viewModel: ProfileViewModel = hiltViewModel()) {
+fun ProfileScreen(
+    modifier: Modifier = Modifier,
+    onNavigateToStats: () -> Unit = {},
+    viewModel: ProfileViewModel = hiltViewModel(),
+    healthViewModel: HealthConnectViewModel = hiltViewModel()
+) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val healthState by healthViewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    // Health Connect's own permission screen; it returns the permissions now granted.
+    val healthPermissions = rememberLauncherForActivityResult(
+        contract = PermissionController.createRequestPermissionResultContract()
+    ) { granted -> healthViewModel.onPermissionsResult(granted) }
+    LifecycleResumeEffect(Unit) {
+        healthViewModel.refresh()
+        onPauseOrDispose { }
+    }
 
     val exportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/json")
@@ -86,6 +110,18 @@ fun ProfileScreen(modifier: Modifier = Modifier, onNavigateToStats: () -> Unit =
                 exportLauncher.launch(fileName)
             },
             onImportClick = { importLauncher.launch(arrayOf("application/json")) },
+            healthConnectCard = {
+                if (healthState.status != HealthConnectStatus.UNSUPPORTED) {
+                    HealthConnectCard(
+                        uiState = healthState,
+                        onInstall = { context.openHealthConnectInStore() },
+                        onConnect = { healthPermissions.launch(healthViewModel.permissions) },
+                        onSyncNow = healthViewModel::syncNow,
+                        onManagePermissions = { context.openHealthConnectPermissions() },
+                        onDisconnect = healthViewModel::disconnect
+                    )
+                }
+            },
             modifier = modifier
         )
     }
@@ -98,6 +134,7 @@ private fun ProfileContent(
     onNavigateToStats: () -> Unit,
     onExportClick: () -> Unit,
     onImportClick: () -> Unit,
+    healthConnectCard: @Composable () -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -274,6 +311,8 @@ private fun ProfileContent(
                 onTimeChange = { hour, minute -> onEvent(ProfileUiEvent.OnReminderTimeChange(hour, minute)) }
             )
         }
+
+        item { healthConnectCard() }
 
         item {
             HdCard(modifier = Modifier.fillMaxWidth()) {

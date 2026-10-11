@@ -2,6 +2,7 @@ package com.example.heavyduty.feature.history.domain.usecase
 
 import com.example.heavyduty.core.domain.model.WorkoutSession
 import com.example.heavyduty.core.domain.model.WorkoutSet
+import com.example.heavyduty.core.domain.repository.WorkoutHealthMirror
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -23,7 +24,10 @@ class GetWorkoutDetailUseCase @Inject constructor(private val workoutRepository:
  * Corrects how long a workout lasted — e.g. one left open overnight before the app ended
  * forgotten workouts at their last set. The start stays; the end moves to match.
  */
-class UpdateWorkoutDurationUseCase @Inject constructor(private val workoutRepository: WorkoutRepository) {
+class UpdateWorkoutDurationUseCase @Inject constructor(
+    private val workoutRepository: WorkoutRepository,
+    private val healthMirror: WorkoutHealthMirror = WorkoutHealthMirror.NONE
+) {
     /** False (and nothing saved) for a duration outside 1 minute to a day. */
     suspend operator fun invoke(sessionId: Long, minutes: Int): Boolean {
         val session = workoutRepository.getSessionById(sessionId).firstOrNull()
@@ -34,6 +38,7 @@ class UpdateWorkoutDurationUseCase @Inject constructor(private val workoutReposi
                 totalDurationSecs = minutes * SECONDS_PER_MINUTE
             )
         )
+        healthMirror.workoutSaved(sessionId)
         return true
     }
 }
@@ -48,11 +53,15 @@ class UpdateLoggedSetUseCase @Inject constructor(private val workoutRepository: 
     }
 }
 
-/** Deletes a workout from the history, with all its sets (the database cascades them). */
-class DeleteWorkoutUseCase @Inject constructor(private val workoutRepository: WorkoutRepository) {
+/** Deletes a workout from the history, with all its sets (the database cascades them) — and from Health Connect. */
+class DeleteWorkoutUseCase @Inject constructor(
+    private val workoutRepository: WorkoutRepository,
+    private val healthMirror: WorkoutHealthMirror = WorkoutHealthMirror.NONE
+) {
     suspend operator fun invoke(sessionId: Long) {
         val session = workoutRepository.getSessionById(sessionId).firstOrNull() ?: return
         workoutRepository.deleteSession(session)
+        healthMirror.workoutDeleted(sessionId)
     }
 }
 

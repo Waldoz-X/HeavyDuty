@@ -99,6 +99,30 @@
     <string name="profile_reminder_time">Hora del aviso: %1$s</string>
     <string name="profile_reminder_change_time">Cambiar hora</string>
     <string name="profile_reminder_time_title">Hora del recordatorio</string>
+    <string name="profile_health_title">Health Connect</string>
+    <string name="profile_health_hint">Envía tus entrenamientos terminados a Health Connect y trae tu peso desde básculas y otras apps.</string>
+    <string name="profile_health_install_hint">Para sincronizar necesitas la app Health Connect.</string>
+    <string name="profile_health_install">Instalar Health Connect</string>
+    <string name="profile_health_connect">Conectar</string>
+    <string name="profile_health_connected">Conectado</string>
+    <string name="profile_health_sync_now">Sincronizar ahora</string>
+    <string name="profile_health_permissions">Permisos</string>
+    <string name="profile_health_disconnect">Desconectar</string>
+    <string name="profile_health_failed">No se pudo sincronizar con Health Connect. Inténtalo de nuevo.</string>
+    <string name="profile_health_denied">Sin permisos no hay nada que sincronizar. Puedes darlos desde Health Connect.</string>
+    <plurals name="profile_health_workouts_sent">
+        <item quantity="one">%d entrenamiento enviado</item>
+        <item quantity="many">%d entrenamientos enviados</item>
+        <item quantity="other">%d entrenamientos enviados</item>
+    </plurals>
+    <plurals name="profile_health_weights_imported">
+        <item quantity="one">%d peso importado</item>
+        <item quantity="many">%d pesos importados</item>
+        <item quantity="other">%d pesos importados</item>
+    </plurals>
+    <string name="health_rationale_title">HeavyDuty y Health Connect</string>
+    <string name="health_rationale_text">HeavyDuty usa Health Connect solo si lo conectas en Perfil, y solo para esto:\n\n• Escribir tus entrenamientos terminados (nombre, inicio y duración) como sesiones de entrenamiento de fuerza. Si editas la duración o borras un entrenamiento en HeavyDuty, se actualiza también allí.\n\n• Leer tu peso corporal, el de tu báscula u otras apps, para mostrarlo en tu progreso.\n\nHeavyDuty no envía estos datos a ningún servidor: se quedan en tu teléfono. Puedes quitar los permisos cuando quieras desde Health Connect, o dejar de sincronizar con «Desconectar» en Perfil.</string>
+    <string name="health_rationale_close">Entendido</string>
     <string name="profile_theme">Tema</string>
     <string name="profile_theme_hint">Oscuro, claro o el mismo que tu teléfono. El claro se lee mejor con mucha luz.</string>
     <string name="profile_theme_dark">Oscuro</string>

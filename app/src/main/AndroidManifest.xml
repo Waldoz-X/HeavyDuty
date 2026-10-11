@@ -12,6 +12,19 @@
     <!-- Re-arms the training reminder after a reboot. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
+    <!-- Health Connect (Perfil › Health Connect): finished workouts out, body weight in.
+         Must match HealthPermissions in core-data. -->
+    <uses-permission android:name="android.permission.health.WRITE_EXERCISE" />
+    <uses-permission android:name="android.permission.health.READ_WEIGHT" />
+
+    <!-- The Health Connect client needs Android 8; the app still installs on 7 and simply
+         doesn't offer it there (HealthConnectClientSource checks the version). -->
+    <uses-sdk tools:overrideLibrary="androidx.health.connect.client" />
+
+    <queries>
+        <package android:name="com.google.android.apps.healthdata" />
+    </queries>
+
     <application
         android:name=".HeavyDutyApp"
         android:allowBackup="true"
@@ -34,6 +47,28 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- What Health Connect shows when the user asks why HeavyDuty wants its data:
+             the intent on Android 13 and older, the alias on 14 and newer. -->
+        <activity
+            android:name=".health.HealthPermissionsRationaleActivity"
+            android:exported="true"
+            android:theme="@style/Theme.HeavyDuty">
+            <intent-filter>
+                <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
+            </intent-filter>
+        </activity>
+
+        <activity-alias
+            android:name="ViewPermissionUsageActivity"
+            android:exported="true"
+            android:permission="android.permission.START_VIEW_PERMISSION_USAGE"
+            android:targetActivity=".health.HealthPermissionsRationaleActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW_PERMISSION_USAGE" />
+                <category android:name="android.intent.category.HEALTH_PERMISSIONS" />
+            </intent-filter>
+        </activity-alias>
 
         <!-- Hands a shared workout image to the app chosen in the share sheet. -->
         <provider

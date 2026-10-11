@@ -11,6 +11,11 @@ android {
         version = release(37)
     }
 
+    testOptions {
+        // android.util.Log in code under test (the Health Connect sync logs its failures).
+        unitTests.isReturnDefaultValues = true
+    }
+
     defaultConfig {
         minSdk = 24
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -19,6 +24,8 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+        // java.time (Health Connect's Instant and ZoneOffset) on API 24-25.
+        isCoreLibraryDesugaringEnabled = true
     }
 }
 
@@ -27,6 +34,8 @@ room {
 }
 
 dependencies {
+    coreLibraryDesugaring(libs.desugar.jdk.libs)
+
     // Project modules
     implementation(project(":core:core-common"))
     implementation(project(":core:core-domain"))
@@ -50,8 +59,12 @@ dependencies {
     // DataStore
     implementation(libs.androidx.datastore.preferences)
 
+    // Health Connect
+    implementation(libs.health.connect.client)
+
     // Testing
     testImplementation(libs.junit)
+    testImplementation(project(":core:core-testing"))
 
     // Instrumented tests (real SQLite on a device/emulator): migrations and backups
     androidTestImplementation(libs.androidx.junit)

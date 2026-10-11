@@ -55,6 +55,9 @@ gson = "2.14.0"
 # DataStore
 datastore = "1.2.1"
 
+# Health Connect: exports workouts, reads body weight. Needs minSdk 26 (see the manifests).
+healthConnect = "1.1.0"
+
 # Charts
 vico = "3.2.3"
 
@@ -126,6 +129,8 @@ reorderable = { group = "sh.calvin.reorderable", name = "reorderable", version.r
 androidx-profileinstaller = { group = "androidx.profileinstaller", name = "profileinstaller", version.ref = "profileinstaller" }
 androidx-benchmark-macro-junit4 = { group = "androidx.benchmark", name = "benchmark-macro-junit4", version.ref = "benchmark" }
 androidx-uiautomator = { group = "androidx.test.uiautomator", name = "uiautomator", version.ref = "uiautomator" }
+
+health-connect-client = { group = "androidx.health.connect", name = "connect-client", version.ref = "healthConnect" }
 
 # Charts
 vico-compose-m3 = { group = "com.patrykandpatrick.vico", name = "compose-m3", version.ref = "vico" }
