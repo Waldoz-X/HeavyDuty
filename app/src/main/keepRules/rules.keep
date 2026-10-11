@@ -1,12 +1,11 @@
-# Add project specific R8 rules here.
-# AGP will combine all keep rule files in src/main/keepRules to pass to R8
-#
-# For more details, see
-#   https://d.android.com/r/tools/r8/keep-rules
+# R8 keep rules for HeavyDuty. Libraries (Room, Hilt, Coil, Gson, Compose…) ship their own.
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# Gson maps JSON keys to field names by reflection. These DTOs read the bundled exercise
+# catalog (assets/exercises.json) and read/write backup files, so their field names are a file
+# format: renaming or removing them would break seeding and make old backups unreadable.
+-keep class com.example.heavyduty.core.data.database.SeedData$ExerciseDto { <init>(...); <fields>; }
+-keep class com.example.heavyduty.core.data.repository.*Dto { <init>(...); <fields>; }
+
+# Readable stack traces in crash reports (map them back with the build's mapping.txt).
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile

@@ -150,7 +150,7 @@ fun ActiveWorkoutRailButton(workout: ActiveWorkoutSummary, onClick: () -> Unit, 
             )
             if (resting) {
                 HdRollingText(
-                    text = formatClock(workout.rest?.remainingSeconds ?: 0),
+                    text = formatClock(workout.rest.remainingSeconds),
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
                     color = accent,

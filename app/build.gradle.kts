@@ -52,12 +52,10 @@ android {
 
     buildTypes {
         release {
-            // R8: shrinks, optimizes and obfuscates code and drops unused resources.
+            // R8: shrinks, optimizes and obfuscates code and drops unused resources. Its keep
+            // rules live in src/main/keepRules/, which AGP passes to R8 by itself.
             optimization {
                 enable = true
-                keepRules {
-                    files.add(file("proguard-rules.pro"))
-                }
             }
             // The real key when keystore.properties exists. Without it, the debug key, so release
             // (and the benchmark builds derived from it) can still be installed and measured

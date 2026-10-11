@@ -370,7 +370,7 @@ class BackupRepositoryImpl @Inject constructor(
             }
             val routineId = routineDao.insertRoutine(
                 RoutineEntity(
-                    name = routineDto.name!!,
+                    name = routineDto.name,
                     description = routineDto.description.orEmpty(),
                     type = routineDto.type ?: "GYM",
                     createdAt = createdAt,
@@ -455,7 +455,7 @@ class BackupRepositoryImpl @Inject constructor(
                 tally.alreadyPresent++
                 continue
             }
-            bodyWeightDao.insertEntry(BodyWeightEntity(weightKg = dto.weightKg!!, loggedAt = dto.loggedAt!!))
+            bodyWeightDao.insertEntry(BodyWeightEntity(weightKg = dto.weightKg, loggedAt = dto.loggedAt))
             imported++
         }
         return imported

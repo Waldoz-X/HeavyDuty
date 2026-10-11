@@ -5,9 +5,9 @@ ktlint = "1.8.0"
 composeRules = "0.6.8"
 detekt = "2.0.0-alpha.6"
 # Core
-agp = "9.3.3"
-kotlin = "2.2.10"
-ksp = "2.3.6"
+agp = "9.4.1"
+kotlin = "2.4.21"
+ksp = "2.3.12"
 # Backports java.time to minSdk 24 (native only from API 26)
 desugarJdkLibs = "2.1.5"
 
@@ -39,8 +39,7 @@ room = "2.8.5"
 coroutines = "1.11.0"
 
 # Image Loading
-# Coil 3.5+ and Vico 3.3+ are built with Kotlin 2.4, which the 2.2 compiler can't read: bump with Kotlin.
-coil = "3.4.0"
+coil = "3.6.3"
 # Drag-to-reorder for LazyColumn (routine editor)
 reorderable = "3.1.0"
 
@@ -59,7 +58,7 @@ datastore = "1.2.1"
 healthConnect = "1.1.0"
 
 # Charts
-vico = "3.2.3"
+vico = "3.3.1"
 
 # Debug-only memory leak detection
 leakcanary = "2.14"
