@@ -167,6 +167,7 @@ private val ROUTES_WITH_OWN_TOP_BAR = setOf(
     // The detail draws its own back button over a full-bleed header image.
     "exercise_detail/{exerciseId}",
     "progress/{exerciseId}",
+    "workout_detail/{sessionId}",
     "stats_graph",
     "stats/series",
     "stats/distribucion_radar",

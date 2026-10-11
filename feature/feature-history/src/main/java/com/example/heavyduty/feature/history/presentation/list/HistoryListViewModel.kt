@@ -38,8 +38,6 @@ class HistoryListViewModel @Inject constructor(
 
     fun onEvent(event: HistoryListUiEvent) {
         when (event) {
-            is HistoryListUiEvent.OnSessionClick -> { /* future detail */ }
-
             is HistoryListUiEvent.OnExerciseProgressClick -> {
                 viewModelScope.launch {
                     _uiEffect.send(HistoryListUiEffect.NavigateToProgress(event.exerciseId))

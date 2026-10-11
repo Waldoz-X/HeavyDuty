@@ -4,6 +4,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.example.heavyduty.feature.history.presentation.detail.WorkoutDetailScreen
 import com.example.heavyduty.feature.history.presentation.list.HistoryListScreen
 import com.example.heavyduty.feature.history.presentation.progress.ProgressScreen
 
@@ -21,6 +22,16 @@ fun NavGraphBuilder.historyScreen(
             onExerciseProgressClick = onExerciseProgressClick,
             onStartWorkout = onStartWorkout
         )
+    }
+}
+
+/** Registers a finished workout's detail, where it can be corrected or deleted. */
+fun NavGraphBuilder.workoutDetailScreen(onNavigateBack: () -> Unit) {
+    composable(
+        route = "workout_detail/{sessionId}",
+        arguments = listOf(navArgument("sessionId") { type = NavType.LongType })
+    ) {
+        WorkoutDetailScreen(onNavigateBack = onNavigateBack)
     }
 }
 

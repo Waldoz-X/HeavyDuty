@@ -138,7 +138,11 @@ fun HistoryListScreen(
                         items = uiState.sessions,
                         key = { it.id }
                     ) { session ->
-                        HistorySessionItem(session = session)
+                        HistorySessionItem(
+                            session = session,
+                            // One still running is opened where it can be continued, not edited.
+                            onClick = { if (session.status == WorkoutStatus.IN_PROGRESS) onStartWorkout() else onSessionClick(session.id) }
+                        )
                     }
                 }
             }
@@ -147,8 +151,8 @@ fun HistoryListScreen(
 }
 
 @Composable
-private fun HistorySessionItem(session: WorkoutSession, modifier: Modifier = Modifier) {
-    HdCard(modifier = modifier) {
+private fun HistorySessionItem(session: WorkoutSession, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    HdCard(modifier = modifier, onClick = onClick) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween

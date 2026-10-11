@@ -11,7 +11,6 @@ data class HistoryListUiState(
 )
 
 sealed interface HistoryListUiEvent {
-    data class OnSessionClick(val sessionId: Long) : HistoryListUiEvent
     data class OnExerciseProgressClick(val exerciseId: Long) : HistoryListUiEvent
 }
 

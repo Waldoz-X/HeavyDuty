@@ -16,6 +16,7 @@ import com.example.heavyduty.feature.exercises.navigation.exerciseListScreen
 import com.example.heavyduty.feature.exercises.navigation.exercisePickerScreen
 import com.example.heavyduty.feature.history.navigation.historyScreen
 import com.example.heavyduty.feature.history.navigation.progressScreen
+import com.example.heavyduty.feature.history.navigation.workoutDetailScreen
 import com.example.heavyduty.feature.profile.navigation.profileScreen
 import com.example.heavyduty.feature.routines.navigation.routineEditorScreen
 import com.example.heavyduty.feature.routines.navigation.routineListScreen
@@ -147,11 +148,12 @@ fun HeavyDutyNavHost(navController: NavHostController, modifier: Modifier = Modi
 
         historyScreen(
             onStartWorkout = { navController.navigateToTopLevel(TopLevelDestination.WORKOUT.route) },
-            onSessionClick = { },
+            onSessionClick = { sessionId -> navController.navigateIfResumed("workout_detail/$sessionId") },
             onExerciseProgressClick = { exerciseId ->
                 navController.navigateIfResumed("progress/$exerciseId")
             }
         )
+        workoutDetailScreen(onNavigateBack = navigateBack)
         progressScreen(
             onNavigateBack = navigateBack
         )
