@@ -96,65 +96,60 @@ fun InformeMensualScreen(onNavigateBack: () -> Unit, modifier: Modifier = Modifi
                 onNextMonth = { viewModel.selectNextMonth() }
             )
 
-            if (uiState.isLoading) {
-                HdCardsSkeleton(modifier = Modifier.fillMaxSize().padding(16.dp), heights = listOf(56.dp, 120.dp, 120.dp, 220.dp))
-                return@Scaffold
+            MonthlyReportBody(uiState = uiState)
+        }
+    }
+}
+
+/** Loading, failed, a month without workouts — or its report. */
+@Composable
+private fun MonthlyReportBody(uiState: InformeMensualUiState) {
+    when {
+        uiState.isLoading -> HdCardsSkeleton(
+            modifier = Modifier.fillMaxSize().padding(16.dp),
+            heights = listOf(56.dp, 120.dp, 120.dp, 220.dp)
+        )
+
+        uiState.loadFailed -> HdErrorState(modifier = Modifier.fillMaxSize())
+
+        uiState.report.totalWorkouts == 0 -> MonthlyEmptyState(monthStartMillis = uiState.report.monthStartMillis)
+
+        else -> MonthlyReportList(report = uiState.report)
+    }
+}
+
+@Composable
+private fun MonthlyReportList(report: MonthlyReport, modifier: Modifier = Modifier) {
+    LazyColumn(
+        modifier = modifier.fillMaxSize(),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 32.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        item { MonthlyStatsGrid(report = report) }
+        if (report.muscleContributions.isNotEmpty()) {
+            item { MuscleDistributionCard(contributions = report.muscleContributions, topMuscle = report.topMuscleGroup) }
+        }
+        if (report.topExercises.isNotEmpty()) {
+            item { TopExercisesCard(exercises = report.topExercises) }
+        }
+        if (report.workoutsPerWeek.isNotEmpty()) {
+            item {
+                WeeklyBarChartCard(
+                    title = stringResource(R.string.monthly_workouts_per_week),
+                    data = report.workoutsPerWeek.map { (week, count) ->
+                        stringResource(R.string.monthly_week_label, week) to
+                            count.toFloat()
+                    }
+                )
             }
-            if (uiState.loadFailed) {
-                HdErrorState(modifier = Modifier.fillMaxSize())
-                return@Scaffold
-            }
-
-            val report = uiState.report
-
-            if (report.totalWorkouts == 0) {
-                MonthlyEmptyState(monthStartMillis = report.monthStartMillis)
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 32.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    item {
-                        MonthlyStatsGrid(report = report)
-                    }
-                    if (report.muscleContributions.isNotEmpty()) {
-                        item {
-                            MuscleDistributionCard(
-                                contributions = report.muscleContributions,
-                                topMuscle = report.topMuscleGroup
-                            )
-                        }
-                    }
-                    if (report.topExercises.isNotEmpty()) {
-                        item {
-                            TopExercisesCard(exercises = report.topExercises)
-                        }
-                    }
-
-                    if (report.workoutsPerWeek.isNotEmpty()) {
-                        item {
-                            WeeklyBarChartCard(
-                                title = stringResource(R.string.monthly_workouts_per_week),
-                                data = report.workoutsPerWeek.map { (week, count) ->
-                                    stringResource(R.string.monthly_week_label, week) to count.toFloat()
-                                }
-                            )
-                        }
-                    }
-
-                    if (report.volumePerWeek.isNotEmpty()) {
-                        item {
-                            val unit = LocalWeightUnit.current
-                            WeeklyBarChartCard(
-                                title = stringResource(R.string.monthly_volume_per_week, weightUnitLabel()),
-                                data = report.volumePerWeek.map { (week, kg) ->
-                                    stringResource(R.string.monthly_week_label, week) to kg.kgTo(unit)
-                                }
-                            )
-                        }
-                    }
-                }
+        }
+        if (report.volumePerWeek.isNotEmpty()) {
+            item {
+                val unit = LocalWeightUnit.current
+                WeeklyBarChartCard(
+                    title = stringResource(R.string.monthly_volume_per_week, weightUnitLabel()),
+                    data = report.volumePerWeek.map { (week, kg) -> stringResource(R.string.monthly_week_label, week) to kg.kgTo(unit) }
+                )
             }
         }
     }
@@ -181,66 +176,64 @@ private fun MonthlyEmptyState(monthStartMillis: Long) {
 @Composable
 private fun MonthlyStatsGrid(report: MonthlyReport) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            HdStatCard(
-                icon = Icons.Default.FitnessCenter,
-                label = stringResource(R.string.monthly_total_volume),
-                value = report.totalVolumeKg.formatTotalWeight(),
-                deltaText = report.prevMonthVolumeDeltaPercent?.let {
-                    val sign = if (it >= 0) "+" else ""
-                    stringResource(R.string.monthly_vs_last_month, "$sign${it.formatOneDecimal()}%")
-                },
-                isPositive = (report.prevMonthVolumeDeltaPercent ?: 0f) >= 0,
-                modifier = Modifier.weight(1f)
-            )
-            HdStatCard(
-                icon = Icons.Default.CalendarMonth,
-                label = stringResource(R.string.stats_workouts),
-                value = "${report.totalWorkouts}",
-                deltaText = report.prevMonthWorkoutsDelta?.let {
-                    val sign = if (it >= 0) "+" else ""
-                    stringResource(R.string.monthly_vs_last_month, "$sign$it")
-                },
-                isPositive = (report.prevMonthWorkoutsDelta ?: 0) >= 0,
-                modifier = Modifier.weight(1f)
-            )
-        }
+        VolumeAndWorkouts(report = report)
+        TimeAndSets(report = report)
+    }
+}
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            val hours = report.totalDurationMinutes / 60
-            val mins = report.totalDurationMinutes % 60
-            val durationStr = if (hours >
+@Composable
+private fun VolumeAndWorkouts(report: MonthlyReport, modifier: Modifier = Modifier) {
+    Row(modifier = modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        HdStatCard(
+            icon = Icons.Default.FitnessCenter,
+            label = stringResource(R.string.monthly_total_volume),
+            value = report.totalVolumeKg.formatTotalWeight(),
+            deltaText = report.prevMonthVolumeDeltaPercent?.let {
+                val sign = if (it >= 0) "+" else ""
+                stringResource(R.string.monthly_vs_last_month, "$sign${it.formatOneDecimal()}%")
+            },
+            isPositive = (report.prevMonthVolumeDeltaPercent ?: 0f) >= 0,
+            modifier = Modifier.weight(1f)
+        )
+        HdStatCard(
+            icon = Icons.Default.CalendarMonth,
+            label = stringResource(R.string.stats_workouts),
+            value = "${report.totalWorkouts}",
+            deltaText = report.prevMonthWorkoutsDelta?.let {
+                val sign = if (it >= 0) "+" else ""
+                stringResource(R.string.monthly_vs_last_month, "$sign$it")
+            },
+            isPositive = (report.prevMonthWorkoutsDelta ?: 0) >= 0,
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+@Composable
+private fun TimeAndSets(report: MonthlyReport, modifier: Modifier = Modifier) {
+    Row(modifier = modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        val hours = report.totalDurationMinutes / 60
+        val mins = report.totalDurationMinutes % 60
+        HdStatCard(
+            icon = Icons.Default.Timer,
+            label = stringResource(R.string.monthly_total_time),
+            value = if (hours >
                 0
             ) {
                 stringResource(R.string.duration_hours_minutes, hours, mins)
             } else {
                 stringResource(R.string.duration_minutes, mins)
-            }
-
-            HdStatCard(
-                icon = Icons.Default.Timer,
-                label = stringResource(R.string.monthly_total_time),
-                value = durationStr,
-                subtext = stringResource(R.string.monthly_avg_session, report.avgSessionDurationMinutes),
-                modifier = Modifier.weight(1f)
-            )
-            HdStatCard(
-                icon = Icons.Default.Repeat,
-                label = stringResource(R.string.monthly_effective_sets),
-                value = "${report.totalSets}",
-                subtext = stringResource(
-                    R.string.monthly_sessions_per_week,
-                    report.workoutsPerWeekAverage.formatOneDecimal()
-                ),
-                modifier = Modifier.weight(1f)
-            )
-        }
+            },
+            subtext = stringResource(R.string.monthly_avg_session, report.avgSessionDurationMinutes),
+            modifier = Modifier.weight(1f)
+        )
+        HdStatCard(
+            icon = Icons.Default.Repeat,
+            label = stringResource(R.string.monthly_effective_sets),
+            value = "${report.totalSets}",
+            subtext = stringResource(R.string.monthly_sessions_per_week, report.workoutsPerWeekAverage.formatOneDecimal()),
+            modifier = Modifier.weight(1f)
+        )
     }
 }
 
@@ -403,74 +396,71 @@ private fun TopExercisesCard(exercises: List<TopExerciseMonthly>, modifier: Modi
         Spacer(modifier = Modifier.height(16.dp))
 
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            exercises.forEachIndexed { index, exercise ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(28.dp)
-                            .clip(CircleShape)
-                            .background(
-                                when (index) {
-                                    0 -> Color(0xFFFFB300).copy(alpha = 0.2f)
-                                    1 -> Color(0xFFB0BEC5).copy(alpha = 0.2f)
-                                    2 -> Color(0xFFCD7F32).copy(alpha = 0.2f)
-                                    else -> MaterialTheme.colorScheme.surfaceVariant
-                                }
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "${index + 1}",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = when (index) {
-                                0 -> Color(0xFFFFB300)
-                                1 -> Color(0xFF90A4AE)
-                                2 -> Color(0xFFCD7F32)
-                                else -> MaterialTheme.colorScheme.onSurfaceVariant
-                            }
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(12.dp))
-
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = exercise.exerciseName,
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = stringResource(
-                                R.string.monthly_exercise_detail,
-                                pluralStringResource(R.plurals.stats_set_count, exercise.totalSets, exercise.totalSets),
-                                exercise.maxWeightKg.formatWeight()
-                            ),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            text = exercise.totalVolumeKg.formatTotalWeight(),
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Text(
-                            text = stringResource(R.string.monthly_volume_lower),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
+            exercises.forEachIndexed { index, exercise -> TopExerciseRow(rank = index + 1, exercise = exercise) }
         }
+    }
+}
+
+@Composable
+private fun TopExerciseRow(rank: Int, exercise: TopExerciseMonthly, modifier: Modifier = Modifier) {
+    Row(modifier = modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        RankBadge(rank = rank)
+        Spacer(modifier = Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = exercise.exerciseName,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = stringResource(
+                    R.string.monthly_exercise_detail,
+                    pluralStringResource(R.plurals.stats_set_count, exercise.totalSets, exercise.totalSets),
+                    exercise.maxWeightKg.formatWeight()
+                ),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Column(horizontalAlignment = Alignment.End) {
+            Text(
+                text = exercise.totalVolumeKg.formatTotalWeight(),
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Text(
+                text = stringResource(R.string.monthly_volume_lower),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+/** 1, 2, 3 in gold, silver and bronze; the rest plain. */
+@Composable
+private fun RankBadge(rank: Int, modifier: Modifier = Modifier) {
+    val medal = when (rank) {
+        1 -> Color(0xFFFFB300) to Color(0xFFFFB300)
+        2 -> Color(0xFFB0BEC5) to Color(0xFF90A4AE)
+        3 -> Color(0xFFCD7F32) to Color(0xFFCD7F32)
+        else -> null
+    }
+    Box(
+        modifier = modifier
+            .size(28.dp)
+            .clip(CircleShape)
+            .background(medal?.first?.copy(alpha = 0.2f) ?: MaterialTheme.colorScheme.surfaceVariant),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "$rank",
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.Bold,
+            color = medal?.second ?: MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 

@@ -14,9 +14,6 @@
     <ID>LongMethod:HdStatCard.kt:@Composable fun HdStatCard</ID>
     <ID>LongMethod:HeavyDutyNavHost.kt:@Composable fun HeavyDutyNavHost</ID>
     <ID>LongMethod:HistoryListScreen.kt:@Composable fun HistoryListScreen</ID>
-    <ID>LongMethod:InformeMensualScreen.kt:@Composable private fun MonthlyStatsGrid</ID>
-    <ID>LongMethod:InformeMensualScreen.kt:@Composable private fun TopExercisesCard</ID>
-    <ID>LongMethod:InformeMensualScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun InformeMensualScreen</ID>
     <ID>LongMethod:MainActivity.kt:@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class) @Composable private fun HeavyDutyMainScreen</ID>
     <ID>LongMethod:RoutineEditorScreen.kt:@Composable private fun EditorContent</ID>
     <ID>LongMethod:RoutineEditorScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun RoutineEditorScreen</ID>
