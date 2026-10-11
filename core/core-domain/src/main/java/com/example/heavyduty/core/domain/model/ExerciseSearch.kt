@@ -61,10 +61,13 @@ private fun Exercise.rank(terms: List<Set<String>>): Int {
 }
 
 private fun String.singular(): String = when {
-    endsWith("es") && length > 4 -> dropLast(2)
-    endsWith("s") && length > 3 -> dropLast(1)
+    endsWith("es") && length - 2 >= MIN_SINGULAR_LENGTH -> dropLast(2)
+    endsWith("s") && length - 1 >= MIN_SINGULAR_LENGTH -> dropLast(1)
     else -> this
 }
+
+/** Shorter words are left alone: "res" isn't the plural of "re". */
+private const val MIN_SINGULAR_LENGTH = 3
 
 private val DIACRITICS = "\\p{Mn}+".toRegex()
 private val NON_ALPHANUMERIC = "[^a-z0-9]+".toRegex()

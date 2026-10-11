@@ -2,28 +2,14 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>ComplexCondition:ActiveWorkoutScreen.kt:uiState.isActive &amp;&amp; !askedForNotifications &amp;&amp; Build.VERSION.SDK_INT &gt;= Build.VERSION_CODES.TIRAMISU &amp;&amp; ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED</ID>
-    <ID>ComplexCondition:BackupRepositoryImpl.kt:kg == null || !kg.isFinite() || kg &lt;= 0f || it.loggedAt == null</ID>
-    <ID>ConstructorParameterNaming:SeedData.kt:SeedData.ExerciseDto$val body_part: String?</ID>
-    <ID>ConstructorParameterNaming:SeedData.kt:SeedData.ExerciseDto$val gif_url: String?</ID>
-    <ID>ConstructorParameterNaming:SeedData.kt:SeedData.ExerciseDto$val instruction_steps: Map&lt;String, List&lt;String&gt;&gt;?</ID>
-    <ID>ConstructorParameterNaming:SeedData.kt:SeedData.ExerciseDto$val media_id: String?</ID>
-    <ID>ConstructorParameterNaming:SeedData.kt:SeedData.ExerciseDto$val muscle_group: String?</ID>
-    <ID>ConstructorParameterNaming:SeedData.kt:SeedData.ExerciseDto$val secondary_muscles: List&lt;String&gt;?</ID>
-    <ID>CyclomaticComplexMethod:ActiveWorkoutViewModel.kt:ActiveWorkoutViewModel$fun onEvent</ID>
     <ID>CyclomaticComplexMethod:ActiveWorkoutViewModel.kt:ActiveWorkoutViewModel$private fun logSet</ID>
     <ID>CyclomaticComplexMethod:BackupRepositoryImpl.kt:BackupRepositoryImpl$private suspend fun importRoutines: Int</ID>
     <ID>CyclomaticComplexMethod:BackupRepositoryImpl.kt:BackupRepositoryImpl$private suspend fun importSessions: Int</ID>
     <ID>CyclomaticComplexMethod:BackupRepositoryImpl.kt:private fun BackupSnapshotDto.validate</ID>
     <ID>CyclomaticComplexMethod:ExerciseListScreen.kt:@Composable private fun ExerciseListContent</ID>
     <ID>CyclomaticComplexMethod:ExerciseSettingsSheet.kt:@Composable private fun NumberStepper</ID>
-    <ID>CyclomaticComplexMethod:GetMonthlyReportUseCase.kt:GetMonthlyReportUseCase$operator fun invoke: Flow&lt;MonthlyReport&gt;</ID>
-    <ID>CyclomaticComplexMethod:GetTrainingActivityHeatmapUseCase.kt:GetTrainingActivityHeatmapUseCase$operator fun invoke: Flow&lt;ActivityHeatmapStatsReport&gt;</ID>
     <ID>CyclomaticComplexMethod:MainActivity.kt:@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class) @Composable private fun HeavyDutyMainScreen</ID>
-    <ID>CyclomaticComplexMethod:RoutineEditorScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun RoutineEditorScreen</ID>
-    <ID>CyclomaticComplexMethod:RoutineEditorViewModel.kt:RoutineEditorViewModel$fun onEvent</ID>
     <ID>CyclomaticComplexMethod:SeedData.kt:SeedData$suspend fun populateExercises</ID>
-    <ID>DestructuringDeclarationWithTooManyEntries:BodyPathData.kt:val (minX, minY, width, height) = viewJson.getString("vb").split(" ").map { it.toFloat() }</ID>
     <ID>LongMethod:ActiveWorkoutBar.kt:@Composable fun ActiveWorkoutBar</ID>
     <ID>LongMethod:ActiveWorkoutScreen.kt:@Composable fun ActiveWorkoutScreen</ID>
     <ID>LongMethod:ActiveWorkoutScreen.kt:@Composable private fun PersonalRecordBanner</ID>
@@ -44,8 +30,6 @@
     <ID>LongMethod:ExerciseListScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun ExerciseListScreen</ID>
     <ID>LongMethod:ExerciseSettingsSheet.kt:@Composable private fun AdvancedSection</ID>
     <ID>LongMethod:ExerciseSettingsSheet.kt:@Composable private fun NumberStepper</ID>
-    <ID>LongMethod:GetMonthlyReportUseCase.kt:GetMonthlyReportUseCase$operator fun invoke: Flow&lt;MonthlyReport&gt;</ID>
-    <ID>LongMethod:GetTrainingActivityHeatmapUseCase.kt:GetTrainingActivityHeatmapUseCase$operator fun invoke: Flow&lt;ActivityHeatmapStatsReport&gt;</ID>
     <ID>LongMethod:HdBarChart.kt:@Composable fun HdBarChart</ID>
     <ID>LongMethod:HdLineChart.kt:@Composable fun HdLineChart</ID>
     <ID>LongMethod:HdRadarChart.kt:@Composable fun HdRadarChart</ID>
@@ -56,7 +40,6 @@
     <ID>LongMethod:InformeMensualScreen.kt:@Composable private fun TopExercisesCard</ID>
     <ID>LongMethod:InformeMensualScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun InformeMensualScreen</ID>
     <ID>LongMethod:MainActivity.kt:@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class) @Composable private fun HeavyDutyMainScreen</ID>
-    <ID>LongMethod:MapaActividadScreen.kt:@Composable private fun DayOfWeekDistributionCard</ID>
     <ID>LongMethod:MapaActividadScreen.kt:@Composable private fun OverviewMetricsCard</ID>
     <ID>LongMethod:MapaActividadScreen.kt:@Composable private fun StreaksHeroCard</ID>
     <ID>LongMethod:MapaActividadScreen.kt:@Composable private fun TimeSlotDistributionCard</ID>
@@ -75,62 +58,6 @@
     <ID>LongMethod:WorkoutHeader.kt:@Composable internal fun RestTimerBanner</ID>
     <ID>LongMethod:WorkoutHeader.kt:@Composable internal fun WorkoutHeader</ID>
     <ID>LongMethod:WorkoutStartScreen.kt:@Composable internal fun WorkoutStartScreen</ID>
-    <ID>LoopWithTooManyJumpStatements:ExerciseHistory.kt:for</ID>
-    <ID>MagicNumber:ActiveWorkoutBar.kt:1_000L</ID>
-    <ID>MagicNumber:Effort.kt:10</ID>
-    <ID>MagicNumber:Effort.kt:10f</ID>
-    <ID>MagicNumber:EstadisticasViewModel.kt:7</ID>
-    <ID>MagicNumber:ExerciseSearch.kt:3</ID>
-    <ID>MagicNumber:ExerciseSearch.kt:4</ID>
-    <ID>MagicNumber:Fatigue.kt:1.5</ID>
-    <ID>MagicNumber:GetTrainingActivityHeatmapUseCase.kt:GetTrainingActivityHeatmapUseCase$60f</ID>
-    <ID>MagicNumber:GetTrainingActivityHeatmapUseCase.kt:GetTrainingActivityHeatmapUseCase$7</ID>
-    <ID>MagicNumber:GetTrainingActivityHeatmapUseCase.kt:TimeSlot.AFTERNOON$12</ID>
-    <ID>MagicNumber:GetTrainingActivityHeatmapUseCase.kt:TimeSlot.AFTERNOON$18</ID>
-    <ID>MagicNumber:GetTrainingActivityHeatmapUseCase.kt:TimeSlot.Companion$11</ID>
-    <ID>MagicNumber:GetTrainingActivityHeatmapUseCase.kt:TimeSlot.Companion$12</ID>
-    <ID>MagicNumber:GetTrainingActivityHeatmapUseCase.kt:TimeSlot.Companion$17</ID>
-    <ID>MagicNumber:GetTrainingActivityHeatmapUseCase.kt:TimeSlot.Companion$18</ID>
-    <ID>MagicNumber:GetTrainingActivityHeatmapUseCase.kt:TimeSlot.Companion$23</ID>
-    <ID>MagicNumber:GetTrainingActivityHeatmapUseCase.kt:TimeSlot.Companion$5</ID>
-    <ID>MagicNumber:GetTrainingActivityHeatmapUseCase.kt:TimeSlot.EVENING$18</ID>
-    <ID>MagicNumber:GetTrainingActivityHeatmapUseCase.kt:TimeSlot.EVENING$24</ID>
-    <ID>MagicNumber:GetTrainingActivityHeatmapUseCase.kt:TimeSlot.MORNING$12</ID>
-    <ID>MagicNumber:GetTrainingActivityHeatmapUseCase.kt:TimeSlot.MORNING$5</ID>
-    <ID>MagicNumber:GetTrainingActivityHeatmapUseCase.kt:TimeSlot.NIGHT$5</ID>
-    <ID>MagicNumber:GetWeeklyScheduleOverviewUseCase.kt:GetWeeklyScheduleOverviewUseCase$7</ID>
-    <ID>MagicNumber:HdActivityHeatmap.kt:7</ID>
-    <ID>MagicNumber:NumberExtensions.kt:1000f</ID>
-    <ID>MagicNumber:OneRepMax.kt:30f</ID>
-    <ID>MagicNumber:PlateCalculator.kt:0.001f</ID>
-    <ID>MagicNumber:PlateCalculator.kt:10f</ID>
-    <ID>MagicNumber:PlateCalculator.kt:15f</ID>
-    <ID>MagicNumber:PlateCalculator.kt:20f</ID>
-    <ID>MagicNumber:PlateCalculator.kt:35f</ID>
-    <ID>MagicNumber:PlateCalculator.kt:45f</ID>
-    <ID>MagicNumber:ProfileActivity.kt:3600f</ID>
-    <ID>MagicNumber:RoutineEditorScreen.kt:60</ID>
-    <ID>MagicNumber:RoutineListScreen.kt:40</ID>
-    <ID>MagicNumber:RoutineListScreen.kt:60</ID>
-    <ID>MagicNumber:StatsPeriod.kt:StatsPeriod.LAST_30_DAYS$30</ID>
-    <ID>MagicNumber:StatsPeriod.kt:StatsPeriod.LAST_7_DAYS$7</ID>
-    <ID>MagicNumber:TimerEngine.kt:TimerEngine$300</ID>
-    <ID>MagicNumber:TimerNotifications.kt:TimerNotifications$60</ID>
-    <ID>MagicNumber:WeekRange.kt:7</ID>
-    <ID>MatchingDeclarationName:WorkoutFeedCard.kt:WorkoutFeedItem</ID>
-    <ID>MaxLineLength:ExerciseDao.kt:ExerciseDao$"UPDATE exercises SET instructionsEn = :english WHERE isCustom = 0 AND instructionsEn = '' AND nameEn = :nameEn AND instructions = :spanish"</ID>
-    <ID>ReturnCount:ActiveWorkoutScreen.kt:private fun nextExerciseIndex: Int?</ID>
-    <ID>ReturnCount:ActiveWorkoutViewModel.kt:ActiveWorkoutViewModel$private fun logSet</ID>
-    <ID>ReturnCount:ActiveWorkoutViewModel.kt:ActiveWorkoutViewModel$private suspend fun checkPersonalRecord</ID>
-    <ID>ReturnCount:Fatigue.kt:fun intensityWeightedTonnage: Float</ID>
-    <ID>ReturnCount:Progression.kt:fun nextPrescription: Prescription</ID>
-    <ID>ReturnCount:Progression.kt:private fun linearPrescription: Prescription</ID>
-    <ID>ReturnCount:SharedTransitions.kt:@OptIn(ExperimentalSharedTransitionApi::class) @Composable fun Modifier.hdSharedBounds: Modifier</ID>
-    <ID>ReturnCount:StrengthRetention.kt:fun strengthRetention: Float</ID>
-    <ID>SwallowedException:CalendarViewModel.kt:CalendarViewModel$e: Exception</ID>
-    <ID>TooGenericExceptionCaught:BackupRepositoryImpl.kt:BackupRepositoryImpl$e: Exception</ID>
-    <ID>TooGenericExceptionCaught:CalendarViewModel.kt:CalendarViewModel$e: Exception</ID>
-    <ID>TooGenericExceptionCaught:SeedData.kt:SeedData$e: Exception</ID>
     <ID>TooManyFunctions:ActiveWorkoutViewModel.kt:ActiveWorkoutViewModel : ViewModel</ID>
     <ID>TooManyFunctions:EntityMappers.kt:com.example.heavyduty.core.data.database.mapper.EntityMappers.kt</ID>
     <ID>TooManyFunctions:ExerciseDao.kt:ExerciseDao</ID>
@@ -140,6 +67,5 @@
     <ID>TooManyFunctions:WorkoutDao.kt:WorkoutDao</ID>
     <ID>TooManyFunctions:WorkoutRepository.kt:WorkoutRepository</ID>
     <ID>TooManyFunctions:WorkoutRepositoryImpl.kt:WorkoutRepositoryImpl : WorkoutRepository</ID>
-    <ID>UnusedParameter:HistoryListScreen.kt:onSessionClick: (Long) -&gt; Unit</ID>
   </CurrentIssues>
 </SmellBaseline>

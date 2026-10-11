@@ -86,7 +86,7 @@ private fun buildLast7DaysStartMillis(now: Long): List<Long> {
         set(Calendar.MILLISECOND, 0)
     }
     val days = mutableListOf<Long>()
-    repeat(7) {
+    repeat(DAYS_PER_WEEK) {
         days.add(0, calendar.timeInMillis)
         calendar.add(Calendar.DAY_OF_YEAR, -1)
     }
@@ -112,3 +112,5 @@ private fun nextDayStart(dayStart: Long): Long = Calendar.getInstance().apply {
     timeInMillis = dayStart
     add(Calendar.DAY_OF_YEAR, 1)
 }.timeInMillis
+
+private const val DAYS_PER_WEEK = 7

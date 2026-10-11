@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
 private const val DAY_MILLIS = 24L * 60 * 60 * 1000
+private const val DAYS_PER_WEEK = 7
 
 /**
  * The Monday-to-Sunday week containing [timeMillis] (same weeks as the dashboard's week strip
@@ -16,10 +17,10 @@ private const val DAY_MILLIS = 24L * 60 * 60 * 1000
  */
 fun weekRangeContaining(timeMillis: Long): LongRange {
     val calendar = startOfDay(timeMillis)
-    val daysSinceMonday = (calendar.get(Calendar.DAY_OF_WEEK) - Calendar.MONDAY + 7) % 7
+    val daysSinceMonday = (calendar.get(Calendar.DAY_OF_WEEK) - Calendar.MONDAY + DAYS_PER_WEEK) % DAYS_PER_WEEK
     calendar.add(Calendar.DAY_OF_MONTH, -daysSinceMonday)
     val start = calendar.timeInMillis
-    calendar.add(Calendar.DAY_OF_MONTH, 7)
+    calendar.add(Calendar.DAY_OF_MONTH, DAYS_PER_WEEK)
     return start until calendar.timeInMillis
 }
 

@@ -1,6 +1,7 @@
 package com.example.heavyduty.feature.workout.presentation
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -150,10 +151,7 @@ fun ActiveWorkoutScreen(
     val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
     var askedForNotifications by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(uiState.isActive) {
-        if (uiState.isActive && !askedForNotifications &&
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
-        ) {
+        if (uiState.isActive && !askedForNotifications && needsNotificationPermission(context)) {
             askedForNotifications = true
             notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
@@ -523,6 +521,9 @@ private fun Modifier.bleedHorizontally(padding: Dp): Modifier = layout { measura
     val placeable = measurable.measure(constraints.copy(minWidth = width, maxWidth = width))
     layout(constraints.maxWidth, placeable.height) { placeable.place(-extra / 2, 0) }
 }
+
+private fun needsNotificationPermission(context: Context): Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+    ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
 
 /** The next exercise still short of its planned sets, once the current one has all of them. */
 private fun nextExerciseIndex(uiState: ActiveWorkoutUiState): Int? {

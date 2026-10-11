@@ -711,6 +711,9 @@ private fun RoutineExercise.summary(): String {
     return "$work$weight · ${formatRest(restBetweenSetsSecs)}"
 }
 
-internal fun formatRest(seconds: Int): String = if (seconds < 60) "$seconds s" else "%d:%02d".format(seconds / 60, seconds % 60)
+internal fun formatRest(seconds: Int): String =
+    if (seconds < SECONDS_PER_MINUTE) "$seconds s" else "%d:%02d".format(seconds / SECONDS_PER_MINUTE, seconds % SECONDS_PER_MINUTE)
+
+private const val SECONDS_PER_MINUTE = 60
 
 internal fun String.capitalized(): String = replaceFirstChar { it.uppercase() }

@@ -278,4 +278,9 @@ private fun RoutineListItem(routine: Routine, onClick: () -> Unit, onStart: () -
 
 private const val MAX_THUMBNAILS = 5
 
-private fun estimatedMinutes(routine: Routine): Int = routine.exercises.sumOf { it.targetSets * (40 + it.restBetweenSetsSecs) } / 60
+// Same estimate as the editor's: each set ~40 s of work plus its planned rest.
+private const val SECONDS_PER_SET = 40
+private const val SECONDS_PER_MINUTE = 60
+
+private fun estimatedMinutes(routine: Routine): Int =
+    routine.exercises.sumOf { it.targetSets * (SECONDS_PER_SET + it.restBetweenSetsSecs) } / SECONDS_PER_MINUTE

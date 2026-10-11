@@ -30,21 +30,6 @@ import coil3.compose.AsyncImage
 import com.example.heavyduty.core.common.R
 import com.example.heavyduty.core.ui.formatTotalWeight
 
-/**
- * A single entry in the workout activity feed, shown on the profile screen.
- */
-data class WorkoutFeedItem(
-    val id: Long,
-    val userName: String,
-    val userAvatarUrl: String?,
-    val relativeTime: String,
-    val workoutName: String,
-    val durationMinutes: Int,
-    val volumeKg: Float,
-    val personalRecords: Int,
-    val exercises: List<String>
-)
-
 private const val MAX_VISIBLE_EXERCISES = 4
 
 /**

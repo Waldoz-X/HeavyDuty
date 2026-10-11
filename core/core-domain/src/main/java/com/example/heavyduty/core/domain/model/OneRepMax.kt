@@ -1,6 +1,7 @@
 package com.example.heavyduty.core.domain.model
 
 private const val ONE_REP_MAX_REP_CAP = 12
+private const val EPLEY_DIVISOR = 30f
 
 /**
  * Epley-formula estimated one-rep max: weight × (1 + reps/30).
@@ -15,7 +16,7 @@ fun estimatedOneRepMax(weightKg: Float, reps: Int): Float? = when {
     weightKg <= 0f || reps <= 0 -> null
     reps == 1 -> weightKg
     reps > ONE_REP_MAX_REP_CAP -> null
-    else -> weightKg * (1f + reps / 30f)
+    else -> weightKg * (1f + reps / EPLEY_DIVISOR)
 }
 
 /**

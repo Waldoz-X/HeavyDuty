@@ -5,6 +5,7 @@ import kotlin.math.min
 import kotlin.math.pow
 
 private const val FATIGUE_HALF_LIFE_HOURS = 36.0
+private const val INTENSITY_EXPONENT = 1.5
 
 /**
  * A completed set's contribution to muscle fatigue/stimulus, weighted by how close it was to
@@ -20,10 +21,9 @@ private const val FATIGUE_HALF_LIFE_HOURS = 36.0
 fun intensityWeightedTonnage(weightKg: Float, reps: Int, estimatedOneRepMaxKg: Float?): Float {
     if (weightKg <= 0f || reps <= 0) return 0f
     val rawTonnage = weightKg * reps
-    val oneRepMax = estimatedOneRepMaxKg ?: return rawTonnage
-    if (oneRepMax <= 0f) return rawTonnage
-    val intensityFactor = min(1f, weightKg / oneRepMax)
-    return rawTonnage * intensityFactor.toDouble().pow(1.5).toFloat()
+    val oneRepMax = estimatedOneRepMaxKg?.takeIf { it > 0f }
+    val intensityFactor = if (oneRepMax == null) 1f else min(1f, weightKg / oneRepMax).toDouble().pow(INTENSITY_EXPONENT).toFloat()
+    return rawTonnage * intensityFactor
 }
 
 /**

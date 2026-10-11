@@ -14,7 +14,12 @@ import kotlinx.coroutines.CancellationException
 /**
  * Seed data with 1,324 exercises parsed from JSON dataset.
  * Populated via RoomDatabase.Callback on first database creation.
+ *
+ * Every step catches any exception and logs it: it runs as the database opens, and a bad
+ * asset or a failed update must leave the app usable (with fewer exercises) rather than crash
+ * it on start.
  */
+@Suppress("TooGenericExceptionCaught")
 object SeedData {
 
     private const val SPANISH_NAMES_ASSET = "exercise_names_es.json"
@@ -96,6 +101,8 @@ object SeedData {
         "upper back" to "Espalda alta"
     )
 
+    // Named like exercises.json's keys, which Gson reads them by.
+    @Suppress("ConstructorParameterNaming")
     data class ExerciseDto(
         val id: String?,
         val name: String?,

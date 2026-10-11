@@ -148,8 +148,8 @@ private fun BackupSnapshotDto.validate() {
         session.sets.orEmpty().forEach { if (it.exerciseName == null) invalid("serie sin ejercicio") }
     }
     bodyWeightEntries.orEmpty().forEach {
-        val kg = it.weightKg
-        if (kg == null || !kg.isFinite() || kg <= 0f || it.loggedAt == null) invalid("peso corporal inválido")
+        val validWeight = it.weightKg?.takeIf { kg -> kg.isFinite() && kg > 0f }
+        if (validWeight == null || it.loggedAt == null) invalid("peso corporal inválido")
     }
 }
 
@@ -256,6 +256,9 @@ class BackupRepositoryImpl @Inject constructor(
         return gson.toJson(snapshot)
     }
 
+    // Whatever the parser throws on a file that isn't a backup becomes the one error the
+    // screen knows how to show.
+    @Suppress("TooGenericExceptionCaught")
     override suspend fun importSnapshot(json: String): BackupImportResult {
         val snapshot = try {
             // Only an object that says which backup format it is: valid JSON from another app

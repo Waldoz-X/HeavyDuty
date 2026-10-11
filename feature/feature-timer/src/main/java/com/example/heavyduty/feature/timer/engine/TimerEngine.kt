@@ -267,11 +267,13 @@ class TimerEngine @Inject constructor(
                 context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                vibrator?.vibrate(VibrationEffect.createOneShot(300, VibrationEffect.DEFAULT_AMPLITUDE))
+                vibrator?.vibrate(VibrationEffect.createOneShot(VIBRATION_MILLIS, VibrationEffect.DEFAULT_AMPLITUDE))
             } else {
                 @Suppress("DEPRECATION")
-                vibrator?.vibrate(300)
+                vibrator?.vibrate(VIBRATION_MILLIS)
             }
         }
     }
 }
+
+private const val VIBRATION_MILLIS = 300L

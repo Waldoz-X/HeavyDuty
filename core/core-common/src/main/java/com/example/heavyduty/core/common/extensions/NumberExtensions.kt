@@ -12,4 +12,6 @@ fun Float.formatDecimal(): String = if (this == this.toInt().toFloat()) this.toI
 fun Float.formatOneDecimal(): String = String.format(Locale.US, "%.1f", this)
 
 /** Compact large-number formatting for stat displays, e.g. 12500f -> "12.5k". */
-fun Float.formatCompact(): String = if (this >= 1000f) "${(this / 1000f).formatDecimal()}k" else this.toInt().toString()
+fun Float.formatCompact(): String = if (this >= THOUSAND) "${(this / THOUSAND).formatDecimal()}k" else this.toInt().toString()
+
+private const val THOUSAND = 1000f

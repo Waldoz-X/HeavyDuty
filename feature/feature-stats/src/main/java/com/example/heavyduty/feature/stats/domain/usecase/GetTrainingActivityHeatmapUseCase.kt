@@ -24,12 +24,7 @@ enum class TimeSlot(val startHour: Int, val endHour: Int) {
     ;
 
     companion object {
-        fun ofHour(hour: Int): TimeSlot = when (hour) {
-            in 5..11 -> MORNING
-            in 12..17 -> AFTERNOON
-            in 18..23 -> EVENING
-            else -> NIGHT
-        }
+        fun ofHour(hour: Int): TimeSlot = entries.firstOrNull { hour >= it.startHour && hour < it.endHour } ?: NIGHT
     }
 }
 
@@ -74,207 +69,136 @@ private const val HEATMAP_WEEKS = 53
 class GetTrainingActivityHeatmapUseCase @Inject constructor(private val workoutRepository: WorkoutRepository, private val clock: Clock) {
     operator fun invoke(): Flow<ActivityHeatmapStatsReport> = workoutRepository.getAllSessions().map { sessions ->
         val nowMillis = clock.nowMillis()
-        val calendar = Calendar.getInstance()
+        val todayMidnight = startOfDay(nowMillis)
+        val windowStart = addDays(todayMidnight, -(HEATMAP_WEEKS * DAYS_PER_WEEK - 1))
+        val completed = sessions.filter { it.status == WorkoutStatus.COMPLETED }
+        val inWindow = completed.filter { it.startTime >= windowStart }
 
-        calendar.timeInMillis = nowMillis
-        calendar.set(Calendar.HOUR_OF_DAY, 0)
-        calendar.set(Calendar.MINUTE, 0)
-        calendar.set(Calendar.SECOND, 0)
-        calendar.set(Calendar.MILLISECOND, 0)
-        val todayMidnight = calendar.timeInMillis
-
-        calendar.add(Calendar.DAY_OF_YEAR, -(HEATMAP_WEEKS * 7 - 1))
-        val windowStart = calendar.timeInMillis
-
-        val completedSessions = sessions.filter {
-            it.status == WorkoutStatus.COMPLETED && it.startTime >= windowStart
-        }
-
-        val minutesByDay = mutableMapOf<Long, Float>()
-        val sessionsByDayOfWeek = mutableMapOf<Int, Int>()
-        val sessionsByTimeSlot = mutableMapOf<TimeSlot, Int>()
-
-        var totalDurationSecs = 0
-
-        completedSessions.forEach { session ->
-            totalDurationSecs += session.totalDurationSecs
-
-            calendar.timeInMillis = session.startTime
-            calendar.set(Calendar.HOUR_OF_DAY, 0)
-            calendar.set(Calendar.MINUTE, 0)
-            calendar.set(Calendar.SECOND, 0)
-            calendar.set(Calendar.MILLISECOND, 0)
-            val day = calendar.timeInMillis
-            minutesByDay[day] = (minutesByDay[day] ?: 0f) + (session.totalDurationSecs / 60f)
-
-            calendar.timeInMillis = session.startTime
-            val dow = calendar.get(Calendar.DAY_OF_WEEK)
-            sessionsByDayOfWeek[dow] = (sessionsByDayOfWeek[dow] ?: 0) + 1
-
-            val hour = calendar.get(Calendar.HOUR_OF_DAY)
-            val slot = TimeSlot.ofHour(hour)
-            sessionsByTimeSlot[slot] = (sessionsByTimeSlot[slot] ?: 0) + 1
-        }
-
-        // Racha diaria
-        val trainedDays = minutesByDay.keys.sorted()
-        val oneDayMillis = 24 * 60 * 60 * 1000L
-        var maxDailyStreak = 0
-        var runningDailyStreak = 0
-        var prevDayMillis: Long? = null
-
-        trainedDays.forEach { dayMillis ->
-            val prev = prevDayMillis
-            if (prev == null) {
-                runningDailyStreak = 1
-            } else {
-                // Rounded: across a DST change two midnights are 23 or 25 hours apart.
-                val diffDays = Math.round((dayMillis - prev).toDouble() / oneDayMillis).toInt()
-                if (diffDays == 1) {
-                    runningDailyStreak++
-                } else if (diffDays > 1) {
-                    runningDailyStreak = 1
-                }
-            }
-            if (runningDailyStreak > maxDailyStreak) {
-                maxDailyStreak = runningDailyStreak
-            }
-            prevDayMillis = dayMillis
-        }
-
-        calendar.timeInMillis = todayMidnight
-        calendar.add(Calendar.DAY_OF_YEAR, -1)
-        val yesterdayMidnight = calendar.timeInMillis
-
-        var currentDailyStreak = 0
-        if (trainedDays.contains(todayMidnight) || trainedDays.contains(yesterdayMidnight)) {
-            var checkDay = if (trainedDays.contains(todayMidnight)) todayMidnight else yesterdayMidnight
-            while (trainedDays.contains(checkDay)) {
-                currentDailyStreak++
-                calendar.timeInMillis = checkDay
-                calendar.add(Calendar.DAY_OF_YEAR, -1)
-                checkDay = calendar.timeInMillis
-            }
-        }
-
-        // Racha semanal
-        // Consecutive Monday-to-Sunday weeks get consecutive indexes, also across New Year —
-        // "year * 53 + WEEK_OF_YEAR" broke there (Dec 29 can be week 1 of the next year).
-        fun getWeekIndex(millis: Long): Long {
-            val cal = Calendar.getInstance().apply {
-                timeInMillis = millis
-                set(Calendar.HOUR_OF_DAY, 0)
-                set(Calendar.MINUTE, 0)
-                set(Calendar.SECOND, 0)
-                set(Calendar.MILLISECOND, 0)
-                val daysSinceMonday = (get(Calendar.DAY_OF_WEEK) - Calendar.MONDAY + 7) % 7
-                add(Calendar.DAY_OF_YEAR, -daysSinceMonday)
-            }
-            return Math.round(cal.timeInMillis.toDouble() / (7 * oneDayMillis))
-        }
-
-        val weeksWithWorkouts = completedSessions.map { getWeekIndex(it.startTime) }.distinct().sorted()
-        var maxWeeklyStreak = 0
-        var runningWeeklyStreak = 0
-        var prevWeekIdx: Long? = null
-
-        weeksWithWorkouts.forEach { weekIdx ->
-            val prevWeek = prevWeekIdx
-            if (prevWeek == null) {
-                runningWeeklyStreak = 1
-            } else {
-                if (weekIdx == prevWeek + 1) {
-                    runningWeeklyStreak++
-                } else if (weekIdx > prevWeek + 1) {
-                    runningWeeklyStreak = 1
-                }
-            }
-            if (runningWeeklyStreak > maxWeeklyStreak) {
-                maxWeeklyStreak = runningWeeklyStreak
-            }
-            prevWeekIdx = weekIdx
-        }
-
-        val currentWeekIdx = getWeekIndex(nowMillis)
-        var currentWeeklyStreak = 0
-        if (weeksWithWorkouts.contains(currentWeekIdx) || weeksWithWorkouts.contains(currentWeekIdx - 1)) {
-            var checkWeek = if (weeksWithWorkouts.contains(currentWeekIdx)) currentWeekIdx else currentWeekIdx - 1
-            while (weeksWithWorkouts.contains(checkWeek)) {
-                currentWeeklyStreak++
-                checkWeek--
-            }
-        }
-
-        // Patrón por día de la semana
-        val dayOrder = listOf(
-            Calendar.MONDAY,
-            Calendar.TUESDAY,
-            Calendar.WEDNESDAY,
-            Calendar.THURSDAY,
-            Calendar.FRIDAY,
-            Calendar.SATURDAY,
-            Calendar.SUNDAY
-        )
-
-        val totalSessions = completedSessions.size
-        val dayStats = dayOrder.map { calDay ->
-            val count = sessionsByDayOfWeek[calDay] ?: 0
-            val pct = if (totalSessions > 0) (count.toFloat() / totalSessions.toFloat() * 100f) else 0f
-            DayOfWeekStat(
-                dayOfWeek = calDay,
-                count = count,
-                percentage = pct
-            )
-        }
-        val favoriteDay = dayStats.maxByOrNull { it.count }?.takeIf { it.count > 0 }?.dayOfWeek
-
-        // Patrón por franja horaria
-        val slotStats = TimeSlot.entries.map { slot ->
-            val count = sessionsByTimeSlot[slot] ?: 0
-            val pct = if (totalSessions > 0) (count.toFloat() / totalSessions.toFloat() * 100f) else 0f
-            TimeSlotStat(
-                slot = slot,
-                count = count,
-                percentage = pct
-            )
-        }
-        val favoriteSlot = slotStats.maxByOrNull { it.count }?.takeIf { it.count > 0 }?.slot
-
-        val totalHours = totalDurationSecs / 3600f
-        val avgDurationMins = if (totalSessions > 0) totalDurationSecs / totalSessions / 60 else 0
-        val consistencyPct = (trainedDays.size.toFloat() / 365f * 100f).coerceIn(0f, 100f)
+        val trainedDays = inWindow.map { startOfDay(it.startTime) }.distinct().sorted()
+        val weeksWithWorkouts = inWindow.map { weekIndex(it.startTime) }.distinct().sorted()
+        val totalSessions = inWindow.size
+        val totalDurationSecs = inWindow.sumOf { it.totalDurationSecs }
+        val dayStats = dayOfWeekStats(inWindow)
+        val slotStats = timeSlotStats(inWindow)
 
         ActivityHeatmapStatsReport(
-            dailyTotals = dailyTotals(sessions.filter { it.status == WorkoutStatus.COMPLETED }),
+            dailyTotals = dailyTotals(completed),
             totalDaysTrained = trainedDays.size,
             totalSessions = totalSessions,
-            totalHoursTrained = totalHours,
-            avgMinutesPerSession = avgDurationMins,
-            consistencyPercentage = consistencyPct,
+            totalHoursTrained = totalDurationSecs / SECONDS_PER_HOUR,
+            avgMinutesPerSession = if (totalSessions > 0) totalDurationSecs / totalSessions / SECONDS_PER_MINUTE.toInt() else 0,
+            consistencyPercentage = (trainedDays.size.toFloat() / DAYS_PER_YEAR * PERCENT).coerceIn(0f, PERCENT),
             activeWeeksCount = weeksWithWorkouts.size,
             totalWeeksInWindow = HEATMAP_WEEKS,
-            currentStreakDays = currentDailyStreak,
-            longestStreakDays = maxDailyStreak,
-            currentStreakWeeks = currentWeeklyStreak,
-            longestStreakWeeks = maxWeeklyStreak,
+            currentStreakDays = currentDailyStreak(trainedDays.toSet(), todayMidnight),
+            // Rounded: across a DST change two midnights are 23 or 25 hours apart.
+            longestStreakDays = longestStreak(trainedDays) { prev, day -> Math.round((day - prev).toDouble() / DAY_MILLIS) },
+            currentStreakWeeks = currentWeeklyStreak(weeksWithWorkouts.toSet(), weekIndex(nowMillis)),
+            longestStreakWeeks = longestStreak(weeksWithWorkouts) { prev, week -> week - prev },
             dayOfWeekDistribution = dayStats,
-            favoriteDayOfWeek = favoriteDay,
+            favoriteDayOfWeek = dayStats.maxByOrNull { it.count }?.takeIf { it.count > 0 }?.dayOfWeek,
             timeSlotDistribution = slotStats,
-            favoriteTimeSlot = favoriteSlot
+            favoriteTimeSlot = slotStats.maxByOrNull { it.count }?.takeIf { it.count > 0 }?.slot
         )
     }.distinctUntilChanged().flowOn(Dispatchers.Default)
 }
 
-private fun dailyTotals(completed: List<WorkoutSession>): Map<Long, DayTotals> {
-    val calendar = Calendar.getInstance()
-    return completed
-        .groupBy { session ->
-            calendar.timeInMillis = session.startTime
-            calendar.set(Calendar.HOUR_OF_DAY, 0)
-            calendar.set(Calendar.MINUTE, 0)
-            calendar.set(Calendar.SECOND, 0)
-            calendar.set(Calendar.MILLISECOND, 0)
-            calendar.timeInMillis
-        }
-        .mapValues { (_, day) -> DayTotals(sessions = day.size, minutes = day.sumOf { it.totalDurationSecs } / 60f) }
+private fun startOfDay(millis: Long): Long = Calendar.getInstance().apply {
+    timeInMillis = millis
+    set(Calendar.HOUR_OF_DAY, 0)
+    set(Calendar.MINUTE, 0)
+    set(Calendar.SECOND, 0)
+    set(Calendar.MILLISECOND, 0)
+}.timeInMillis
+
+private fun addDays(millis: Long, days: Int): Long = Calendar.getInstance().apply {
+    timeInMillis = millis
+    add(Calendar.DAY_OF_YEAR, days)
+}.timeInMillis
+
+/**
+ * Consecutive Monday-to-Sunday weeks get consecutive indexes, also across New Year —
+ * "year * 53 + WEEK_OF_YEAR" broke there (Dec 29 can be week 1 of the next year).
+ */
+private fun weekIndex(millis: Long): Long {
+    val monday = Calendar.getInstance().apply {
+        timeInMillis = startOfDay(millis)
+        val daysSinceMonday = (get(Calendar.DAY_OF_WEEK) - Calendar.MONDAY + DAYS_PER_WEEK) % DAYS_PER_WEEK
+        add(Calendar.DAY_OF_YEAR, -daysSinceMonday)
+    }
+    return Math.round(monday.timeInMillis.toDouble() / (DAYS_PER_WEEK * DAY_MILLIS))
 }
+
+/** The longest run in [sorted] (distinct, ascending) where each item is [gap] 1 from the one before. */
+private fun longestStreak(sorted: List<Long>, gap: (previous: Long, current: Long) -> Long): Int {
+    var longest = 0
+    var running = 0
+    sorted.forEachIndexed { index, item ->
+        running = if (index > 0 && gap(sorted[index - 1], item) == 1L) running + 1 else 1
+        longest = maxOf(longest, running)
+    }
+    return longest
+}
+
+/** Days trained in a row up to today — or up to yesterday, while today can still be trained. */
+private fun currentDailyStreak(trainedDays: Set<Long>, todayMidnight: Long): Int {
+    var day = if (todayMidnight in trainedDays) todayMidnight else addDays(todayMidnight, -1)
+    var streak = 0
+    while (day in trainedDays) {
+        streak++
+        day = addDays(day, -1)
+    }
+    return streak
+}
+
+/** Weeks trained in a row up to this one — or up to last week, while this one can still be. */
+private fun currentWeeklyStreak(weeks: Set<Long>, currentWeek: Long): Int {
+    var week = if (currentWeek in weeks) currentWeek else currentWeek - 1
+    var streak = 0
+    while (week in weeks) {
+        streak++
+        week--
+    }
+    return streak
+}
+
+private val WEEK_DAYS = listOf(
+    Calendar.MONDAY,
+    Calendar.TUESDAY,
+    Calendar.WEDNESDAY,
+    Calendar.THURSDAY,
+    Calendar.FRIDAY,
+    Calendar.SATURDAY,
+    Calendar.SUNDAY
+)
+
+private fun share(count: Int, total: Int): Float = if (total > 0) count.toFloat() / total.toFloat() * PERCENT else 0f
+
+private fun dayOfWeekStats(sessions: List<WorkoutSession>): List<DayOfWeekStat> {
+    val byDay = sessions.groupingBy { Calendar.getInstance().apply { timeInMillis = it.startTime }.get(Calendar.DAY_OF_WEEK) }.eachCount()
+    return WEEK_DAYS.map { day ->
+        val count = byDay[day] ?: 0
+        DayOfWeekStat(dayOfWeek = day, count = count, percentage = share(count, sessions.size))
+    }
+}
+
+private fun timeSlotStats(sessions: List<WorkoutSession>): List<TimeSlotStat> {
+    val bySlot = sessions.groupingBy {
+        TimeSlot.ofHour(Calendar.getInstance().apply { timeInMillis = it.startTime }.get(Calendar.HOUR_OF_DAY))
+    }.eachCount()
+    return TimeSlot.entries.map { slot ->
+        val count = bySlot[slot] ?: 0
+        TimeSlotStat(slot = slot, count = count, percentage = share(count, sessions.size))
+    }
+}
+
+private fun dailyTotals(completed: List<WorkoutSession>): Map<Long, DayTotals> = completed
+    .groupBy { startOfDay(it.startTime) }
+    .mapValues { (_, day) -> DayTotals(sessions = day.size, minutes = day.sumOf { it.totalDurationSecs } / SECONDS_PER_MINUTE) }
+
+private const val DAYS_PER_WEEK = 7
+private const val DAY_MILLIS = 24 * 60 * 60 * 1000L
+private const val DAYS_PER_YEAR = 365f
+private const val SECONDS_PER_MINUTE = 60f
+private const val SECONDS_PER_HOUR = 3600f
+private const val PERCENT = 100f

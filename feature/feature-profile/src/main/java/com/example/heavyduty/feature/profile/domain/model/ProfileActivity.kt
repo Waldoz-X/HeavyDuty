@@ -5,6 +5,7 @@ import com.example.heavyduty.core.domain.model.WorkoutSet
 import com.example.heavyduty.core.domain.model.WorkoutStatus
 
 private const val WEEK_MILLIS = 7 * 24 * 60 * 60 * 1000L
+private const val SECONDS_PER_HOUR = 3600f
 
 /**
  * Ids of the working sets that, when lifted, beat the heaviest weight ever logged for their
@@ -49,6 +50,6 @@ fun weeklyTrainingHours(sessions: List<WorkoutSession>, now: Long, weeks: Int = 
         val start = now - weeksBack * WEEK_MILLIS
         val end = start + WEEK_MILLIS
         val secs = completed.filter { it.startTime >= start && it.startTime < end }.sumOf { it.totalDurationSecs }
-        start to secs / 3600f
+        start to secs / SECONDS_PER_HOUR
     }
 }

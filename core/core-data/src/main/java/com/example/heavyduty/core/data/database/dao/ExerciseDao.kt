@@ -56,7 +56,8 @@ interface ExerciseDao {
      * different instructions, and the stored row has no other link to its catalog entry.
      */
     @Query(
-        "UPDATE exercises SET instructionsEn = :english WHERE isCustom = 0 AND instructionsEn = '' AND nameEn = :nameEn AND instructions = :spanish"
+        "UPDATE exercises SET instructionsEn = :english " +
+            "WHERE isCustom = 0 AND instructionsEn = '' AND nameEn = :nameEn AND instructions = :spanish"
     )
     suspend fun setEnglishInstructions(nameEn: String, spanish: String, english: String)
 

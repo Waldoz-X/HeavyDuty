@@ -208,7 +208,9 @@ private fun RestCountdown(remainingSeconds: Int) {
     }
 }
 
-private fun secondsSince(startTime: Long): Int = ((System.currentTimeMillis() - startTime) / 1_000L).toInt().coerceAtLeast(0)
+private fun secondsSince(startTime: Long): Int = ((System.currentTimeMillis() - startTime) / MILLIS_PER_SECOND).toInt().coerceAtLeast(0)
+
+private const val MILLIS_PER_SECOND = 1_000L
 
 private fun formatClock(totalSeconds: Int): String {
     val hours = totalSeconds / 3600

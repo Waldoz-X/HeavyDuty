@@ -155,7 +155,10 @@ class TimerNotifications @Inject constructor(@param:ApplicationContext private v
         }
     }
 
-    private fun formatTime(totalSeconds: Int): String = "%d:%02d".format(totalSeconds / 60, totalSeconds % 60)
+    private fun formatTime(totalSeconds: Int): String = "%d:%02d".format(
+        totalSeconds / SECONDS_PER_MINUTE,
+        totalSeconds % SECONDS_PER_MINUTE
+    )
 
     /**
      * What the ongoing notification shows. While running, [anchorMillis] is when the countdown
@@ -209,3 +212,5 @@ class TimerNotifications @Inject constructor(@param:ApplicationContext private v
         private const val ACCENT_COLOR = 0xFF00E5FF.toInt()
     }
 }
+
+private const val SECONDS_PER_MINUTE = 60

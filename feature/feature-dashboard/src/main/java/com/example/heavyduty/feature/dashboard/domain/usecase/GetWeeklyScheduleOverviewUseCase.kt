@@ -39,7 +39,7 @@ class GetWeeklyScheduleOverviewUseCase @Inject constructor(
         val todayDate = Instant.ofEpochMilli(clock.nowMillis()).atZone(ZoneId.systemDefault()).toLocalDate()
         val monday = todayDate.with(DayOfWeek.MONDAY).plusWeeks(weekOffset.toLong())
 
-        (1..7).map { day ->
+        (1..DAYS_PER_WEEK).map { day ->
             val date = monday.plusDays((day - 1).toLong())
 
             val dayStartMillis = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
@@ -91,3 +91,5 @@ class GetWeeklyScheduleOverviewUseCase @Inject constructor(
             .replaceFirstChar { it.titlecase(locale) }
     }
 }
+
+private const val DAYS_PER_WEEK = 7

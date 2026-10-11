@@ -6,10 +6,16 @@ val STANDARD_PLATES_KG = listOf(25f, 20f, 15f, 10f, 5f, 2.5f, 1.25f)
 /** Standard pound plate denominations. */
 val STANDARD_PLATES_LB = listOf(45f, 35f, 25f, 10f, 5f, 2.5f)
 
+private val BAR_PRESETS_KG = listOf(20f, 15f, 10f)
+private val BAR_PRESETS_LB = listOf(45f, 35f, 15f)
+
+/** Leeway for float rounding, so 2.5 still fits a remainder computed as 2.4999. */
+private const val PLATE_TOLERANCE = 0.001f
+
 /** Common bar weights, heaviest (the standard Olympic bar) first. */
 fun WeightUnit.barPresets(): List<Float> = when (this) {
-    WeightUnit.KG -> listOf(20f, 15f, 10f)
-    WeightUnit.LB -> listOf(45f, 35f, 15f)
+    WeightUnit.KG -> BAR_PRESETS_KG
+    WeightUnit.LB -> BAR_PRESETS_LB
 }
 
 fun WeightUnit.standardPlates(): List<Float> = when (this) {
@@ -30,7 +36,7 @@ fun calculatePlatesPerSide(targetWeightKg: Float, barWeightKg: Float, availableP
 
     val plates = mutableListOf<Float>()
     for (plate in availablePlates.sortedDescending()) {
-        while (remainingPerSide + 0.001f >= plate) {
+        while (remainingPerSide + PLATE_TOLERANCE >= plate) {
             plates.add(plate)
             remainingPerSide -= plate
         }

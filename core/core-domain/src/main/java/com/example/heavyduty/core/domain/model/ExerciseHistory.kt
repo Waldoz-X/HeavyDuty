@@ -45,14 +45,14 @@ fun exerciseSetSummaries(completedSets: List<WorkoutSet>): List<ExerciseSetSumma
 /** When each exercise last had a hard working set ([HARD_SET_INTENSITY]); exercises with none are left out. */
 fun lastHardSetAtByExercise(completedSets: List<WorkoutSet>): Map<Long, Long> {
     val bestByExercise = exerciseSetSummaries(completedSets).associate { it.exerciseId to it.bestOneRepMaxKg }
-    val last = mutableMapOf<Long, Long>()
-    for (set in completedSets.excludeWarmups()) {
-        val completedAt = set.completedAt ?: continue
-        val oneRepMax = bestByExercise[set.exerciseId]?.takeIf { it > 0f } ?: continue
-        if ((set.weight ?: 0f) / oneRepMax < HARD_SET_INTENSITY) continue
-        if (completedAt > (last[set.exerciseId] ?: Long.MIN_VALUE)) last[set.exerciseId] = completedAt
+    fun WorkoutSet.isHard(): Boolean {
+        val oneRepMax = bestByExercise[exerciseId]?.takeIf { it > 0f } ?: return false
+        return (weight ?: 0f) / oneRepMax >= HARD_SET_INTENSITY
     }
-    return last
+    return completedSets.excludeWarmups()
+        .filter { it.completedAt != null && it.isHard() }
+        .groupBy { it.exerciseId }
+        .mapValues { (_, sets) -> sets.maxOf { it.completedAt!! } }
 }
 
 /**

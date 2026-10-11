@@ -16,10 +16,13 @@ sealed class Effort {
 
 fun Effort.displayRir(): Int = when (this) {
     is Effort.Rir -> value
-    is Effort.Rpe -> Math.round(10f - value)
+    is Effort.Rpe -> Math.round(RPE_MAX - value)
 }
 
 fun Effort.displayRpe(): Float = when (this) {
-    is Effort.Rir -> (10 - value).toFloat()
+    is Effort.Rir -> (RPE_MAX - value)
     is Effort.Rpe -> value
 }
+
+/** RPE 10 is a set taken to failure: no reps left in reserve. */
+private const val RPE_MAX = 10f

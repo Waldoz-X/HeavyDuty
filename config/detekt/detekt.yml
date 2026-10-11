@@ -9,8 +9,16 @@ style:
     ignoreAnnotated: ['Composable', 'Preview']
     ignorePropertyDeclaration: true
     ignoreCompanionObjectPropertyDeclaration: true
+    # An enum entry names its own arguments: LAST_7_DAYS(7, …).
+    ignoreEnums: true
+  ReturnCount:
+    # Early exits at the top (`?: return`, `if (…) return`) are how Kotlin reads best.
+    excludeGuardClauses: true
 
 complexity:
+  CyclomaticComplexMethod:
+    # A `when` that only dispatches (one call per event) reads flat however many branches it has.
+    ignoreSimpleWhenEntries: true
   TooManyFunctions:
     # Screens are meant to be split into small composables; counting each one would push
     # toward the opposite — few, long functions.

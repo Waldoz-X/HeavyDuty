@@ -81,7 +81,7 @@ class CalendarViewModel @Inject constructor(
                         calendarRepository.deleteEntry(event.entry)
                     } catch (e: CancellationException) {
                         throw e
-                    } catch (e: Exception) {
+                    } catch (_: Exception) {
                         _uiEffect.send(CalendarUiEffect.ShowMessage(R.string.calendar_remove_error))
                     }
                 }

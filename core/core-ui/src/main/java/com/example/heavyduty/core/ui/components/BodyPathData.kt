@@ -66,6 +66,8 @@ internal fun loadBodyPaths(context: Context, gender: BodyGender): Pair<BodyView,
     return parseView(root.getJSONObject("front")) to parseView(root.getJSONObject("back"))
 }
 
+// An SVG viewBox is four numbers: min-x, min-y, width, height.
+@Suppress("DestructuringDeclarationWithTooManyEntries")
 private fun parseView(viewJson: JSONObject): BodyView {
     val (minX, minY, width, height) = viewJson.getString("vb").split(" ").map { it.toFloat() }
     val pathsJson = viewJson.getJSONObject("p")
