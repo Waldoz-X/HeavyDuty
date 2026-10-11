@@ -86,7 +86,7 @@ class ActiveWorkoutViewModel @Inject constructor(
     val uiEffect: Flow<ActiveWorkoutUiEffect> = _uiEffect.receiveAsFlow()
 
     private val clocks = WorkoutClocks(viewModelScope, clock, _uiState)
-    private val exercisePicker = ExercisePicker(viewModelScope, exerciseRepository, _uiState)
+    private val exercisePicker = ExercisePickerController(viewModelScope, exerciseRepository, _uiState)
 
     init {
         observePreferences()

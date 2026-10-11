@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /** The search for an exercise to add to a free workout; the catalog is read the first time it opens. */
-internal class ExercisePicker(
+internal class ExercisePickerController(
     private val scope: CoroutineScope,
     private val exerciseRepository: ExerciseRepository,
     private val uiState: MutableStateFlow<ActiveWorkoutUiState>

@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -23,6 +24,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableFloatStateOf
@@ -31,6 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -109,6 +112,10 @@ internal fun DiscardWorkoutDialog(uiState: ActiveWorkoutUiState, onConfirm: () -
 
 @Composable
 internal fun ExercisePicker(query: String, results: List<Exercise>, onQueryChange: (String) -> Unit, onExercisePick: (Exercise) -> Unit) {
+    // New results start at the top: items are keyed by exercise, so the list would otherwise
+    // stay anchored on whichever exercise was first on screen and hide the best matches above it.
+    val listState = rememberLazyListState()
+    LaunchedEffect(results) { listState.scrollToItem(0) }
     HdCard {
         Text(
             text = stringResource(R.string.workout_add_exercise),
@@ -123,9 +130,11 @@ internal fun ExercisePicker(query: String, results: List<Exercise>, onQueryChang
         )
         Spacer(modifier = Modifier.height(8.dp))
         LazyColumn(
+            state = listState,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(240.dp)
+                .testTag(EXERCISE_PICKER_LIST)
         ) {
             items(items = results, key = { it.id }) { exercise ->
                 Row(
@@ -221,3 +230,5 @@ internal fun PlateCalculatorDialog(unit: WeightUnit, initialWeight: String, onDi
         }
     }
 }
+
+internal const val EXERCISE_PICKER_LIST = "exercisePickerList"
