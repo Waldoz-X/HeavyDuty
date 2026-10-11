@@ -264,6 +264,10 @@ private fun ProfileContent(
         }
 
         item {
+            ThemeModeCard(selected = uiState.themeMode, onSelect = { onEvent(ProfileUiEvent.OnThemeModeChange(it)) })
+        }
+
+        item {
             TrainingReminderCard(
                 reminder = uiState.reminder,
                 onEnabledChange = { onEvent(ProfileUiEvent.OnReminderEnabledChange(it)) },

@@ -2,6 +2,7 @@ package com.example.heavyduty
 
 import com.example.heavyduty.core.common.navigation.AppSections
 import com.example.heavyduty.core.domain.model.Routine
+import com.example.heavyduty.core.domain.model.ThemeMode
 import com.example.heavyduty.core.domain.model.WeightUnit
 import com.example.heavyduty.core.domain.model.WorkoutSession
 import com.example.heavyduty.core.domain.model.WorkoutSet
@@ -51,6 +52,7 @@ class MainViewModelTest {
     private fun viewModel(repository: FakeWorkoutRepository): MainViewModel {
         val preferences = mockk<UserPreferencesRepository> {
             every { preferredWeightUnit } returns flowOf(WeightUnit.KG)
+            every { themeMode } returns flowOf(ThemeMode.DARK)
             every { onboardingCompleted } returns flowOf(true)
         }
         return MainViewModel(
@@ -153,6 +155,7 @@ class MainViewModelTest {
     ): Boolean? {
         val preferences = mockk<UserPreferencesRepository> {
             every { preferredWeightUnit } returns flowOf(WeightUnit.KG)
+            every { themeMode } returns flowOf(ThemeMode.DARK)
             every { onboardingCompleted } returns flowOf(completed)
         }
         val repository = FakeWorkoutRepository(sessions)

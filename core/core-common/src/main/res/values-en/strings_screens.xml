@@ -80,6 +80,11 @@
     <string name="profile_reminder_time">Reminder time: %1$s</string>
     <string name="profile_reminder_change_time">Change time</string>
     <string name="profile_reminder_time_title">Reminder time</string>
+    <string name="profile_theme">Theme</string>
+    <string name="profile_theme_hint">Dark, light or the same as your phone. Light reads better in bright light.</string>
+    <string name="profile_theme_dark">Dark</string>
+    <string name="profile_theme_light">Light</string>
+    <string name="profile_theme_system">System</string>
     <string name="reminder_channel_name">Training reminders</string>
     <string name="reminder_channel_description">Lets you know on days your calendar has a routine still to do.</string>
     <string name="reminder_title">Today: %1$s</string>

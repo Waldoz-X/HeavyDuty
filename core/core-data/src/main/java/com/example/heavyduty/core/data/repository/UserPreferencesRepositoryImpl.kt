@@ -12,6 +12,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.example.heavyduty.core.domain.model.DEFAULT_REMINDER_HOUR
 import com.example.heavyduty.core.domain.model.ReminderSettings
+import com.example.heavyduty.core.domain.model.ThemeMode
 import com.example.heavyduty.core.domain.model.WeightUnit
 import com.example.heavyduty.core.domain.repository.UserPreferencesRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -38,6 +39,7 @@ class UserPreferencesRepositoryImpl @Inject constructor(@ApplicationContext priv
         val PREFERRED_WEIGHT_UNIT = stringPreferencesKey("preferred_weight_unit")
         val REMINDER_ENABLED = booleanPreferencesKey("training_reminder_enabled")
         val ONBOARDING_COMPLETED = booleanPreferencesKey("onboarding_completed")
+        val THEME_MODE = stringPreferencesKey("theme_mode")
         val REMINDER_MINUTE_OF_DAY = intPreferencesKey("training_reminder_minute_of_day")
     }
 
@@ -116,6 +118,14 @@ class UserPreferencesRepositoryImpl @Inject constructor(@ApplicationContext priv
 
     override suspend fun setOnboardingCompleted() {
         context.userPreferencesDataStore.edit { prefs -> prefs[Keys.ONBOARDING_COMPLETED] = true }
+    }
+
+    override val themeMode: Flow<ThemeMode> = safeData.map { prefs ->
+        prefs[Keys.THEME_MODE]?.let { runCatching { ThemeMode.valueOf(it) }.getOrNull() } ?: ThemeMode.DARK
+    }
+
+    override suspend fun setThemeMode(mode: ThemeMode) {
+        context.userPreferencesDataStore.edit { prefs -> prefs[Keys.THEME_MODE] = mode.name }
     }
 }
 

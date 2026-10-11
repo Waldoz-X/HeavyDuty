@@ -18,6 +18,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -78,6 +79,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.heavyduty.core.common.R
 import com.example.heavyduty.core.common.navigation.AppSections
+import com.example.heavyduty.core.domain.model.ThemeMode
 import com.example.heavyduty.core.ui.LocalSharedTransitionScope
 import com.example.heavyduty.core.ui.LocalWeightUnit
 import com.example.heavyduty.core.ui.theme.HeavyDutyTheme
@@ -122,12 +124,7 @@ class MainActivity : ComponentActivity() {
         // Held until it's known whether this is a first run, so the welcome doesn't flash in.
         installSplashScreen().setKeepOnScreenCondition { mainViewModel.needsOnboarding.value == null }
         super.onCreate(savedInstanceState)
-        // The app is always dark, whatever the phone's theme: with the default (which follows the
-        // system) a phone in light mode drew dark status-bar icons on the black background.
-        enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
-            navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
-        )
+        applySystemBars(darkTheme = true)
         // A recreated activity (rotation…) already handled its launch intent.
         if (savedInstanceState == null) mainViewModel.openSection(intent.getStringExtra(AppSections.EXTRA_OPEN_SECTION))
         setContent {
@@ -136,8 +133,17 @@ class MainActivity : ComponentActivity() {
             val pendingSection by mainViewModel.pendingSection.collectAsStateWithLifecycle()
             val forgottenWorkout by mainViewModel.forgottenWorkout.collectAsStateWithLifecycle()
             val needsOnboarding by mainViewModel.needsOnboarding.collectAsStateWithLifecycle()
+            val themeMode by mainViewModel.themeMode.collectAsStateWithLifecycle()
+            val darkTheme = when (themeMode) {
+                ThemeMode.DARK -> true
+                ThemeMode.LIGHT -> false
+                ThemeMode.SYSTEM -> isSystemInDarkTheme()
+            }
+            // The status-bar icons follow the app's theme, not the phone's: with the system's
+            // default, a phone in light mode drew dark icons on the dark theme's black background.
+            LaunchedEffect(darkTheme) { applySystemBars(darkTheme) }
             CompositionLocalProvider(LocalWeightUnit provides weightUnit) {
-                HeavyDutyTheme {
+                HeavyDutyTheme(darkTheme = darkTheme) {
                     if (needsOnboarding != false) {
                         OnboardingScreen(onFinish = mainViewModel::completeOnboarding)
                         return@HeavyDutyTheme
@@ -159,6 +165,12 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    private fun applySystemBars(darkTheme: Boolean) {
+        val transparent = android.graphics.Color.TRANSPARENT
+        val style = if (darkTheme) SystemBarStyle.dark(transparent) else SystemBarStyle.light(transparent, transparent)
+        enableEdgeToEdge(statusBarStyle = style, navigationBarStyle = style)
     }
 
     /** A notification tapped while the app is already open (see AppSections). */

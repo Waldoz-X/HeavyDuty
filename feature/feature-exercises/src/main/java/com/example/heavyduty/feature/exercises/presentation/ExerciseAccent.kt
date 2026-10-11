@@ -1,15 +1,18 @@
 package com.example.heavyduty.feature.exercises.presentation
 
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
 import com.example.heavyduty.core.domain.model.MuscleGroup
-import com.example.heavyduty.core.ui.theme.PrimaryCyan
-import com.example.heavyduty.core.ui.theme.SecondaryMagenta
-import com.example.heavyduty.core.ui.theme.TertiaryLime
 
 /**
  * Maps each muscle group to one of the app's three accent colors so exercise
- * cards and detail sections read as a harmonious, color-coded system.
+ * cards and detail sections read as a harmonious, color-coded system — taken from the active
+ * theme, so they stay legible in light mode too.
  */
+@Composable
+@ReadOnlyComposable
 fun MuscleGroup.accentColor(): Color = when (this) {
     MuscleGroup.CHEST,
     MuscleGroup.BACK,
@@ -17,7 +20,7 @@ fun MuscleGroup.accentColor(): Color = when (this) {
     MuscleGroup.LATS,
     MuscleGroup.TRAPS,
     MuscleGroup.FULL_BODY
-    -> PrimaryCyan
+    -> MaterialTheme.colorScheme.primary
 
     MuscleGroup.BICEPS,
     MuscleGroup.TRICEPS,
@@ -25,11 +28,11 @@ fun MuscleGroup.accentColor(): Color = when (this) {
     MuscleGroup.ABS,
     MuscleGroup.OBLIQUES,
     MuscleGroup.CARDIO
-    -> SecondaryMagenta
+    -> MaterialTheme.colorScheme.secondary
 
     MuscleGroup.QUADRICEPS,
     MuscleGroup.HAMSTRINGS,
     MuscleGroup.GLUTES,
     MuscleGroup.CALVES
-    -> TertiaryLime
+    -> MaterialTheme.colorScheme.tertiary
 }

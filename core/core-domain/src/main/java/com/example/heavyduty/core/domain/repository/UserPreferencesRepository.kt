@@ -1,6 +1,7 @@
 package com.example.heavyduty.core.domain.repository
 
 import com.example.heavyduty.core.domain.model.ReminderSettings
+import com.example.heavyduty.core.domain.model.ThemeMode
 import com.example.heavyduty.core.domain.model.WeightUnit
 import kotlinx.coroutines.flow.Flow
 
@@ -41,4 +42,8 @@ interface UserPreferencesRepository {
     /** Whether the first-run welcome was finished or skipped; it's shown only once. */
     val onboardingCompleted: Flow<Boolean>
     suspend fun setOnboardingCompleted()
+
+    /** Dark, light or the phone's theme; dark by default. */
+    val themeMode: Flow<ThemeMode>
+    suspend fun setThemeMode(mode: ThemeMode)
 }

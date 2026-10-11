@@ -2,6 +2,7 @@ package com.example.heavyduty.feature.profile.presentation
 
 import android.net.Uri
 import com.example.heavyduty.core.domain.model.ReminderSettings
+import com.example.heavyduty.core.domain.model.ThemeMode
 import com.example.heavyduty.core.domain.model.WeightUnit
 import com.example.heavyduty.feature.profile.domain.model.ProfileStats
 
@@ -21,6 +22,7 @@ data class ProfileUiState(
     val preferredEffortScale: String = "RIR",
     val preferredWeightUnit: WeightUnit = WeightUnit.KG,
     val reminder: ReminderSettings = ReminderSettings(),
+    val themeMode: ThemeMode = ThemeMode.DARK,
     val isLoading: Boolean = true,
     /** The data couldn't be read; the screen shows an error instead of looking empty. */
     val loadFailed: Boolean = false,
@@ -41,6 +43,7 @@ sealed interface ProfileUiEvent {
     data class OnEffortTrackingEnabledChange(val enabled: Boolean) : ProfileUiEvent
     data class OnPreferredEffortScaleChange(val scale: String) : ProfileUiEvent
     data class OnReminderEnabledChange(val enabled: Boolean) : ProfileUiEvent
+    data class OnThemeModeChange(val mode: ThemeMode) : ProfileUiEvent
     data class OnReminderTimeChange(val hour: Int, val minute: Int) : ProfileUiEvent
     data class OnPreferredWeightUnitChange(val unit: WeightUnit) : ProfileUiEvent
     data class OnExportDataRequested(val uri: Uri) : ProfileUiEvent

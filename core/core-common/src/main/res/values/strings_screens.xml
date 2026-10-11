@@ -85,6 +85,11 @@
     <string name="profile_reminder_time">Hora del aviso: %1$s</string>
     <string name="profile_reminder_change_time">Cambiar hora</string>
     <string name="profile_reminder_time_title">Hora del recordatorio</string>
+    <string name="profile_theme">Tema</string>
+    <string name="profile_theme_hint">Oscuro, claro o el mismo que tu teléfono. El claro se lee mejor con mucha luz.</string>
+    <string name="profile_theme_dark">Oscuro</string>
+    <string name="profile_theme_light">Claro</string>
+    <string name="profile_theme_system">Sistema</string>
     <string name="reminder_channel_name">Recordatorios de entrenamiento</string>
     <string name="reminder_channel_description">Avisa los días que tu calendario tiene una rutina pendiente.</string>
     <string name="reminder_title">Hoy toca: %1$s</string>

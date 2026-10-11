@@ -8,6 +8,7 @@ import com.example.heavyduty.core.domain.model.MuscleGroup
 import com.example.heavyduty.core.domain.model.ReminderSettings
 import com.example.heavyduty.core.domain.model.Routine
 import com.example.heavyduty.core.domain.model.RoutineExercise
+import com.example.heavyduty.core.domain.model.ThemeMode
 import com.example.heavyduty.core.domain.model.WeightUnit
 import com.example.heavyduty.core.domain.model.WorkoutSession
 import com.example.heavyduty.core.domain.model.WorkoutSet
@@ -190,6 +191,7 @@ class FakeUserPreferencesRepository(goalWeightKg: Float? = null) : UserPreferenc
     override val preferredWeightUnit = MutableStateFlow(WeightUnit.KG)
     override val trainingReminder = MutableStateFlow(ReminderSettings())
     override val onboardingCompleted = MutableStateFlow(false)
+    override val themeMode = MutableStateFlow(ThemeMode.DARK)
 
     override suspend fun setDisplayName(name: String) {
         displayName.value = name
@@ -214,5 +216,8 @@ class FakeUserPreferencesRepository(goalWeightKg: Float? = null) : UserPreferenc
     }
     override suspend fun setOnboardingCompleted() {
         onboardingCompleted.value = true
+    }
+    override suspend fun setThemeMode(mode: ThemeMode) {
+        themeMode.value = mode
     }
 }

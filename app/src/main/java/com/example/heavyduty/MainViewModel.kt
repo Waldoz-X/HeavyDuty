@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.heavyduty.core.common.navigation.AppSections
 import com.example.heavyduty.core.domain.model.Clock
+import com.example.heavyduty.core.domain.model.ThemeMode
 import com.example.heavyduty.core.domain.model.WeightUnit
 import com.example.heavyduty.core.domain.model.isForgotten
 import com.example.heavyduty.core.domain.model.lastActivityAt
@@ -45,6 +46,9 @@ class MainViewModel @Inject constructor(
     private val discardWorkout: DiscardWorkoutUseCase,
     private val clock: Clock
 ) : ViewModel() {
+    val themeMode: StateFlow<ThemeMode> = userPreferences.themeMode
+        .stateIn(viewModelScope, SharingStarted.Eagerly, ThemeMode.DARK)
+
     val preferredWeightUnit: StateFlow<WeightUnit> = userPreferences.preferredWeightUnit
         .stateIn(viewModelScope, SharingStarted.Eagerly, WeightUnit.KG)
 

@@ -167,6 +167,10 @@ class ProfileViewModel @Inject constructor(
         }
 
         launch {
+            userPreferencesRepository.themeMode.collect { mode -> _uiState.update { it.copy(themeMode = mode) } }
+        }
+
+        launch {
             combine(profileDataFlow, settingsFlow) { data, settings ->
                 _uiState.update {
                     it.copy(
@@ -229,25 +233,13 @@ class ProfileViewModel @Inject constructor(
 
             ProfileUiEvent.OnSaveName -> saveName()
 
-            is ProfileUiEvent.OnBodyDiagramGenderChange -> {
-                viewModelScope.launch { setBodyDiagramGenderUseCase(event.gender) }
-            }
-
-            is ProfileUiEvent.OnEffortTrackingEnabledChange -> {
-                viewModelScope.launch { setEffortTrackingEnabledUseCase(event.enabled) }
-            }
-
-            is ProfileUiEvent.OnPreferredEffortScaleChange -> {
-                viewModelScope.launch { setPreferredEffortScaleUseCase(event.scale) }
-            }
-
-            is ProfileUiEvent.OnReminderEnabledChange -> updateReminder { it.copy(enabled = event.enabled) }
-
-            is ProfileUiEvent.OnReminderTimeChange -> updateReminder { it.copy(hour = event.hour, minute = event.minute) }
-
-            is ProfileUiEvent.OnPreferredWeightUnitChange -> {
-                viewModelScope.launch { userPreferencesRepository.setPreferredWeightUnit(event.unit) }
-            }
+            is ProfileUiEvent.OnBodyDiagramGenderChange,
+            is ProfileUiEvent.OnEffortTrackingEnabledChange,
+            is ProfileUiEvent.OnPreferredEffortScaleChange,
+            is ProfileUiEvent.OnPreferredWeightUnitChange,
+            is ProfileUiEvent.OnThemeModeChange,
+            is ProfileUiEvent.OnReminderEnabledChange,
+            is ProfileUiEvent.OnReminderTimeChange -> changeSetting(event)
 
             is ProfileUiEvent.OnExportDataRequested -> exportData(event.uri)
 
@@ -256,6 +248,29 @@ class ProfileViewModel @Inject constructor(
             ProfileUiEvent.OnDismissBackupMessage -> {
                 _uiState.update { it.copy(backupMessage = null) }
             }
+        }
+    }
+
+    /** One of the settings cards was changed; each is saved as soon as it's picked. */
+    private fun changeSetting(event: ProfileUiEvent) {
+        when (event) {
+            is ProfileUiEvent.OnBodyDiagramGenderChange -> viewModelScope.launch { setBodyDiagramGenderUseCase(event.gender) }
+
+            is ProfileUiEvent.OnEffortTrackingEnabledChange -> viewModelScope.launch { setEffortTrackingEnabledUseCase(event.enabled) }
+
+            is ProfileUiEvent.OnPreferredEffortScaleChange -> viewModelScope.launch { setPreferredEffortScaleUseCase(event.scale) }
+
+            is ProfileUiEvent.OnPreferredWeightUnitChange -> viewModelScope.launch {
+                userPreferencesRepository.setPreferredWeightUnit(event.unit)
+            }
+
+            is ProfileUiEvent.OnThemeModeChange -> viewModelScope.launch { userPreferencesRepository.setThemeMode(event.mode) }
+
+            is ProfileUiEvent.OnReminderEnabledChange -> updateReminder { it.copy(enabled = event.enabled) }
+
+            is ProfileUiEvent.OnReminderTimeChange -> updateReminder { it.copy(hour = event.hour, minute = event.minute) }
+
+            else -> Unit
         }
     }
 
