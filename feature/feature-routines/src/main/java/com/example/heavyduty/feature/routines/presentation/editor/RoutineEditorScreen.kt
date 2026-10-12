@@ -155,33 +155,15 @@ fun RoutineEditorScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         modifier = modifier
     ) { innerPadding ->
-        when {
-            uiState.isLoading -> HdCardListSkeleton(
-                modifier = Modifier.padding(innerPadding).padding(16.dp),
-                rows = 6,
-                thumbnailSize = 48.dp
-            )
-
-            uiState.loadFailed -> HdErrorState(modifier = Modifier.padding(innerPadding))
-
-            else -> EditorContent(
-                uiState = uiState,
-                onEvent = onEvent,
-                onOpenExercisePicker = onOpenExercisePicker,
-                listState = listState,
-                modifier = Modifier.padding(innerPadding)
-            )
-        }
-    }
-
-    uiState.editingExercise?.let { exercise ->
-        val index = uiState.editingIndex ?: return@let
-        ExerciseSettingsSheet(
-            routineExercise = exercise,
-            onUpdate = { onEvent(RoutineEditorUiEvent.OnUpdateExercise(index, it)) },
-            onDismiss = { onEvent(RoutineEditorUiEvent.OnCloseExercise) }
+        EditorBody(
+            uiState = uiState,
+            onEvent = onEvent,
+            onOpenExercisePicker = onOpenExercisePicker,
+            listState = listState,
+            modifier = Modifier.padding(innerPadding)
         )
     }
+    EditingExerciseSheet(uiState = uiState, onEvent = onEvent)
 
     if (showDiscardDialog) {
         DiscardChangesDialog(
@@ -196,6 +178,41 @@ fun RoutineEditorScreen(
             onDismiss = { showDiscardDialog = false }
         )
     }
+}
+
+@Composable
+private fun EditorBody(
+    uiState: RoutineEditorUiState,
+    onEvent: (RoutineEditorUiEvent) -> Unit,
+    onOpenExercisePicker: () -> Unit,
+    listState: LazyListState,
+    modifier: Modifier = Modifier
+) {
+    when {
+        uiState.isLoading -> HdCardListSkeleton(modifier = modifier.padding(16.dp), rows = 6, thumbnailSize = 48.dp)
+
+        uiState.loadFailed -> HdErrorState(modifier = modifier)
+
+        else -> EditorContent(
+            uiState = uiState,
+            onEvent = onEvent,
+            onOpenExercisePicker = onOpenExercisePicker,
+            listState = listState,
+            modifier = modifier
+        )
+    }
+}
+
+/** The tapped exercise's sets, reps, weight and rest, while one is open. */
+@Composable
+private fun EditingExerciseSheet(uiState: RoutineEditorUiState, onEvent: (RoutineEditorUiEvent) -> Unit) {
+    val exercise = uiState.editingExercise ?: return
+    val index = uiState.editingIndex ?: return
+    ExerciseSettingsSheet(
+        routineExercise = exercise,
+        onUpdate = { onEvent(RoutineEditorUiEvent.OnUpdateExercise(index, it)) },
+        onDismiss = { onEvent(RoutineEditorUiEvent.OnCloseExercise) }
+    )
 }
 
 /** The exercise picker leaves the chosen ids in this destination's [navResults]; each batch is taken once. */
@@ -352,16 +369,8 @@ private fun EditorContent(
     modifier: Modifier = Modifier
 ) {
     val haptic = LocalHapticFeedback.current
-    val exercises by rememberUpdatedState(uiState.exercises)
-    val reorderState = rememberReorderableLazyListState(listState) { from, to ->
-        // Only exercise rows are keyed by id (Long); headers and buttons can't be dragged onto.
-        val fromIndex = exercises.indexOfFirst { it.id == from.key }
-        val toIndex = exercises.indexOfFirst { it.id == to.key }
-        if (fromIndex >= 0 && toIndex >= 0) {
-            onEvent(RoutineEditorUiEvent.OnMoveExercise(fromIndex, toIndex))
-            haptic.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
-        }
-    }
+    val reorderState =
+        rememberExerciseReorderState(listState = listState, exercises = uiState.exercises, onEvent = onEvent, haptic = haptic)
     val nameFocus = remember { FocusRequester() }
     LaunchedEffect(Unit) {
         // A new routine starts at its name, keyboard up, so creating one is type-name-and-go.
@@ -375,26 +384,10 @@ private fun EditorContent(
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 32.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        item(key = "name") {
-            RoutineNameField(uiState = uiState, focusRequester = nameFocus, onEvent = onEvent)
-        }
-
-        item(key = "description") {
-            DescriptionField(description = uiState.description, expanded = showDescription, onExpand = {
-                showDescription = true
-            }, onEvent = onEvent)
-        }
-
-        item(key = "type") {
-            WorkoutTypeChips(selected = uiState.type, onEvent = onEvent)
-        }
-
-        // Only meaningful once the routine has been trained a couple of times.
-        if (uiState.isEditMode && uiState.volumeHistory.size >= 2) {
-            item(key = "volume") {
-                VolumeHistoryCard(history = uiState.volumeHistory)
-            }
-        }
+        formItems(uiState = uiState, nameFocus = nameFocus, showDescription = showDescription, onExpandDescription = {
+            showDescription =
+                true
+        }, onEvent = onEvent)
 
         item(key = "exercises_header") {
             ExercisesHeader(uiState = uiState)
@@ -422,6 +415,45 @@ private fun EditorContent(
                     .padding(top = 8.dp)
             )
         }
+    }
+}
+
+/** Dragging a row onto another moves the exercise there, with a tick at each step. */
+@Composable
+private fun rememberExerciseReorderState(
+    listState: LazyListState,
+    exercises: List<RoutineExercise>,
+    onEvent: (RoutineEditorUiEvent) -> Unit,
+    haptic: HapticFeedback
+): ReorderableLazyListState {
+    val currentExercises by rememberUpdatedState(exercises)
+    return rememberReorderableLazyListState(listState) { from, to ->
+        // Only exercise rows are keyed by id (Long); headers and buttons can't be dragged onto.
+        val fromIndex = currentExercises.indexOfFirst { it.id == from.key }
+        val toIndex = currentExercises.indexOfFirst { it.id == to.key }
+        if (fromIndex >= 0 && toIndex >= 0) {
+            onEvent(RoutineEditorUiEvent.OnMoveExercise(fromIndex, toIndex))
+            haptic.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
+        }
+    }
+}
+
+/** Name, description, type and — once trained a couple of times — the volume chart. */
+private fun LazyListScope.formItems(
+    uiState: RoutineEditorUiState,
+    nameFocus: FocusRequester,
+    showDescription: Boolean,
+    onExpandDescription: () -> Unit,
+    onEvent: (RoutineEditorUiEvent) -> Unit
+) {
+    item(key = "name") { RoutineNameField(uiState = uiState, focusRequester = nameFocus, onEvent = onEvent) }
+    item(key = "description") {
+        DescriptionField(description = uiState.description, expanded = showDescription, onExpand = onExpandDescription, onEvent = onEvent)
+    }
+    item(key = "type") { WorkoutTypeChips(selected = uiState.type, onEvent = onEvent) }
+    // Only meaningful once the routine has been trained a couple of times.
+    if (uiState.isEditMode && uiState.volumeHistory.size >= 2) {
+        item(key = "volume") { VolumeHistoryCard(history = uiState.volumeHistory) }
     }
 }
 

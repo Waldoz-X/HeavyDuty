@@ -5,16 +5,12 @@
     <ID>CyclomaticComplexMethod:MainActivity.kt:@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class) @Composable private fun HeavyDutyMainScreen</ID>
     <ID>CyclomaticComplexMethod:SeedData.kt:SeedData$suspend fun populateExercises</ID>
     <ID>LongMethod:ActiveWorkoutBar.kt:@Composable fun ActiveWorkoutBar</ID>
-    <ID>LongMethod:DistribucionMuscularScreen.kt:@Composable private fun PeriodTotals</ID>
     <ID>LongMethod:HdBarChart.kt:@Composable fun HdBarChart</ID>
     <ID>LongMethod:HdLineChart.kt:@Composable fun HdLineChart</ID>
     <ID>LongMethod:HdRadarChart.kt:@Composable fun HdRadarChart</ID>
     <ID>LongMethod:HdStatCard.kt:@Composable fun HdStatCard</ID>
     <ID>LongMethod:HeavyDutyNavHost.kt:@Composable fun HeavyDutyNavHost</ID>
-    <ID>LongMethod:HistoryListScreen.kt:@Composable fun HistoryListScreen</ID>
     <ID>LongMethod:MainActivity.kt:@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class) @Composable private fun HeavyDutyMainScreen</ID>
-    <ID>LongMethod:RoutineEditorScreen.kt:@Composable private fun EditorContent</ID>
-    <ID>LongMethod:RoutineEditorScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun RoutineEditorScreen</ID>
     <ID>LongMethod:SeedData.kt:SeedData$suspend fun populateExercises</ID>
     <ID>TooManyFunctions:ActiveWorkoutViewModel.kt:ActiveWorkoutViewModel : ViewModel</ID>
     <ID>TooManyFunctions:FakeRepositories.kt:FakeWorkoutRepository : WorkoutRepository</ID>

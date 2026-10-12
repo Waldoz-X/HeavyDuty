@@ -34,7 +34,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -49,6 +48,7 @@ import com.example.heavyduty.core.ui.components.HdStatCard
 import com.example.heavyduty.core.ui.formatTotalWeight
 import com.example.heavyduty.core.ui.nameResId
 import com.example.heavyduty.feature.stats.domain.model.PeriodSummary
+import kotlin.math.abs
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -138,46 +138,21 @@ private fun LegendDot(color: Color, label: String) {
 /** Workouts / duration / volume / sets tiles, each with a delta vs. the previous period. */
 @Composable
 private fun PeriodTotals(summary: PeriodSummary) {
-    val resources = LocalResources.current
-    fun <T : Number> deltaText(delta: T, suffix: String = ""): String {
-        val sign = if (delta.toDouble() >= 0) "+" else ""
-        return resources.getString(R.string.stats_vs_previous, "$sign$delta$suffix")
-    }
-
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             HdStatCard(
                 icon = Icons.Default.CalendarMonth,
                 label = stringResource(R.string.stats_workouts),
                 value = "${summary.workouts}",
-                deltaText = deltaText(summary.workoutsDelta),
+                deltaText = vsPrevious(signed(summary.workoutsDelta)),
                 isPositive = summary.workoutsDelta >= 0,
                 modifier = Modifier.weight(1f)
             )
             HdStatCard(
                 icon = Icons.Default.Timer,
                 label = stringResource(R.string.metric_duration),
-                value = run {
-                    val h = summary.durationMinutes / 60
-                    val m = summary.durationMinutes % 60
-                    if (h > 0) stringResource(R.string.duration_hours_minutes, h, m) else stringResource(R.string.duration_minutes, m)
-                },
-                deltaText = run {
-                    val h = kotlin.math.abs(summary.durationMinutesDelta) / 60
-                    val m = kotlin.math.abs(summary.durationMinutesDelta) % 60
-                    val sign = if (summary.durationMinutesDelta >= 0) "+" else "-"
-                    stringResource(
-                        R.string.stats_vs_previous,
-                        sign +
-                            if (h >
-                                0
-                            ) {
-                                stringResource(R.string.duration_hours_minutes, h, m)
-                            } else {
-                                stringResource(R.string.duration_minutes, m)
-                            }
-                    )
-                },
+                value = durationText(summary.durationMinutes),
+                deltaText = vsPrevious(signOf(summary.durationMinutesDelta >= 0) + durationText(abs(summary.durationMinutesDelta))),
                 isPositive = summary.durationMinutesDelta >= 0,
                 modifier = Modifier.weight(1f)
             )
@@ -187,10 +162,7 @@ private fun PeriodTotals(summary: PeriodSummary) {
                 icon = Icons.Default.FitnessCenter,
                 label = stringResource(R.string.metric_volume),
                 value = summary.volumeKg.formatTotalWeight(),
-                deltaText = run {
-                    val sign = if (summary.volumeKgDelta >= 0) "+" else "-"
-                    stringResource(R.string.stats_vs_previous, "$sign${kotlin.math.abs(summary.volumeKgDelta).formatTotalWeight()}")
-                },
+                deltaText = vsPrevious(signOf(summary.volumeKgDelta >= 0) + abs(summary.volumeKgDelta).formatTotalWeight()),
                 isPositive = summary.volumeKgDelta >= 0,
                 modifier = Modifier.weight(1f)
             )
@@ -198,10 +170,29 @@ private fun PeriodTotals(summary: PeriodSummary) {
                 icon = Icons.Default.Repeat,
                 label = stringResource(R.string.stats_sets),
                 value = "${summary.sets}",
-                deltaText = deltaText(summary.setsDelta),
+                deltaText = vsPrevious(signed(summary.setsDelta)),
                 isPositive = summary.setsDelta >= 0,
                 modifier = Modifier.weight(1f)
             )
         }
     }
 }
+
+/** "1 h 5 min", or "45 min" under an hour. */
+@Composable
+private fun durationText(minutes: Int): String {
+    val hours = minutes / MINUTES_PER_HOUR
+    val rest = minutes % MINUTES_PER_HOUR
+    return if (hours > 0) stringResource(R.string.duration_hours_minutes, hours, rest) else stringResource(R.string.duration_minutes, rest)
+}
+
+/** "+2 vs. anterior". */
+@Composable
+private fun vsPrevious(change: String): String = stringResource(R.string.stats_vs_previous, change)
+
+/** "+2", "0" reads "+0", "-3" keeps its own sign. */
+private fun signed(delta: Int): String = if (delta >= 0) "+$delta" else "$delta"
+
+private fun signOf(isUpOrSame: Boolean): String = if (isUpOrSame) "+" else "-"
+
+private const val MINUTES_PER_HOUR = 60

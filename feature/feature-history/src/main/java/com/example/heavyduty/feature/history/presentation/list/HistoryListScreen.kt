@@ -38,6 +38,7 @@ import com.example.heavyduty.core.ui.components.HdGradientCard
 import com.example.heavyduty.core.ui.components.HdSkeletonCard
 import com.example.heavyduty.core.ui.theme.GradientLimeEnd
 import com.example.heavyduty.core.ui.theme.GradientLimeStart
+import com.example.heavyduty.feature.history.domain.usecase.WorkoutStats
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -76,74 +77,61 @@ fun HistoryListScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Stats card
         if (!uiState.isLoading && uiState.stats.totalSessions > 0) {
-            HdGradientCard(
-                gradientColors = listOf(GradientLimeStart, GradientLimeEnd)
-            ) {
-                Text(
-                    text = stringResource(R.string.history_your_stats),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.tertiary
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    StatItem(label = stringResource(R.string.history_sessions), value = "${uiState.stats.completedSessions}")
-                    StatItem(
-                        label = stringResource(R.string.history_total_time),
-                        value = stringResource(R.string.duration_minutes, uiState.stats.totalDurationMinutes)
-                    )
-                    StatItem(
-                        label = stringResource(R.string.history_avg_duration),
-                        value = stringResource(R.string.duration_minutes, uiState.stats.averageDurationMinutes)
-                    )
-                }
-            }
+            HistoryStatsCard(stats = uiState.stats)
             Spacer(modifier = Modifier.height(16.dp))
         }
+        HistorySessions(uiState = uiState, onStartWorkout = onStartWorkout, onSessionClick = onSessionClick)
+    }
+}
 
-        when {
-            uiState.isLoading -> {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    repeat(5) { HdSkeletonCard() }
-                }
+/** Sessions, total time and average length, over the whole history. */
+@Composable
+private fun HistoryStatsCard(stats: WorkoutStats, modifier: Modifier = Modifier) {
+    HdGradientCard(gradientColors = listOf(GradientLimeStart, GradientLimeEnd), modifier = modifier) {
+        Text(
+            text = stringResource(R.string.history_your_stats),
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.tertiary
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            StatItem(label = stringResource(R.string.history_sessions), value = "${stats.completedSessions}")
+            StatItem(
+                label = stringResource(R.string.history_total_time),
+                value = stringResource(R.string.duration_minutes, stats.totalDurationMinutes)
+            )
+            StatItem(
+                label = stringResource(R.string.history_avg_duration),
+                value = stringResource(R.string.duration_minutes, stats.averageDurationMinutes)
+            )
+        }
+    }
+}
+
+/** Loading, failed, nothing trained yet — or the workouts, newest first. */
+@Composable
+private fun HistorySessions(uiState: HistoryListUiState, onStartWorkout: () -> Unit, onSessionClick: (Long) -> Unit) {
+    when {
+        uiState.isLoading -> Column(verticalArrangement = Arrangement.spacedBy(8.dp)) { repeat(5) { HdSkeletonCard() } }
+
+        uiState.loadFailed -> HdErrorState()
+
+        uiState.sessions.isEmpty() -> HdEmptyState(
+            icon = Icons.Default.History,
+            title = stringResource(R.string.history_empty_title),
+            description = stringResource(R.string.history_empty_description),
+            action = {
+                HdButton(text = stringResource(R.string.history_start_training), onClick = onStartWorkout, icon = Icons.Default.PlayArrow)
             }
+        )
 
-            uiState.loadFailed -> HdErrorState()
-
-            uiState.sessions.isEmpty() -> {
-                HdEmptyState(
-                    icon = Icons.Default.History,
-                    title = stringResource(R.string.history_empty_title),
-                    description = stringResource(R.string.history_empty_description),
-                    action = {
-                        HdButton(
-                            text = stringResource(R.string.history_start_training),
-                            onClick = onStartWorkout,
-                            icon = Icons.Default.PlayArrow
-                        )
-                    }
+        else -> LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(bottom = 16.dp)) {
+            items(items = uiState.sessions, key = { it.id }) { session ->
+                HistorySessionItem(
+                    session = session,
+                    onClick = { openHistorySession(session, onContinueWorkout = onStartWorkout, onOpenDetail = onSessionClick) }
                 )
-            }
-
-            else -> {
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    contentPadding = PaddingValues(bottom = 16.dp)
-                ) {
-                    items(
-                        items = uiState.sessions,
-                        key = { it.id }
-                    ) { session ->
-                        HistorySessionItem(
-                            session = session,
-                            onClick = { openHistorySession(session, onContinueWorkout = onStartWorkout, onOpenDetail = onSessionClick) }
-                        )
-                    }
-                }
             }
         }
     }
