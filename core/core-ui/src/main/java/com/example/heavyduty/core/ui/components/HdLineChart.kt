@@ -3,15 +3,12 @@ package com.example.heavyduty.core.ui.components
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -62,16 +59,7 @@ fun HdLineChart(
     xAxisLabelFormatter: ((Long) -> String)? = null
 ) {
     if (data.size < 2) {
-        Box(
-            modifier = modifier.fillMaxWidth().height(height),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = stringResource(R.string.state_no_data_yet),
-                style = MaterialTheme.typography.bodyMedium,
-                color = labelColor
-            )
-        }
+        NoChartData(height = height, color = labelColor, modifier = modifier)
         return
     }
 
@@ -79,7 +67,6 @@ fun HdLineChart(
     val formatX = remember(data, locale, xAxisLabelFormatter) {
         dateFormatter(xAxisLabelFormatter, data.last().first - data.first().first, locale)
     }
-
     val textMeasurer = rememberTextMeasurer()
     val labelStyle = TextStyle(color = labelColor, fontSize = 10.sp)
     val goalStyle = TextStyle(color = goalLineColor, fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
@@ -90,8 +77,42 @@ fun HdLineChart(
         animationProgress.animateTo(1f, animationSpec = tween(durationMillis = 700))
     }
 
+    val description = lineChartDescription(data, formatX, valueLabelFormatter)
+    Canvas(
+        modifier = modifier
+            .semantics { contentDescription = description }
+            .fillMaxWidth()
+            .height(height)
+    ) {
+        val area = lineChartArea(data, goalValue)
+        // Y-axis value labels: max, mid, min.
+        val yLabels = yAxisLabels(low = area.minY + area.padding, high = area.maxY - area.padding, formatter = valueLabelFormatter)
+        drawAxisLabels(area, yLabels, xAxisLabels(data.map { it.first }, formatX), textMeasurer, labelStyle)
+        // Dashed goal line.
+        goalValue?.let { goal ->
+            drawGoalLine(
+                y = area.mappedY(goal),
+                left = area.left,
+                right = area.right,
+                label = valueFormatter(valueLabelFormatter, yLabels.map { it.first })(goal),
+                color = goalLineColor,
+                textMeasurer = textMeasurer,
+                style = goalStyle
+            )
+        }
+        drawSeries(data, area, animationProgress.value, lineColor, fillColor)
+    }
+}
+
+/** "N points from … to …, lowest …, highest …, latest …" for TalkBack. */
+@Composable
+private fun lineChartDescription(
+    data: List<Pair<Long, Float>>,
+    formatX: (Long) -> String,
+    valueLabelFormatter: ((Float) -> String)?
+): String {
     val readValue = valueFormatter(valueLabelFormatter, data.map { it.second })
-    val description = stringResource(
+    return stringResource(
         R.string.a11y_line_chart,
         data.size,
         formatX(data.first().first),
@@ -100,102 +121,86 @@ fun HdLineChart(
         readValue(data.maxOf { it.second }),
         readValue(data.last().second)
     )
-    Canvas(
-        modifier = modifier
-            .semantics { contentDescription = description }
-            .fillMaxWidth()
-            .height(height)
-    ) {
-        val bottomLabelHeight = 18.dp.toPx()
-        val leftLabelWidth = 34.dp.toPx()
-        val chartLeft = leftLabelWidth
-        val chartRight = size.width
-        val chartTop = 4.dp.toPx()
-        val chartBottom = size.height - bottomLabelHeight
+}
 
-        val minX = data.first().first
-        val maxX = data.last().first
-        val xRange = (maxX - minX).coerceAtLeast(1L).toFloat()
+/** Where the plot sits inside the canvas, and how data maps onto it. */
+private class LineChartArea(
+    val left: Float,
+    val right: Float,
+    val top: Float,
+    val bottom: Float,
+    val minX: Long,
+    val xRange: Float,
+    val minY: Float,
+    val maxY: Float,
+    val padding: Float
+) {
+    private val yRange = (maxY - minY).coerceAtLeast(0.01f)
+    fun mappedX(timestamp: Long) = left + (timestamp - minX) / xRange * (right - left)
+    fun mappedY(value: Float) = bottom - (value - minY) / yRange * (bottom - top)
+}
 
-        val rawValues = data.map { it.second }
-        val valueRange = (rawValues + listOfNotNull(goalValue))
-        val padding = ((valueRange.maxOrNull() ?: 0f) - (valueRange.minOrNull() ?: 0f)) * 0.15f
-        val minY = (valueRange.minOrNull() ?: 0f) - padding
-        val maxY = (valueRange.maxOrNull() ?: 1f) + padding
-        val yRange = (maxY - minY).coerceAtLeast(0.01f)
+/** Room for the labels on the left and bottom; values padded 15% so the line doesn't touch the edges. */
+private fun DrawScope.lineChartArea(data: List<Pair<Long, Float>>, goalValue: Float?): LineChartArea {
+    val valueRange = data.map { it.second } + listOfNotNull(goalValue)
+    val padding = ((valueRange.maxOrNull() ?: 0f) - (valueRange.minOrNull() ?: 0f)) * 0.15f
+    return LineChartArea(
+        left = 34.dp.toPx(),
+        right = size.width,
+        top = 4.dp.toPx(),
+        bottom = size.height - 18.dp.toPx(),
+        minX = data.first().first,
+        xRange = (data.last().first - data.first().first).coerceAtLeast(1L).toFloat(),
+        minY = (valueRange.minOrNull() ?: 0f) - padding,
+        maxY = (valueRange.maxOrNull() ?: 1f) + padding,
+        padding = padding
+    )
+}
 
-        fun mappedX(timestamp: Long) = chartLeft + (timestamp - minX) / xRange * (chartRight - chartLeft)
-        fun mappedY(value: Float) = chartBottom - (value - minY) / yRange * (chartBottom - chartTop)
-
-        // Y-axis value labels: max, mid, min.
-        val yLabels = yAxisLabels(low = minY + padding, high = maxY - padding, formatter = valueLabelFormatter)
-        yLabels.forEach { (value, text) ->
-            drawText(
-                textMeasurer = textMeasurer,
-                text = text,
-                style = labelStyle,
-                topLeft = Offset(0f, mappedY(value) - 6.sp.toPx())
-            )
-        }
-
-        // X-axis labels: first, middle, last point — kept inside the chart so the edge ones
-        // aren't cut in half.
-        xAxisLabels(data.map { it.first }, formatX).forEach { (timestamp, text) ->
-            val width = textMeasurer.measure(text, style = labelStyle).size.width.toFloat()
-            val left = (mappedX(timestamp) - width / 2f).coerceIn(chartLeft, (chartRight - width).coerceAtLeast(chartLeft))
-            drawText(
-                textMeasurer = textMeasurer,
-                text = text,
-                style = labelStyle,
-                topLeft = Offset(left, chartBottom + 4.dp.toPx())
-            )
-        }
-
-        // Dashed goal line.
-        goalValue?.let { goal ->
-            drawGoalLine(
-                y = mappedY(goal),
-                left = chartLeft,
-                right = chartRight,
-                label = valueFormatter(valueLabelFormatter, yLabels.map { it.first })(goal),
-                color = goalLineColor,
-                textMeasurer = textMeasurer,
-                style = goalStyle
-            )
-        }
-
-        // Animated line + area fill, growing up from the baseline.
-        val progress = animationProgress.value
-        val points = data.map { (timestamp, value) ->
-            val targetY = mappedY(value)
-            val animatedY = chartBottom + (targetY - chartBottom) * progress
-            Offset(mappedX(timestamp), animatedY)
-        }
-
-        val linePath = Path().apply {
-            points.forEachIndexed { index, point ->
-                if (index == 0) moveTo(point.x, point.y) else lineTo(point.x, point.y)
-            }
-        }
-        val fillPath = Path().apply {
-            addPath(linePath)
-            lineTo(points.last().x, chartBottom)
-            lineTo(points.first().x, chartBottom)
-            close()
-        }
-
-        drawPath(
-            path = fillPath,
-            brush = Brush.verticalGradient(
-                colors = listOf(fillColor.copy(alpha = 0.3f), fillColor.copy(alpha = 0f)),
-                startY = chartTop,
-                endY = chartBottom
-            ),
-            style = Fill
-        )
-        drawPath(path = linePath, color = lineColor, style = Stroke(width = 2.5.dp.toPx()))
-        drawCircle(color = lineColor, radius = 4.dp.toPx(), center = points.last())
+private fun DrawScope.drawAxisLabels(
+    area: LineChartArea,
+    yLabels: List<Pair<Float, String>>,
+    xLabels: List<Pair<Long, String>>,
+    textMeasurer: TextMeasurer,
+    style: TextStyle
+) {
+    yLabels.forEach { (value, text) ->
+        drawText(textMeasurer = textMeasurer, text = text, style = style, topLeft = Offset(0f, area.mappedY(value) - 6.sp.toPx()))
     }
+    // First, middle and last point — kept inside the chart so the edge ones aren't cut in half.
+    xLabels.forEach { (timestamp, text) ->
+        val width = textMeasurer.measure(text, style = style).size.width.toFloat()
+        val left = (area.mappedX(timestamp) - width / 2f).coerceIn(area.left, (area.right - width).coerceAtLeast(area.left))
+        drawText(textMeasurer = textMeasurer, text = text, style = style, topLeft = Offset(left, area.bottom + 4.dp.toPx()))
+    }
+}
+
+/** The line and the area under it, growing up from the baseline as [progress] goes 0 → 1. */
+private fun DrawScope.drawSeries(data: List<Pair<Long, Float>>, area: LineChartArea, progress: Float, lineColor: Color, fillColor: Color) {
+    val points = data.map { (timestamp, value) ->
+        val targetY = area.mappedY(value)
+        Offset(area.mappedX(timestamp), area.bottom + (targetY - area.bottom) * progress)
+    }
+    val linePath = Path().apply {
+        points.forEachIndexed { index, point -> if (index == 0) moveTo(point.x, point.y) else lineTo(point.x, point.y) }
+    }
+    val fillPath = Path().apply {
+        addPath(linePath)
+        lineTo(points.last().x, area.bottom)
+        lineTo(points.first().x, area.bottom)
+        close()
+    }
+    drawPath(
+        path = fillPath,
+        brush = Brush.verticalGradient(
+            colors = listOf(fillColor.copy(alpha = 0.3f), fillColor.copy(alpha = 0f)),
+            startY = area.top,
+            endY = area.bottom
+        ),
+        style = Fill
+    )
+    drawPath(path = linePath, color = lineColor, style = Stroke(width = 2.5.dp.toPx()))
+    drawCircle(color = lineColor, radius = 4.dp.toPx(), center = points.last())
 }
 
 /** Dash then gap, in px, of the goal line. */

@@ -53,35 +53,7 @@ fun HdStatCard(
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(22.dp)
             )
-            if (deltaText != null) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(
-                            if (isPositive) {
-                                Color(0xFF4CAF50).copy(alpha = 0.15f)
-                            } else {
-                                Color(0xFFE53935).copy(alpha = 0.15f)
-                            }
-                        )
-                        .padding(horizontal = 6.dp, vertical = 2.dp)
-                ) {
-                    Icon(
-                        imageVector = if (isPositive) Icons.AutoMirrored.Filled.TrendingUp else Icons.AutoMirrored.Filled.TrendingDown,
-                        contentDescription = null,
-                        tint = if (isPositive) Color(0xFF4CAF50) else Color(0xFFE53935),
-                        modifier = Modifier.size(12.dp)
-                    )
-                    Spacer(modifier = Modifier.width(2.dp))
-                    Text(
-                        text = deltaText,
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = if (isPositive) Color(0xFF4CAF50) else Color(0xFFE53935)
-                    )
-                }
-            }
+            if (deltaText != null) TrendBadge(text = deltaText, isPositive = isPositive)
         }
 
         Spacer(modifier = Modifier.height(10.dp))
@@ -105,5 +77,27 @@ fun HdStatCard(
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
             )
         }
+    }
+}
+
+/** "↗ +2 vs. anterior" on green, or the falling arrow on red. */
+@Composable
+private fun TrendBadge(text: String, isPositive: Boolean, modifier: Modifier = Modifier) {
+    val color = if (isPositive) Color(0xFF4CAF50) else Color(0xFFE53935)
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(color.copy(alpha = 0.15f))
+            .padding(horizontal = 6.dp, vertical = 2.dp)
+    ) {
+        Icon(
+            imageVector = if (isPositive) Icons.AutoMirrored.Filled.TrendingUp else Icons.AutoMirrored.Filled.TrendingDown,
+            contentDescription = null,
+            tint = color,
+            modifier = Modifier.size(12.dp)
+        )
+        Spacer(modifier = Modifier.width(2.dp))
+        Text(text = text, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = color)
     }
 }

@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
@@ -84,83 +85,20 @@ fun HdRadarChart(
             .aspectRatio(1f)
             .padding(16.dp)
     ) {
-        val radius = (size.minDimension / 2) * 0.75f // leave 25% for text labels
-        val center = Offset(size.width / 2, size.height / 2)
-        val anglePerItem = 2 * PI / labels.size
-
-        // Draw the web (grid lines)
-        val levels = 5
-        for (i in 1..levels) {
-            val r = radius * (i.toFloat() / levels)
-            val path = Path()
-            labels.indices.forEach { index ->
-                val angle = (index * anglePerItem) - (PI / 2) // Start from top
-                val x = center.x + r * cos(angle).toFloat()
-                val y = center.y + r * sin(angle).toFloat()
-                if (index == 0) path.moveTo(x, y) else path.lineTo(x, y)
-            }
-            path.close()
-            drawPath(
-                path = path,
-                color = gridColor,
-                style = Stroke(width = 1.dp.toPx())
-            )
-        }
-
-        // Draw axes and labels
-        labels.indices.forEach { index ->
-            val angle = (index * anglePerItem) - (PI / 2)
-
-            // Axis line
-            val endX = center.x + radius * cos(angle).toFloat()
-            val endY = center.y + radius * sin(angle).toFloat()
-            drawLine(
-                color = gridColor,
-                start = center,
-                end = Offset(endX, endY),
-                strokeWidth = 1.dp.toPx()
-            )
-
-            // Label text
-            val textLayoutResult = textMeasurer.measure(labels[index], style = textStyle)
-            val labelRadius = radius * 1.25f // push label outside
-            val labelX = center.x + labelRadius * cos(angle).toFloat() - textLayoutResult.size.width / 2
-            val labelY = center.y + labelRadius * sin(angle).toFloat() - textLayoutResult.size.height / 2
-
-            drawText(
-                textMeasurer = textMeasurer,
-                text = labels[index],
-                style = textStyle,
-                topLeft = Offset(labelX, labelY)
-            )
-        }
-
-        // Draw the data polygon(s) — scale shared across primary and secondary datasets.
-        val secondaryValues = secondaryData?.let { labels.map { label -> it[label] ?: 0f } }
-        val maxValue = (values + (secondaryValues ?: emptyList())).maxOrNull()?.coerceAtLeast(1f) ?: 1f
-
-        if (secondaryValues != null) {
-            drawRadarPolygon(
-                values = secondaryValues,
-                animationProgress = animationProgress.value,
-                maxValue = maxValue,
-                radius = radius,
-                center = center,
-                anglePerItem = anglePerItem,
-                fillColor = secondaryFillColor,
-                lineColor = secondaryLineColor
-            )
-        }
-
-        drawRadarPolygon(
+        drawRadar(
+            labels = labels,
             values = values,
-            animationProgress = animationProgress.value,
-            maxValue = maxValue,
-            radius = radius,
-            center = center,
-            anglePerItem = anglePerItem,
-            fillColor = fillColor,
-            lineColor = lineColor
+            secondaryValues = secondaryData?.let { labels.map { label -> it[label] ?: 0f } },
+            progress = animationProgress.value,
+            colors = RadarColors(
+                fill = fillColor,
+                line = lineColor,
+                secondaryFill = secondaryFillColor,
+                secondaryLine = secondaryLineColor,
+                grid = gridColor
+            ),
+            textMeasurer = textMeasurer,
+            textStyle = textStyle
         )
     }
 }
@@ -197,4 +135,92 @@ private fun DrawScope.drawRadarPolygon(
 
     drawPath(path = dataPath, color = fillColor, style = Fill)
     drawPath(path = dataPath, color = lineColor, style = Stroke(width = 2.dp.toPx()))
+}
+
+/** The web: [RADAR_LEVELS] concentric polygons, the first corner at the top. */
+private fun DrawScope.drawRadarWeb(sides: Int, radius: Float, center: Offset, anglePerItem: Double, color: Color) {
+    for (i in 1..RADAR_LEVELS) {
+        val r = radius * (i.toFloat() / RADAR_LEVELS)
+        val path = Path()
+        for (index in 0 until sides) {
+            val angle = (index * anglePerItem) - (PI / 2) // Start from top
+            val x = center.x + r * cos(angle).toFloat()
+            val y = center.y + r * sin(angle).toFloat()
+            if (index == 0) path.moveTo(x, y) else path.lineTo(x, y)
+        }
+        path.close()
+        drawPath(path = path, color = color, style = Stroke(width = 1.dp.toPx()))
+    }
+}
+
+/** A line from the centre to each corner, and the corner's label just beyond it. */
+private fun DrawScope.drawRadarAxes(
+    labels: List<String>,
+    radius: Float,
+    center: Offset,
+    anglePerItem: Double,
+    color: Color,
+    textMeasurer: TextMeasurer,
+    textStyle: TextStyle
+) {
+    labels.indices.forEach { index ->
+        val angle = (index * anglePerItem) - (PI / 2)
+        val end = Offset(center.x + radius * cos(angle).toFloat(), center.y + radius * sin(angle).toFloat())
+        drawLine(color = color, start = center, end = end, strokeWidth = 1.dp.toPx())
+
+        val textLayoutResult = textMeasurer.measure(labels[index], style = textStyle)
+        val labelRadius = radius * 1.25f // push label outside
+        val labelX = center.x + labelRadius * cos(angle).toFloat() - textLayoutResult.size.width / 2
+        val labelY = center.y + labelRadius * sin(angle).toFloat() - textLayoutResult.size.height / 2
+        drawText(textMeasurer = textMeasurer, text = labels[index], style = textStyle, topLeft = Offset(labelX, labelY))
+    }
+}
+
+private const val RADAR_LEVELS = 5
+
+private class RadarColors(val fill: Color, val line: Color, val secondaryFill: Color, val secondaryLine: Color, val grid: Color)
+
+/** Web, axes and labels, then the data: [secondaryValues] (if any) underneath, [values] on top. */
+private fun DrawScope.drawRadar(
+    labels: List<String>,
+    values: List<Float>,
+    secondaryValues: List<Float>?,
+    progress: Float,
+    colors: RadarColors,
+    textMeasurer: TextMeasurer,
+    textStyle: TextStyle
+) {
+    val radius = (size.minDimension / 2) * 0.75f // leave 25% for text labels
+    val center = Offset(size.width / 2, size.height / 2)
+    val anglePerItem = 2 * PI / labels.size
+
+    drawRadarWeb(sides = labels.size, radius = radius, center = center, anglePerItem = anglePerItem, color = colors.grid)
+    drawRadarAxes(
+        labels = labels,
+        radius = radius,
+        center = center,
+        anglePerItem = anglePerItem,
+        color = colors.grid,
+        textMeasurer = textMeasurer,
+        textStyle = textStyle
+    )
+
+    // Draw the data polygon(s) — scale shared across primary and secondary datasets.
+    val maxValue = (values + secondaryValues.orEmpty()).maxOrNull()?.coerceAtLeast(1f) ?: 1f
+    // The previous period underneath, the current one on top.
+    listOfNotNull(
+        secondaryValues?.let { Triple(it, colors.secondaryFill, colors.secondaryLine) },
+        Triple(values, colors.fill, colors.line)
+    ).forEach { (series, fill, line) ->
+        drawRadarPolygon(
+            values = series,
+            animationProgress = progress,
+            maxValue = maxValue,
+            radius = radius,
+            center = center,
+            anglePerItem = anglePerItem,
+            fillColor = fill,
+            lineColor = line
+        )
+    }
 }

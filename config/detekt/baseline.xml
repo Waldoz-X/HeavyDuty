@@ -5,10 +5,6 @@
     <ID>CyclomaticComplexMethod:MainActivity.kt:@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class) @Composable private fun HeavyDutyMainScreen</ID>
     <ID>CyclomaticComplexMethod:SeedData.kt:SeedData$suspend fun populateExercises</ID>
     <ID>LongMethod:ActiveWorkoutBar.kt:@Composable fun ActiveWorkoutBar</ID>
-    <ID>LongMethod:HdBarChart.kt:@Composable fun HdBarChart</ID>
-    <ID>LongMethod:HdLineChart.kt:@Composable fun HdLineChart</ID>
-    <ID>LongMethod:HdRadarChart.kt:@Composable fun HdRadarChart</ID>
-    <ID>LongMethod:HdStatCard.kt:@Composable fun HdStatCard</ID>
     <ID>LongMethod:HeavyDutyNavHost.kt:@Composable fun HeavyDutyNavHost</ID>
     <ID>LongMethod:MainActivity.kt:@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class) @Composable private fun HeavyDutyMainScreen</ID>
     <ID>LongMethod:SeedData.kt:SeedData$suspend fun populateExercises</ID>
