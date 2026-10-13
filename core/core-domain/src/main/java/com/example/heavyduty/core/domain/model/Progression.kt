@@ -168,7 +168,11 @@ private fun doubleProgressionPrescription(sessions: List<List<WorkoutSet>>, conf
     return if (minReps >= config.repRangeHigh) {
         Prescription(sets = config.targetSets, reps = config.repRangeLow, weightKg = lastWeight + WEIGHT_INCREMENT_KG)
     } else {
-        Prescription(sets = config.targetSets, reps = (minReps + repStep).coerceAtMost(config.repRangeHigh), weightKg = lastWeight)
+        // Never below the range: after a bad day (3 reps in a 5–8 range) the target is the range's
+        // start at the same weight, not 4. coerceAtLeast/AtMost, not coerceIn: a range typed
+        // backwards (low > high) must not throw.
+        val reps = (minReps + repStep).coerceAtLeast(config.repRangeLow).coerceAtMost(config.repRangeHigh)
+        Prescription(sets = config.targetSets, reps = reps, weightKg = lastWeight)
     }
 }
 

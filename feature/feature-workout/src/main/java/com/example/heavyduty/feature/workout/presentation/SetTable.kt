@@ -8,6 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -20,8 +21,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DeleteOutline
@@ -55,13 +58,17 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.heavyduty.core.common.R
 import com.example.heavyduty.core.common.extensions.formatDecimal
 import com.example.heavyduty.core.domain.model.Effort
@@ -158,30 +165,73 @@ private fun TableRow(modifier: Modifier = Modifier, content: @Composable RowScop
 
 @Composable
 private fun HeaderCell(text: String, modifier: Modifier = Modifier) {
-    Text(
+    FitText(
         text = text,
-        style = MaterialTheme.typography.labelSmall,
-        fontWeight = FontWeight.Bold,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        textAlign = TextAlign.Center,
-        maxLines = 1,
+        style = MaterialTheme.typography.labelSmall.copy(
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        ),
         modifier = modifier
     )
 }
 
 @Composable
-private fun ValueCell(text: String, modifier: Modifier = Modifier, dim: Boolean = false, bold: Boolean = false) {
-    Text(
+private fun ValueCell(text: String, modifier: Modifier = Modifier, dim: Boolean = false, bold: Boolean = false, maxLines: Int = 1) {
+    FitText(
         text = text,
-        style = MaterialTheme.typography.bodyMedium.tabular(),
-        fontWeight = if (bold) FontWeight.SemiBold else FontWeight.Normal,
-        color = if (dim) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurface,
-        textAlign = TextAlign.Center,
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
+        style = MaterialTheme.typography.bodyMedium.tabular().copy(
+            fontWeight = if (bold) FontWeight.SemiBold else FontWeight.Normal,
+            color = if (dim) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurface,
+            textAlign = TextAlign.Center
+        ),
+        maxLines = maxLines,
         modifier = modifier
     )
 }
+
+/**
+ * Text that shrinks to fit its column instead of cutting itself off. The value columns keep a
+ * fixed width (they hold the inputs), so on a narrow phone "Anterior" gets little room: there
+ * "8 × 62.5 kg" read as "8 × 62…" and the header as "ANTERIO". Below [MIN_CELL_FONT] it wraps,
+ * up to [maxLines], and only then ellipsizes.
+ */
+@Composable
+private fun FitText(text: String, style: TextStyle, modifier: Modifier = Modifier, maxLines: Int = 1) {
+    if (maxLines == 1) {
+        ShrinkingText(text = text, style = style, maxLines = 1, modifier = modifier)
+        return
+    }
+    // A second line only once even the smallest size can't hold it on one: with lines to spare,
+    // auto-size would rather wrap at full size than shrink, and every row would grow.
+    val measurer = rememberTextMeasurer()
+    BoxWithConstraints(modifier = modifier, contentAlignment = Alignment.Center) {
+        val fitsOnOneLine = !measurer.measure(
+            text = text,
+            style = style.copy(fontSize = MIN_CELL_FONT),
+            maxLines = 1,
+            constraints = Constraints(maxWidth = constraints.maxWidth)
+        ).hasVisualOverflow
+        ShrinkingText(text = text, style = style, maxLines = if (fitsOnOneLine) 1 else maxLines, modifier = Modifier.fillMaxWidth())
+    }
+}
+
+@Composable
+private fun ShrinkingText(text: String, style: TextStyle, maxLines: Int, modifier: Modifier = Modifier) {
+    BasicText(
+        text = text,
+        style = style,
+        maxLines = maxLines,
+        overflow = TextOverflow.Ellipsis,
+        autoSize = TextAutoSize.StepBased(minFontSize = MIN_CELL_FONT, maxFontSize = style.fontSize, stepSize = 0.5.sp),
+        modifier = modifier
+    )
+}
+
+private val MIN_CELL_FONT = 9.sp
+
+/** "4 × 117.5 kg" — a set from another unit — may need a second line where the column is narrow. */
+private const val PREVIOUS_MAX_LINES = 2
 
 @Composable
 private fun SetNumberCell(label: String, highlighted: Boolean) {
@@ -288,7 +338,7 @@ private fun LoggedSetRowContent(set: WorkoutSet, previous: WorkoutSet?, unit: We
             label = if (set.isWarmup) stringResource(R.string.workout_warmup_short) else set.setNumber.toString(),
             highlighted = false
         )
-        ValueCell(previous.describe(unit), Modifier.weight(1f), dim = true)
+        ValueCell(previous.describe(unit), Modifier.weight(1f), dim = true, maxLines = PREVIOUS_MAX_LINES)
         // Each set shows in the unit it was logged in — a lb machine set stays "50 lb".
         val setUnit = set.weightUnit ?: unit
         ValueCell(
@@ -340,7 +390,7 @@ private fun ActiveSetRow(
                 label = if (uiState.isWarmupInput) stringResource(R.string.workout_warmup_short) else setNumber.toString(),
                 highlighted = true
             )
-            ValueCell(previous.describe(unit), Modifier.weight(1f), dim = true)
+            ValueCell(previous.describe(unit), Modifier.weight(1f), dim = true, maxLines = PREVIOUS_MAX_LINES)
             CompactNumberInput(
                 value = uiState.weightInput,
                 onValueChange = { onEvent(ActiveWorkoutUiEvent.OnWeightChange(it)) },
@@ -428,7 +478,7 @@ private fun EffortInputRow(scale: String, value: String, onValueChange: (String)
 private fun PendingSetRow(setNumber: Int, previous: WorkoutSet?, unit: WeightUnit) {
     TableRow {
         SetNumberCell(label = setNumber.toString(), highlighted = false)
-        ValueCell(previous.describe(unit), Modifier.weight(1f), dim = true)
+        ValueCell(previous.describe(unit), Modifier.weight(1f), dim = true, maxLines = PREVIOUS_MAX_LINES)
         ValueCell("—", Modifier.width(ValueColumnWidth), dim = true)
         ValueCell("—", Modifier.width(ValueColumnWidth), dim = true)
         Spacer(modifier = Modifier.width(ActionColumnWidth))
