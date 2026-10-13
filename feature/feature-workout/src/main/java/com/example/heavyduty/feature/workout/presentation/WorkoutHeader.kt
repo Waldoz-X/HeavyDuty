@@ -2,7 +2,7 @@ package com.example.heavyduty.feature.workout.presentation
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -204,10 +204,11 @@ internal fun RestTimerBanner(rest: RestTimerState, onAdjust: (Int) -> Unit, onSk
         if (ending) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.secondary,
         label = "restBar"
     )
-    // Each one-second step is spread over that second, so the bar moves smoothly.
+    // Each one-second step glides over a short moment and then holds: spread over the whole
+    // second instead, the screen redrew every frame for the entire rest.
     val progress by animateFloatAsState(
         targetValue = rest.remainingSeconds.toFloat() / rest.totalSeconds.coerceAtLeast(1),
-        animationSpec = tween(durationMillis = 1_000, easing = LinearEasing),
+        animationSpec = tween(durationMillis = REST_BAR_GLIDE_MILLIS, easing = FastOutSlowInEasing),
         label = "restProgress"
     )
 
@@ -233,6 +234,7 @@ internal fun RestTimerBanner(rest: RestTimerState, onAdjust: (Int) -> Unit, onSk
 }
 
 private const val REST_WARNING_SECONDS = 3
+private const val REST_BAR_GLIDE_MILLIS = 300
 
 /** "Descanso 1:15", then −15 s / +15 s and skip. */
 @Composable
