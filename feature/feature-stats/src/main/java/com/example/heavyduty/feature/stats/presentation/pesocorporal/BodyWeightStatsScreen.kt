@@ -482,7 +482,7 @@ private fun GoalProgress(progress: Float, remainingKg: Float) {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            val statusText = if (kotlin.math.abs(remainingKg) <= 0.2f) {
+            val statusText = if (remainingKg == 0f) {
                 stringResource(R.string.bw_goal_reached)
             } else if (remainingKg > 0) {
                 stringResource(R.string.bw_remaining, remainingKg.formatWeight())

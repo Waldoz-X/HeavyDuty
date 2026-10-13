@@ -34,4 +34,13 @@ class NumberExtensionsTest {
         assertEquals("60", 60f.formatDecimal())
         assertEquals("950", 950f.formatCompact())
     }
+
+    @Test
+    fun `values a hair off a whole number read as whole`() {
+        // Fractional set credit adds up to things like 11.999997 (0.6 + 0.2 + 0.2 ...).
+        assertEquals("12", 11.999997f.formatDecimal())
+        assertEquals("12", 12.000003f.formatDecimal())
+        assertEquals("5.4", 5.4000006f.formatDecimal())
+        assertEquals("7k", 6_999.99f.formatCompact())
+    }
 }

@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Timeline
@@ -24,10 +26,10 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.heavyduty.core.common.R
 import com.example.heavyduty.core.common.extensions.formatDecimal
-import com.example.heavyduty.core.ui.components.HdBarChart
 import com.example.heavyduty.core.ui.components.HdCardsSkeleton
 import com.example.heavyduty.core.ui.components.HdEmptyState
 import com.example.heavyduty.core.ui.components.HdErrorState
+import com.example.heavyduty.core.ui.components.HdHorizontalBarChart
 import com.example.heavyduty.core.ui.components.HdPeriodSelector
 import com.example.heavyduty.core.ui.nameResId
 
@@ -64,6 +66,7 @@ fun SeriesPorMusculoScreen(
         Column(
             modifier = Modifier
                 .padding(innerPadding)
+                .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
             HdPeriodSelector(
@@ -85,7 +88,7 @@ fun SeriesPorMusculoScreen(
                 )
             } else {
                 val data = uiState.data.map { (muscle, value) -> stringResource(muscle.nameResId) to value }
-                HdBarChart(
+                HdHorizontalBarChart(
                     data = data,
                     valueFormatter = { value -> value.formatDecimal() }
                 )

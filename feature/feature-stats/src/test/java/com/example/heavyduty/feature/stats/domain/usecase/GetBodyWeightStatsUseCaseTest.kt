@@ -68,6 +68,22 @@ class GetBodyWeightStatsUseCaseTest {
     }
 
     @Test
+    fun `a goal is reached only within the 0_1 kg weights are shown in`() {
+        fun from(currentKg: Float) = stats(
+            listOf(BodyWeightEntry(weightKg = 82.6f, loggedAt = DAY), BodyWeightEntry(weightKg = currentKg, loggedAt = 2 * DAY)),
+            goalKg = 80f
+        )
+        // 0.2 kg to go is not there yet, and the bar says so.
+        val close = from(80.2f)
+        assertEquals(0.2f, close.remainingToGoalKg!!, 0.001f)
+        assertEquals(2.4f / 2.6f, close.progressPercentage!!, 0.001f)
+        // 80.03 shows as 80.0: done, all the way.
+        val there = from(80.03f)
+        assertEquals(0f, there.remainingToGoalKg)
+        assertEquals(1f, there.progressPercentage!!, 0.001f)
+    }
+
+    @Test
     fun `moving away from the goal is zero progress`() {
         val report = stats(losing, goalKg = 95f)
 

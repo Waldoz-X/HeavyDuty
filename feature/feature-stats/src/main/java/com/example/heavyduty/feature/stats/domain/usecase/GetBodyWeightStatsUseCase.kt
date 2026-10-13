@@ -17,6 +17,7 @@ data class BodyWeightStatsReport(
     val currentWeightKg: Float?,
     val startWeightKg: Float?,
     val progressPercentage: Float?,
+    /** Left to the goal; past it, negative; at it (see [GOAL_REACHED_KG]), exactly 0. */
     val remainingToGoalKg: Float?,
     val chartPoints: List<Pair<Long, Float>>,
     val history: List<BodyWeightHistoryItem>
@@ -59,6 +60,10 @@ class GetBodyWeightStatsUseCase @Inject constructor(
             }
         } else {
             null to null
+        }.let { (pct, rem) ->
+            // Closer than the 0.1 kg weights are shown in is the goal itself: 80.2 kg against
+            // 80.0 is still 0.2 to go, while 80.03 reads as 80.0 and is done.
+            if (rem != null && kotlin.math.abs(rem) < GOAL_REACHED_KG) 1f to 0f else pct to rem
         }
 
         val historyItems = sorted.mapIndexed { index, entry ->
@@ -85,3 +90,6 @@ class GetBodyWeightStatsUseCase @Inject constructor(
         )
     }.distinctUntilChanged()
 }
+
+/** Half the 0.1 kg step weights are shown in. */
+private const val GOAL_REACHED_KG = 0.05f

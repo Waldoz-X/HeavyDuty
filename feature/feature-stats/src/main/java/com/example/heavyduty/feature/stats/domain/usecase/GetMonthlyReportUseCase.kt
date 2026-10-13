@@ -42,13 +42,13 @@ class GetMonthlyReportUseCase @Inject constructor(
         ) { sessions, rawSets, prevSessions, prevRawSets, exercises ->
             val current = MonthData.of(sessions, rawSets)
             val previous = MonthData.of(prevSessions, prevRawSets)
-            buildReport(month, referenceMillis, current, previous, exercises.associateBy { it.id })
+            buildReport(month, referenceMillis, current, previous, exercises.associateBy { it.id }, weeksSoFar(month, clock.nowMillis()))
         }.distinctUntilChanged().flowOn(Dispatchers.Default)
     }
 }
 
 /** The month containing a moment, and the one before it (for the comparisons). */
-private data class MonthBounds(val start: Long, val end: Long, val previousStart: Long, val weeks: Int) {
+private data class MonthBounds(val start: Long, val end: Long, val previousStart: Long, val weeks: Int, val days: Int) {
     val previousEnd: Long get() = start - 1
 
     companion object {
@@ -63,12 +63,13 @@ private data class MonthBounds(val start: Long, val end: Long, val previousStart
             }
             val start = calendar.timeInMillis
             val weeks = calendar.getActualMaximum(Calendar.WEEK_OF_MONTH)
+            val days = calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
             // The month's last millisecond — "23:59:59" alone would drop its final second.
             calendar.add(Calendar.MONTH, 1)
             val end = calendar.timeInMillis - 1
             calendar.timeInMillis = start
             calendar.add(Calendar.MONTH, -1)
-            return MonthBounds(start = start, end = end, previousStart = calendar.timeInMillis, weeks = weeks)
+            return MonthBounds(start = start, end = end, previousStart = calendar.timeInMillis, weeks = weeks, days = days)
         }
     }
 }
@@ -92,7 +93,8 @@ private fun buildReport(
     referenceMillis: Long,
     current: MonthData,
     previous: MonthData,
-    exerciseById: Map<Long, Exercise>
+    exerciseById: Map<Long, Exercise>,
+    weeksSoFar: Float
 ): MonthlyReport {
     // Only sets of exercises still in the catalog count, as in the per-muscle and top lists.
     val countedSets = current.sets.filter { it.exerciseId in exerciseById }
@@ -110,7 +112,7 @@ private fun buildReport(
         totalVolumeKg = totalVolumeKg,
         totalDurationMinutes = totalDurationSecs / SECONDS_PER_MINUTE,
         avgSessionDurationMinutes = if (workoutCount > 0) totalDurationSecs / workoutCount / SECONDS_PER_MINUTE else 0,
-        workoutsPerWeekAverage = if (month.weeks > 0) workoutCount.toFloat() / month.weeks.toFloat() else 0f,
+        workoutsPerWeekAverage = if (weeksSoFar > 0f) workoutCount / weeksSoFar else 0f,
         prevMonthWorkoutsDelta = (workoutCount - previous.sessions.size).takeIf { workoutCount > 0 || previous.sessions.isNotEmpty() },
         prevMonthVolumeDeltaPercent = if (prevTotalVolumeKg >
             0f
@@ -127,6 +129,22 @@ private fun buildReport(
         volumePerWeek = perWeek(month.weeks, volumePerWeek(countedSets, current.sessionsById), 0f)
     )
 }
+
+/**
+ * How many weeks of the month have gone by at [nowMillis]: all of it for a past month, the days
+ * so far for the current one — dividing a month in progress by all its weeks made 8 workouts in
+ * 13 days read as 1.6 a week. At least one week, so the first days don't read as 7 a week.
+ */
+private fun weeksSoFar(month: MonthBounds, nowMillis: Long): Float {
+    val daysSoFar = when {
+        nowMillis > month.end -> month.days
+        nowMillis < month.start -> return 0f
+        else -> Calendar.getInstance().apply { timeInMillis = nowMillis }.get(Calendar.DAY_OF_MONTH)
+    }
+    return (daysSoFar / DAYS_PER_WEEK).coerceAtLeast(1f)
+}
+
+private const val DAYS_PER_WEEK = 7f
 
 private fun weekOfMonth(millis: Long): Int = Calendar.getInstance().apply { timeInMillis = millis }.get(Calendar.WEEK_OF_MONTH)
 

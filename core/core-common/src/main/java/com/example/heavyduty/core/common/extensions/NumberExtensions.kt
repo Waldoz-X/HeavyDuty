@@ -1,9 +1,16 @@
 package com.example.heavyduty.core.common.extensions
 
 import java.util.Locale
+import kotlin.math.roundToInt
 
-/** Formats as a whole number when it has no fractional part, otherwise with one decimal. */
-fun Float.formatDecimal(): String = if (this == this.toInt().toFloat()) this.toInt().toString() else formatOneDecimal()
+/**
+ * A whole number when it has no fractional part, otherwise one decimal. Rounded first: a sum of
+ * fractions such as 11.999997 shows "12", not "12.0".
+ */
+fun Float.formatDecimal(): String {
+    val rounded = (this * 10).roundToInt() / 10f
+    return if (rounded % 1f == 0f) rounded.toInt().toString() else rounded.formatOneDecimal()
+}
 
 /**
  * One decimal with a point ("62.5") whatever the phone's language. The number fields take a

@@ -43,13 +43,14 @@ class GetMonthlyReportUseCaseTest {
     private fun report(
         reference: Long,
         sessions: List<com.example.heavyduty.core.domain.model.WorkoutSession> = this.sessions,
-        sets: List<com.example.heavyduty.core.domain.model.WorkoutSet> = this.sets
+        sets: List<com.example.heavyduty.core.domain.model.WorkoutSet> = this.sets,
+        now: Long = reference
     ) = runBlocking {
         GetMonthlyReportUseCase(
             FakeTrainingHistoryRepository(sessions, sets),
             FakeExerciseRepository(EXERCISES),
-            FakeClock(reference)
-        )().first()
+            FakeClock(now)
+        )(reference).first()
     }
 
     @Test
@@ -97,6 +98,17 @@ class GetMonthlyReportUseCaseTest {
         assertEquals(2, top[0].totalSets)
         assertEquals(1600f, top[0].totalVolumeKg, 0.01f)
         assertEquals(100f, top[0].maxWeightKg)
+    }
+
+    @Test
+    fun `workouts per week count only the weeks gone by in a month in progress`() {
+        // On September 21st, three weeks in, its 2 workouts are 2/3 a week — not 2 over all its weeks.
+        assertEquals(2f / 3f, report(september, now = at(Calendar.SEPTEMBER, 21)).workoutsPerWeekAverage, 0.01f)
+        // A finished month spreads its workouts over all its 30 days.
+        assertEquals(2f / (30f / 7f), report(september, now = october).workoutsPerWeekAverage, 0.01f)
+        // On the 3rd, the one workout so far counts over a whole week, not as 7 a week.
+        val firstDays = report(september, sessions = sessions.take(1), now = at(Calendar.SEPTEMBER, 3))
+        assertEquals(1f, firstDays.workoutsPerWeekAverage, 0.01f)
     }
 
     @Test
