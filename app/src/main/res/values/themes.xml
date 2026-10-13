@@ -17,6 +17,9 @@
     <!-- Shown while the app cold-starts, before Compose takes over. -->
     <style name="Theme.App.Starting" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/splash_background</item>
+        <!-- A PNG rendered from the logo's SVG: as a vector, the ring's outline with its carved
+             details needs several times aapt2's 32,767-character limit for one path's data.
+             288dp square (xxxhdpi), the logo within the 192dp circle Android 12+ shows of it. -->
         <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_logo</item>
         <item name="postSplashScreenTheme">@style/Theme.HeavyDuty</item>
     </style>
