@@ -12,6 +12,7 @@ import com.example.heavyduty.core.domain.repository.RestTimerController
 import com.example.heavyduty.core.domain.repository.RestTimerState
 import com.example.heavyduty.core.domain.repository.RoutineRepository
 import com.example.heavyduty.core.domain.repository.StoredDataCheck
+import com.example.heavyduty.core.domain.repository.TrainingHistoryRepository
 import com.example.heavyduty.core.domain.repository.UserPreferencesRepository
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
 import com.example.heavyduty.feature.workout.domain.usecase.CompleteWorkoutUseCase
@@ -39,6 +40,7 @@ import kotlinx.coroutines.launch
 class MainViewModel @Inject constructor(
     private val userPreferences: UserPreferencesRepository,
     workoutRepository: WorkoutRepository,
+    trainingHistoryRepository: TrainingHistoryRepository,
     routineRepository: RoutineRepository,
     storedDataCheck: StoredDataCheck,
     private val restTimerController: RestTimerController,
@@ -64,7 +66,7 @@ class MainViewModel @Inject constructor(
                 // A brand-new install: no need to wait (behind the splash) for the catalog seeding.
                 !databaseExisted -> flowOf(true)
 
-                else -> combine(routineRepository.getAllRoutines(), workoutRepository.getAllSessions()) { routines, sessions ->
+                else -> combine(routineRepository.getAllRoutines(), trainingHistoryRepository.getAllSessions()) { routines, sessions ->
                     routines.isEmpty() && sessions.isEmpty()
                 }
             }

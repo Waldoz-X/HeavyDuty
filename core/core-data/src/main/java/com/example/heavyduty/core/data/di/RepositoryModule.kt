@@ -5,6 +5,8 @@ import com.example.heavyduty.core.data.repository.BodyWeightRepositoryImpl
 import com.example.heavyduty.core.data.repository.CalendarRepositoryImpl
 import com.example.heavyduty.core.data.repository.ExerciseRepositoryImpl
 import com.example.heavyduty.core.data.repository.RoutineRepositoryImpl
+import com.example.heavyduty.core.data.repository.TrainingHistoryRepositoryImpl
+import com.example.heavyduty.core.data.repository.TrainingStatsRepositoryImpl
 import com.example.heavyduty.core.data.repository.UserPreferencesRepositoryImpl
 import com.example.heavyduty.core.data.repository.WorkoutRepositoryImpl
 import com.example.heavyduty.core.domain.repository.BackupRepository
@@ -12,6 +14,8 @@ import com.example.heavyduty.core.domain.repository.BodyWeightRepository
 import com.example.heavyduty.core.domain.repository.CalendarRepository
 import com.example.heavyduty.core.domain.repository.ExerciseRepository
 import com.example.heavyduty.core.domain.repository.RoutineRepository
+import com.example.heavyduty.core.domain.repository.TrainingHistoryRepository
+import com.example.heavyduty.core.domain.repository.TrainingStatsRepository
 import com.example.heavyduty.core.domain.repository.UserPreferencesRepository
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
 import dagger.Binds
@@ -36,6 +40,14 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindWorkoutRepository(impl: WorkoutRepositoryImpl): WorkoutRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindTrainingHistoryRepository(impl: TrainingHistoryRepositoryImpl): TrainingHistoryRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindTrainingStatsRepository(impl: TrainingStatsRepositoryImpl): TrainingStatsRepository
 
     @Binds
     @Singleton

@@ -9,7 +9,7 @@ import com.example.heavyduty.core.domain.model.RoutineExercise
 import com.example.heavyduty.core.domain.model.WeightUnit
 import com.example.heavyduty.core.domain.repository.ExerciseRepository
 import com.example.heavyduty.core.domain.repository.RoutineRepository
-import com.example.heavyduty.core.domain.repository.WorkoutRepository
+import com.example.heavyduty.core.domain.repository.TrainingHistoryRepository
 import com.example.heavyduty.core.testing.FakeClock
 import com.example.heavyduty.core.testing.MainDispatcherRule
 import com.example.heavyduty.feature.routines.domain.usecase.CreateRoutineUseCase
@@ -44,14 +44,14 @@ class RoutineEditorViewModelTest {
 
     private fun createViewModel(routineId: Long? = null): RoutineEditorViewModel {
         routineId?.let { savedStateHandle["routineId"] = it }
-        val workoutRepository = mockk<WorkoutRepository> {
+        val trainingHistoryRepository = mockk<TrainingHistoryRepository> {
             every { getCompletedSessionsByRoutineId(any()) } returns flowOf(emptyList())
         }
         viewModel = RoutineEditorViewModel(
             createRoutineUseCase = CreateRoutineUseCase(routineRepository),
             updateRoutineUseCase = UpdateRoutineUseCase(routineRepository),
             getRoutineWithExercisesUseCase = GetRoutineWithExercisesUseCase(routineRepository),
-            getRoutineVolumeHistoryUseCase = GetRoutineVolumeHistoryUseCase(workoutRepository),
+            getRoutineVolumeHistoryUseCase = GetRoutineVolumeHistoryUseCase(trainingHistoryRepository),
             exerciseRepository = exerciseRepository,
             savedStateHandle = savedStateHandle,
             clock = FakeClock(1_800_000_000_000)

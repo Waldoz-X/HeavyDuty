@@ -3,7 +3,7 @@ package com.example.heavyduty.feature.history.domain
 import com.example.heavyduty.core.domain.model.WorkoutSession
 import com.example.heavyduty.core.domain.model.WorkoutSet
 import com.example.heavyduty.core.domain.model.WorkoutStatus
-import com.example.heavyduty.core.testing.FakeWorkoutRepository
+import com.example.heavyduty.core.testing.FakeTrainingHistoryRepository
 import com.example.heavyduty.feature.history.domain.usecase.GetExercisePersonalRecordsUseCase
 import com.example.heavyduty.feature.history.domain.usecase.GetExerciseProgressUseCase
 import com.example.heavyduty.feature.history.domain.usecase.GetStatsUseCase
@@ -38,7 +38,8 @@ class HistoryUseCasesTest {
         set(4, bench, reps = 5, weight = 0f, at = 4), // no weight: not a record
         set(5, squat, reps = 5, weight = 140f, at = 5)
     )
-    private val workouts = FakeWorkoutRepository(listOf(WorkoutSession(id = 1, startTime = 0, status = WorkoutStatus.COMPLETED)), sets)
+    private val workouts =
+        FakeTrainingHistoryRepository(listOf(WorkoutSession(id = 1, startTime = 0, status = WorkoutStatus.COMPLETED)), sets)
 
     @Test
     fun `records of one exercise`() = runBlocking {
@@ -69,7 +70,7 @@ class HistoryUseCasesTest {
 
     @Test
     fun `history is newest first`() = runBlocking {
-        val repo = FakeWorkoutRepository(
+        val repo = FakeTrainingHistoryRepository(
             listOf(WorkoutSession(id = 1, startTime = 10), WorkoutSession(id = 2, startTime = 30), WorkoutSession(id = 3, startTime = 20))
         )
 
@@ -78,7 +79,7 @@ class HistoryUseCasesTest {
 
     @Test
     fun `history totals and average duration`() = runBlocking {
-        val repo = FakeWorkoutRepository(
+        val repo = FakeTrainingHistoryRepository(
             listOf(
                 WorkoutSession(id = 1, startTime = 1, totalDurationSecs = 3600, status = WorkoutStatus.COMPLETED),
                 WorkoutSession(id = 2, startTime = 2, totalDurationSecs = 1800, status = WorkoutStatus.COMPLETED),

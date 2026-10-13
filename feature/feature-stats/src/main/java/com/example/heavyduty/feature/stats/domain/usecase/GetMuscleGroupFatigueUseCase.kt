@@ -8,7 +8,8 @@ import com.example.heavyduty.core.domain.model.fatigueLevel
 import com.example.heavyduty.core.domain.model.intensityWeightedTonnage
 import com.example.heavyduty.core.domain.model.muscleCredits
 import com.example.heavyduty.core.domain.repository.ExerciseRepository
-import com.example.heavyduty.core.domain.repository.WorkoutRepository
+import com.example.heavyduty.core.domain.repository.TrainingHistoryRepository
+import com.example.heavyduty.core.domain.repository.TrainingStatsRepository
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -40,14 +41,15 @@ private const val FATIGUE_WINDOW_MILLIS = 14 * 24 * 60 * 60 * 1000L
  * "ready" at a fixed day boundary.
  */
 class GetMuscleGroupFatigueUseCase @Inject constructor(
-    private val workoutRepository: WorkoutRepository,
+    private val trainingHistoryRepository: TrainingHistoryRepository,
+    private val trainingStatsRepository: TrainingStatsRepository,
     private val exerciseRepository: ExerciseRepository,
     private val clock: Clock
 ) {
     operator fun invoke(): Flow<Map<MuscleGroup, Float>> = combine(
-        workoutRepository.getCompletedSetsByDateRange(clock.nowMillis() - FATIGUE_WINDOW_MILLIS, Long.MAX_VALUE),
+        trainingHistoryRepository.getCompletedSetsByDateRange(clock.nowMillis() - FATIGUE_WINDOW_MILLIS, Long.MAX_VALUE),
         // Intensity is relative to the best estimated 1RM across all history, not the window.
-        workoutRepository.getExerciseSetSummaries(),
+        trainingStatsRepository.getExerciseSetSummaries(),
         exerciseRepository.getAllExercises()
     ) { sets, summaries, exercises ->
         val exerciseById = exercises.associateBy { it.id }

@@ -3,7 +3,7 @@ package com.example.heavyduty.feature.stats.presentation.mapaactividad
 import com.example.heavyduty.core.domain.model.WorkoutSession
 import com.example.heavyduty.core.domain.model.WorkoutStatus
 import com.example.heavyduty.core.testing.FakeClock
-import com.example.heavyduty.core.testing.FakeWorkoutRepository
+import com.example.heavyduty.core.testing.FakeTrainingHistoryRepository
 import com.example.heavyduty.core.testing.MainDispatcherRule
 import com.example.heavyduty.feature.stats.domain.usecase.GetTrainingActivityHeatmapUseCase
 import java.util.Calendar
@@ -34,7 +34,7 @@ class MapaActividadViewModelTest {
             WorkoutSession(id = i + 1L, startTime = start, totalDurationSecs = 3600, status = WorkoutStatus.COMPLETED)
         }
         val clock = FakeClock(now)
-        return MapaActividadViewModel(GetTrainingActivityHeatmapUseCase(FakeWorkoutRepository(sessions), clock), clock)
+        return MapaActividadViewModel(GetTrainingActivityHeatmapUseCase(FakeTrainingHistoryRepository(sessions), clock), clock)
     }
 
     @Test

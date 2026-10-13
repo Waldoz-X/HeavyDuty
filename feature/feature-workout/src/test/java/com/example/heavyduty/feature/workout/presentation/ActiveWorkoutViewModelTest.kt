@@ -14,6 +14,7 @@ import com.example.heavyduty.core.domain.repository.ExerciseRepository
 import com.example.heavyduty.core.domain.repository.RestTimerController
 import com.example.heavyduty.core.domain.repository.RestTimerState
 import com.example.heavyduty.core.domain.repository.RoutineRepository
+import com.example.heavyduty.core.domain.repository.TrainingHistoryRepository
 import com.example.heavyduty.core.domain.repository.UserPreferencesRepository
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
 import com.example.heavyduty.core.testing.FakeClock
@@ -79,6 +80,7 @@ class ActiveWorkoutViewModelTest {
             discardWorkoutUseCase = DiscardWorkoutUseCase(workoutRepository),
             routineRepository = FakeRoutineRepository(listOf(routine)),
             workoutRepository = workoutRepository,
+            trainingHistoryRepository = workoutRepository,
             exerciseRepository = FakeExerciseRepository(listOf(bench, row)),
             userPreferencesRepository = preferences,
             restTimerController = restTimer,
@@ -383,7 +385,10 @@ class ActiveWorkoutViewModelTest {
         assertEquals(3, viewModel.uiState.value.currentSetNumber)
     }
 
-    private class FakeWorkoutRepository : WorkoutRepository {
+    /** The workout being logged and, like the database, the history it joins. */
+    private class FakeWorkoutRepository :
+        WorkoutRepository,
+        TrainingHistoryRepository {
         val sessions = MutableStateFlow<List<WorkoutSession>>(emptyList())
         val sets = MutableStateFlow<List<WorkoutSet>>(emptyList())
         private var nextId = 1L

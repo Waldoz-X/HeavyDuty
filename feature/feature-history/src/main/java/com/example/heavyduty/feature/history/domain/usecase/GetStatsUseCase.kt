@@ -1,7 +1,7 @@
 package com.example.heavyduty.feature.history.domain.usecase
 
 import com.example.heavyduty.core.domain.model.WorkoutStatus
-import com.example.heavyduty.core.domain.repository.WorkoutRepository
+import com.example.heavyduty.core.domain.repository.TrainingHistoryRepository
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -20,8 +20,8 @@ data class WorkoutStats(
 /**
  * Use case to calculate overall workout statistics.
  */
-class GetStatsUseCase @Inject constructor(private val workoutRepository: WorkoutRepository) {
-    operator fun invoke(): Flow<WorkoutStats> = workoutRepository.getAllSessions().map { sessions ->
+class GetStatsUseCase @Inject constructor(private val trainingHistoryRepository: TrainingHistoryRepository) {
+    operator fun invoke(): Flow<WorkoutStats> = trainingHistoryRepository.getAllSessions().map { sessions ->
         val completed = sessions.filter { it.status == WorkoutStatus.COMPLETED }
         val cancelled = sessions.filter { it.status == WorkoutStatus.CANCELLED }
         val totalMinutes = completed.sumOf { it.totalDurationSecs } / 60

@@ -2,7 +2,7 @@ package com.example.heavyduty.feature.history.domain.usecase
 
 import com.example.heavyduty.core.domain.model.WorkoutSet
 import com.example.heavyduty.core.domain.model.excludeWarmups
-import com.example.heavyduty.core.domain.repository.WorkoutRepository
+import com.example.heavyduty.core.domain.repository.TrainingHistoryRepository
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.map
  * Used for generating progress charts — a warmup set would show up as an artificial dip
  * in the trend line, so it's excluded here rather than at the chart-building call site.
  */
-class GetExerciseProgressUseCase @Inject constructor(private val workoutRepository: WorkoutRepository) {
+class GetExerciseProgressUseCase @Inject constructor(private val trainingHistoryRepository: TrainingHistoryRepository) {
     operator fun invoke(exerciseId: Long): Flow<List<WorkoutSet>> =
-        workoutRepository.getSetsByExerciseId(exerciseId).map { it.excludeWarmups() }
+        trainingHistoryRepository.getSetsByExerciseId(exerciseId).map { it.excludeWarmups() }
 }

@@ -88,7 +88,7 @@ class ProfileCalculationsTest {
             set(4, exercise = 2, weight = 90f, at = 9 * day, session = 3) // workout not finished
         )
 
-        val stats = GetProfileStatsUseCase(FakeWorkoutRepository(sessions, sets))().first()
+        val stats = FakeWorkoutRepository(sessions, sets).let { GetProfileStatsUseCase(it.history, it.stats) }().first()
 
         assertEquals(2, stats.totalWorkouts)
         assertEquals(2, stats.totalSets)
@@ -98,7 +98,7 @@ class ProfileCalculationsTest {
 
     @Test
     fun `a new user has empty totals`() = runBlocking {
-        val stats = GetProfileStatsUseCase(FakeWorkoutRepository())().first()
+        val stats = FakeWorkoutRepository().let { GetProfileStatsUseCase(it.history, it.stats) }().first()
 
         assertEquals(0, stats.totalWorkouts)
         assertEquals(0f, stats.totalVolumeKg)

@@ -3,7 +3,7 @@ package com.example.heavyduty.feature.stats.domain.usecase
 import com.example.heavyduty.core.domain.model.WorkoutSession
 import com.example.heavyduty.core.domain.model.WorkoutSet
 import com.example.heavyduty.core.domain.model.WorkoutStatus
-import com.example.heavyduty.core.domain.repository.WorkoutRepository
+import com.example.heavyduty.core.domain.repository.TrainingHistoryRepository
 import com.example.heavyduty.core.testing.FakeClock
 import java.util.Calendar
 import kotlinx.coroutines.flow.Flow
@@ -17,27 +17,18 @@ import org.junit.Test
 
 class GetTrainingActivityHeatmapUseCaseTest {
 
-    private class FakeWorkoutRepository(private val sessions: List<WorkoutSession>) : WorkoutRepository {
+    private class FakeTrainingHistoryRepository(private val sessions: List<WorkoutSession>) : TrainingHistoryRepository {
         override fun getAllSessions(): Flow<List<WorkoutSession>> = flowOf(sessions)
-        override fun getSessionById(id: Long): Flow<WorkoutSession?> = flowOf(null)
-        override fun getSessionWithSets(id: Long): Flow<WorkoutSession?> = flowOf(null)
         override fun getSessionsByDateRange(startTime: Long, endTime: Long): Flow<List<WorkoutSession>> = flowOf(emptyList())
         override fun getCompletedSessionsByRoutineId(routineId: Long): Flow<List<WorkoutSession>> = flowOf(emptyList())
         override fun getSetsByExerciseId(exerciseId: Long): Flow<List<WorkoutSet>> = flowOf(emptyList())
         override fun getAllCompletedSets(): Flow<List<WorkoutSet>> = flowOf(emptyList())
         override fun getCompletedSetsByDateRange(startTime: Long, endTime: Long): Flow<List<WorkoutSet>> = flowOf(emptyList())
-        override fun getActiveSession(): Flow<WorkoutSession?> = flowOf(null)
-        override suspend fun insertSession(session: WorkoutSession): Long = 0L
-        override suspend fun updateSession(session: WorkoutSession) {}
-        override suspend fun deleteSession(session: WorkoutSession) {}
-        override suspend fun insertSet(set: WorkoutSet): Long = 0L
-        override suspend fun updateSet(set: WorkoutSet) {}
-        override suspend fun deleteSet(set: WorkoutSet) {}
     }
 
     @Test
     fun `empty sessions returns default report`() = runBlocking {
-        val repo = FakeWorkoutRepository(emptyList())
+        val repo = FakeTrainingHistoryRepository(emptyList())
         val useCase = GetTrainingActivityHeatmapUseCase(repo, FakeClock(System.currentTimeMillis()))
 
         val report = useCase().first()
@@ -66,7 +57,10 @@ class GetTrainingActivityHeatmapUseCaseTest {
             WorkoutSession(id = 4, startTime = today, totalDurationSecs = 600, status = WorkoutStatus.IN_PROGRESS)
         )
 
-        val totals = GetTrainingActivityHeatmapUseCase(FakeWorkoutRepository(sessions), FakeClock(today)).invoke().first().dailyTotals
+        val totals = GetTrainingActivityHeatmapUseCase(
+            FakeTrainingHistoryRepository(sessions),
+            FakeClock(today)
+        ).invoke().first().dailyTotals
 
         assertEquals(2, totals.size)
         val todayTotals = totals.getValue(totals.keys.max())
@@ -115,7 +109,7 @@ class GetTrainingActivityHeatmapUseCaseTest {
             )
         )
 
-        val repo = FakeWorkoutRepository(sessions)
+        val repo = FakeTrainingHistoryRepository(sessions)
         val useCase = GetTrainingActivityHeatmapUseCase(repo, FakeClock(now))
 
         val report = useCase().first()
@@ -153,7 +147,7 @@ class GetTrainingActivityHeatmapUseCaseTest {
         }
 
         val report = GetTrainingActivityHeatmapUseCase(
-            FakeWorkoutRepository(sessions),
+            FakeTrainingHistoryRepository(sessions),
             FakeClock(at(2025, Calendar.DECEMBER, 31))
         )().first()
 

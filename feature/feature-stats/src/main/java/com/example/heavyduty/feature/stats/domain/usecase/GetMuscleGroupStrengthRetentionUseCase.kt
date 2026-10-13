@@ -5,7 +5,7 @@ import com.example.heavyduty.core.domain.model.HARD_SET_INTENSITY
 import com.example.heavyduty.core.domain.model.MuscleGroup
 import com.example.heavyduty.core.domain.model.strengthRetention
 import com.example.heavyduty.core.domain.repository.ExerciseRepository
-import com.example.heavyduty.core.domain.repository.WorkoutRepository
+import com.example.heavyduty.core.domain.repository.TrainingStatsRepository
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -21,12 +21,12 @@ private const val DAY_MILLIS = 86_400_000f
  * weekly volume.
  */
 class GetMuscleGroupStrengthRetentionUseCase @Inject constructor(
-    private val workoutRepository: WorkoutRepository,
+    private val trainingStatsRepository: TrainingStatsRepository,
     private val exerciseRepository: ExerciseRepository,
     private val clock: Clock
 ) {
     operator fun invoke(): Flow<Map<MuscleGroup, Float>> = combine(
-        workoutRepository.getLastHardSetTimes(),
+        trainingStatsRepository.getLastHardSetTimes(),
         exerciseRepository.getAllExercises()
     ) { lastHardSetByExercise, exercises ->
         // A hard compound set stresses every muscle it credits (see Exercise.muscleWeights),

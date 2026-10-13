@@ -28,12 +28,14 @@ class MuscleRecoveryStatsTest {
     private fun fatigue(vararg sets: com.example.heavyduty.core.domain.model.WorkoutSet, status: WorkoutStatus = WorkoutStatus.COMPLETED) =
         runBlocking {
             val sessions = sessionsOf(sets.toList(), status)
-            GetMuscleGroupFatigueUseCase(FakeWorkoutRepository(sessions, sets.toList()), exercises, FakeClock(now))().first()
+            FakeWorkoutRepository(sessions, sets.toList()).let {
+                GetMuscleGroupFatigueUseCase(it.history, it.stats, exercises, FakeClock(now))
+            }().first()
         }
 
     private fun retention(vararg sets: com.example.heavyduty.core.domain.model.WorkoutSet) = runBlocking {
         val sessions = sessionsOf(sets.toList())
-        GetMuscleGroupStrengthRetentionUseCase(FakeWorkoutRepository(sessions, sets.toList()), exercises, FakeClock(now))().first()
+        GetMuscleGroupStrengthRetentionUseCase(FakeWorkoutRepository(sessions, sets.toList()).stats, exercises, FakeClock(now))().first()
     }
 
     @Test

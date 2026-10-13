@@ -10,7 +10,7 @@ import com.example.heavyduty.core.domain.model.displayName
 import com.example.heavyduty.core.domain.model.excludeWarmups
 import com.example.heavyduty.core.domain.model.muscleCredits
 import com.example.heavyduty.core.domain.repository.ExerciseRepository
-import com.example.heavyduty.core.domain.repository.WorkoutRepository
+import com.example.heavyduty.core.domain.repository.TrainingHistoryRepository
 import com.example.heavyduty.feature.stats.domain.model.MonthlyReport
 import com.example.heavyduty.feature.stats.domain.model.MuscleVolumeContribution
 import com.example.heavyduty.feature.stats.domain.model.TopExerciseMonthly
@@ -27,17 +27,17 @@ import kotlinx.coroutines.flow.flowOn
  * calendar month containing `referenceMillis` (defaults to the current month).
  */
 class GetMonthlyReportUseCase @Inject constructor(
-    private val workoutRepository: WorkoutRepository,
+    private val trainingHistoryRepository: TrainingHistoryRepository,
     private val exerciseRepository: ExerciseRepository,
     private val clock: Clock
 ) {
     operator fun invoke(referenceMillis: Long = clock.nowMillis()): Flow<MonthlyReport> {
         val month = MonthBounds.containing(referenceMillis)
         return combine(
-            workoutRepository.getSessionsByDateRange(month.start, month.end),
-            workoutRepository.getCompletedSetsByDateRange(month.start, month.end),
-            workoutRepository.getSessionsByDateRange(month.previousStart, month.previousEnd),
-            workoutRepository.getCompletedSetsByDateRange(month.previousStart, month.previousEnd),
+            trainingHistoryRepository.getSessionsByDateRange(month.start, month.end),
+            trainingHistoryRepository.getCompletedSetsByDateRange(month.start, month.end),
+            trainingHistoryRepository.getSessionsByDateRange(month.previousStart, month.previousEnd),
+            trainingHistoryRepository.getCompletedSetsByDateRange(month.previousStart, month.previousEnd),
             exerciseRepository.getAllExercises()
         ) { sessions, rawSets, prevSessions, prevRawSets, exercises ->
             val current = MonthData.of(sessions, rawSets)

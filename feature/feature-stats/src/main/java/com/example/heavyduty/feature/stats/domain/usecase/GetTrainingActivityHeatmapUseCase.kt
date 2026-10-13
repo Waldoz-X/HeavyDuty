@@ -3,7 +3,7 @@ package com.example.heavyduty.feature.stats.domain.usecase
 import com.example.heavyduty.core.domain.model.Clock
 import com.example.heavyduty.core.domain.model.WorkoutSession
 import com.example.heavyduty.core.domain.model.WorkoutStatus
-import com.example.heavyduty.core.domain.repository.WorkoutRepository
+import com.example.heavyduty.core.domain.repository.TrainingHistoryRepository
 import java.util.Calendar
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
@@ -66,8 +66,11 @@ private const val HEATMAP_WEEKS = 53
  * - Current and longest weekly streaks.
  * - Day of week frequency and time-of-day distribution.
  */
-class GetTrainingActivityHeatmapUseCase @Inject constructor(private val workoutRepository: WorkoutRepository, private val clock: Clock) {
-    operator fun invoke(): Flow<ActivityHeatmapStatsReport> = workoutRepository.getAllSessions().map { sessions ->
+class GetTrainingActivityHeatmapUseCase @Inject constructor(
+    private val trainingHistoryRepository: TrainingHistoryRepository,
+    private val clock: Clock
+) {
+    operator fun invoke(): Flow<ActivityHeatmapStatsReport> = trainingHistoryRepository.getAllSessions().map { sessions ->
         val nowMillis = clock.nowMillis()
         val todayMidnight = startOfDay(nowMillis)
         val windowStart = addDays(todayMidnight, -(HEATMAP_WEEKS * DAYS_PER_WEEK - 1))

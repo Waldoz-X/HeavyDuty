@@ -14,9 +14,10 @@ import com.example.heavyduty.core.domain.model.currentStreakDays
 import com.example.heavyduty.core.domain.model.displayName
 import com.example.heavyduty.core.domain.model.excludeWarmups
 import com.example.heavyduty.core.domain.repository.ExerciseRepository
+import com.example.heavyduty.core.domain.repository.TrainingHistoryRepository
 import com.example.heavyduty.core.domain.repository.TrainingReminderScheduler
+import com.example.heavyduty.core.domain.repository.TrainingStatsRepository
 import com.example.heavyduty.core.domain.repository.UserPreferencesRepository
-import com.example.heavyduty.core.domain.repository.WorkoutRepository
 import com.example.heavyduty.core.ui.components.WorkoutFeedItem
 import com.example.heavyduty.feature.profile.domain.model.ProfileStats
 import com.example.heavyduty.feature.profile.domain.model.feedSessions
@@ -67,7 +68,8 @@ class ProfileViewModel @Inject constructor(
     private val setPreferredEffortScaleUseCase: SetPreferredEffortScaleUseCase,
     private val exportBackupUseCase: ExportBackupUseCase,
     private val importBackupUseCase: ImportBackupUseCase,
-    workoutRepository: WorkoutRepository,
+    trainingHistoryRepository: TrainingHistoryRepository,
+    trainingStatsRepository: TrainingStatsRepository,
     exerciseRepository: ExerciseRepository,
     private val userPreferencesRepository: UserPreferencesRepository,
     private val reminderScheduler: TrainingReminderScheduler,
@@ -79,7 +81,7 @@ class ProfileViewModel @Inject constructor(
 
     /** Loads only while the screen is watching — see [whileSubscribed]. */
     val uiState: StateFlow<ProfileUiState> = _uiState.whileSubscribed(viewModelScope) {
-        val sessionsFlow = workoutRepository.getAllSessions()
+        val sessionsFlow = trainingHistoryRepository.getAllSessions()
         // Only the latest workouts are shown, so only their sets are read — plus, per exercise,
         // the heaviest weight lifted before them, which their sets must beat to be records.
         val feedSetsFlow = sessionsFlow
@@ -90,8 +92,8 @@ class ProfileViewModel @Inject constructor(
                     flowOf(emptyList<WorkoutSet>() to emptyMap())
                 } else {
                     combine(
-                        workoutRepository.getCompletedSetsByDateRange(since, Long.MAX_VALUE),
-                        workoutRepository.getBestWeightsBefore(since)
+                        trainingHistoryRepository.getCompletedSetsByDateRange(since, Long.MAX_VALUE),
+                        trainingStatsRepository.getBestWeightsBefore(since)
                     ) { sets, earlierBests -> sets to earlierBests }
                 }
             }

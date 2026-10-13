@@ -23,8 +23,8 @@ data class ExerciseSetSummary(
 /*
  * The functions below define what these numbers mean, over a plain list of completed sets.
  * The database answers the same questions with aggregate queries (so years of history never
- * have to be loaded into memory) and is tested against these, which stay the reference — and
- * the default WorkoutRepository implementation, used by in-memory fakes.
+ * have to be loaded into memory) and is tested against these, which stay the reference;
+ * TrainingStatsFromHistory applies them for the in-memory fakes.
  */
 
 fun exerciseSetSummaries(completedSets: List<WorkoutSet>): List<ExerciseSetSummary> =

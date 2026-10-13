@@ -1,6 +1,5 @@
 package com.example.heavyduty.feature.timer.engine
 
-import android.content.Context
 import com.example.heavyduty.feature.timer.domain.model.TimerMode
 import com.example.heavyduty.feature.timer.presentation.TimerUiEffect
 import com.example.heavyduty.feature.timer.presentation.TimerUiEvent
@@ -23,19 +22,19 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * [context] is a relaxed mock: TimerEngine only uses it to start/stop [TimerService] and to
- * vibrate on completion, neither of which this test cares about — it verifies the countdown
- * state machine itself, driven purely by virtual time via [StandardTestDispatcher].
+ * [device] is a relaxed mock: starting/stopping [TimerService] and vibrating on completion
+ * aren't what this test is about — it verifies the countdown state machine itself, driven
+ * purely by virtual time via [StandardTestDispatcher].
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class TimerEngineTest {
 
-    private val context: Context = mockk(relaxed = true)
+    private val device: TimerDevice = mockk(relaxed = true)
     private val notifications: TimerNotifications = mockk(relaxed = true)
 
     @Test
     fun `counts down every second while running`() = runTest {
-        val engine = TimerEngine(context, StandardTestDispatcher(testScheduler), notifications)
+        val engine = TimerEngine(StandardTestDispatcher(testScheduler), device, notifications)
         engine.onEvent(TimerUiEvent.OnModeSelect(TimerMode.REST))
         engine.onEvent(TimerUiEvent.OnDurationChange(10))
 
@@ -49,7 +48,7 @@ class TimerEngineTest {
 
     @Test
     fun `pausing stops the countdown without resetting remaining time`() = runTest {
-        val engine = TimerEngine(context, StandardTestDispatcher(testScheduler), notifications)
+        val engine = TimerEngine(StandardTestDispatcher(testScheduler), device, notifications)
         engine.onEvent(TimerUiEvent.OnModeSelect(TimerMode.REST))
         engine.onEvent(TimerUiEvent.OnDurationChange(10))
         engine.onEvent(TimerUiEvent.OnStartPause)
@@ -68,7 +67,7 @@ class TimerEngineTest {
 
     @Test
     fun `reset returns to the configured duration`() = runTest {
-        val engine = TimerEngine(context, StandardTestDispatcher(testScheduler), notifications)
+        val engine = TimerEngine(StandardTestDispatcher(testScheduler), device, notifications)
         engine.onEvent(TimerUiEvent.OnModeSelect(TimerMode.REST))
         engine.onEvent(TimerUiEvent.OnDurationChange(30))
         engine.onEvent(TimerUiEvent.OnStartPause)
@@ -85,7 +84,7 @@ class TimerEngineTest {
 
     @Test
     fun `finishing the only round emits TimerFinished and stops running`() = runTest {
-        val engine = TimerEngine(context, StandardTestDispatcher(testScheduler), notifications)
+        val engine = TimerEngine(StandardTestDispatcher(testScheduler), device, notifications)
         val effects = mutableListOf<TimerUiEffect>()
         backgroundScope.launch(kotlinx.coroutines.test.UnconfinedTestDispatcher(testScheduler)) {
             engine.effects.toList(effects)
@@ -103,7 +102,7 @@ class TimerEngineTest {
 
     @Test
     fun `advances to the next round instead of finishing when more rounds remain`() = runTest {
-        val engine = TimerEngine(context, StandardTestDispatcher(testScheduler), notifications)
+        val engine = TimerEngine(StandardTestDispatcher(testScheduler), device, notifications)
         val effects = mutableListOf<TimerUiEffect>()
         backgroundScope.launch { engine.effects.toList(effects) }
 
@@ -121,7 +120,7 @@ class TimerEngineTest {
 
     @Test
     fun `a rest that runs out alerts the lifter, a skipped one doesn't`() = runTest {
-        val engine = TimerEngine(context, StandardTestDispatcher(testScheduler), notifications)
+        val engine = TimerEngine(StandardTestDispatcher(testScheduler), device, notifications)
 
         engine.startRest(2)
         advanceUntilIdle()
@@ -137,7 +136,7 @@ class TimerEngineTest {
 
     @Test
     fun `a skipped workout rest gives the timer tab its own setup back`() = runTest {
-        val engine = TimerEngine(context, StandardTestDispatcher(testScheduler), notifications)
+        val engine = TimerEngine(StandardTestDispatcher(testScheduler), device, notifications)
         engine.onEvent(TimerUiEvent.OnModeSelect(TimerMode.TABATA))
 
         engine.startRest(60)
@@ -155,7 +154,7 @@ class TimerEngineTest {
 
     @Test
     fun `a workout rest that runs out also gives the setup back`() = runTest {
-        val engine = TimerEngine(context, StandardTestDispatcher(testScheduler), notifications)
+        val engine = TimerEngine(StandardTestDispatcher(testScheduler), device, notifications)
         engine.onEvent(TimerUiEvent.OnModeSelect(TimerMode.AMRAP))
 
         engine.startRest(2)
@@ -169,7 +168,7 @@ class TimerEngineTest {
 
     @Test
     fun `picking a mode during a workout rest keeps that choice`() = runTest {
-        val engine = TimerEngine(context, StandardTestDispatcher(testScheduler), notifications)
+        val engine = TimerEngine(StandardTestDispatcher(testScheduler), device, notifications)
         engine.onEvent(TimerUiEvent.OnModeSelect(TimerMode.TABATA))
         engine.startRest(60)
 

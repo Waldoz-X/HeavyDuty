@@ -7,7 +7,8 @@ import com.example.heavyduty.core.domain.model.WorkoutSession
 import com.example.heavyduty.core.domain.model.WorkoutSet
 import com.example.heavyduty.core.domain.model.WorkoutStatus
 import com.example.heavyduty.core.domain.repository.ExerciseRepository
-import com.example.heavyduty.core.domain.repository.WorkoutRepository
+import com.example.heavyduty.core.domain.repository.TrainingHistoryRepository
+import com.example.heavyduty.core.domain.repository.TrainingStatsFromHistory
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
@@ -17,14 +18,12 @@ import org.junit.Test
 
 class GetWeeklySummaryUseCaseTest {
 
-    private class FakeWorkoutRepository(private val sessions: List<WorkoutSession>, private val sets: List<WorkoutSet>) :
-        WorkoutRepository {
+    private class FakeTrainingHistoryRepository(private val sessions: List<WorkoutSession>, private val sets: List<WorkoutSet>) :
+        TrainingHistoryRepository {
         var requestedSessionRange: LongRange? = null
         var requestedSetRange: LongRange? = null
 
         override fun getAllSessions(): Flow<List<WorkoutSession>> = flowOf(sessions)
-        override fun getSessionById(id: Long): Flow<WorkoutSession?> = flowOf(null)
-        override fun getSessionWithSets(id: Long): Flow<WorkoutSession?> = flowOf(null)
         override fun getSessionsByDateRange(startTime: Long, endTime: Long): Flow<List<WorkoutSession>> {
             requestedSessionRange = startTime..endTime
             return flowOf(sessions)
@@ -36,18 +35,11 @@ class GetWeeklySummaryUseCaseTest {
             requestedSetRange = startTime..endTime
             return flowOf(sets)
         }
-        override fun getActiveSession(): Flow<WorkoutSession?> = flowOf(null)
-        override suspend fun insertSession(session: WorkoutSession): Long = 0L
-        override suspend fun updateSession(session: WorkoutSession) {}
-        override suspend fun deleteSession(session: WorkoutSession) {}
-        override suspend fun insertSet(set: WorkoutSet): Long = 0L
-        override suspend fun updateSet(set: WorkoutSet) {}
-        override suspend fun deleteSet(set: WorkoutSet) {}
     }
 
     @Test
     fun `queries sessions and sets over the whole given range`() = runBlocking {
-        val repo = FakeWorkoutRepository(emptyList(), emptyList())
+        val repo = FakeTrainingHistoryRepository(emptyList(), emptyList())
         val range = 1_000L..9_999L
 
         GetWeeklySummaryUseCase(repo)(range).first()
@@ -58,7 +50,7 @@ class GetWeeklySummaryUseCaseTest {
 
     @Test
     fun `sets of an unfinished workout do not count`() = runBlocking {
-        val repo = FakeWorkoutRepository(
+        val repo = FakeTrainingHistoryRepository(
             sessions = listOf(
                 WorkoutSession(id = 1, totalDurationSecs = 1800, status = WorkoutStatus.COMPLETED),
                 WorkoutSession(id = 2, status = WorkoutStatus.IN_PROGRESS)
@@ -79,7 +71,7 @@ class GetWeeklySummaryUseCaseTest {
 
     @Test
     fun `recent workout is the last completed one, ignoring the one in progress`() = runBlocking {
-        val repo = FakeWorkoutRepository(
+        val repo = FakeTrainingHistoryRepository(
             sessions = listOf(
                 WorkoutSession(id = 1, endTime = 1_000L, status = WorkoutStatus.COMPLETED),
                 WorkoutSession(id = 2, endTime = 5_000L, status = WorkoutStatus.COMPLETED),
@@ -88,7 +80,7 @@ class GetWeeklySummaryUseCaseTest {
             sets = emptyList()
         )
 
-        assertEquals(2L, GetRecentWorkoutUseCase(repo)().first()?.id)
+        assertEquals(2L, GetRecentWorkoutUseCase(TrainingStatsFromHistory(repo))().first()?.id)
     }
 
     private class FakeExerciseRepository(private val exercises: List<Exercise>) : ExerciseRepository {
@@ -105,7 +97,7 @@ class GetWeeklySummaryUseCaseTest {
     @Test
     fun `radar only counts sets of finished workouts, like the weekly volume`() = runBlocking {
         val bench = Exercise(id = 10, name = "Bench", muscleGroup = MuscleGroup.CHEST, exerciseType = ExerciseType.STRENGTH)
-        val repo = FakeWorkoutRepository(
+        val repo = FakeTrainingHistoryRepository(
             sessions = listOf(
                 WorkoutSession(id = 1, status = WorkoutStatus.COMPLETED),
                 WorkoutSession(id = 2, status = WorkoutStatus.IN_PROGRESS)

@@ -4,7 +4,7 @@ import com.example.heavyduty.core.domain.model.MuscleGroup
 import com.example.heavyduty.core.domain.model.excludeWarmups
 import com.example.heavyduty.core.domain.model.muscleCredits
 import com.example.heavyduty.core.domain.repository.ExerciseRepository
-import com.example.heavyduty.core.domain.repository.WorkoutRepository
+import com.example.heavyduty.core.domain.repository.TrainingHistoryRepository
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -18,11 +18,11 @@ import kotlinx.coroutines.flow.flowOn
  * secondaries) instead of one whole set for its primary muscle alone, per [muscleCredits].
  */
 class GetMuscleGroupSetCountUseCase @Inject constructor(
-    private val workoutRepository: WorkoutRepository,
+    private val trainingHistoryRepository: TrainingHistoryRepository,
     private val exerciseRepository: ExerciseRepository
 ) {
     operator fun invoke(startTime: Long, endTime: Long): Flow<Map<MuscleGroup, Float>> = combine(
-        workoutRepository.getCompletedSetsByDateRange(startTime, endTime),
+        trainingHistoryRepository.getCompletedSetsByDateRange(startTime, endTime),
         exerciseRepository.getAllExercises()
     ) { sets, exercises ->
         val exerciseById = exercises.associateBy { it.id }

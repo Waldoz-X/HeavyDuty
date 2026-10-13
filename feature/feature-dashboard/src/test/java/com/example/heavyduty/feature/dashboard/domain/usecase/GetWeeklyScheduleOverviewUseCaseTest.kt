@@ -7,7 +7,7 @@ import com.example.heavyduty.core.domain.model.WorkoutStatus
 import com.example.heavyduty.core.testing.FakeCalendarRepository
 import com.example.heavyduty.core.testing.FakeClock
 import com.example.heavyduty.core.testing.FakeRoutineRepository
-import com.example.heavyduty.core.testing.FakeWorkoutRepository
+import com.example.heavyduty.core.testing.FakeTrainingHistoryRepository
 import com.example.heavyduty.feature.dashboard.domain.model.DayStatus
 import java.time.LocalDate
 import java.time.LocalTime
@@ -37,7 +37,7 @@ class GetWeeklyScheduleOverviewUseCaseTest {
             CalendarEntry(id = 6, routineId = 99, dayOfWeek = 7) // Sun: a routine that was deleted
         )
     )
-    private val workouts = FakeWorkoutRepository(
+    private val workouts = FakeTrainingHistoryRepository(
         listOf(
             WorkoutSession(id = 1, routineId = 10, startTime = millis(thursday.minusDays(3)), status = WorkoutStatus.COMPLETED),
             WorkoutSession(id = 2, routineId = 10, startTime = millis(thursday, hour = 7), status = WorkoutStatus.COMPLETED),

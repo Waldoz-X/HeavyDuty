@@ -7,7 +7,7 @@ import com.example.heavyduty.core.data.database.entity.ExerciseEntity
 import com.example.heavyduty.core.data.database.entity.WorkoutSessionEntity
 import com.example.heavyduty.core.data.database.entity.WorkoutSetEntity
 import com.example.heavyduty.core.data.database.mapper.toDomain
-import com.example.heavyduty.core.data.repository.WorkoutRepositoryImpl
+import com.example.heavyduty.core.data.repository.TrainingStatsRepositoryImpl
 import com.example.heavyduty.core.domain.model.bestWeightsBefore
 import com.example.heavyduty.core.domain.model.exerciseSetSummaries
 import com.example.heavyduty.core.domain.model.lastHardSetAtByExercise
@@ -31,12 +31,12 @@ import org.junit.runner.RunWith
 class TrainingAggregatesTest {
 
     private lateinit var db: HeavyDutyDatabase
-    private lateinit var repository: WorkoutRepositoryImpl
+    private lateinit var repository: TrainingStatsRepositoryImpl
 
     @Before
     fun setUp() = runTest {
         db = Room.inMemoryDatabaseBuilder(InstrumentationRegistry.getInstrumentation().targetContext, HeavyDutyDatabase::class.java).build()
-        repository = WorkoutRepositoryImpl(db.workoutDao())
+        repository = TrainingStatsRepositoryImpl(db.workoutDao())
         val dao = db.workoutDao()
         val bench = db.exerciseDao().insertExercise(ExerciseEntity(name = "Banca", muscleGroup = "CHEST", exerciseType = "STRENGTH"))
         val squat = db.exerciseDao().insertExercise(

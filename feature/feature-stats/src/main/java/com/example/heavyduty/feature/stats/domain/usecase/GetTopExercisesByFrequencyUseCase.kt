@@ -2,7 +2,7 @@ package com.example.heavyduty.feature.stats.domain.usecase
 
 import com.example.heavyduty.core.domain.model.displayName
 import com.example.heavyduty.core.domain.repository.ExerciseRepository
-import com.example.heavyduty.core.domain.repository.WorkoutRepository
+import com.example.heavyduty.core.domain.repository.TrainingStatsRepository
 import com.example.heavyduty.feature.stats.domain.model.ExerciseFrequency
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
@@ -15,11 +15,11 @@ import kotlinx.coroutines.flow.flowOn
  * Ranks exercises by how many sets have been logged for them, all-time.
  */
 class GetTopExercisesByFrequencyUseCase @Inject constructor(
-    private val workoutRepository: WorkoutRepository,
+    private val trainingStatsRepository: TrainingStatsRepository,
     private val exerciseRepository: ExerciseRepository
 ) {
     operator fun invoke(): Flow<List<ExerciseFrequency>> = combine(
-        workoutRepository.getExerciseSetSummaries(),
+        trainingStatsRepository.getExerciseSetSummaries(),
         exerciseRepository.getAllExercises()
     ) { summaries, exercises ->
         val exerciseById = exercises.associateBy { it.id }

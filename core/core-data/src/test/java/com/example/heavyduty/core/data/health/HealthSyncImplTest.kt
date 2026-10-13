@@ -35,7 +35,7 @@ class HealthSyncImplTest {
     private val settings = FakeSettings()
     private val workouts = FakeWorkoutRepository(listOf(finished, inProgress, zeroLength))
     private val bodyWeights = FakeBodyWeightRepository()
-    private val sync = HealthSyncImpl(healthConnect, settings, workouts, bodyWeights, FakeClock(now))
+    private val sync = HealthSyncImpl(healthConnect, settings, workouts, workouts.history, bodyWeights, FakeClock(now))
 
     @Test
     fun `connecting sends the finished workouts and brings the weigh-ins`() = runTest {

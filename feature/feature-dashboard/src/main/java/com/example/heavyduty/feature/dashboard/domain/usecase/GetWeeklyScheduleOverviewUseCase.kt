@@ -4,7 +4,7 @@ import com.example.heavyduty.core.domain.model.Clock
 import com.example.heavyduty.core.domain.model.WorkoutStatus
 import com.example.heavyduty.core.domain.repository.CalendarRepository
 import com.example.heavyduty.core.domain.repository.RoutineRepository
-import com.example.heavyduty.core.domain.repository.WorkoutRepository
+import com.example.heavyduty.core.domain.repository.TrainingHistoryRepository
 import com.example.heavyduty.feature.dashboard.domain.model.DayPlanUi
 import com.example.heavyduty.feature.dashboard.domain.model.DayStatus
 import com.example.heavyduty.feature.dashboard.domain.model.PlannedRoutineUi
@@ -26,13 +26,13 @@ import kotlinx.coroutines.flow.combine
 class GetWeeklyScheduleOverviewUseCase @Inject constructor(
     private val calendarRepository: CalendarRepository,
     private val routineRepository: RoutineRepository,
-    private val workoutRepository: WorkoutRepository,
+    private val trainingHistoryRepository: TrainingHistoryRepository,
     private val clock: Clock
 ) {
     operator fun invoke(weekOffset: Int = 0): Flow<List<DayPlanUi>> = combine(
         calendarRepository.getWeekSchedule(),
         routineRepository.getAllRoutines(),
-        workoutRepository.getAllSessions()
+        trainingHistoryRepository.getAllSessions()
     ) { schedule, routines, sessions ->
         val routineById = routines.associateBy { it.id }
         // Read on every update, so the plan rolls over at midnight.

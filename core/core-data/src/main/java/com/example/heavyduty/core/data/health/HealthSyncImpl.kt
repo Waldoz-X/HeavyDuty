@@ -9,6 +9,7 @@ import com.example.heavyduty.core.domain.model.WorkoutSession
 import com.example.heavyduty.core.domain.model.WorkoutStatus
 import com.example.heavyduty.core.domain.repository.BodyWeightRepository
 import com.example.heavyduty.core.domain.repository.HealthSync
+import com.example.heavyduty.core.domain.repository.TrainingHistoryRepository
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -24,6 +25,7 @@ internal class HealthSyncImpl @Inject constructor(
     private val source: HealthConnectSource,
     private val settings: HealthConnectSettings,
     private val workoutRepository: WorkoutRepository,
+    private val trainingHistoryRepository: TrainingHistoryRepository,
     private val bodyWeightRepository: BodyWeightRepository,
     private val clock: Clock
 ) : HealthSync {
@@ -73,7 +75,7 @@ internal class HealthSyncImpl @Inject constructor(
         if (settings.enabled.first() && status() == HealthConnectStatus.AVAILABLE) source.grantedPermissions() else emptySet()
 
     private suspend fun exportAllWorkouts(): Int {
-        val workouts = workoutRepository.getAllSessions().first().filter { it.isExportable() }
+        val workouts = trainingHistoryRepository.getAllSessions().first().filter { it.isExportable() }
         source.upsertWorkouts(workouts)
         return workouts.size
     }

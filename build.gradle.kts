@@ -47,13 +47,11 @@ subprojects {
     }
 }
 
-// Static analysis for the whole repo: ./gradlew detekt. Findings that predate it are recorded in
-// config/detekt/baseline.xml so the build stays green while new code is held to the rules; the
-// baseline shrinks as that code is cleaned up (regenerate with ./gradlew detektBaseline).
+// Static analysis for the whole repo: ./gradlew detekt. There's no baseline: every finding
+// fails the build, so fix it, or suppress it where it is with a comment saying why.
 detekt {
     buildUponDefaultConfig = true
     config.setFrom(rootProject.file("config/detekt/detekt.yml"))
-    baseline = rootProject.file("config/detekt/baseline.xml")
     parallel = true
     source.setFrom(
         fileTree(rootDir) {

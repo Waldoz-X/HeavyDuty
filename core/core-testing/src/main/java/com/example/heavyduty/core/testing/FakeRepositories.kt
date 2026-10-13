@@ -17,6 +17,8 @@ import com.example.heavyduty.core.domain.repository.BodyWeightRepository
 import com.example.heavyduty.core.domain.repository.CalendarRepository
 import com.example.heavyduty.core.domain.repository.ExerciseRepository
 import com.example.heavyduty.core.domain.repository.RoutineRepository
+import com.example.heavyduty.core.domain.repository.TrainingHistoryRepository
+import com.example.heavyduty.core.domain.repository.TrainingStatsFromHistory
 import com.example.heavyduty.core.domain.repository.UserPreferencesRepository
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
 import kotlinx.coroutines.flow.Flow
@@ -36,33 +38,13 @@ class FakeWorkoutRepository(sessions: List<WorkoutSession> = emptyList(), sets: 
     val sessions = MutableStateFlow(sessions)
     val sets = MutableStateFlow(sets)
 
-    /** Logged sets of finished workouts (WorkoutDao.getAllCompletedSets). */
-    private fun counted(sessions: List<WorkoutSession>, sets: List<WorkoutSet>): List<Pair<WorkoutSet, WorkoutSession>> {
-        val byId = sessions.associateBy { it.id }
-        return sets.mapNotNull { set ->
-            val session = byId[set.sessionId]?.takeIf { it.status == WorkoutStatus.COMPLETED } ?: return@mapNotNull null
-            if (set.isCompleted) set to session else null
-        }
-    }
+    /** The same workouts, as the history and stats screens read them. */
+    val history = FakeTrainingHistoryRepository(this.sessions, this.sets)
+    val stats = TrainingStatsFromHistory(history)
 
-    private val both = combine(this.sessions, this.sets) { a, b -> a to b }
-
-    override fun getAllSessions(): Flow<List<WorkoutSession>> = sessions.map { list -> list.sortedByDescending { it.startTime } }
     override fun getSessionById(id: Long): Flow<WorkoutSession?> = sessions.map { list -> list.firstOrNull { it.id == id } }
     override fun getSessionWithSets(id: Long): Flow<WorkoutSession?> =
-        both.map { (s, sets) -> s.firstOrNull { it.id == id }?.copy(sets = sets.filter { it.sessionId == id }) }
-    override fun getSessionsByDateRange(startTime: Long, endTime: Long) =
-        sessions.map { list -> list.filter { it.startTime in startTime..endTime }.sortedByDescending { it.startTime } }
-    override fun getCompletedSessionsByRoutineId(routineId: Long) =
-        sessions.map { list -> list.filter { it.routineId == routineId && it.status == WorkoutStatus.COMPLETED }.sortedBy { it.startTime } }
-    override fun getSetsByExerciseId(exerciseId: Long) =
-        sets.map { list -> list.filter { it.exerciseId == exerciseId }.sortedByDescending { it.completedAt } }
-    override fun getAllCompletedSets() = both.map { (s, sets) -> counted(s, sets).map { it.first } }
-
-    /** A set belongs to the period its workout started in (WorkoutDao.getCompletedSetsByDateRange). */
-    override fun getCompletedSetsByDateRange(startTime: Long, endTime: Long) =
-        both.map { (s, sets) -> counted(s, sets).filter { it.second.startTime in startTime..endTime }.map { it.first } }
-
+        combine(sessions, sets) { s, sets -> s.firstOrNull { it.id == id }?.copy(sets = sets.filter { it.sessionId == id }) }
     override fun getActiveSession() =
         sessions.map { list -> list.filter { it.status == WorkoutStatus.IN_PROGRESS }.maxByOrNull { it.startTime } }
 
@@ -93,6 +75,37 @@ class FakeWorkoutRepository(sessions: List<WorkoutSession> = emptyList(), sets: 
     }
     override suspend fun updateSet(set: WorkoutSet) = sets.update { list -> list.map { if (it.id == set.id) set else it } }
     override suspend fun deleteSet(set: WorkoutSet) = sets.update { list -> list.filter { it.id != set.id } }
+}
+
+/** Reads the workouts of a [FakeWorkoutRepository] (its [FakeWorkoutRepository.history]), or of the lists given. */
+class FakeTrainingHistoryRepository(val sessions: MutableStateFlow<List<WorkoutSession>>, val sets: MutableStateFlow<List<WorkoutSet>>) :
+    TrainingHistoryRepository {
+    constructor(sessions: List<WorkoutSession> = emptyList(), sets: List<WorkoutSet> = emptyList()) :
+        this(MutableStateFlow(sessions), MutableStateFlow(sets))
+
+    /** Logged sets of finished workouts (WorkoutDao.getAllCompletedSets). */
+    private fun counted(sessions: List<WorkoutSession>, sets: List<WorkoutSet>): List<Pair<WorkoutSet, WorkoutSession>> {
+        val byId = sessions.associateBy { it.id }
+        return sets.mapNotNull { set ->
+            val session = byId[set.sessionId]?.takeIf { it.status == WorkoutStatus.COMPLETED } ?: return@mapNotNull null
+            if (set.isCompleted) set to session else null
+        }
+    }
+
+    private val both = combine(this.sessions, this.sets) { a, b -> a to b }
+
+    override fun getAllSessions(): Flow<List<WorkoutSession>> = sessions.map { list -> list.sortedByDescending { it.startTime } }
+    override fun getSessionsByDateRange(startTime: Long, endTime: Long) =
+        sessions.map { list -> list.filter { it.startTime in startTime..endTime }.sortedByDescending { it.startTime } }
+    override fun getCompletedSessionsByRoutineId(routineId: Long) =
+        sessions.map { list -> list.filter { it.routineId == routineId && it.status == WorkoutStatus.COMPLETED }.sortedBy { it.startTime } }
+    override fun getSetsByExerciseId(exerciseId: Long) =
+        sets.map { list -> list.filter { it.exerciseId == exerciseId }.sortedByDescending { it.completedAt } }
+    override fun getAllCompletedSets() = both.map { (s, sets) -> counted(s, sets).map { it.first } }
+
+    /** A set belongs to the period its workout started in (WorkoutDao.getCompletedSetsByDateRange). */
+    override fun getCompletedSetsByDateRange(startTime: Long, endTime: Long) =
+        both.map { (s, sets) -> counted(s, sets).filter { it.second.startTime in startTime..endTime }.map { it.first } }
 }
 
 class FakeExerciseRepository(exercises: List<Exercise> = emptyList()) : ExerciseRepository {

@@ -1,12 +1,5 @@
 package com.example.heavyduty.feature.timer.engine
 
-import android.content.Context
-import android.content.Intent
-import android.os.Build
-import android.os.VibrationEffect
-import android.os.Vibrator
-import android.os.VibratorManager
-import androidx.core.content.ContextCompat
 import com.example.heavyduty.core.common.dispatchers.DefaultDispatcher
 import com.example.heavyduty.core.domain.repository.RestTimerController
 import com.example.heavyduty.core.domain.repository.RestTimerState
@@ -16,7 +9,6 @@ import com.example.heavyduty.feature.timer.presentation.TimerUiEvent
 import com.example.heavyduty.feature.timer.presentation.TimerUiState
 import com.example.heavyduty.feature.timer.service.TimerNotifications
 import com.example.heavyduty.feature.timer.service.TimerService
-import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.time.Duration.Companion.seconds
@@ -45,8 +37,8 @@ import kotlinx.coroutines.launch
  */
 @Singleton
 class TimerEngine @Inject constructor(
-    @param:ApplicationContext private val context: Context,
     @param:DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher,
+    private val device: TimerDevice,
     private val notifications: TimerNotifications
 ) : RestTimerController {
     private val engineScope = CoroutineScope(SupervisorJob() + defaultDispatcher)
@@ -114,7 +106,7 @@ class TimerEngine @Inject constructor(
                 isRunning = true
             )
         }
-        startService()
+        device.startService()
         startCountDown()
     }
 
@@ -164,7 +156,7 @@ class TimerEngine @Inject constructor(
                 rounds = defaultRounds
             )
         }
-        stopService()
+        device.stopService()
     }
 
     private fun toggleStartPause() {
@@ -174,7 +166,7 @@ class TimerEngine @Inject constructor(
             _state.update { it.copy(isRunning = false, isPaused = true) }
         } else {
             _state.update { it.copy(isRunning = true, isPaused = false) }
-            startService()
+            device.startService()
             when (current.mode) {
                 TimerMode.STOPWATCH -> startCountUp()
                 else -> startCountDown()
@@ -203,16 +195,16 @@ class TimerEngine @Inject constructor(
                             remainingSeconds = it.totalSeconds
                         )
                     }
-                    vibrate()
+                    device.vibrate()
                     startCountDown()
                 } else {
                     _state.update { it.copy(isRunning = false) }
-                    vibrate()
+                    device.vibrate()
                     _effects.emit(TimerUiEffect.TimerFinished)
                     // Only a rest that ran out — skipping one means the lifter is already on it.
                     if (current.mode == TimerMode.REST) notifications.notifyRestFinished()
                     restoreSetupAfterWorkoutRest()
-                    stopService()
+                    device.stopService()
                 }
             }
         }
@@ -232,48 +224,15 @@ class TimerEngine @Inject constructor(
         tickJob?.cancel()
         _state.update { it.asIdleSetup() }
         restoreSetupAfterWorkoutRest()
-        stopService()
-    }
-
-    /** The same timer, stopped and back at its start (full duration, round 1). */
-    private fun TimerUiState.asIdleSetup(): TimerUiState = copy(
-        remainingSeconds = totalSeconds,
-        elapsedSeconds = 0,
-        isRunning = false,
-        isPaused = false,
-        currentRound = 1
-    )
-
-    private fun startService() {
-        runCatching {
-            ContextCompat.startForegroundService(context, Intent(context, TimerService::class.java))
-        }
-    }
-
-    private fun stopService() {
-        runCatching {
-            context.stopService(Intent(context, TimerService::class.java))
-        }
-    }
-
-    @android.annotation.SuppressLint("MissingPermission")
-    private fun vibrate() {
-        runCatching {
-            val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                val manager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager
-                manager?.defaultVibrator
-            } else {
-                @Suppress("DEPRECATION")
-                context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                vibrator?.vibrate(VibrationEffect.createOneShot(VIBRATION_MILLIS, VibrationEffect.DEFAULT_AMPLITUDE))
-            } else {
-                @Suppress("DEPRECATION")
-                vibrator?.vibrate(VIBRATION_MILLIS)
-            }
-        }
+        device.stopService()
     }
 }
 
-private const val VIBRATION_MILLIS = 300L
+/** The same timer, stopped and back at its start (full duration, round 1). */
+private fun TimerUiState.asIdleSetup(): TimerUiState = copy(
+    remainingSeconds = totalSeconds,
+    elapsedSeconds = 0,
+    isRunning = false,
+    isPaused = false,
+    currentRound = 1
+)

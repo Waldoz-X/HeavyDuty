@@ -7,6 +7,7 @@ import com.example.heavyduty.core.domain.model.Clock
 import com.example.heavyduty.core.domain.model.pendingRoutinesOn
 import com.example.heavyduty.core.domain.repository.CalendarRepository
 import com.example.heavyduty.core.domain.repository.RoutineRepository
+import com.example.heavyduty.core.domain.repository.TrainingHistoryRepository
 import com.example.heavyduty.core.domain.repository.TrainingReminderScheduler
 import com.example.heavyduty.core.domain.repository.UserPreferencesRepository
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
@@ -34,6 +35,8 @@ class TrainingReminderReceiver : BroadcastReceiver() {
 
     @Inject lateinit var workoutRepository: WorkoutRepository
 
+    @Inject lateinit var trainingHistoryRepository: TrainingHistoryRepository
+
     @Inject lateinit var scheduler: TrainingReminderScheduler
 
     @Inject lateinit var notifications: TrainingReminderNotifications
@@ -51,7 +54,7 @@ class TrainingReminderReceiver : BroadcastReceiver() {
                         date = today,
                         schedule = calendarRepository.getWeekSchedule().first(),
                         routines = routineRepository.getAllRoutines().first(),
-                        sessions = workoutRepository.getAllSessions().first()
+                        sessions = trainingHistoryRepository.getAllSessions().first()
                     )
                     if (due.isNotEmpty()) notifications.show(due)
                 }

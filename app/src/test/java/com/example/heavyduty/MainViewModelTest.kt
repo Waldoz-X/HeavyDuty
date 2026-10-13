@@ -58,6 +58,7 @@ class MainViewModelTest {
         return MainViewModel(
             userPreferences = preferences,
             workoutRepository = repository,
+            trainingHistoryRepository = repository.history,
             routineRepository = FakeRoutineRepository(),
             storedDataCheck = StoredDataCheck { true },
             restTimerController = restTimer,
@@ -162,6 +163,7 @@ class MainViewModelTest {
         return MainViewModel(
             userPreferences = preferences,
             workoutRepository = repository,
+            trainingHistoryRepository = repository.history,
             routineRepository = FakeRoutineRepository(routines),
             storedDataCheck = StoredDataCheck { databaseExisted },
             restTimerController = restTimer,
@@ -190,6 +192,7 @@ class MainViewModelTest {
         val viewModel = MainViewModel(
             userPreferences = preferences,
             workoutRepository = repository,
+            trainingHistoryRepository = repository.history,
             routineRepository = FakeRoutineRepository(),
             storedDataCheck = StoredDataCheck { false },
             restTimerController = restTimer,

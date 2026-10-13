@@ -4,7 +4,7 @@ import com.example.heavyduty.core.domain.model.MuscleGroup
 import com.example.heavyduty.core.domain.model.countedFor
 import com.example.heavyduty.core.domain.model.muscleCredits
 import com.example.heavyduty.core.domain.repository.ExerciseRepository
-import com.example.heavyduty.core.domain.repository.WorkoutRepository
+import com.example.heavyduty.core.domain.repository.TrainingHistoryRepository
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -16,12 +16,12 @@ import kotlinx.coroutines.flow.distinctUntilChanged
  * weekly volume total (see [countedFor]), so a workout still in progress doesn't show up yet.
  */
 class GetWeeklyMuscleVolumeUseCase @Inject constructor(
-    private val workoutRepository: WorkoutRepository,
+    private val trainingHistoryRepository: TrainingHistoryRepository,
     private val exerciseRepository: ExerciseRepository
 ) {
     operator fun invoke(startTime: Long, endTime: Long): Flow<Map<MuscleGroup, Float>> = combine(
-        workoutRepository.getSessionsByDateRange(startTime, endTime),
-        workoutRepository.getCompletedSetsByDateRange(startTime, endTime),
+        trainingHistoryRepository.getSessionsByDateRange(startTime, endTime),
+        trainingHistoryRepository.getCompletedSetsByDateRange(startTime, endTime),
         exerciseRepository.getAllExercises()
     ) { sessions, sets, exercises ->
         val exerciseById = exercises.associateBy { it.id }

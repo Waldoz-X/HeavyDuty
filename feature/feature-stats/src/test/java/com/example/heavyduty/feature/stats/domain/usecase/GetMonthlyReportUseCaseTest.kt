@@ -4,7 +4,7 @@ import com.example.heavyduty.core.domain.model.MuscleGroup
 import com.example.heavyduty.core.domain.model.WorkoutStatus
 import com.example.heavyduty.core.testing.FakeClock
 import com.example.heavyduty.core.testing.FakeExerciseRepository
-import com.example.heavyduty.core.testing.FakeWorkoutRepository
+import com.example.heavyduty.core.testing.FakeTrainingHistoryRepository
 import java.util.Calendar
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -45,7 +45,11 @@ class GetMonthlyReportUseCaseTest {
         sessions: List<com.example.heavyduty.core.domain.model.WorkoutSession> = this.sessions,
         sets: List<com.example.heavyduty.core.domain.model.WorkoutSet> = this.sets
     ) = runBlocking {
-        GetMonthlyReportUseCase(FakeWorkoutRepository(sessions, sets), FakeExerciseRepository(EXERCISES), FakeClock(reference))().first()
+        GetMonthlyReportUseCase(
+            FakeTrainingHistoryRepository(sessions, sets),
+            FakeExerciseRepository(EXERCISES),
+            FakeClock(reference)
+        )().first()
     }
 
     @Test
