@@ -65,40 +65,8 @@ fun ActiveWorkoutBar(workout: ActiveWorkoutSummary, onClick: () -> Unit, modifie
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.FitnessCenter,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = stringResource(R.string.active_workout_bar_label),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Text(
-                    text = pluralStringResource(
-                        R.plurals.active_workout_bar_sets,
-                        workout.setsLogged,
-                        workout.sessionName,
-                        workout.setsLogged
-                    ),
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
+            WorkoutBarIcon()
+            WorkoutBarText(workout = workout, modifier = Modifier.weight(1f))
             // Swaps between the session clock and the rest countdown with a quick crossfade.
             AnimatedContent(
                 targetState = workout.rest != null,
@@ -117,6 +85,44 @@ fun ActiveWorkoutBar(workout: ActiveWorkoutSummary, onClick: () -> Unit, modifie
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
+    }
+}
+
+@Composable
+private fun WorkoutBarIcon(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .size(36.dp)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.primary),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = Icons.Default.FitnessCenter,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onPrimary,
+            modifier = Modifier.size(20.dp)
+        )
+    }
+}
+
+/** "Entrenamiento en curso", then "Torso · 3 series". */
+@Composable
+private fun WorkoutBarText(workout: ActiveWorkoutSummary, modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {
+        Text(
+            text = stringResource(R.string.active_workout_bar_label),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.primary
+        )
+        Text(
+            text = pluralStringResource(R.plurals.active_workout_bar_sets, workout.setsLogged, workout.sessionName, workout.setsLogged),
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }
 

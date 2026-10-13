@@ -2,11 +2,7 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>CyclomaticComplexMethod:MainActivity.kt:@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class) @Composable private fun HeavyDutyMainScreen</ID>
     <ID>CyclomaticComplexMethod:SeedData.kt:SeedData$suspend fun populateExercises</ID>
-    <ID>LongMethod:ActiveWorkoutBar.kt:@Composable fun ActiveWorkoutBar</ID>
-    <ID>LongMethod:HeavyDutyNavHost.kt:@Composable fun HeavyDutyNavHost</ID>
-    <ID>LongMethod:MainActivity.kt:@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class) @Composable private fun HeavyDutyMainScreen</ID>
     <ID>LongMethod:SeedData.kt:SeedData$suspend fun populateExercises</ID>
     <ID>TooManyFunctions:ActiveWorkoutViewModel.kt:ActiveWorkoutViewModel : ViewModel</ID>
     <ID>TooManyFunctions:FakeRepositories.kt:FakeWorkoutRepository : WorkoutRepository</ID>

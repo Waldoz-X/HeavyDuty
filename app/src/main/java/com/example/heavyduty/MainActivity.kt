@@ -75,7 +75,9 @@ import androidx.compose.ui.unit.sp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.heavyduty.core.common.R
@@ -224,6 +226,107 @@ private fun HeavyDutyMainScreen(activeWorkout: ActiveWorkoutSummary?, pendingSec
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val coroutineScope = rememberCoroutineScope()
 
+    OpenPendingSection(pendingSection = pendingSection, navController = navController, onSectionOpen = onSectionOpen)
+
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            AppDrawerContent(
+                isSelected = { destination -> currentDestination?.hierarchy?.any { it.route == destination.route } == true },
+                onNavigate = { destination ->
+                    coroutineScope.launch { drawerState.close() }
+                    navController.navigateToTopLevel(destination.route)
+                }
+            )
+        }
+    ) {
+        MainChrome(
+            navController = navController,
+            currentDestination = currentDestination,
+            activeWorkout = activeWorkout,
+            onOpenMenu = { coroutineScope.launch { drawerState.open() } }
+        )
+    }
+}
+
+/** Top bar, bottom bar (or the side rail in landscape) and the workout shortcut around the screens. */
+@OptIn(ExperimentalSharedTransitionApi::class)
+@Composable
+private fun MainChrome(
+    navController: NavHostController,
+    currentDestination: NavDestination?,
+    activeWorkout: ActiveWorkoutSummary?,
+    onOpenMenu: () -> Unit
+) {
+    val currentRouteHasOwnTopBar = currentDestination?.route?.let { it in ROUTES_WITH_OWN_TOP_BAR } ?: false
+    // A phone on its side: the top bar, workout bar and bottom navigation together left a
+    // strip of content, so navigation moves to a rail at the side instead.
+    val compactHeight = isCompactHeight()
+    val isSelected: (TopLevelDestination) -> Boolean = { currentDestination.isIn(it) }
+    val navigate: (TopLevelDestination) -> Unit = { navController.navigateToTopLevel(it.route) }
+    val openWorkout = { navController.navigateToTopLevel(TopLevelDestination.WORKOUT.route) }
+    // The workout screen shows the session itself; everywhere else a shortcut leads back.
+    val onWorkoutScreen = currentDestination?.route?.startsWith(TopLevelDestination.WORKOUT.route) == true
+    val showWorkoutShortcut = activeWorkout != null && !onWorkoutScreen
+    // Keeps drawing the last workout while the shortcut animates out after finishing it.
+    var shownWorkout by remember { mutableStateOf(activeWorkout) }
+    if (activeWorkout != null) shownWorkout = activeWorkout
+    // The rail already sits clear of the cutout on its side; screens mustn't pad for it again.
+    val railSide = if (compactHeight) WindowInsets.safeDrawing.only(WindowInsetsSides.Start) else WindowInsets(0)
+
+    Row(modifier = Modifier.fillMaxSize()) {
+        if (compactHeight) {
+            HeavyDutyNavigationRail(
+                isSelected = isSelected,
+                onNavigate = navigate,
+                onOpenMenu = onOpenMenu,
+                workout = shownWorkout,
+                showWorkout = showWorkoutShortcut,
+                onOpenWorkout = openWorkout
+            )
+        }
+        Scaffold(
+            modifier = Modifier
+                .weight(1f)
+                .consumeWindowInsets(railSide),
+            topBar = {
+                // In landscape the menu lives in the rail, and the bar's height is worth more as content.
+                if (!currentRouteHasOwnTopBar && !compactHeight) MainTopBar(onOpenMenu = onOpenMenu)
+            },
+            contentWindowInsets = scaffoldContentInsets(routeHasOwnTopBar = currentRouteHasOwnTopBar, compactHeight = compactHeight),
+            bottomBar = {
+                if (!compactHeight) {
+                    MainBottomBar(
+                        workout = shownWorkout,
+                        showWorkout = showWorkoutShortcut,
+                        onOpenWorkout = openWorkout,
+                        isSelected = isSelected,
+                        onNavigate = navigate
+                    )
+                }
+            }
+        ) { innerPadding ->
+            // Lets screens share elements across navigation (see core.ui.hdSharedBounds).
+            // Consumed as well as applied, so screens with their own Scaffold don't pad for the
+            // same insets again (in landscape that left a cutout-wide gap beside the rail).
+            SharedTransitionLayout(modifier = Modifier.padding(innerPadding).consumeWindowInsets(innerPadding)) {
+                CompositionLocalProvider(LocalSharedTransitionScope provides this) {
+                    HeavyDutyNavHost(navController = navController)
+                }
+            }
+        }
+    }
+}
+
+/** Whether this screen belongs to [destination]'s section (its tab, or something pushed from it). */
+private fun NavDestination?.isIn(destination: TopLevelDestination): Boolean {
+    val route = this?.route ?: return false
+    return destination.associatedRoutes.any { route.startsWith(it) }
+}
+
+/** Opens the section a notification or shortcut asked for, once, then reports it handled. */
+@Composable
+private fun OpenPendingSection(pendingSection: String?, navController: NavHostController, onSectionOpen: () -> Unit) {
     val currentOnSectionOpen by rememberUpdatedState(onSectionOpen)
     LaunchedEffect(pendingSection) {
         when (pendingSection) {
@@ -238,137 +341,80 @@ private fun HeavyDutyMainScreen(activeWorkout: ActiveWorkoutSummary?, pendingSec
         }
         currentOnSectionOpen()
     }
+}
 
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        drawerContent = {
-            ModalDrawerSheet {
-                Text(
-                    text = "HeavyDuty",
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(16.dp)
-                )
-                HorizontalDivider()
-                DrawerDestination.entries.forEach { destination ->
-                    val selected = currentDestination?.hierarchy?.any {
-                        it.route == destination.route
-                    } == true
-
-                    NavigationDrawerItem(
-                        icon = { Icon(imageVector = destination.icon, contentDescription = null) },
-                        label = { Text(text = stringResource(destination.labelRes)) },
-                        selected = selected,
-                        onClick = {
-                            coroutineScope.launch { drawerState.close() }
-                            navController.navigateToTopLevel(destination.route)
-                        },
-                        modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-                    )
-                }
-            }
-        }
-    ) {
-        val currentRouteHasOwnTopBar = currentDestination?.route?.let { it in ROUTES_WITH_OWN_TOP_BAR } ?: false
-        // A phone on its side: the top bar, workout bar and bottom navigation together left a
-        // strip of content, so navigation moves to a rail at the side instead.
-        val compactHeight = isCompactHeight()
-        val isSelected: (TopLevelDestination) -> Boolean = { destination ->
-            currentDestination?.route?.let { currentRoute ->
-                destination.associatedRoutes.any { associated -> currentRoute.startsWith(associated) }
-            } == true
-        }
-        val navigate: (TopLevelDestination) -> Unit = { navController.navigateToTopLevel(it.route) }
-        val openWorkout = { navController.navigateToTopLevel(TopLevelDestination.WORKOUT.route) }
-        val openMenu: () -> Unit = { coroutineScope.launch { drawerState.open() } }
-        // The workout screen shows the session itself; everywhere else a shortcut leads back.
-        val onWorkoutScreen = currentDestination?.route?.startsWith(TopLevelDestination.WORKOUT.route) == true
-        val showWorkoutShortcut = activeWorkout != null && !onWorkoutScreen
-        // Keeps drawing the last workout while the shortcut animates out after finishing it.
-        var shownWorkout by remember { mutableStateOf(activeWorkout) }
-        if (activeWorkout != null) shownWorkout = activeWorkout
-
-        // When the pushed screen owns its own TopAppBar, it already consumes the status bar
-        // inset itself — without this, Scaffold reserves that inset a second time here (nothing
-        // consumed it, since the outer topBar renders nothing), leaving a blank gap above the
-        // pushed screen's own header.
-        val routeInsets = if (currentRouteHasOwnTopBar) {
-            ScaffoldDefaults.contentWindowInsets.exclude(WindowInsets.statusBars)
-        } else {
-            ScaffoldDefaults.contentWindowInsets
-        }
-        // Beside the rail the start side (the camera cutout) is the rail's. It's dropped here
-        // outright rather than left to Scaffold's consumed-insets tracking, which forgets the
-        // exclusion whenever these insets change on navigation.
-        val contentInsets = if (compactHeight) routeInsets.only(WindowInsetsSides.Vertical + WindowInsetsSides.End) else routeInsets
-
-        Row(modifier = Modifier.fillMaxSize()) {
-            if (compactHeight) {
-                HeavyDutyNavigationRail(
-                    isSelected = isSelected,
-                    onNavigate = navigate,
-                    onOpenMenu = openMenu,
-                    workout = shownWorkout,
-                    showWorkout = showWorkoutShortcut,
-                    onOpenWorkout = openWorkout
-                )
-            }
-            Scaffold(
-                modifier = Modifier
-                    .weight(1f)
-                    // The rail already sits clear of the cutout on its side; screens mustn't pad for it again.
-                    .then(
-                        if (compactHeight) {
-                            Modifier.consumeWindowInsets(
-                                WindowInsets.safeDrawing.only(WindowInsetsSides.Start)
-                            )
-                        } else {
-                            Modifier
-                        }
-                    ),
-                topBar = {
-                    // In landscape the menu lives in the rail, and the bar's height is worth more as content.
-                    if (!currentRouteHasOwnTopBar && !compactHeight) {
-                        TopAppBar(
-                            title = { Text(text = "HeavyDuty") },
-                            navigationIcon = {
-                                IconButton(onClick = openMenu) {
-                                    Icon(
-                                        imageVector = Icons.Default.Menu,
-                                        contentDescription = stringResource(R.string.nav_open_menu),
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                }
-                            }
-                        )
-                    }
-                },
-                contentWindowInsets = contentInsets,
-                bottomBar = {
-                    if (!compactHeight) {
-                        Column {
-                            AnimatedVisibility(
-                                visible = showWorkoutShortcut,
-                                enter = expandVertically(expandFrom = Alignment.Bottom) + fadeIn(),
-                                exit = shrinkVertically(shrinkTowards = Alignment.Bottom) + fadeOut()
-                            ) {
-                                shownWorkout?.let { workout -> ActiveWorkoutBar(workout = workout, onClick = openWorkout) }
-                            }
-                            HeavyDutyNavigationBar(isSelected = isSelected, onNavigate = navigate)
-                        }
-                    }
-                }
-            ) { innerPadding ->
-                // Lets screens share elements across navigation (see core.ui.hdSharedBounds).
-                // Consumed as well as applied, so screens with their own Scaffold don't pad for the
-                // same insets again (in landscape that left a cutout-wide gap beside the rail).
-                SharedTransitionLayout(modifier = Modifier.padding(innerPadding).consumeWindowInsets(innerPadding)) {
-                    CompositionLocalProvider(LocalSharedTransitionScope provides this) {
-                        HeavyDutyNavHost(navController = navController)
-                    }
-                }
-            }
+/** The side menu: the sections that aren't in the bottom bar. */
+@Composable
+private fun AppDrawerContent(isSelected: (DrawerDestination) -> Boolean, onNavigate: (DrawerDestination) -> Unit) {
+    ModalDrawerSheet {
+        Text(text = "HeavyDuty", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(16.dp))
+        HorizontalDivider()
+        DrawerDestination.entries.forEach { destination ->
+            NavigationDrawerItem(
+                icon = { Icon(imageVector = destination.icon, contentDescription = null) },
+                label = { Text(text = stringResource(destination.labelRes)) },
+                selected = isSelected(destination),
+                onClick = { onNavigate(destination) },
+                modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+            )
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun MainTopBar(onOpenMenu: () -> Unit) {
+    TopAppBar(
+        title = { Text(text = "HeavyDuty") },
+        navigationIcon = {
+            IconButton(onClick = onOpenMenu) {
+                Icon(
+                    imageVector = Icons.Default.Menu,
+                    contentDescription = stringResource(R.string.nav_open_menu),
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+    )
+}
+
+/** The workout-in-progress bar (sliding in and out) above the bottom navigation. */
+@Composable
+private fun MainBottomBar(
+    workout: ActiveWorkoutSummary?,
+    showWorkout: Boolean,
+    onOpenWorkout: () -> Unit,
+    isSelected: (TopLevelDestination) -> Boolean,
+    onNavigate: (TopLevelDestination) -> Unit
+) {
+    Column {
+        AnimatedVisibility(
+            visible = showWorkout,
+            enter = expandVertically(expandFrom = Alignment.Bottom) + fadeIn(),
+            exit = shrinkVertically(shrinkTowards = Alignment.Bottom) + fadeOut()
+        ) {
+            workout?.let { ActiveWorkoutBar(workout = it, onClick = onOpenWorkout) }
+        }
+        HeavyDutyNavigationBar(isSelected = isSelected, onNavigate = onNavigate)
+    }
+}
+
+/**
+ * The insets the content keeps clear of. When the pushed screen owns its own TopAppBar, it
+ * already consumes the status bar inset itself — without excluding it, Scaffold reserves that
+ * inset a second time (nothing consumed it, since the outer topBar renders nothing), leaving a
+ * blank gap above the pushed screen's own header. Beside the rail the start side (the camera
+ * cutout) is the rail's: it's dropped here outright rather than left to Scaffold's
+ * consumed-insets tracking, which forgets the exclusion whenever these insets change on navigation.
+ */
+@Composable
+private fun scaffoldContentInsets(routeHasOwnTopBar: Boolean, compactHeight: Boolean): WindowInsets {
+    val routeInsets = if (routeHasOwnTopBar) {
+        ScaffoldDefaults.contentWindowInsets.exclude(WindowInsets.statusBars)
+    } else {
+        ScaffoldDefaults.contentWindowInsets
+    }
+    return if (compactHeight) routeInsets.only(WindowInsetsSides.Vertical + WindowInsetsSides.End) else routeInsets
 }
 
 /** Below this height (a phone in landscape) navigation moves from the bottom to a side rail. */
