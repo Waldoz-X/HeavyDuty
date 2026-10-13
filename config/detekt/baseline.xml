@@ -2,8 +2,6 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>CyclomaticComplexMethod:SeedData.kt:SeedData$suspend fun populateExercises</ID>
-    <ID>LongMethod:SeedData.kt:SeedData$suspend fun populateExercises</ID>
     <ID>TooManyFunctions:ActiveWorkoutViewModel.kt:ActiveWorkoutViewModel : ViewModel</ID>
     <ID>TooManyFunctions:FakeRepositories.kt:FakeWorkoutRepository : WorkoutRepository</ID>
     <ID>TooManyFunctions:TimerEngine.kt:TimerEngine : RestTimerController</ID>
