@@ -7,6 +7,7 @@ import com.example.heavyduty.core.testing.FakeExerciseRepository
 import com.example.heavyduty.core.testing.FakeWorkoutRepository
 import kotlin.math.exp
 import kotlin.math.pow
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -29,13 +30,18 @@ class MuscleRecoveryStatsTest {
         runBlocking {
             val sessions = sessionsOf(sets.toList(), status)
             FakeWorkoutRepository(sessions, sets.toList()).let {
-                GetMuscleGroupFatigueUseCase(it.history, it.stats, exercises, FakeClock(now))
+                GetMuscleGroupFatigueUseCase(it.history, it.stats, exercises, FakeClock(now), Dispatchers.Unconfined)
             }().first()
         }
 
     private fun retention(vararg sets: com.example.heavyduty.core.domain.model.WorkoutSet) = runBlocking {
         val sessions = sessionsOf(sets.toList())
-        GetMuscleGroupStrengthRetentionUseCase(FakeWorkoutRepository(sessions, sets.toList()).stats, exercises, FakeClock(now))().first()
+        GetMuscleGroupStrengthRetentionUseCase(
+            FakeWorkoutRepository(sessions, sets.toList()).stats,
+            exercises,
+            FakeClock(now),
+            Dispatchers.Unconfined
+        )().first()
     }
 
     @Test

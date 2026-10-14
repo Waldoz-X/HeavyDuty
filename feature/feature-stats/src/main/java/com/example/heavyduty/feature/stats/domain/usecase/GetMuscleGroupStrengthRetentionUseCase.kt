@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.stats.domain.usecase
 
+import com.example.heavyduty.core.common.dispatchers.DefaultDispatcher
 import com.example.heavyduty.core.domain.model.Clock
 import com.example.heavyduty.core.domain.model.HARD_SET_INTENSITY
 import com.example.heavyduty.core.domain.model.MuscleGroup
@@ -7,7 +8,7 @@ import com.example.heavyduty.core.domain.model.strengthRetention
 import com.example.heavyduty.core.domain.repository.ExerciseRepository
 import com.example.heavyduty.core.domain.repository.TrainingStatsRepository
 import javax.inject.Inject
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -23,7 +24,8 @@ private const val DAY_MILLIS = 86_400_000f
 class GetMuscleGroupStrengthRetentionUseCase @Inject constructor(
     private val trainingStatsRepository: TrainingStatsRepository,
     private val exerciseRepository: ExerciseRepository,
-    private val clock: Clock
+    private val clock: Clock,
+    @param:DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher
 ) {
     operator fun invoke(): Flow<Map<MuscleGroup, Float>> = combine(
         trainingStatsRepository.getLastHardSetTimes(),
@@ -48,5 +50,5 @@ class GetMuscleGroupStrengthRetentionUseCase @Inject constructor(
             val daysSince = lastHardSetByMuscle[muscle]?.let { (now - it) / DAY_MILLIS }
             strengthRetention(daysSince)
         }
-    }.distinctUntilChanged().flowOn(Dispatchers.Default)
+    }.distinctUntilChanged().flowOn(defaultDispatcher)
 }

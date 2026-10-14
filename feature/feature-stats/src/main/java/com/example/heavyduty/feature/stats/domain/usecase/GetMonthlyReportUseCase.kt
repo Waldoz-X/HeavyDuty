@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.stats.domain.usecase
 
+import com.example.heavyduty.core.common.dispatchers.DefaultDispatcher
 import com.example.heavyduty.core.domain.model.Clock
 import com.example.heavyduty.core.domain.model.Exercise
 import com.example.heavyduty.core.domain.model.MuscleGroup
@@ -16,7 +17,7 @@ import com.example.heavyduty.feature.stats.domain.model.MuscleVolumeContribution
 import com.example.heavyduty.feature.stats.domain.model.TopExerciseMonthly
 import java.util.Calendar
 import javax.inject.Inject
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -29,7 +30,8 @@ import kotlinx.coroutines.flow.flowOn
 class GetMonthlyReportUseCase @Inject constructor(
     private val trainingHistoryRepository: TrainingHistoryRepository,
     private val exerciseRepository: ExerciseRepository,
-    private val clock: Clock
+    private val clock: Clock,
+    @param:DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher
 ) {
     operator fun invoke(referenceMillis: Long = clock.nowMillis()): Flow<MonthlyReport> {
         val month = MonthBounds.containing(referenceMillis)
@@ -43,7 +45,7 @@ class GetMonthlyReportUseCase @Inject constructor(
             val current = MonthData.of(sessions, rawSets)
             val previous = MonthData.of(prevSessions, prevRawSets)
             buildReport(month, referenceMillis, current, previous, exercises.associateBy { it.id }, weeksSoFar(month, clock.nowMillis()))
-        }.distinctUntilChanged().flowOn(Dispatchers.Default)
+        }.distinctUntilChanged().flowOn(defaultDispatcher)
     }
 }
 

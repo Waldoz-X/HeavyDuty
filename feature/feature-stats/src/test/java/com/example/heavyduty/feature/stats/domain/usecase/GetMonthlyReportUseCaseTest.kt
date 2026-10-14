@@ -6,6 +6,7 @@ import com.example.heavyduty.core.testing.FakeClock
 import com.example.heavyduty.core.testing.FakeExerciseRepository
 import com.example.heavyduty.core.testing.FakeTrainingHistoryRepository
 import java.util.Calendar
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -49,7 +50,8 @@ class GetMonthlyReportUseCaseTest {
         GetMonthlyReportUseCase(
             FakeTrainingHistoryRepository(sessions, sets),
             FakeExerciseRepository(EXERCISES),
-            FakeClock(now)
+            FakeClock(now),
+            Dispatchers.Unconfined
         )(reference).first()
     }
 

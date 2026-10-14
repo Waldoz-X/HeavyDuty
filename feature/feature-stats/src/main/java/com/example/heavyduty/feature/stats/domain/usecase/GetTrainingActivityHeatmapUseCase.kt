@@ -1,12 +1,13 @@
 package com.example.heavyduty.feature.stats.domain.usecase
 
+import com.example.heavyduty.core.common.dispatchers.DefaultDispatcher
 import com.example.heavyduty.core.domain.model.Clock
 import com.example.heavyduty.core.domain.model.WorkoutSession
 import com.example.heavyduty.core.domain.model.WorkoutStatus
 import com.example.heavyduty.core.domain.repository.TrainingHistoryRepository
 import java.util.Calendar
 import javax.inject.Inject
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
@@ -68,7 +69,8 @@ private const val HEATMAP_WEEKS = 53
  */
 class GetTrainingActivityHeatmapUseCase @Inject constructor(
     private val trainingHistoryRepository: TrainingHistoryRepository,
-    private val clock: Clock
+    private val clock: Clock,
+    @param:DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher
 ) {
     operator fun invoke(): Flow<ActivityHeatmapStatsReport> = trainingHistoryRepository.getAllSessions().map { sessions ->
         val nowMillis = clock.nowMillis()
@@ -103,7 +105,7 @@ class GetTrainingActivityHeatmapUseCase @Inject constructor(
             timeSlotDistribution = slotStats,
             favoriteTimeSlot = slotStats.maxByOrNull { it.count }?.takeIf { it.count > 0 }?.slot
         )
-    }.distinctUntilChanged().flowOn(Dispatchers.Default)
+    }.distinctUntilChanged().flowOn(defaultDispatcher)
 }
 
 private fun startOfDay(millis: Long): Long = Calendar.getInstance().apply {

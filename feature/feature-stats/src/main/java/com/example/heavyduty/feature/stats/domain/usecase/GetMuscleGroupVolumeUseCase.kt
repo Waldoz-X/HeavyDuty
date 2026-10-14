@@ -1,12 +1,13 @@
 package com.example.heavyduty.feature.stats.domain.usecase
 
+import com.example.heavyduty.core.common.dispatchers.DefaultDispatcher
 import com.example.heavyduty.core.domain.model.MuscleGroup
 import com.example.heavyduty.core.domain.model.excludeWarmups
 import com.example.heavyduty.core.domain.model.muscleCredits
 import com.example.heavyduty.core.domain.repository.ExerciseRepository
 import com.example.heavyduty.core.domain.repository.TrainingHistoryRepository
 import javax.inject.Inject
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -20,7 +21,8 @@ import kotlinx.coroutines.flow.flowOn
  */
 class GetMuscleGroupVolumeUseCase @Inject constructor(
     private val trainingHistoryRepository: TrainingHistoryRepository,
-    private val exerciseRepository: ExerciseRepository
+    private val exerciseRepository: ExerciseRepository,
+    @param:DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher
 ) {
     operator fun invoke(startTime: Long, endTime: Long): Flow<Map<MuscleGroup, Float>> = combine(
         trainingHistoryRepository.getCompletedSetsByDateRange(startTime, endTime),
@@ -36,5 +38,5 @@ class GetMuscleGroupVolumeUseCase @Inject constructor(
             }
         }
         volumeByMuscle
-    }.distinctUntilChanged().flowOn(Dispatchers.Default)
+    }.distinctUntilChanged().flowOn(defaultDispatcher)
 }

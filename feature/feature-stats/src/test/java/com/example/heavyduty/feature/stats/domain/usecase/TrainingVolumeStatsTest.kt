@@ -8,6 +8,7 @@ import com.example.heavyduty.core.domain.model.WorkoutStatus
 import com.example.heavyduty.core.testing.FakeExerciseRepository
 import com.example.heavyduty.core.testing.FakeTrainingHistoryRepository
 import com.example.heavyduty.core.testing.FakeWorkoutRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -58,7 +59,7 @@ class TrainingVolumeStatsTest {
 
     @Test
     fun `period summary counts only finished workouts and their working sets`() = runBlocking {
-        val summary = GetPeriodSummaryUseCase(workouts.history)(currentRange, previousRange).first()
+        val summary = GetPeriodSummaryUseCase(workouts.history, Dispatchers.Unconfined)(currentRange, previousRange).first()
 
         assertEquals(2, summary.workouts)
         assertEquals(105, summary.durationMinutes)
@@ -79,7 +80,7 @@ class TrainingVolumeStatsTest {
 
     @Test
     fun `period summary of an empty history is all zeros`() = runBlocking {
-        val summary = GetPeriodSummaryUseCase(FakeTrainingHistoryRepository())(currentRange, previousRange).first()
+        val summary = GetPeriodSummaryUseCase(FakeTrainingHistoryRepository(), Dispatchers.Unconfined)(currentRange, previousRange).first()
 
         assertEquals(0, summary.workouts)
         assertEquals(0f, summary.volumeKg)
@@ -88,7 +89,11 @@ class TrainingVolumeStatsTest {
 
     @Test
     fun `sets per muscle split a compound set across the muscles it trains`() = runBlocking {
-        val counts = GetMuscleGroupSetCountUseCase(workouts.history, exercises)(currentRange.first, currentRange.last).first()
+        val counts = GetMuscleGroupSetCountUseCase(
+            workouts.history,
+            exercises,
+            Dispatchers.Unconfined
+        )(currentRange.first, currentRange.last).first()
 
         // Two bench sets: 0.6 + 0.25 + 0.15 of a set each.
         assertEquals(1.2f, counts.getValue(MuscleGroup.CHEST), 0.001f)
@@ -103,7 +108,11 @@ class TrainingVolumeStatsTest {
 
     @Test
     fun `volume per muscle is reps times kilograms, split like the sets`() = runBlocking {
-        val volume = GetMuscleGroupVolumeUseCase(workouts.history, exercises)(currentRange.first, currentRange.last).first()
+        val volume = GetMuscleGroupVolumeUseCase(
+            workouts.history,
+            exercises,
+            Dispatchers.Unconfined
+        )(currentRange.first, currentRange.last).first()
 
         assertEquals(960f, volume.getValue(MuscleGroup.CHEST), 0.01f)
         assertEquals(400f, volume.getValue(MuscleGroup.TRICEPS), 0.01f)
@@ -115,14 +124,18 @@ class TrainingVolumeStatsTest {
 
     @Test
     fun `volume of the previous window only has that window's workouts`() = runBlocking {
-        val volume = GetMuscleGroupVolumeUseCase(workouts.history, exercises)(previousRange.first, previousRange.last).first()
+        val volume = GetMuscleGroupVolumeUseCase(
+            workouts.history,
+            exercises,
+            Dispatchers.Unconfined
+        )(previousRange.first, previousRange.last).first()
 
         assertEquals(mapOf(MuscleGroup.BICEPS to 200f), volume)
     }
 
     @Test
     fun `most used exercises are ranked by working sets`() = runBlocking {
-        val top = GetTopExercisesByFrequencyUseCase(workouts.stats, exercises)().first()
+        val top = GetTopExercisesByFrequencyUseCase(workouts.stats, exercises, Dispatchers.Unconfined)().first()
 
         assertEquals(listOf("Press de banca", "Curl de bíceps", "Sentadilla"), top.map { it.exerciseName })
         assertEquals(listOf(2, 2, 1), top.map { it.setCount })
@@ -141,7 +154,11 @@ class TrainingVolumeStatsTest {
             set(1, CURL, reps = 15, weightKg = 20f, at = DAY + 4) // only high-rep sets: no PR
         )
 
-        val records = GetExercisePersonalRecordsListUseCase(FakeWorkoutRepository(history, prSets).stats, exercises)().first()
+        val records = GetExercisePersonalRecordsListUseCase(
+            FakeWorkoutRepository(history, prSets).stats,
+            exercises,
+            Dispatchers.Unconfined
+        )().first()
 
         assertEquals(listOf(BENCH.id, SQUAT.id), records.map { it.exerciseId })
         val bench = records[0]

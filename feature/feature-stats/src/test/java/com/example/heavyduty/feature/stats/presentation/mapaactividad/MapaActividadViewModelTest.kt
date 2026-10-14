@@ -7,6 +7,7 @@ import com.example.heavyduty.core.testing.FakeTrainingHistoryRepository
 import com.example.heavyduty.core.testing.MainDispatcherRule
 import com.example.heavyduty.feature.stats.domain.usecase.GetTrainingActivityHeatmapUseCase
 import java.util.Calendar
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -34,7 +35,10 @@ class MapaActividadViewModelTest {
             WorkoutSession(id = i + 1L, startTime = start, totalDurationSecs = 3600, status = WorkoutStatus.COMPLETED)
         }
         val clock = FakeClock(now)
-        return MapaActividadViewModel(GetTrainingActivityHeatmapUseCase(FakeTrainingHistoryRepository(sessions), clock), clock)
+        return MapaActividadViewModel(
+            GetTrainingActivityHeatmapUseCase(FakeTrainingHistoryRepository(sessions), clock, Dispatchers.Unconfined),
+            clock
+        )
     }
 
     @Test

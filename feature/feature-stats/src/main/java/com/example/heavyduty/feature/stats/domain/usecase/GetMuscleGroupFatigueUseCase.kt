@@ -1,5 +1,6 @@
 package com.example.heavyduty.feature.stats.domain.usecase
 
+import com.example.heavyduty.core.common.dispatchers.DefaultDispatcher
 import com.example.heavyduty.core.domain.model.Clock
 import com.example.heavyduty.core.domain.model.MuscleGroup
 import com.example.heavyduty.core.domain.model.decayedFatigue
@@ -11,7 +12,7 @@ import com.example.heavyduty.core.domain.repository.ExerciseRepository
 import com.example.heavyduty.core.domain.repository.TrainingHistoryRepository
 import com.example.heavyduty.core.domain.repository.TrainingStatsRepository
 import javax.inject.Inject
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -44,7 +45,8 @@ class GetMuscleGroupFatigueUseCase @Inject constructor(
     private val trainingHistoryRepository: TrainingHistoryRepository,
     private val trainingStatsRepository: TrainingStatsRepository,
     private val exerciseRepository: ExerciseRepository,
-    private val clock: Clock
+    private val clock: Clock,
+    @param:DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher
 ) {
     operator fun invoke(): Flow<Map<MuscleGroup, Float>> = combine(
         trainingHistoryRepository.getCompletedSetsByDateRange(clock.nowMillis() - FATIGUE_WINDOW_MILLIS, Long.MAX_VALUE),
@@ -78,7 +80,7 @@ class GetMuscleGroupFatigueUseCase @Inject constructor(
         }
 
         MuscleGroup.entries.associateWith { fatigueLevel(fatigueByMuscle[it] ?: 0f) }
-    }.distinctUntilChanged().flowOn(Dispatchers.Default)
+    }.distinctUntilChanged().flowOn(defaultDispatcher)
 
     private fun accumulateFatigue(chronologicalStimulus: List<Pair<Long, Float>>, now: Long): Float {
         var accumulator = 0f

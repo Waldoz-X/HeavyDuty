@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.heavyduty.core.common.R
+import com.example.heavyduty.core.common.dispatchers.DefaultDispatcher
 import com.example.heavyduty.core.common.flow.whileSubscribed
 import com.example.heavyduty.core.domain.model.Clock
 import com.example.heavyduty.core.domain.model.ReminderSettings
@@ -40,7 +41,7 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -74,7 +75,8 @@ class ProfileViewModel @Inject constructor(
     private val userPreferencesRepository: UserPreferencesRepository,
     private val reminderScheduler: TrainingReminderScheduler,
     @param:ApplicationContext private val appContext: Context,
-    private val clock: Clock
+    private val clock: Clock,
+    @param:DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileUiState())
@@ -153,7 +155,7 @@ class ProfileViewModel @Inject constructor(
                 chartData = chartData,
                 streak = currentStreakDays(sessions, clock.nowMillis())
             )
-        }.flowOn(Dispatchers.Default)
+        }.flowOn(defaultDispatcher)
 
         val settingsFlow = combine(
             getBodyDiagramGenderUseCase(),
