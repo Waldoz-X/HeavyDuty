@@ -2,9 +2,14 @@ package com.example.heavyduty.feature.stats.domain.model
 
 import com.example.heavyduty.core.domain.model.MuscleGroup
 
-data class MuscleVolumeContribution(
+/**
+ * A muscle's share of the month in effective sets (fractional: a compound set is split across
+ * the muscles it works). Counted in sets, not kilos: by weight, calf raises and leg presses
+ * outweighed the bench and made calves the month's "top" muscle.
+ */
+data class MuscleSetContribution(
     val muscleGroup: MuscleGroup,
-    val volumeKg: Float,
+    val sets: Float,
     // 0.0 to 100.0
     val percentage: Float
 )
@@ -39,7 +44,7 @@ data class MonthlyReport(
 
     // Desglose muscular
     val topMuscleGroup: MuscleGroup? = null,
-    val muscleContributions: List<MuscleVolumeContribution> = emptyList(),
+    val muscleContributions: List<MuscleSetContribution> = emptyList(),
 
     // Top ejercicios del mes
     val topExercises: List<TopExerciseMonthly> = emptyList(),

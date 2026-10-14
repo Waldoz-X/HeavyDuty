@@ -48,6 +48,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.heavyduty.core.common.R
 import com.example.heavyduty.core.common.extensions.formatCompact
+import com.example.heavyduty.core.common.extensions.formatDecimal
 import com.example.heavyduty.core.common.extensions.formatOneDecimal
 import com.example.heavyduty.core.domain.model.kgTo
 import com.example.heavyduty.core.ui.LocalWeightUnit
@@ -62,7 +63,7 @@ import com.example.heavyduty.core.ui.formatWeight
 import com.example.heavyduty.core.ui.nameResId
 import com.example.heavyduty.core.ui.weightUnitLabel
 import com.example.heavyduty.feature.stats.domain.model.MonthlyReport
-import com.example.heavyduty.feature.stats.domain.model.MuscleVolumeContribution
+import com.example.heavyduty.feature.stats.domain.model.MuscleSetContribution
 import com.example.heavyduty.feature.stats.domain.model.TopExerciseMonthly
 import kotlin.math.roundToInt
 
@@ -313,7 +314,7 @@ private fun MonthSelectorHeader(
 
 @Composable
 private fun MuscleDistributionCard(
-    contributions: List<MuscleVolumeContribution>,
+    contributions: List<MuscleSetContribution>,
     topMuscle: com.example.heavyduty.core.domain.model.MuscleGroup?,
     modifier: Modifier = Modifier
 ) {
@@ -355,7 +356,7 @@ private fun MuscleDistributionCard(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "${item.volumeKg.formatTotalWeight()} (${item.percentage.roundToInt()}%)",
+                            text = stringResource(R.string.monthly_muscle_sets, item.sets.formatDecimal(), item.percentage.roundToInt()),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

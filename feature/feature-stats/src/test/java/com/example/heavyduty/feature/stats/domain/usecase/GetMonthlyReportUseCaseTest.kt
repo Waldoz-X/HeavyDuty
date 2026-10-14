@@ -77,19 +77,34 @@ class GetMonthlyReportUseCaseTest {
     }
 
     @Test
-    fun `muscle breakdown splits compound volume and adds up to 100 percent`() {
+    fun `muscle breakdown counts effective sets, splits compounds and adds up to 100 percent`() {
         val report = report(september)
 
         assertEquals(MuscleGroup.CHEST, report.topMuscleGroup)
+        // Effective sets: 2 bench sets (0.6 chest, 0.25 triceps, 0.15 shoulders each), 1 squat set.
         val expected = listOf(
-            MuscleGroup.CHEST to 960f,
-            MuscleGroup.QUADRICEPS to 600f,
-            MuscleGroup.TRICEPS to 400f,
-            MuscleGroup.SHOULDERS to 240f
+            MuscleGroup.CHEST to 1.2f,
+            MuscleGroup.QUADRICEPS to 1f,
+            MuscleGroup.TRICEPS to 0.5f,
+            MuscleGroup.SHOULDERS to 0.3f
         )
         assertEquals(expected.map { it.first }, report.muscleContributions.map { it.muscleGroup })
-        expected.zip(report.muscleContributions).forEach { (want, got) -> assertEquals(want.second, got.volumeKg, 0.01f) }
+        expected.zip(report.muscleContributions).forEach { (want, got) -> assertEquals(want.second, got.sets, 0.01f) }
         assertEquals(100f, report.muscleContributions.sumOf { it.percentage.toDouble() }.toFloat(), 0.01f)
+    }
+
+    @Test
+    fun `the top muscle is the one with most sets, not most kilos`() {
+        // One very heavy squat set (1000 kg) against two light bench sets (500 kg in all).
+        val sessions = listOf(session(1, start = at(Calendar.SEPTEMBER, 2), durationMins = 60))
+        val sets = listOf(
+            set(1, SQUAT, reps = 5, weightKg = 200f, at = at(Calendar.SEPTEMBER, 2, minute = 5)),
+            set(1, BENCH, reps = 5, weightKg = 50f, at = at(Calendar.SEPTEMBER, 2, minute = 10)),
+            set(1, BENCH, reps = 5, weightKg = 50f, at = at(Calendar.SEPTEMBER, 2, minute = 15))
+        )
+        val report = report(september, sessions = sessions, sets = sets)
+
+        assertEquals(MuscleGroup.CHEST, report.topMuscleGroup) // 1.2 sets against the quads' 1
     }
 
     @Test

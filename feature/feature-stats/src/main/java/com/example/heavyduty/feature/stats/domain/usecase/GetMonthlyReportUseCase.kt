@@ -7,13 +7,13 @@ import com.example.heavyduty.core.domain.model.MuscleGroup
 import com.example.heavyduty.core.domain.model.WorkoutSession
 import com.example.heavyduty.core.domain.model.WorkoutSet
 import com.example.heavyduty.core.domain.model.WorkoutStatus
+import com.example.heavyduty.core.domain.model.creditByMuscle
 import com.example.heavyduty.core.domain.model.displayName
 import com.example.heavyduty.core.domain.model.excludeWarmups
-import com.example.heavyduty.core.domain.model.muscleCredits
 import com.example.heavyduty.core.domain.repository.ExerciseRepository
 import com.example.heavyduty.core.domain.repository.TrainingHistoryRepository
 import com.example.heavyduty.feature.stats.domain.model.MonthlyReport
-import com.example.heavyduty.feature.stats.domain.model.MuscleVolumeContribution
+import com.example.heavyduty.feature.stats.domain.model.MuscleSetContribution
 import com.example.heavyduty.feature.stats.domain.model.TopExerciseMonthly
 import java.util.Calendar
 import javax.inject.Inject
@@ -102,7 +102,7 @@ private fun buildReport(
     val countedSets = current.sets.filter { it.exerciseId in exerciseById }
     val totalVolumeKg = countedSets.fold(0f) { total, set -> total + set.volumeKg() }
     val prevTotalVolumeKg = previous.sets.sumOf { it.volumeKg().toDouble() }.toFloat()
-    val volumeByMuscle = volumeByMuscle(countedSets, exerciseById)
+    val setsByMuscle = countedSets.creditByMuscle(exerciseById) { 1f }
     val workoutCount = current.sessions.size
     val totalDurationSecs = current.sessions.sumOf { it.totalDurationSecs }
 
@@ -124,8 +124,8 @@ private fun buildReport(
             null
         },
         prevMonthVolumeKg = prevTotalVolumeKg,
-        topMuscleGroup = volumeByMuscle.maxByOrNull { it.value }?.key,
-        muscleContributions = muscleContributions(volumeByMuscle, totalVolumeKg),
+        topMuscleGroup = setsByMuscle.maxByOrNull { it.value }?.key,
+        muscleContributions = muscleContributions(setsByMuscle),
         topExercises = topExercises(current.sets, exerciseById),
         workoutsPerWeek = perWeek(month.weeks, current.sessions.groupingBy { weekOfMonth(it.startTime) }.eachCount(), 0),
         volumePerWeek = perWeek(month.weeks, volumePerWeek(countedSets, current.sessionsById), 0f)
@@ -163,27 +163,17 @@ private fun volumePerWeek(sets: List<WorkoutSet>, sessionsById: Map<Long, Workou
     return volume
 }
 
-private fun volumeByMuscle(sets: List<WorkoutSet>, exerciseById: Map<Long, Exercise>): Map<MuscleGroup, Float> {
-    val volume = mutableMapOf<MuscleGroup, Float>()
-    sets.forEach { set ->
-        val exercise = exerciseById[set.exerciseId] ?: return@forEach
-        exercise.muscleCredits(set.volumeKg()).forEach { (muscle, credit) ->
-            volume[muscle] = (volume[muscle] ?: 0f) + credit
-        }
-    }
-    return volume
-}
-
-private fun muscleContributions(volumeByMuscle: Map<MuscleGroup, Float>, totalVolumeKg: Float): List<MuscleVolumeContribution> {
-    if (totalVolumeKg <= 0f) return emptyList()
-    return volumeByMuscle.entries
+private fun muscleContributions(setsByMuscle: Map<MuscleGroup, Float>): List<MuscleSetContribution> {
+    val totalSets = setsByMuscle.values.sum()
+    if (totalSets <= 0f) return emptyList()
+    return setsByMuscle.entries
         .filter { it.value > 0f }
         .sortedByDescending { it.value }
         .map {
-            MuscleVolumeContribution(
+            MuscleSetContribution(
                 muscleGroup = it.key,
-                volumeKg = it.value,
-                percentage = (it.value / totalVolumeKg * PERCENT).coerceIn(0f, PERCENT)
+                sets = it.value,
+                percentage = (it.value / totalSets * PERCENT).coerceIn(0f, PERCENT)
             )
         }
 }

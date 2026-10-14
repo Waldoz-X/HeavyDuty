@@ -119,6 +119,7 @@
     <string name="monthly_next_month">Mes siguiente</string>
     <string name="monthly_muscle_distribution">Distribución muscular</string>
     <string name="monthly_top_muscle">Top: %1$s</string>
+    <string name="monthly_muscle_sets">%1$s series (%2$d %%)</string>
     <string name="monthly_top_exercises">Top ejercicios del mes</string>
     <string name="monthly_exercise_detail">%1$s · Peso máx: %2$s</string>
     <string name="monthly_volume_lower">volumen</string>

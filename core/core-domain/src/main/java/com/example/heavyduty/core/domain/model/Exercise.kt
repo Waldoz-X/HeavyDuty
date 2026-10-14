@@ -41,6 +41,21 @@ data class Exercise(
 fun Exercise.muscleCredits(amount: Float): Map<MuscleGroup, Float> = muscleWeights.mapValues { (_, weight) -> amount * weight }
 
 /**
+ * Adds up [amount] of each set over the muscles its exercise credits ([muscleCredits]):
+ * `{ 1f }` gives fractional set counts, a set's reps × weight gives volume. Sets of exercises
+ * missing from [exerciseById] are skipped; which sets count (warm-ups, unfinished workouts) is
+ * the caller's choice.
+ */
+fun List<WorkoutSet>.creditByMuscle(exerciseById: Map<Long, Exercise>, amount: (WorkoutSet) -> Float): Map<MuscleGroup, Float> {
+    val total = mutableMapOf<MuscleGroup, Float>()
+    forEach { set ->
+        val exercise = exerciseById[set.exerciseId] ?: return@forEach
+        exercise.muscleCredits(amount(set)).forEach { (muscle, credit) -> total[muscle] = (total[muscle] ?: 0f) + credit }
+    }
+    return total
+}
+
+/**
  * Inferred from [Exercise.equipment] rather than a stored flag, per the catalog's own
  * "body weight" equipment value — push-ups, pull-ups, etc. shouldn't need a schema change to
  * be recognized. UI built on this should still let the lifter log a weight when they want to
