@@ -12,6 +12,9 @@ private const val TIME_INCREMENT_SECS = 5
  */
 data class ProgressionConfig(
     val policy: ProgressionPolicy,
+    /** The routine's reps per set — what the fixed-rep policies (linear, GreySkull, off) aim at. */
+    val targetReps: Int,
+    /** The range double progression climbs (and, in seconds, the time policy) — see [usesRange]. */
     val repRangeLow: Int,
     val repRangeHigh: Int,
     val stallThreshold: Int,
@@ -21,8 +24,18 @@ data class ProgressionConfig(
     val isPerSide: Boolean = false
 )
 
+/**
+ * Whether the policy climbs a range (repRangeLow..repRangeHigh) rather than repeating the
+ * routine's own reps: double progression in reps, the time policy in seconds. The fixed-rep
+ * policies ignore the range, so the editor only offers it where it means something — a hidden
+ * range once made a linear "4 × 13" suggest 12.
+ */
+val ProgressionPolicy.usesRange: Boolean
+    get() = this == ProgressionPolicy.DOUBLE_PROGRESSION || this == ProgressionPolicy.TIME
+
 fun RoutineExercise.toProgressionConfig(): ProgressionConfig = ProgressionConfig(
     policy = progressionPolicy,
+    targetReps = targetReps,
     repRangeLow = repRangeLow,
     repRangeHigh = repRangeHigh,
     stallThreshold = stallThreshold,
@@ -72,7 +85,7 @@ fun nextPrescription(history: List<WorkoutSet>, config: ProgressionConfig): Pres
         .sortedBy { sets -> sets.minOf { it.completedAt!! } }
 
     if (config.policy == ProgressionPolicy.OFF) {
-        return Prescription(sets = config.targetSets, reps = config.repRangeHigh, weightKg = config.startingWeightKg)
+        return Prescription(sets = config.targetSets, reps = config.targetReps, weightKg = config.startingWeightKg)
     }
     if (config.policy == ProgressionPolicy.TIME) {
         return timePrescription(sessions, config)
@@ -107,7 +120,7 @@ private fun consecutiveFailures(sessions: List<List<WorkoutSet>>, targetReps: In
 private fun Float.roundToNearestIncrement(): Float = round(this / WEIGHT_INCREMENT_KG) * WEIGHT_INCREMENT_KG
 
 private fun linearPrescription(sessions: List<List<WorkoutSet>>, config: ProgressionConfig): Prescription {
-    val target = config.repRangeHigh
+    val target = config.targetReps
     val last = sessions.lastOrNull()
         ?: return Prescription(sets = config.targetSets, reps = target, weightKg = config.startingWeightKg)
     val lastWeight = last.mapNotNull { it.weight }.maxOrNull() ?: config.startingWeightKg
@@ -132,7 +145,7 @@ private fun linearPrescription(sessions: List<List<WorkoutSet>>, config: Progres
 
 /** See [nextPrescription] doc for the AMRAP-set-approximation caveat. */
 private fun greyskullPrescription(sessions: List<List<WorkoutSet>>, config: ProgressionConfig): Prescription {
-    val target = config.repRangeHigh
+    val target = config.targetReps
     val last = sessions.lastOrNull()
         ?: return Prescription(sets = config.targetSets, reps = target, weightKg = config.startingWeightKg)
     val lastWeight = last.mapNotNull { it.weight }.maxOrNull() ?: config.startingWeightKg

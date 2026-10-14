@@ -72,6 +72,7 @@ import com.example.heavyduty.core.domain.model.kgToRounded
 import com.example.heavyduty.core.domain.model.label
 import com.example.heavyduty.core.domain.model.loadStep
 import com.example.heavyduty.core.domain.model.toKgFrom
+import com.example.heavyduty.core.domain.model.usesRange
 import com.example.heavyduty.core.ui.components.HdChip
 import com.example.heavyduty.core.ui.components.HdExerciseThumbnail
 import com.example.heavyduty.core.ui.components.HdTonalButton
@@ -288,23 +289,8 @@ private fun ProgressionSettings(
 ) {
     val step = if (isTimeBased) 5f else 1f
     Column(modifier = modifier) {
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            NumberStepper(
-                label = stringResource(if (isTimeBased) R.string.routine_time_range_min else R.string.routine_rep_range_min),
-                value = routineExercise.repRangeLow.toFloat(),
-                step = step,
-                range = 1f..routineExercise.repRangeHigh.toFloat(),
-                onValueChange = { onUpdate(routineExercise.copy(repRangeLow = it.roundToInt())) },
-                modifier = Modifier.weight(1f)
-            )
-            NumberStepper(
-                label = stringResource(if (isTimeBased) R.string.routine_time_range_max else R.string.routine_rep_range_max),
-                value = routineExercise.repRangeHigh.toFloat(),
-                step = step,
-                range = routineExercise.repRangeLow.toFloat()..600f,
-                onValueChange = { onUpdate(routineExercise.copy(repRangeHigh = it.roundToInt())) },
-                modifier = Modifier.weight(1f)
-            )
+        if (routineExercise.progressionPolicy.usesRange) {
+            RangeSteppers(routineExercise = routineExercise, isTimeBased = isTimeBased, step = step, onUpdate = onUpdate)
         }
         val showStall = routineExercise.progressionPolicy == ProgressionPolicy.LINEAR ||
             routineExercise.progressionPolicy == ProgressionPolicy.GREYSKULL_LP
@@ -520,3 +506,26 @@ private fun RoutineExercise.withTargetReps(reps: Int): RoutineExercise {
 }
 
 private val REST_PRESETS_SECONDS = listOf(60, 90, 120, 180)
+
+/** The range double progression climbs — reps, or seconds for a timed exercise. */
+@Composable
+private fun RangeSteppers(routineExercise: RoutineExercise, isTimeBased: Boolean, step: Float, onUpdate: (RoutineExercise) -> Unit) {
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        NumberStepper(
+            label = stringResource(if (isTimeBased) R.string.routine_time_range_min else R.string.routine_rep_range_min),
+            value = routineExercise.repRangeLow.toFloat(),
+            step = step,
+            range = 1f..routineExercise.repRangeHigh.toFloat(),
+            onValueChange = { onUpdate(routineExercise.copy(repRangeLow = it.roundToInt())) },
+            modifier = Modifier.weight(1f)
+        )
+        NumberStepper(
+            label = stringResource(if (isTimeBased) R.string.routine_time_range_max else R.string.routine_rep_range_max),
+            value = routineExercise.repRangeHigh.toFloat(),
+            step = step,
+            range = routineExercise.repRangeLow.toFloat()..600f,
+            onValueChange = { onUpdate(routineExercise.copy(repRangeHigh = it.roundToInt())) },
+            modifier = Modifier.weight(1f)
+        )
+    }
+}

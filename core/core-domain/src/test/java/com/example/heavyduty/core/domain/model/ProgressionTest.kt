@@ -11,13 +11,14 @@ class ProgressionTest {
 
     private fun config(
         policy: ProgressionPolicy,
+        reps: Int = 10,
         low: Int = 8,
         high: Int = 12,
         stall: Int = 3,
         sets: Int = 3,
         startKg: Float = 20f,
         perSide: Boolean = false
-    ) = ProgressionConfig(policy, low, high, stall, sets, startKg, perSide)
+    ) = ProgressionConfig(policy, reps, low, high, stall, sets, startKg, perSide)
 
     private var nextId = 1L
 
@@ -40,14 +41,14 @@ class ProgressionTest {
             Prescription(sets = 3, reps = 8, weightKg = 20f),
             nextPrescription(emptyList(), config(ProgressionPolicy.DOUBLE_PROGRESSION))
         )
-        assertEquals(Prescription(sets = 3, reps = 12, weightKg = 20f), nextPrescription(emptyList(), config(ProgressionPolicy.LINEAR)))
+        assertEquals(Prescription(sets = 3, reps = 10, weightKg = 20f), nextPrescription(emptyList(), config(ProgressionPolicy.LINEAR)))
         assertEquals(Prescription(sets = 3, durationSecs = 8), nextPrescription(emptyList(), config(ProgressionPolicy.TIME)))
     }
 
     @Test
     fun `off repeats the routine whatever was done`() {
         val history = session(1, 50f, 12, 12, 12)
-        assertEquals(Prescription(sets = 3, reps = 12, weightKg = 20f), nextPrescription(history, config(ProgressionPolicy.OFF)))
+        assertEquals(Prescription(sets = 3, reps = 10, weightKg = 20f), nextPrescription(history, config(ProgressionPolicy.OFF)))
     }
 
     // ------------------------------------------------------------------ double progression
@@ -112,14 +113,14 @@ class ProgressionTest {
 
     @Test
     fun `linear adds weight after a session at the target`() {
-        val next = nextPrescription(session(1, 100f, 5, 5, 5), config(ProgressionPolicy.LINEAR, low = 5, high = 5))
+        val next = nextPrescription(session(1, 100f, 5, 5, 5), config(ProgressionPolicy.LINEAR, reps = 5))
         assertEquals(102.5f, next.weightKg)
         assertFalse(next.isDeload)
     }
 
     @Test
     fun `linear repeats the weight after a miss and deloads after the stall threshold`() {
-        val cfg = config(ProgressionPolicy.LINEAR, low = 5, high = 5, stall = 3)
+        val cfg = config(ProgressionPolicy.LINEAR, reps = 5, stall = 3)
         val oneMiss = session(1, 100f, 5, 5, 4)
         assertEquals(100f, nextPrescription(oneMiss, cfg).weightKg)
 
@@ -129,11 +130,30 @@ class ProgressionTest {
         assertEquals(90f, next.weightKg) // −10 %, on the 2.5 kg grid
     }
 
+    @Test
+    fun `fixed-rep policies aim at the routine's reps, not a range they don't use`() {
+        // The user's "4 × 13" kept a 10–12 range from before; it suggested 12.
+        val cfg = config(ProgressionPolicy.LINEAR, reps = 13, low = 10, high = 12)
+        assertEquals(13, nextPrescription(emptyList(), cfg).reps)
+        assertEquals(13, nextPrescription(session(1, 6f, 13, 13, 13, 13), cfg).reps)
+        assertEquals(13, nextPrescription(session(1, 6f, 12, 12, 12), cfg).reps) // missed: same target
+        assertEquals(13, nextPrescription(emptyList(), cfg.copy(policy = ProgressionPolicy.OFF)).reps)
+    }
+
+    @Test
+    fun `only double progression and time climb a range`() {
+        assertTrue(ProgressionPolicy.DOUBLE_PROGRESSION.usesRange)
+        assertTrue(ProgressionPolicy.TIME.usesRange)
+        assertFalse(ProgressionPolicy.LINEAR.usesRange)
+        assertFalse(ProgressionPolicy.GREYSKULL_LP.usesRange)
+        assertFalse(ProgressionPolicy.OFF.usesRange)
+    }
+
     // ------------------------------------------------------------------ GreySkull
 
     @Test
     fun `greyskull reads the last set as the AMRAP`() {
-        val cfg = config(ProgressionPolicy.GREYSKULL_LP, low = 5, high = 5)
+        val cfg = config(ProgressionPolicy.GREYSKULL_LP, reps = 5)
         assertEquals(105f, nextPrescription(session(1, 100f, 5, 5, 10), cfg).weightKg) // doubled: double jump
         assertEquals(102.5f, nextPrescription(session(1, 100f, 5, 5, 6), cfg).weightKg)
         val missed = nextPrescription(session(1, 100f, 5, 5, 3), cfg)
