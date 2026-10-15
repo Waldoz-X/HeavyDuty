@@ -19,6 +19,7 @@ import com.example.heavyduty.core.domain.repository.UserPreferencesRepository
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
 import com.example.heavyduty.core.testing.FakeClock
 import com.example.heavyduty.core.testing.MainDispatcherRule
+import com.example.heavyduty.core.testing.shiftedFrom
 import com.example.heavyduty.feature.workout.domain.usecase.CompleteWorkoutUseCase
 import com.example.heavyduty.feature.workout.domain.usecase.DiscardWorkoutUseCase
 import com.example.heavyduty.feature.workout.domain.usecase.LogSetUseCase
@@ -216,6 +217,20 @@ class ActiveWorkoutViewModelTest {
     }
 
     @Test
+    fun `the first time an exercise is done, an empty set repeats the weight just lifted`() {
+        val viewModel = createViewModel()
+        viewModel.onEvent(ActiveWorkoutUiEvent.OnStartRoutine(routine.id))
+        viewModel.logSet("10", weight = "24")
+
+        // No history, no planned weight: the next row used to offer 0 kg.
+        assertEquals(24f, viewModel.uiState.value.currentSetHint.weightKg)
+        viewModel.onEvent(ActiveWorkoutUiEvent.OnLogSet)
+        val second = viewModel.uiState.value.setsFor(bench.id).single { it.setNumber == 2 }
+        assertEquals(24f, second.weight)
+        assertEquals(8, second.reps) // reps still aim at the plan, not at the set just done
+    }
+
+    @Test
     fun `finishing the workout returns to the start screen`() {
         val viewModel = createViewModel()
         viewModel.onEvent(ActiveWorkoutUiEvent.OnStartRoutine(routine.id))
@@ -385,6 +400,56 @@ class ActiveWorkoutViewModelTest {
         assertEquals(3, viewModel.uiState.value.currentSetNumber)
     }
 
+    @Test
+    fun `deleting a middle set leaves no gap in the numbers, and undo puts it back in place`() {
+        val viewModel = createViewModel()
+        val effects = viewModel.collectEffects()
+        viewModel.onEvent(ActiveWorkoutUiEvent.OnStartRoutine(routine.id))
+        viewModel.logSet("10")
+        viewModel.logSet("9")
+        viewModel.logSet("8")
+        fun repsByNumber() = viewModel.uiState.value.setsFor(bench.id).sortedBy { it.setNumber }.map { it.setNumber to it.reps }
+
+        viewModel.onEvent(ActiveWorkoutUiEvent.OnDeleteSet(viewModel.uiState.value.setsFor(bench.id).single { it.setNumber == 2 }))
+        assertEquals(listOf(1 to 10, 2 to 8), repsByNumber())
+        assertEquals(3, viewModel.uiState.value.currentSetNumber)
+
+        viewModel.onEvent(ActiveWorkoutUiEvent.OnUndoDeleteSet(effects.filterIsInstance<ActiveWorkoutUiEffect.SetDeleted>().single().set))
+        assertEquals(listOf(1 to 10, 2 to 9, 3 to 8), repsByNumber())
+    }
+
+    @Test
+    fun `a weight far above the best is held back until confirmed`() {
+        val viewModel = createViewModel()
+        viewModel.onEvent(ActiveWorkoutUiEvent.OnStartRoutine(routine.id))
+        viewModel.logSet("10", weight = "60")
+
+        viewModel.logSet("10", weight = "609") // meant 60.9
+        assertEquals(609f, viewModel.uiState.value.unusualWeight?.weightKg)
+        assertEquals(60f, viewModel.uiState.value.unusualWeight?.bestKg)
+        assertEquals(1, viewModel.uiState.value.setsFor(bench.id).size)
+
+        viewModel.onEvent(ActiveWorkoutUiEvent.OnDismissUnusualWeight)
+        assertEquals(null, viewModel.uiState.value.unusualWeight)
+        assertEquals("609", viewModel.uiState.value.weightInput) // left to correct
+        assertEquals(1, viewModel.uiState.value.setsFor(bench.id).size)
+
+        viewModel.onEvent(ActiveWorkoutUiEvent.OnLogSet)
+        viewModel.onEvent(ActiveWorkoutUiEvent.OnConfirmUnusualWeight)
+        assertEquals(609f, viewModel.uiState.value.setsFor(bench.id).single { it.setNumber == 2 }.weight)
+    }
+
+    @Test
+    fun `a normal jump in weight logs straight away`() {
+        val viewModel = createViewModel()
+        viewModel.onEvent(ActiveWorkoutUiEvent.OnStartRoutine(routine.id))
+        viewModel.logSet("10", weight = "60")
+        viewModel.logSet("8", weight = "70")
+
+        assertEquals(null, viewModel.uiState.value.unusualWeight)
+        assertEquals(2, viewModel.uiState.value.setsFor(bench.id).size)
+    }
+
     /** The workout being logged and, like the database, the history it joins. */
     private class FakeWorkoutRepository :
         WorkoutRepository,
@@ -424,7 +489,7 @@ class ActiveWorkoutViewModelTest {
         /** Like the DAO's REPLACE insert: a set that already has an id keeps it. */
         override suspend fun insertSet(set: WorkoutSet): Long {
             val id = if (set.id != 0L) set.id else nextId++
-            sets.value = sets.value.filter { it.id != id } + set.copy(id = id)
+            sets.value = sets.value.filter { it.id != id }.shiftedFrom(set, by = 1) + set.copy(id = id)
             return id
         }
 
@@ -436,7 +501,7 @@ class ActiveWorkoutViewModelTest {
             sets.value = sets.value.map { if (it.id == set.id) set else it }
         }
         override suspend fun deleteSet(set: WorkoutSet) {
-            sets.value = sets.value.filter { it.id != set.id }
+            sets.value = sets.value.filter { it.id != set.id }.shiftedFrom(set, by = -1)
         }
     }
 

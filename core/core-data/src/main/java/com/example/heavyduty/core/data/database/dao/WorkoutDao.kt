@@ -87,6 +87,38 @@ interface WorkoutDao {
     @Delete
     suspend fun deleteSet(set: WorkoutSetEntity)
 
+    @Query(
+        "UPDATE workout_sets SET setNumber = setNumber - 1 " +
+            "WHERE sessionId = :sessionId AND exerciseId = :exerciseId AND setNumber > :setNumber"
+    )
+    suspend fun closeSetNumberGap(sessionId: Long, exerciseId: Long, setNumber: Int)
+
+    @Query(
+        "UPDATE workout_sets SET setNumber = setNumber + 1 " +
+            "WHERE sessionId = :sessionId AND exerciseId = :exerciseId AND setNumber >= :setNumber AND id != :setId"
+    )
+    suspend fun openSetNumberGap(sessionId: Long, exerciseId: Long, setNumber: Int, setId: Long)
+
+    /*
+     * An exercise's sets in a workout stay numbered 1, 2, 3…: "Anterior" and the suggestions
+     * match sets by number, so deleting set 2 of 3 used to leave 1 and 3 — and next time set 2
+     * had nothing to compare with.
+     */
+
+    /** Deletes a set and moves the exercise's later sets in that workout down one. */
+    @Transaction
+    suspend fun deleteSetKeepingNumbers(set: WorkoutSetEntity) {
+        deleteSet(set)
+        closeSetNumberGap(set.sessionId, set.exerciseId, set.setNumber)
+    }
+
+    /** Inserts a set at its number, moving the exercise's sets from there on up one; logging the next set moves none. */
+    @Transaction
+    suspend fun insertSetKeepingNumbers(set: WorkoutSetEntity): Long {
+        openSetNumberGap(set.sessionId, set.exerciseId, set.setNumber, set.id)
+        return insertSet(set)
+    }
+
     /** Every logged set, finished workout or not — for backups, which must not drop any. */
     @Query("SELECT * FROM workout_sets WHERE isCompleted = 1")
     fun getAllLoggedSets(): Flow<List<WorkoutSetEntity>>

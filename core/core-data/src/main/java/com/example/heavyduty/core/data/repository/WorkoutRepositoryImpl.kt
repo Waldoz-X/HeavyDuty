@@ -26,9 +26,9 @@ class WorkoutRepositoryImpl @Inject constructor(private val workoutDao: WorkoutD
 
     override suspend fun deleteSession(session: WorkoutSession) = workoutDao.deleteSession(session.toEntity())
 
-    override suspend fun insertSet(set: WorkoutSet): Long = workoutDao.insertSet(set.toEntity())
+    override suspend fun insertSet(set: WorkoutSet): Long = workoutDao.insertSetKeepingNumbers(set.toEntity())
 
     override suspend fun updateSet(set: WorkoutSet) = workoutDao.updateSet(set.toEntity())
 
-    override suspend fun deleteSet(set: WorkoutSet) = workoutDao.deleteSet(set.toEntity())
+    override suspend fun deleteSet(set: WorkoutSet) = workoutDao.deleteSetKeepingNumbers(set.toEntity())
 }

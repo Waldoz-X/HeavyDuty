@@ -91,6 +91,8 @@
     <string name="profile_reminder_hint">Reminds you at this time on days your calendar has a routine, if you haven\'t trained it yet.</string>
     <string name="profile_reminder_time">Reminder time: %1$s</string>
     <string name="profile_reminder_change_time">Change time</string>
+    <string name="profile_reminder_blocked">HeavyDuty\'s notifications are turned off, so the reminder can\'t reach you.</string>
+    <string name="profile_reminder_open_settings">Open settings</string>
     <string name="profile_reminder_time_title">Reminder time</string>
     <string name="profile_health_title">Health Connect</string>
     <string name="profile_health_hint">Send your finished workouts to Health Connect and bring in your weight from scales and other apps.</string>

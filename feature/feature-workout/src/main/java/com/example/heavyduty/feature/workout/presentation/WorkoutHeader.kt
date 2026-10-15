@@ -335,7 +335,9 @@ private fun ExerciseStripChip(
                 text = name,
                 style = MaterialTheme.typography.labelLarge,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
+                // Cut in the middle: names of one family differ at the end ("Press de banca con
+                // barra" / "… con mancuernas"), which an end ellipsis hid on narrow phones.
+                overflow = TextOverflow.MiddleEllipsis,
                 modifier = Modifier.widthIn(max = 150.dp)
             )
             Row(verticalAlignment = Alignment.CenterVertically) {

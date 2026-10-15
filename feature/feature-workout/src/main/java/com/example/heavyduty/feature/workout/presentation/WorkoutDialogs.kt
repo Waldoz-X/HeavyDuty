@@ -48,6 +48,7 @@ import com.example.heavyduty.core.domain.model.WeightUnit
 import com.example.heavyduty.core.domain.model.barPresets
 import com.example.heavyduty.core.domain.model.calculatePlatesPerSide
 import com.example.heavyduty.core.domain.model.displayName
+import com.example.heavyduty.core.domain.model.kgToRounded
 import com.example.heavyduty.core.domain.model.label
 import com.example.heavyduty.core.domain.model.standardPlates
 import com.example.heavyduty.core.ui.components.HdButton
@@ -80,6 +81,19 @@ internal fun FinishWorkoutDialog(uiState: ActiveWorkoutUiState, onConfirm: () ->
         dismissButton = {
             TextButton(onClick = onDismiss) { Text(stringResource(R.string.workout_cancel)) }
         }
+    )
+}
+
+/** Asks before logging a weight far above the exercise's best — most likely a typo (609 for 60.9). */
+@Composable
+internal fun UnusualWeightDialog(check: UnusualWeight, onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    fun shown(kg: Float) = "${kg.kgToRounded(check.unit).formatDecimal()} ${check.unit.label}"
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.workout_unusual_weight_title, shown(check.weightKg))) },
+        text = { Text(stringResource(R.string.workout_unusual_weight_message, shown(check.bestKg))) },
+        confirmButton = { TextButton(onClick = onConfirm) { Text(stringResource(R.string.workout_unusual_weight_log)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.workout_unusual_weight_fix)) } }
     )
 }
 

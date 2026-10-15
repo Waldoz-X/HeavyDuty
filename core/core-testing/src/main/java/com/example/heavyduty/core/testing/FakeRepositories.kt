@@ -68,13 +68,24 @@ class FakeWorkoutRepository(sessions: List<WorkoutSession> = emptyList(), sets: 
         sessions.update { list -> list.filter { it.id != session.id } }
         sets.update { list -> list.filter { it.sessionId != session.id } }
     }
+
+    /** Like the DAO: a set inserted at a taken number moves the exercise's later sets up one. */
     override suspend fun insertSet(set: WorkoutSet): Long {
         val id = if (set.id != 0L) set.id else (sets.value.maxOfOrNull { it.id } ?: 0) + 1
-        sets.update { list -> list.filter { it.id != id } + set.copy(id = id) }
+        sets.update { list -> list.filter { it.id != id }.shiftedFrom(set, by = 1) + set.copy(id = id) }
         return id
     }
     override suspend fun updateSet(set: WorkoutSet) = sets.update { list -> list.map { if (it.id == set.id) set else it } }
-    override suspend fun deleteSet(set: WorkoutSet) = sets.update { list -> list.filter { it.id != set.id } }
+
+    /** Like the DAO: the exercise's later sets in that workout move down one. */
+    override suspend fun deleteSet(set: WorkoutSet) = sets.update { list -> list.filter { it.id != set.id }.shiftedFrom(set, by = -1) }
+}
+
+/** The sets of [set]'s exercise and workout numbered at or after it, renumbered by [by]. */
+fun List<WorkoutSet>.shiftedFrom(set: WorkoutSet, by: Int): List<WorkoutSet> = map {
+    val sameExercise = it.sessionId == set.sessionId && it.exerciseId == set.exerciseId && it.id != set.id
+    val from = if (by > 0) it.setNumber >= set.setNumber else it.setNumber > set.setNumber
+    if (sameExercise && from) it.copy(setNumber = it.setNumber + by) else it
 }
 
 /** Reads the workouts of a [FakeWorkoutRepository] (its [FakeWorkoutRepository.history]), or of the lists given. */

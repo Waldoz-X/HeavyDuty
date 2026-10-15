@@ -8,6 +8,7 @@ import com.example.heavyduty.core.domain.model.RoutineExercise
 import com.example.heavyduty.core.domain.model.WeightUnit
 import com.example.heavyduty.core.domain.model.WorkoutSet
 import com.example.heavyduty.core.domain.model.displayUnit
+import com.example.heavyduty.core.domain.model.isUnusuallyHeavy
 import com.example.heavyduty.core.domain.repository.RestTimerState
 
 /**
@@ -54,7 +55,9 @@ data class ActiveWorkoutUiState(
     /** Routines the start screen offers to begin. */
     val routines: List<Routine> = emptyList(),
     /** True while a set is being saved, so a double tap can't log it twice. */
-    val isLoggingSet: Boolean = false
+    val isLoggingSet: Boolean = false,
+    /** A set held back to confirm its weight, far above the exercise's best (see [isUnusuallyHeavy]). */
+    val unusualWeight: UnusualWeight? = null
 ) {
     val currentExercise: RoutineExercise? get() = routineExercises.getOrNull(currentExerciseIndex)
 
@@ -81,17 +84,26 @@ data class ActiveWorkoutUiState(
             val exercise = currentExercise ?: return SetHint()
             val previous = previousSets[currentSetNumber]
             val suggestion = suggestedPrescription
+            // Last resort for the load: the working set just done. The first time an exercise is
+            // done there's no suggestion, last time or planned weight, and the next row offered
+            // 0 kg — one tap on ✓ logged an empty bar. Reps keep the plan as their target.
+            val lastToday = setsFor(exercise.exerciseId).filter { !it.isWarmup }.maxByOrNull { it.completedAt ?: 0L }
             return SetHint(
                 reps = suggestion?.reps ?: previous?.reps ?: exercise.targetReps.takeIf { it > 0 },
                 // 0 kg means "no weight planned/used", not a load to repeat.
                 weightKg = suggestion?.weightKg?.takeIf { it > 0f }
                     ?: previous?.weight?.takeIf { it > 0f }
-                    ?: exercise.targetWeight.takeIf { it > 0f },
+                    ?: exercise.targetWeight.takeIf { it > 0f }
+                    ?: lastToday?.weight?.takeIf { it > 0f },
                 durationSecs = suggestion?.durationSecs ?: previous?.durationSecs
                     ?: exercise.targetDurationSecs.takeIf { it > 0 }
+                    ?: lastToday?.durationSecs
             )
         }
 }
+
+/** The weight about to be logged and the best it's being compared with, both in kg, shown in [unit]. */
+data class UnusualWeight(val weightKg: Float, val bestKg: Float, val unit: WeightUnit)
 
 /** Reps/weight/time a set falls back to when its input is left empty. Weight is in kg. */
 data class SetHint(val reps: Int? = null, val weightKg: Float? = null, val durationSecs: Int? = null)
@@ -136,6 +148,12 @@ sealed interface ActiveWorkoutUiEvent {
 
     /** Switches the current exercise between kg and lb — the machine or plates in use. */
     data object OnToggleUnit : ActiveWorkoutUiEvent
+
+    /** Log the set held back by [ActiveWorkoutUiState.unusualWeight] as typed. */
+    data object OnConfirmUnusualWeight : ActiveWorkoutUiEvent
+
+    /** Don't log it: back to the inputs to correct the weight. */
+    data object OnDismissUnusualWeight : ActiveWorkoutUiEvent
 }
 
 /**

@@ -79,6 +79,10 @@
     </plurals>
     <string name="workout_finish_dialog_logged">Series registradas: %1$d</string>
     <string name="workout_cancel">Cancelar</string>
+    <string name="workout_unusual_weight_title">¿Seguro que son %1$s?</string>
+    <string name="workout_unusual_weight_message">Es mucho más que lo máximo que has levantado en este ejercicio (%1$s). Si fue un error al escribir, corrígelo.</string>
+    <string name="workout_unusual_weight_log">Registrar igual</string>
+    <string name="workout_unusual_weight_fix">Corregir</string>
     <string name="workout_more_options">Más opciones</string>
     <string name="workout_discard">Descartar entrenamiento</string>
     <string name="workout_discard_dialog_title">¿Descartar entrenamiento?</string>

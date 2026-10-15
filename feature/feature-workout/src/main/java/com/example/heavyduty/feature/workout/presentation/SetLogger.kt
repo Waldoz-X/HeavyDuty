@@ -5,6 +5,7 @@ import com.example.heavyduty.core.domain.model.Clock
 import com.example.heavyduty.core.domain.model.WeightUnit
 import com.example.heavyduty.core.domain.model.WorkoutSet
 import com.example.heavyduty.core.domain.model.displayName
+import com.example.heavyduty.core.domain.model.isUnusuallyHeavy
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
 import com.example.heavyduty.feature.workout.domain.usecase.LogSetUseCase
 import kotlinx.coroutines.CancellationException
@@ -25,7 +26,11 @@ internal class SetLogger(
     private val workoutRepository: WorkoutRepository,
     private val clock: Clock
 ) {
-    fun logSet() {
+    /**
+     * Logs the next set. A weight far above the exercise's best is held back first (see
+     * [isUnusuallyHeavy]) until [confirmUnusualWeight]; [weightConfirmed] skips that check.
+     */
+    fun logSet(weightConfirmed: Boolean = false) {
         val state = uiState.value
         if (state.isLoggingSet) return
         val sessionId = state.sessionId ?: return
@@ -49,31 +54,8 @@ internal class SetLogger(
         uiState.update { it.copy(isLoggingSet = true) }
         scope.launch {
             try {
-                val setId = logSetUseCase(
-                    sessionId = sessionId,
-                    exerciseId = set.exerciseId,
-                    setNumber = set.setNumber,
-                    reps = set.reps,
-                    weight = set.weight,
-                    durationSecs = set.durationSecs,
-                    isWarmup = set.isWarmup,
-                    effort = set.effort,
-                    restSeconds = exercise.restBetweenSetsSecs,
-                    weightUnit = state.currentUnit
-                )
-                val loggedSet = set.copy(id = setId, completedAt = clock.nowMillis())
-                clocks.resetHold()
-                // Shown right away; the database emission that follows carries the same set.
-                draft.update {
-                    it.copy(
-                        completedSets = it.completedSets.filter { logged -> logged.id != setId } + loggedSet,
-                        repsInput = "",
-                        weightInput = "",
-                        isWarmupInput = false,
-                        effortInput = ""
-                    )
-                }
-                celebrateIfRecord(loggedSet, earlierToday = state.setsFor(exercise.exerciseId), unit = state.currentUnit)
+                if (!weightConfirmed && heldBackForUnusualWeight(set, state)) return@launch
+                save(set, restSeconds = exercise.restBetweenSetsSecs, state = state)
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Exception) {
@@ -82,6 +64,63 @@ internal class SetLogger(
                 uiState.update { it.copy(isLoggingSet = false) }
             }
         }
+    }
+
+    /** True when [set]'s weight is far above the exercise's best: it waits for [confirmUnusualWeight]. */
+    private suspend fun heldBackForUnusualWeight(set: WorkoutSet, state: ActiveWorkoutUiState): Boolean {
+        val best = bestWeightKg(set.exerciseId, earlierToday = state.setsFor(set.exerciseId))
+        if (!isUnusuallyHeavy(set.weight, best)) return false
+        uiState.update { it.copy(unusualWeight = UnusualWeight(set.weight!!, best!!, state.currentUnit)) }
+        return true
+    }
+
+    private suspend fun save(set: WorkoutSet, restSeconds: Int, state: ActiveWorkoutUiState) {
+        val setId = logSetUseCase(
+            sessionId = set.sessionId,
+            exerciseId = set.exerciseId,
+            setNumber = set.setNumber,
+            reps = set.reps,
+            weight = set.weight,
+            durationSecs = set.durationSecs,
+            isWarmup = set.isWarmup,
+            effort = set.effort,
+            restSeconds = restSeconds,
+            weightUnit = state.currentUnit
+        )
+        val loggedSet = set.copy(id = setId, completedAt = clock.nowMillis())
+        clocks.resetHold()
+        // Shown right away; the database emission that follows carries the same set.
+        draft.update {
+            it.copy(
+                completedSets = it.completedSets.filter { logged -> logged.id != setId } + loggedSet,
+                repsInput = "",
+                weightInput = "",
+                isWarmupInput = false,
+                effortInput = ""
+            )
+        }
+        celebrateIfRecord(loggedSet, earlierToday = state.setsFor(set.exerciseId), unit = state.currentUnit)
+    }
+
+    fun confirmUnusualWeight() {
+        uiState.update { it.copy(unusualWeight = null) }
+        logSet(weightConfirmed = true)
+    }
+
+    fun dismissUnusualWeight() {
+        uiState.update { it.copy(unusualWeight = null) }
+    }
+
+    /** The heaviest working set of the exercise, past or today; null when there's none or history can't be read. */
+    private suspend fun bestWeightKg(exerciseId: Long, earlierToday: List<WorkoutSet>): Float? {
+        val history = try {
+            currentExercise.historyExcludingCurrentSession(exerciseId)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            emptyList()
+        }
+        return (history + earlierToday).filter { !it.isWarmup }.mapNotNull { it.weight }.maxOrNull()
     }
 
     /** Celebrates a set that beats every earlier set of the exercise (see [newRecordEstimate]). */

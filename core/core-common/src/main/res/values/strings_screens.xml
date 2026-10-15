@@ -98,6 +98,8 @@
     <string name="profile_reminder_hint">Te avisa a esta hora los días que tu calendario tiene una rutina, si aún no la entrenaste.</string>
     <string name="profile_reminder_time">Hora del aviso: %1$s</string>
     <string name="profile_reminder_change_time">Cambiar hora</string>
+    <string name="profile_reminder_blocked">Las notificaciones de HeavyDuty están desactivadas, así que el recordatorio no puede avisarte.</string>
+    <string name="profile_reminder_open_settings">Abrir ajustes</string>
     <string name="profile_reminder_time_title">Hora del recordatorio</string>
     <string name="profile_health_title">Health Connect</string>
     <string name="profile_health_hint">Envía tus entrenamientos terminados a Health Connect y trae tu peso desde básculas y otras apps.</string>

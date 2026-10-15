@@ -161,6 +161,10 @@ class ActiveWorkoutViewModel @Inject constructor(
             ActiveWorkoutUiEvent.OnSkipRest -> restTimerController.skipRest()
 
             ActiveWorkoutUiEvent.OnToggleUnit -> currentExercise.toggleUnit()
+
+            ActiveWorkoutUiEvent.OnConfirmUnusualWeight -> setLogger.confirmUnusualWeight()
+
+            ActiveWorkoutUiEvent.OnDismissUnusualWeight -> setLogger.dismissUnusualWeight()
         }
     }
 

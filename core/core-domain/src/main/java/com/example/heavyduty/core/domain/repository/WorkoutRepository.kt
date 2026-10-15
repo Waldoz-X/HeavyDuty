@@ -16,7 +16,14 @@ interface WorkoutRepository {
     suspend fun insertSession(session: WorkoutSession): Long
     suspend fun updateSession(session: WorkoutSession)
     suspend fun deleteSession(session: WorkoutSession)
+
+    /**
+     * Stores [set] at its number. An exercise's sets in a workout are kept numbered 1, 2, 3…:
+     * inserting at a taken number (putting a deleted set back) moves the later ones up one.
+     */
     suspend fun insertSet(set: WorkoutSet): Long
     suspend fun updateSet(set: WorkoutSet)
+
+    /** Deletes [set]; the exercise's later sets in that workout move down one, leaving no gap. */
     suspend fun deleteSet(set: WorkoutSet)
 }

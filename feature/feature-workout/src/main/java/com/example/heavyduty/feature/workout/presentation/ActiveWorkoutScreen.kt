@@ -341,6 +341,13 @@ internal fun ActiveWorkoutContent(uiState: ActiveWorkoutUiState, onEvent: (Activ
     endDialog?.let { dialog ->
         EndWorkoutDialogs(dialog = dialog, uiState = uiState, onDismiss = { endDialog = null }, onEvent = onEvent)
     }
+    uiState.unusualWeight?.let { check ->
+        UnusualWeightDialog(
+            check = check,
+            onConfirm = { onEvent(ActiveWorkoutUiEvent.OnConfirmUnusualWeight) },
+            onDismiss = { onEvent(ActiveWorkoutUiEvent.OnDismissUnusualWeight) }
+        )
+    }
 }
 
 /** The two ways out of a workout, each confirmed first. */
