@@ -25,13 +25,25 @@ fun NavGraphBuilder.historyScreen(
     }
 }
 
-/** Registers a finished workout's detail, where it can be corrected or deleted. */
+/** The workout detail's route pattern, for whoever matches against it (the app's top bar). */
+const val WORKOUT_DETAIL_ROUTE = "workout_detail/{sessionId}?finished={finished}"
+
+/** The detail of [sessionId]; [finished] when arriving straight from finishing it, to say so. */
+fun workoutDetailRoute(sessionId: Long, finished: Boolean = false): String = "workout_detail/$sessionId?finished=$finished"
+
+/** Registers a finished workout's detail, where it can be corrected or deleted — and the summary shown on finishing. */
 fun NavGraphBuilder.workoutDetailScreen(onNavigateBack: () -> Unit) {
     composable(
-        route = "workout_detail/{sessionId}",
-        arguments = listOf(navArgument("sessionId") { type = NavType.LongType })
-    ) {
-        WorkoutDetailScreen(onNavigateBack = onNavigateBack)
+        route = WORKOUT_DETAIL_ROUTE,
+        arguments = listOf(
+            navArgument("sessionId") { type = NavType.LongType },
+            navArgument("finished") {
+                type = NavType.BoolType
+                defaultValue = false
+            }
+        )
+    ) { entry ->
+        WorkoutDetailScreen(onNavigateBack = onNavigateBack, justFinished = entry.arguments?.getBoolean("finished") == true)
     }
 }
 

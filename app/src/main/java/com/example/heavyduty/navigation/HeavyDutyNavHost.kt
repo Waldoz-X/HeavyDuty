@@ -21,6 +21,7 @@ import com.example.heavyduty.feature.exercises.navigation.exerciseListScreen
 import com.example.heavyduty.feature.exercises.navigation.exercisePickerScreen
 import com.example.heavyduty.feature.history.navigation.historyScreen
 import com.example.heavyduty.feature.history.navigation.progressScreen
+import com.example.heavyduty.feature.history.navigation.workoutDetailRoute
 import com.example.heavyduty.feature.history.navigation.workoutDetailScreen
 import com.example.heavyduty.feature.profile.navigation.profileScreen
 import com.example.heavyduty.feature.routines.navigation.routineEditorScreen
@@ -87,13 +88,12 @@ private fun NavGraphBuilder.trainingDestinations(navController: NavHostControlle
         onNavigateToRoutines = {
             navController.navigateToTopLevel(DrawerDestination.ROUTINES.route)
         },
-        onWorkoutComplete = {
-            navController.navigate(TopLevelDestination.DASHBOARD.route) {
-                popUpTo(navController.graph.id) {
-                    inclusive = true
-                }
-            }
-        }
+        // The finished workout's summary, on top of the dashboard: back from it lands there.
+        onWorkoutComplete = { sessionId ->
+            navController.navigateToFreshDashboard()
+            navController.navigate(workoutDetailRoute(sessionId, finished = true))
+        },
+        onWorkoutDiscard = { navController.navigateToFreshDashboard() }
     )
 
     exerciseListScreen(
@@ -142,7 +142,7 @@ private fun NavGraphBuilder.trainingDestinations(navController: NavHostControlle
 private fun NavGraphBuilder.recordDestinations(navController: NavHostController, navigateBack: () -> Unit) {
     historyScreen(
         onStartWorkout = { navController.navigateToTopLevel(TopLevelDestination.WORKOUT.route) },
-        onSessionClick = { sessionId -> navController.navigateIfResumed("workout_detail/$sessionId") },
+        onSessionClick = { sessionId -> navController.navigateIfResumed(workoutDetailRoute(sessionId)) },
         onExerciseProgressClick = { exerciseId ->
             navController.navigateIfResumed("progress/$exerciseId")
         }
@@ -194,3 +194,10 @@ private fun AnimatedContentTransitionScope<NavBackStackEntry>.exitTransition(for
         slideOutHorizontally(tween(TRANSITION_DURATION_MS)) { if (forward) -it / SLIDE_DIVISOR else it / SLIDE_DIVISOR } +
             fadeOut(tween(TRANSITION_DURATION_MS))
     }
+
+/** The dashboard as the only screen left: a workout that's over can't be gone back to. */
+private fun NavHostController.navigateToFreshDashboard() {
+    navigate(TopLevelDestination.DASHBOARD.route) {
+        popUpTo(graph.id) { inclusive = true }
+    }
+}

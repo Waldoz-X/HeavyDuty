@@ -231,8 +231,9 @@ class ActiveWorkoutViewModelTest {
     }
 
     @Test
-    fun `finishing the workout returns to the start screen`() {
+    fun `finishing the workout returns to the start screen and hands over its summary`() {
         val viewModel = createViewModel()
+        val effects = viewModel.collectEffects()
         viewModel.onEvent(ActiveWorkoutUiEvent.OnStartRoutine(routine.id))
         viewModel.logSet("8")
 
@@ -241,7 +242,9 @@ class ActiveWorkoutViewModelTest {
         val state = viewModel.uiState.value
         assertFalse(state.isActive)
         assertTrue(state.completedSets.isEmpty())
-        assertEquals(WorkoutStatus.COMPLETED, workoutRepository.sessions.value.single().status)
+        val session = workoutRepository.sessions.value.single()
+        assertEquals(WorkoutStatus.COMPLETED, session.status)
+        assertEquals(session.id, effects.filterIsInstance<ActiveWorkoutUiEffect.WorkoutCompleted>().single().sessionId)
     }
 
     @Test

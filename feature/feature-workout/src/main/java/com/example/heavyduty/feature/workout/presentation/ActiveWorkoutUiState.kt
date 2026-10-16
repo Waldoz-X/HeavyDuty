@@ -162,7 +162,9 @@ sealed interface ActiveWorkoutUiEvent {
 sealed interface ActiveWorkoutUiEffect {
     data object NavigateToRoutines : ActiveWorkoutUiEffect
     data class ShowMessage(@param:StringRes val messageResId: Int) : ActiveWorkoutUiEffect
-    data object WorkoutCompleted : ActiveWorkoutUiEffect
+
+    /** Carries the finished session, so its summary can be shown. */
+    data class WorkoutCompleted(val sessionId: Long) : ActiveWorkoutUiEffect
     data object WorkoutDiscarded : ActiveWorkoutUiEffect
 
     /** A set was deleted — offer to undo it. */

@@ -5,9 +5,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -16,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
@@ -52,6 +56,7 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -82,7 +87,12 @@ private sealed interface DetailDialog {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WorkoutDetailScreen(onNavigateBack: () -> Unit, modifier: Modifier = Modifier, viewModel: WorkoutDetailViewModel = hiltViewModel()) {
+fun WorkoutDetailScreen(
+    onNavigateBack: () -> Unit,
+    modifier: Modifier = Modifier,
+    justFinished: Boolean = false,
+    viewModel: WorkoutDetailViewModel = hiltViewModel()
+) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -97,6 +107,7 @@ fun WorkoutDetailScreen(onNavigateBack: () -> Unit, modifier: Modifier = Modifie
         onEvent = viewModel::onEvent,
         onNavigateBack = onNavigateBack,
         snackbarHostState = snackbarHostState,
+        justFinished = justFinished,
         modifier = modifier
     )
 }
@@ -109,7 +120,8 @@ internal fun WorkoutDetailScaffold(
     onEvent: (WorkoutDetailUiEvent) -> Unit,
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier,
-    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    justFinished: Boolean = false
 ) {
     var dialog by remember { mutableStateOf<DetailDialog?>(null) }
     val session = uiState.session
@@ -136,6 +148,7 @@ internal fun WorkoutDetailScaffold(
 
             else -> WorkoutDetailContent(
                 uiState = uiState,
+                justFinished = justFinished,
                 onEditSet = { dialog = DetailDialog.EditSet(it.id) },
                 onDeleteSet = { onEvent(WorkoutDetailUiEvent.OnDeleteSet(it)) },
                 modifier = Modifier.padding(innerPadding)
@@ -268,6 +281,7 @@ private fun DetailDialogs(
 @Composable
 private fun WorkoutDetailContent(
     uiState: WorkoutDetailUiState,
+    justFinished: Boolean,
     onEditSet: (WorkoutSet) -> Unit,
     onDeleteSet: (WorkoutSet) -> Unit,
     modifier: Modifier = Modifier
@@ -277,10 +291,38 @@ private fun WorkoutDetailContent(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+        if (justFinished) item(key = "finished") { FinishedBanner() }
         item(key = "summary") { SummaryCard(uiState) }
         items(uiState.exercises, key = { it.exerciseId }) { exercise ->
             ExerciseCard(exercise = exercise, onEditSet = onEditSet, onDeleteSet = onDeleteSet)
         }
+    }
+}
+
+/** Heads the detail when it opens as the summary of the workout just finished. */
+@Composable
+private fun FinishedBanner(modifier: Modifier = Modifier) {
+    Column(modifier = modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Icon(
+            imageVector = Icons.Default.EmojiEvents,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(48.dp)
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = stringResource(R.string.history_workout_finished_title),
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlign = TextAlign.Center
+        )
+        Text(
+            text = stringResource(R.string.history_workout_finished_subtitle),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
     }
 }
 

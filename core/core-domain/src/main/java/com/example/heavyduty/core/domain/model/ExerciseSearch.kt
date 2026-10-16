@@ -20,10 +20,37 @@ fun List<Exercise>.searchExercises(query: String): List<Exercise> {
         val haystack = exercise.searchText()
         if (terms.all { alternatives -> alternatives.any { it in haystack } }) exercise to exercise.rank(terms) else null
     }.sortedWith(
-        compareBy<Pair<Exercise, Int>>({ it.second }, { it.first.displayName.length })
+        compareBy<Pair<Exercise, Int>>(
+            { it.second },
+            { if (it.first.startsWithFirstWord(terms)) 0 else 1 },
+            { it.first.equipmentTier() },
+            { it.first.displayName.length }
+        )
             .thenBy(collator) { it.first.displayName }
     ).map { it.first }
 }
+
+/** "Sentadilla con barra" before "Envión en sentadilla" when the search starts with "sentadilla". */
+private fun Exercise.startsWithFirstWord(terms: List<Set<String>>): Boolean {
+    val name = normalize(displayName)
+    return terms.first().any { name.startsWith(it) }
+}
+
+/**
+ * How common the exercise's equipment is, as a tie-break: "press banca" should list the barbell
+ * and dumbbell bench press before the cable, Smith and band versions — by name length alone the
+ * cable one ("en polea") came first and the classic one fourth. Bodyweight goes with machines:
+ * as a first tier, its many variants (sissy squats, inverted rows) buried the barbell classics.
+ */
+private fun Exercise.equipmentTier(): Int = when (equipment.lowercase(Locale.ROOT)) {
+    in FREE_WEIGHT_EQUIPMENT -> 0
+    in GYM_EQUIPMENT -> 1
+    else -> 2
+}
+
+private val FREE_WEIGHT_EQUIPMENT = setOf("barbell", "dumbbell")
+private val GYM_EQUIPMENT =
+    setOf("body weight", "cable", "leverage machine", "ez barbell", "sled machine", "smith machine", "olympic barbell", "trap bar")
 
 /** Each query word becomes the set of strings any of which counts as a match for it. */
 internal fun parseQuery(query: String): List<Set<String>> {

@@ -93,7 +93,7 @@ internal class WorkoutLifecycle(
             try {
                 completeWorkoutUseCase(sessionId)
                 restTimerController.skipRest()
-                effects.send(ActiveWorkoutUiEffect.WorkoutCompleted)
+                effects.send(ActiveWorkoutUiEffect.WorkoutCompleted(sessionId))
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Exception) {

@@ -56,6 +56,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -67,6 +68,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.heavyduty.core.common.R
@@ -172,6 +174,9 @@ private fun HeaderCell(text: String, modifier: Modifier = Modifier) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center
         ),
+        // A floor in dp, not sp: with a large system font the sp floor grew too and a one-word
+        // header ("ANTERIOR") couldn't fit nor wrap. The values below keep the user's size.
+        minFontSize = with(LocalDensity.current) { MIN_HEADER_FONT.toSp() },
         modifier = modifier
     )
 }
@@ -197,9 +202,15 @@ private fun ValueCell(text: String, modifier: Modifier = Modifier, dim: Boolean 
  * up to [maxLines], and only then ellipsizes.
  */
 @Composable
-private fun FitText(text: String, style: TextStyle, modifier: Modifier = Modifier, maxLines: Int = 1) {
+private fun FitText(
+    text: String,
+    style: TextStyle,
+    modifier: Modifier = Modifier,
+    maxLines: Int = 1,
+    minFontSize: TextUnit = MIN_CELL_FONT
+) {
     if (maxLines == 1) {
-        ShrinkingText(text = text, style = style, maxLines = 1, modifier = modifier)
+        ShrinkingText(text = text, style = style, maxLines = 1, minFontSize = minFontSize, modifier = modifier)
         return
     }
     // A second line only once even the smallest size can't hold it on one: with lines to spare,
@@ -208,27 +219,34 @@ private fun FitText(text: String, style: TextStyle, modifier: Modifier = Modifie
     BoxWithConstraints(modifier = modifier, contentAlignment = Alignment.Center) {
         val fitsOnOneLine = !measurer.measure(
             text = text,
-            style = style.copy(fontSize = MIN_CELL_FONT),
+            style = style.copy(fontSize = minFontSize),
             maxLines = 1,
             constraints = Constraints(maxWidth = constraints.maxWidth)
         ).hasVisualOverflow
-        ShrinkingText(text = text, style = style, maxLines = if (fitsOnOneLine) 1 else maxLines, modifier = Modifier.fillMaxWidth())
+        ShrinkingText(
+            text = text,
+            style = style,
+            maxLines = if (fitsOnOneLine) 1 else maxLines,
+            minFontSize = minFontSize,
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
 
 @Composable
-private fun ShrinkingText(text: String, style: TextStyle, maxLines: Int, modifier: Modifier = Modifier) {
+private fun ShrinkingText(text: String, style: TextStyle, maxLines: Int, minFontSize: TextUnit, modifier: Modifier = Modifier) {
     BasicText(
         text = text,
         style = style,
         maxLines = maxLines,
         overflow = TextOverflow.Ellipsis,
-        autoSize = TextAutoSize.StepBased(minFontSize = MIN_CELL_FONT, maxFontSize = style.fontSize, stepSize = 0.5.sp),
+        autoSize = TextAutoSize.StepBased(minFontSize = minFontSize, maxFontSize = style.fontSize, stepSize = 0.5.sp),
         modifier = modifier
     )
 }
 
 private val MIN_CELL_FONT = 9.sp
+private val MIN_HEADER_FONT = 9.dp
 
 /** "4 × 117.5 kg" — a set from another unit — may need a second line where the column is narrow. */
 private const val PREVIOUS_MAX_LINES = 2

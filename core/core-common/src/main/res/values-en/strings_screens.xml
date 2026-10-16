@@ -28,6 +28,8 @@
     <string name="history_empty_description">Finish a workout to see your history</string>
     <string name="history_start_training">Start training</string>
     <string name="history_workout_default">Workout</string>
+    <string name="history_workout_finished_title">Workout done!</string>
+    <string name="history_workout_finished_subtitle">Nice work. Here\'s how it went.</string>
     <string name="history_detail_sets">Sets</string>
     <string name="history_edit_duration">Edit duration</string>
     <string name="history_duration_minutes_label">Duration (minutes)</string>

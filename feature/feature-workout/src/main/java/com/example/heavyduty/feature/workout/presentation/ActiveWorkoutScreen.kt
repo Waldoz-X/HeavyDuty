@@ -98,7 +98,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun ActiveWorkoutScreen(
     onNavigateToRoutines: () -> Unit,
-    onWorkoutComplete: () -> Unit,
+    onWorkoutComplete: (sessionId: Long) -> Unit,
+    onWorkoutDiscard: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: ActiveWorkoutViewModel = hiltViewModel()
 ) {
@@ -111,13 +112,16 @@ fun ActiveWorkoutScreen(
 
     val currentOnNavigateToRoutines by rememberUpdatedState(onNavigateToRoutines)
     val currentOnWorkoutComplete by rememberUpdatedState(onWorkoutComplete)
+    val currentOnWorkoutDiscard by rememberUpdatedState(onWorkoutDiscard)
     LaunchedEffect(Unit) {
         viewModel.uiEffect.collect { effect ->
             when (effect) {
                 ActiveWorkoutUiEffect.NavigateToRoutines -> currentOnNavigateToRoutines()
 
-                // Either way the workout is over: back to the dashboard.
-                ActiveWorkoutUiEffect.WorkoutCompleted, ActiveWorkoutUiEffect.WorkoutDiscarded -> currentOnWorkoutComplete()
+                // Finished: its summary. Discarded: nothing to show.
+                is ActiveWorkoutUiEffect.WorkoutCompleted -> currentOnWorkoutComplete(effect.sessionId)
+
+                ActiveWorkoutUiEffect.WorkoutDiscarded -> currentOnWorkoutDiscard()
 
                 // Shown in its own coroutine so a visible snackbar never holds up navigation.
                 is ActiveWorkoutUiEffect.ShowMessage -> scope.launch {

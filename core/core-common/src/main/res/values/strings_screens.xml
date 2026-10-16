@@ -31,6 +31,8 @@
     <string name="history_empty_description">Completa un entrenamiento para ver tu historial</string>
     <string name="history_start_training">Empezar a entrenar</string>
     <string name="history_workout_default">Entrenamiento</string>
+    <string name="history_workout_finished_title">¡Entrenamiento terminado!</string>
+    <string name="history_workout_finished_subtitle">Buen trabajo. Así quedó tu sesión.</string>
     <string name="history_detail_sets">Series</string>
     <string name="history_edit_duration">Editar duración</string>
     <string name="history_duration_minutes_label">Duración (minutos)</string>

@@ -87,6 +87,7 @@ import com.example.heavyduty.core.domain.repository.HealthSync
 import com.example.heavyduty.core.ui.LocalSharedTransitionScope
 import com.example.heavyduty.core.ui.LocalWeightUnit
 import com.example.heavyduty.core.ui.theme.HeavyDutyTheme
+import com.example.heavyduty.feature.history.navigation.WORKOUT_DETAIL_ROUTE
 import com.example.heavyduty.feature.profile.presentation.onboarding.OnboardingScreen
 import com.example.heavyduty.navigation.DrawerDestination
 import com.example.heavyduty.navigation.HeavyDutyNavHost
@@ -205,7 +206,7 @@ private val ROUTES_WITH_OWN_TOP_BAR = setOf(
     // The detail draws its own back button over a full-bleed header image.
     "exercise_detail/{exerciseId}",
     "progress/{exerciseId}",
-    "workout_detail/{sessionId}",
+    WORKOUT_DETAIL_ROUTE,
     "stats_graph",
     "stats/series",
     "stats/distribucion_radar",

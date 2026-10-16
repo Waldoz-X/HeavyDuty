@@ -71,6 +71,48 @@ class ExerciseSearchTest {
         assertEquals(listOf(11L, 10L), listOf(jm, bench).searchExercises("press banca barra").map { it.id })
     }
 
+    @Test
+    fun `among equal matches, free weights come before machines and bands`() {
+        fun bench(id: Long, name: String, equipment: String) = Exercise(
+            id = id,
+            name = name,
+            muscleGroup = MuscleGroup.CHEST,
+            exerciseType = ExerciseType.STRENGTH,
+            equipment = equipment
+        )
+        val results = listOf(
+            bench(20, "Press de banca en polea", "cable"),
+            bench(21, "Press de banca en Smith", "smith machine"),
+            bench(22, "Press de banca con banda", "band"),
+            bench(23, "Press de banca con barra", "barbell"),
+            bench(24, "Press de banca con mancuernas", "dumbbell"),
+            bench(25, "Press de banca inclinado con barra", "barbell")
+        ).searchExercises("press banca").map { it.id }
+
+        // The classic two first, then their variants, then machines, then bands.
+        assertEquals(listOf(23L, 24L, 25L, 20L, 21L, 22L), results)
+    }
+
+    @Test
+    fun `names that start with the search come first, then the free-weight classics`() {
+        fun squat(id: Long, name: String, nameEn: String, equipment: String) = Exercise(
+            id = id,
+            name = name,
+            nameEn = nameEn,
+            muscleGroup = MuscleGroup.QUADRICEPS,
+            exerciseType = ExerciseType.STRENGTH,
+            equipment = equipment
+        )
+        val results = listOf(
+            squat(30, "Envión en sentadilla", "barbell clean squat", "barbell"),
+            squat(31, "Sentadilla con salto", "jump squat", "body weight"),
+            squat(32, "Sentadilla sissy", "sissy squat", "body weight"),
+            squat(33, "Sentadilla completa con barra", "barbell full squat", "barbell")
+        ).searchExercises("sentadilla").map { it.id }
+
+        assertEquals(listOf(33L, 32L, 31L, 30L), results)
+    }
+
     private fun exercise(id: Long, name: String, muscleGroup: MuscleGroup, equipment: String) = Exercise(
         id = id,
         name = name,
