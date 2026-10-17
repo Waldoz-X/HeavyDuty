@@ -10,7 +10,7 @@ import java.util.regex.Pattern
 
 /** User journeys shared by the Baseline Profile generator and the benchmarks. */
 
-const val PACKAGE_NAME = "com.example.heavyduty"
+const val PACKAGE_NAME = "com.waldoz.heavyduty"
 
 private const val TIMEOUT_MS = 10_000L
 private const val SEED_TIMEOUT_MS = 60_000L

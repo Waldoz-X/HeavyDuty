@@ -130,7 +130,10 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // Held until it's known whether this is a first run, so the welcome doesn't flash in.
-        installSplashScreen().setKeepOnScreenCondition { mainViewModel.needsOnboarding.value == null }
+        installSplashScreen().apply {
+            setKeepOnScreenCondition { mainViewModel.needsOnboarding.value == null }
+            setOnExitAnimationListener { it.spinLogoOut() }
+        }
         super.onCreate(savedInstanceState)
         applySystemBars(darkTheme = true)
         // A recreated activity (rotation…) already handled its launch intent.

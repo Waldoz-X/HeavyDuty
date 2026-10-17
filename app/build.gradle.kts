@@ -30,7 +30,10 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.heavyduty"
+        // The app's identity on devices and on Google Play: changing it later makes a different app,
+        // and installs of the old one keep their data to themselves. The Kotlin packages and
+        // namespace stay com.example.* — they're source layout, not identity.
+        applicationId = "com.waldoz.heavyduty"
         minSdk = 24
         targetSdk = 37
         versionCode = 1
@@ -51,7 +54,14 @@ android {
     }
 
     buildTypes {
+        // Studio's debug builds are signed with this PC's debug key and release with the real
+        // one: as one app they couldn't replace each other. Side by side, the debug one apart.
+        debug {
+            applicationIdSuffix = ".debug"
+            manifestPlaceholders["appLabel"] = "HeavyDuty Debug"
+        }
         release {
+            manifestPlaceholders["appLabel"] = "@string/app_name"
             // R8: shrinks, optimizes and obfuscates code and drops unused resources. Its keep
             // rules live in src/main/keepRules/, which AGP passes to R8 by itself.
             optimization {
