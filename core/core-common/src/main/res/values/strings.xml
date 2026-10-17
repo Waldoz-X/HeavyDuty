@@ -113,7 +113,9 @@
     <string name="dashboard_muscle_distribution">Distribución Muscular</string>
     <string name="dashboard_quick_actions">Acciones Rápidas</string>
     <string name="dashboard_start_free_workout">Iniciar Entrenamiento Libre</string>
+    <string name="dashboard_start_free_workout_hint">Agrega ejercicios sobre la marcha</string>
     <string name="dashboard_choose_routine">Elegir Rutina</string>
+    <string name="dashboard_choose_routine_hint">Empieza una de tus rutinas guardadas</string>
     <string name="dashboard_recent_activity">Actividad Reciente</string>
     <string name="dashboard_previous_week">Semana anterior</string>
     <string name="dashboard_next_week">Semana siguiente</string>

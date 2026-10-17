@@ -48,10 +48,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
@@ -70,13 +73,10 @@ import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdErrorState
 import com.example.heavyduty.core.ui.components.HdLineChart
 import com.example.heavyduty.core.ui.components.HdTextButton
-import com.example.heavyduty.core.ui.components.HdTonalButton
 import com.example.heavyduty.core.ui.formatTotalWeight
 import com.example.heavyduty.core.ui.formatWeight
 import com.example.heavyduty.core.ui.formatWeightValue
 import com.example.heavyduty.core.ui.nameResId
-import com.example.heavyduty.core.ui.theme.GradientCyanEnd
-import com.example.heavyduty.core.ui.theme.GradientCyanStart
 import com.example.heavyduty.core.ui.theme.overlay
 import com.example.heavyduty.core.ui.weightUnitLabel
 import com.example.heavyduty.feature.dashboard.domain.model.DayPlanUi
@@ -170,15 +170,22 @@ private fun DashboardContent(uiState: DashboardUiState, onEvent: (DashboardUiEve
         SectionTitle(stringResource(R.string.dashboard_quick_actions))
         Spacer(modifier = Modifier.height(16.dp))
 
-        StartFreeWorkoutButton(onClick = { onEvent(DashboardUiEvent.OnStartFreeWorkout) })
+        QuickActionCard(
+            icon = Icons.Default.PlayArrow,
+            title = stringResource(R.string.dashboard_start_free_workout),
+            hint = stringResource(R.string.dashboard_start_free_workout_hint),
+            emphasized = true,
+            onClick = { onEvent(DashboardUiEvent.OnStartFreeWorkout) }
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        HdTonalButton(
-            text = stringResource(R.string.dashboard_choose_routine),
-            onClick = { onEvent(DashboardUiEvent.OnChooseRoutine) },
-            modifier = Modifier.fillMaxWidth().height(64.dp),
-            icon = Icons.AutoMirrored.Filled.DirectionsRun
+        QuickActionCard(
+            icon = Icons.AutoMirrored.Filled.DirectionsRun,
+            title = stringResource(R.string.dashboard_choose_routine),
+            hint = stringResource(R.string.dashboard_choose_routine_hint),
+            emphasized = false,
+            onClick = { onEvent(DashboardUiEvent.OnChooseRoutine) }
         )
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -264,42 +271,53 @@ private fun MuscleDistributionSection(weeklyMuscleVolume: Map<MuscleGroup, Float
     }
 }
 
+/**
+ * A quick action as one of the dashboard's cards — dark, with the cyan icon the stat cards above
+ * use — rather than a gradient banner and a maroon tonal button that matched nothing on this
+ * screen. The main action ([emphasized]) gets a solid cyan icon, the other a tinted one.
+ */
 @Composable
-private fun StartFreeWorkoutButton(onClick: () -> Unit) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(80.dp)
-            .clip(RoundedCornerShape(24.dp)),
-        onClick = onClick
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(GradientCyanStart, GradientCyanEnd)
-                    )
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
+private fun QuickActionCard(
+    icon: ImageVector,
+    title: String,
+    hint: String,
+    emphasized: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    HdCard(onClick = onClick, modifier = modifier.semantics { role = Role.Button }) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(
+                        if (emphasized) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                    ),
+                contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = Icons.Default.PlayArrow,
+                    imageVector = icon,
                     contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(32.dp)
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    text = stringResource(R.string.dashboard_start_free_workout),
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                    color = Color.White
+                    tint = if (emphasized) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(26.dp)
                 )
             }
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(text = hint, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }

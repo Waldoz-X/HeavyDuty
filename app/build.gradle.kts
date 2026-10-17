@@ -18,6 +18,18 @@ val keystoreProperties = Properties().apply {
         ?.let { load(StringReader(it)) }
 }
 
+/*
+ * versionCode counts the commits, so a build from any later commit installs over the one
+ * before it without anyone remembering to bump a number — Android refuses an update whose code
+ * isn't higher. Builds handed out should come from a commit. Without git it falls back to 1.
+ */
+val commitCount: Int = runCatching {
+    providers.exec { commandLine("git", "rev-list", "--count", "HEAD") }.standardOutput.asText.get().trim().toInt()
+}.getOrElse {
+    logger.warn("versionCode: git rev-list failed (${it.message}); using 1")
+    1
+}
+
 android {
     testOptions {
         // Robolectric needs the merged resources (strings, theme) to render composables.
@@ -36,8 +48,9 @@ android {
         applicationId = "com.waldoz.heavyduty"
         minSdk = 24
         targetSdk = 37
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = commitCount
+        // Set by hand when a release is worth naming (0.1.0 → 0.2.0…); shown in Perfil.
+        versionName = "0.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

@@ -171,6 +171,7 @@ private fun ProfileContent(
             )
         }
         items(uiState.feedItems) { feedItem -> WorkoutFeedCard(item = feedItem) }
+        item { AppVersionFooter(modifier = Modifier.padding(top = 16.dp)) }
         item { Spacer(modifier = Modifier.height(32.dp)) }
     }
 }

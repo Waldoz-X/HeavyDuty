@@ -106,7 +106,9 @@
     <string name="dashboard_muscle_distribution">Muscle Distribution</string>
     <string name="dashboard_quick_actions">Quick Actions</string>
     <string name="dashboard_start_free_workout">Start Free Workout</string>
+    <string name="dashboard_start_free_workout_hint">Add exercises as you go</string>
     <string name="dashboard_choose_routine">Choose Routine</string>
+    <string name="dashboard_choose_routine_hint">Start one of your saved routines</string>
     <string name="dashboard_recent_activity">Recent Activity</string>
     <string name="dashboard_previous_week">Previous week</string>
     <string name="dashboard_next_week">Next week</string>

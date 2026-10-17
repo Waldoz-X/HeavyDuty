@@ -170,4 +170,5 @@
     <string name="profile_add_name">Agrega tu nombre</string>
     <string name="profile_tap_to_edit">Toca el lápiz para editar</string>
     <string name="profile_edit_name">Editar nombre</string>
+    <string name="profile_app_version" translatable="false">HeavyDuty %1$s (%2$d)</string>
 </resources>
