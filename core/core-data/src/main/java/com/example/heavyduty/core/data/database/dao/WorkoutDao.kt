@@ -66,6 +66,13 @@ interface WorkoutDao {
     )
     fun getAllCompletedSets(): Flow<List<WorkoutSetEntity>>
 
+    /** One exercise's logged sets in finished workouts that started before [beforeStartTime]. */
+    @Query(
+        "SELECT s.* FROM workout_sets s INNER JOIN workout_sessions w ON s.sessionId = w.id " +
+            "WHERE s.exerciseId = :exerciseId AND s.isCompleted = 1 AND w.status = 'COMPLETED' AND w.startTime < :beforeStartTime"
+    )
+    fun getCompletedSetsByExerciseIdBefore(exerciseId: Long, beforeStartTime: Long): Flow<List<WorkoutSetEntity>>
+
     /**
      * Sets of finished workouts that *started* in the range, matching [getSessionsByDateRange]: a
      * workout that runs past midnight at the end of a period counts whole in the period it began,

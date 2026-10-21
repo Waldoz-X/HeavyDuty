@@ -45,7 +45,6 @@
     <string name="history_delete_set">Delete set %1$d</string>
     <string name="history_share">Share</string>
     <string name="history_share_title">Share workout</string>
-    <string name="history_share_button">Share image</string>
     <string name="history_share_chooser">Share with</string>
     <plurals name="history_share_sets">
         <item quantity="one">%1$d set</item>
@@ -54,6 +53,16 @@
     <plurals name="history_share_more">
         <item quantity="one">+%1$d more exercise</item>
         <item quantity="other">+%1$d more exercises</item>
+    </plurals>
+    <string name="history_share_format_story">Story</string>
+    <string name="history_share_format_post">Post</string>
+    <string name="history_share_save">Save</string>
+    <string name="history_share_saved">Image saved to Gallery › HeavyDuty</string>
+    <string name="history_share_save_failed">Couldn\'t save the image</string>
+    <string name="history_share_preparing">Preparing the card…</string>
+    <plurals name="history_share_records">
+        <item quantity="one">%1$d new record</item>
+        <item quantity="other">%1$d new records</item>
     </plurals>
     <string name="status_completed">Completed</string>
     <string name="status_in_progress">In progress</string>

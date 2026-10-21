@@ -48,7 +48,6 @@
     <string name="history_delete_set">Eliminar serie %1$d</string>
     <string name="history_share">Compartir</string>
     <string name="history_share_title">Compartir entrenamiento</string>
-    <string name="history_share_button">Compartir imagen</string>
     <string name="history_share_chooser">Compartir con</string>
     <plurals name="history_share_sets">
         <item quantity="one">%1$d serie</item>
@@ -59,6 +58,17 @@
         <item quantity="one">+%1$d ejercicio más</item>
         <item quantity="other">+%1$d ejercicios más</item>
         <item quantity="many">+%1$d ejercicios más</item>
+    </plurals>
+    <string name="history_share_format_story">Historia</string>
+    <string name="history_share_format_post">Publicación</string>
+    <string name="history_share_save">Guardar</string>
+    <string name="history_share_saved">Imagen guardada en Galería › HeavyDuty</string>
+    <string name="history_share_save_failed">No se pudo guardar la imagen</string>
+    <string name="history_share_preparing">Preparando la tarjeta…</string>
+    <plurals name="history_share_records">
+        <item quantity="one">%1$d récord nuevo</item>
+        <item quantity="other">%1$d récords nuevos</item>
+        <item quantity="many">%1$d récords nuevos</item>
     </plurals>
     <string name="status_completed">Completado</string>
     <string name="status_in_progress">En progreso</string>

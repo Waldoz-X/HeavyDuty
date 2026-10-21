@@ -68,10 +68,12 @@ import com.example.heavyduty.core.domain.model.WorkoutSet
 import com.example.heavyduty.core.domain.model.kgToRounded
 import com.example.heavyduty.core.domain.model.label
 import com.example.heavyduty.core.ui.LocalWeightUnit
+import com.example.heavyduty.core.ui.components.HdButton
 import com.example.heavyduty.core.ui.components.HdCard
 import com.example.heavyduty.core.ui.components.HdCardsSkeleton
 import com.example.heavyduty.core.ui.components.HdErrorState
 import com.example.heavyduty.core.ui.formatTotalWeight
+import com.example.heavyduty.feature.history.domain.model.ExerciseSets
 import java.text.SimpleDateFormat
 import java.util.Date
 import kotlinx.coroutines.flow.Flow
@@ -149,6 +151,7 @@ internal fun WorkoutDetailScaffold(
             else -> WorkoutDetailContent(
                 uiState = uiState,
                 justFinished = justFinished,
+                onShare = { dialog = DetailDialog.Share },
                 onEditSet = { dialog = DetailDialog.EditSet(it.id) },
                 onDeleteSet = { onEvent(WorkoutDetailUiEvent.OnDeleteSet(it)) },
                 modifier = Modifier.padding(innerPadding)
@@ -282,6 +285,7 @@ private fun DetailDialogs(
 private fun WorkoutDetailContent(
     uiState: WorkoutDetailUiState,
     justFinished: Boolean,
+    onShare: () -> Unit,
     onEditSet: (WorkoutSet) -> Unit,
     onDeleteSet: (WorkoutSet) -> Unit,
     modifier: Modifier = Modifier
@@ -291,7 +295,7 @@ private fun WorkoutDetailContent(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        if (justFinished) item(key = "finished") { FinishedBanner() }
+        if (justFinished) item(key = "finished") { FinishedBanner(onShare = onShare) }
         item(key = "summary") { SummaryCard(uiState) }
         items(uiState.exercises, key = { it.exerciseId }) { exercise ->
             ExerciseCard(exercise = exercise, onEditSet = onEditSet, onDeleteSet = onDeleteSet)
@@ -299,9 +303,9 @@ private fun WorkoutDetailContent(
     }
 }
 
-/** Heads the detail when it opens as the summary of the workout just finished. */
+/** Heads the detail when it opens as the summary of the workout just finished — the moment to share it. */
 @Composable
-private fun FinishedBanner(modifier: Modifier = Modifier) {
+private fun FinishedBanner(onShare: () -> Unit, modifier: Modifier = Modifier) {
     Column(modifier = modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Icon(
             imageVector = Icons.Default.EmojiEvents,
@@ -323,6 +327,8 @@ private fun FinishedBanner(modifier: Modifier = Modifier) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center
         )
+        Spacer(modifier = Modifier.height(16.dp))
+        HdButton(text = stringResource(R.string.history_share_title), onClick = onShare, icon = Icons.Default.Share)
     }
 }
 

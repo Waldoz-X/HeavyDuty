@@ -6,7 +6,7 @@ App de Android para registrar tus entrenamientos de fuerza: rutinas, series, des
 
 ## Descargar
 
-**[⬇️ Descargar HeavyDuty.apk](https://github.com/Waldoz-X/HeavyDuty/releases/latest/download/HeavyDuty.apk)** — versión 0.1.1
+**[⬇️ Descargar HeavyDuty.apk](https://github.com/Waldoz-X/HeavyDuty/releases/latest/download/HeavyDuty.apk)** — versión 0.1.2
 
 El enlace siempre baja la versión más reciente. Todas las versiones y sus cambios están en [Releases](https://github.com/Waldoz-X/HeavyDuty/releases).
 

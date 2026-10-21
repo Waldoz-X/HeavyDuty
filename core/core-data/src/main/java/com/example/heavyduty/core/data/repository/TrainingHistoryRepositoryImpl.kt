@@ -26,6 +26,9 @@ class TrainingHistoryRepositoryImpl @Inject constructor(private val workoutDao: 
 
     override fun getAllCompletedSets(): Flow<List<WorkoutSet>> = workoutDao.getAllCompletedSets().map { list -> list.map { it.toDomain() } }
 
+    override fun getCompletedSetsByExerciseIdBefore(exerciseId: Long, beforeStartTime: Long): Flow<List<WorkoutSet>> =
+        workoutDao.getCompletedSetsByExerciseIdBefore(exerciseId, beforeStartTime).map { list -> list.map { it.toDomain() } }
+
     override fun getCompletedSetsByDateRange(startTime: Long, endTime: Long): Flow<List<WorkoutSet>> =
         workoutDao.getCompletedSetsByDateRange(startTime, endTime).map { list -> list.map { it.toDomain() } }
 }

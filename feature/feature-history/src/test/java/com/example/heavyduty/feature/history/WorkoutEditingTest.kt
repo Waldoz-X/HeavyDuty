@@ -10,8 +10,11 @@ import com.example.heavyduty.core.domain.model.WorkoutSession
 import com.example.heavyduty.core.domain.model.WorkoutSet
 import com.example.heavyduty.core.domain.model.WorkoutStatus
 import com.example.heavyduty.core.domain.repository.WorkoutHealthMirror
+import com.example.heavyduty.core.testing.FakeTrainingHistoryRepository
+import com.example.heavyduty.core.testing.FakeUserPreferencesRepository
 import com.example.heavyduty.core.testing.FakeWorkoutRepository
 import com.example.heavyduty.core.testing.MainDispatcherRule
+import com.example.heavyduty.feature.history.domain.usecase.BuildWorkoutShareSummaryUseCase
 import com.example.heavyduty.feature.history.domain.usecase.DeleteWorkoutUseCase
 import com.example.heavyduty.feature.history.domain.usecase.GetWorkoutDetailUseCase
 import com.example.heavyduty.feature.history.domain.usecase.UpdateLoggedSetUseCase
@@ -76,6 +79,8 @@ class WorkoutEditingTest {
     private fun viewModel(): Pair<WorkoutDetailViewModel, List<WorkoutDetailUiEffect>> {
         val vm = WorkoutDetailViewModel(
             getWorkoutDetail = GetWorkoutDetailUseCase(repository),
+            buildShareSummary = BuildWorkoutShareSummaryUseCase(FakeTrainingHistoryRepository()),
+            userPreferencesRepository = FakeUserPreferencesRepository(),
             updateWorkoutDuration = UpdateWorkoutDurationUseCase(repository),
             updateLoggedSet = UpdateLoggedSetUseCase(repository),
             deleteWorkout = DeleteWorkoutUseCase(repository),

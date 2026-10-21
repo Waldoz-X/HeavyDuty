@@ -31,6 +31,8 @@ class GetWeeklySummaryUseCaseTest {
         override fun getCompletedSessionsByRoutineId(routineId: Long): Flow<List<WorkoutSession>> = flowOf(emptyList())
         override fun getSetsByExerciseId(exerciseId: Long): Flow<List<WorkoutSet>> = flowOf(emptyList())
         override fun getAllCompletedSets(): Flow<List<WorkoutSet>> = flowOf(sets)
+        override fun getCompletedSetsByExerciseIdBefore(exerciseId: Long, beforeStartTime: Long): Flow<List<WorkoutSet>> =
+            flowOf(emptyList())
         override fun getCompletedSetsByDateRange(startTime: Long, endTime: Long): Flow<List<WorkoutSet>> {
             requestedSetRange = startTime..endTime
             return flowOf(sets)

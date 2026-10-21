@@ -471,6 +471,8 @@ class ActiveWorkoutViewModelTest {
         override fun getSetsByExerciseId(exerciseId: Long): Flow<List<WorkoutSet>> =
             sets.map { list -> list.filter { it.exerciseId == exerciseId } }
         override fun getAllCompletedSets(): Flow<List<WorkoutSet>> = sets
+        override fun getCompletedSetsByExerciseIdBefore(exerciseId: Long, beforeStartTime: Long): Flow<List<WorkoutSet>> =
+            flowOf(emptyList())
         override fun getCompletedSetsByDateRange(startTime: Long, endTime: Long): Flow<List<WorkoutSet>> = sets
         override fun getActiveSession(): Flow<WorkoutSession?> =
             sessions.map { list -> list.firstOrNull { it.status == WorkoutStatus.IN_PROGRESS } }

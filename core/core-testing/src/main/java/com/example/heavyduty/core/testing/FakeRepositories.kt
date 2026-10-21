@@ -113,6 +113,9 @@ class FakeTrainingHistoryRepository(val sessions: MutableStateFlow<List<WorkoutS
     override fun getSetsByExerciseId(exerciseId: Long) =
         sets.map { list -> list.filter { it.exerciseId == exerciseId }.sortedByDescending { it.completedAt } }
     override fun getAllCompletedSets() = both.map { (s, sets) -> counted(s, sets).map { it.first } }
+    override fun getCompletedSetsByExerciseIdBefore(exerciseId: Long, beforeStartTime: Long) = both.map { (s, sets) ->
+        counted(s, sets).filter { (set, session) -> set.exerciseId == exerciseId && session.startTime < beforeStartTime }.map { it.first }
+    }
 
     /** A set belongs to the period its workout started in (WorkoutDao.getCompletedSetsByDateRange). */
     override fun getCompletedSetsByDateRange(startTime: Long, endTime: Long) =

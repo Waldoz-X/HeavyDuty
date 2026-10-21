@@ -50,7 +50,7 @@ android {
         targetSdk = 37
         versionCode = commitCount
         // Set by hand when a release is worth naming (0.1.0 → 0.2.0…); shown in Perfil.
-        versionName = "0.1.1"
+        versionName = "0.1.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

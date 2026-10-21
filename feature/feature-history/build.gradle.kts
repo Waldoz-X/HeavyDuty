@@ -43,6 +43,9 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     debugImplementation(libs.androidx.compose.ui.tooling)
 
+    // Activity results (storage permission for saving images before Android 10)
+    implementation(libs.androidx.activity.compose)
+
     // Navigation
     implementation(libs.androidx.navigation.compose)
 

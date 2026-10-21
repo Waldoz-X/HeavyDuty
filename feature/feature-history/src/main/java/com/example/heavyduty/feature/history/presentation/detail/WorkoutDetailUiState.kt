@@ -4,28 +4,31 @@ import androidx.annotation.StringRes
 import com.example.heavyduty.core.domain.model.WeightUnit
 import com.example.heavyduty.core.domain.model.WorkoutSession
 import com.example.heavyduty.core.domain.model.WorkoutSet
-import com.example.heavyduty.core.domain.model.displayName
+import com.example.heavyduty.core.ui.components.BodyGender
+import com.example.heavyduty.feature.history.domain.model.ExerciseSets
+import com.example.heavyduty.feature.history.domain.model.WorkoutShareSummary
+import com.example.heavyduty.feature.history.domain.model.exerciseSets
+import com.example.heavyduty.feature.history.domain.model.workingSetCount
+import com.example.heavyduty.feature.history.domain.model.workingVolumeKg
 
-data class WorkoutDetailUiState(val session: WorkoutSession? = null, val isLoading: Boolean = true, val loadFailed: Boolean = false) {
+data class WorkoutDetailUiState(
+    val session: WorkoutSession? = null,
+    val isLoading: Boolean = true,
+    val loadFailed: Boolean = false,
+    /** What the share card shows; null until worked out (it reads past workouts for records). */
+    val shareSummary: WorkoutShareSummary? = null,
+    /** The silhouette the share card's body map uses, as chosen in Statistics. */
+    val bodyGender: BodyGender = BodyGender.MALE
+) {
     /** The sets grouped by exercise, in the order the exercises were first trained. */
-    val exercises: List<ExerciseSets>
-        get() = session?.sets.orEmpty()
-            .sortedWith(compareBy({ it.completedAt ?: Long.MAX_VALUE }, { it.setNumber }))
-            .groupBy { it.exerciseId }
-            .map { (exerciseId, sets) ->
-                ExerciseSets(exerciseId, sets.first().exercise?.displayName.orEmpty(), sets.sortedBy { it.setNumber })
-            }
+    val exercises: List<ExerciseSets> get() = session?.exerciseSets().orEmpty()
 
     /** Working sets (no warm-ups), like everywhere else the app counts sets. */
-    val workingSets: Int get() = session?.sets.orEmpty().count { !it.isWarmup }
+    val workingSets: Int get() = session?.workingSetCount ?: 0
 
     /** Kilograms moved in working sets. */
-    val volumeKg: Float get() = session?.sets.orEmpty().filter {
-        !it.isWarmup
-    }.sumOf { (it.weight ?: 0f).toDouble() * (it.reps ?: 0) }.toFloat()
+    val volumeKg: Float get() = session?.workingVolumeKg ?: 0f
 }
-
-data class ExerciseSets(val exerciseId: Long, val name: String, val sets: List<WorkoutSet>)
 
 sealed interface WorkoutDetailUiEvent {
     data class OnSaveDuration(val minutes: String) : WorkoutDetailUiEvent

@@ -6,7 +6,10 @@ import androidx.lifecycle.viewModelScope
 import com.example.heavyduty.core.common.R
 import com.example.heavyduty.core.common.flow.whileSubscribed
 import com.example.heavyduty.core.domain.model.toKgFrom
+import com.example.heavyduty.core.domain.repository.UserPreferencesRepository
 import com.example.heavyduty.core.domain.repository.WorkoutRepository
+import com.example.heavyduty.core.ui.components.BodyGender
+import com.example.heavyduty.feature.history.domain.usecase.BuildWorkoutShareSummaryUseCase
 import com.example.heavyduty.feature.history.domain.usecase.DeleteWorkoutUseCase
 import com.example.heavyduty.feature.history.domain.usecase.GetWorkoutDetailUseCase
 import com.example.heavyduty.feature.history.domain.usecase.UpdateLoggedSetUseCase
@@ -14,19 +17,25 @@ import com.example.heavyduty.feature.history.domain.usecase.UpdateWorkoutDuratio
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /** A finished workout from the history, open to corrections: duration, sets, or deleting it. */
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class WorkoutDetailViewModel @Inject constructor(
     getWorkoutDetail: GetWorkoutDetailUseCase,
+    buildShareSummary: BuildWorkoutShareSummaryUseCase,
+    userPreferencesRepository: UserPreferencesRepository,
     private val updateWorkoutDuration: UpdateWorkoutDurationUseCase,
     private val updateLoggedSet: UpdateLoggedSetUseCase,
     private val deleteWorkout: DeleteWorkoutUseCase,
@@ -42,8 +51,16 @@ class WorkoutDetailViewModel @Inject constructor(
     val uiState: StateFlow<WorkoutDetailUiState> = _uiState.whileSubscribed(viewModelScope) {
         launch {
             getWorkoutDetail(sessionId)
+                .onEach { session -> _uiState.update { it.copy(session = session, isLoading = false) } }
+                // Redone on every correction, so the card never shows a set as it was before an edit.
+                .mapLatest { session -> session?.let { buildShareSummary(it) } }
                 .catch { _uiState.update { it.copy(isLoading = false, loadFailed = true) } }
-                .collect { session -> _uiState.update { it.copy(session = session, isLoading = false) } }
+                .collect { summary -> _uiState.update { it.copy(shareSummary = summary) } }
+        }
+        launch {
+            userPreferencesRepository.bodyDiagramGender.collect { gender ->
+                _uiState.update { it.copy(bodyGender = BodyGender.fromStorageValue(gender)) }
+            }
         }
     }
 

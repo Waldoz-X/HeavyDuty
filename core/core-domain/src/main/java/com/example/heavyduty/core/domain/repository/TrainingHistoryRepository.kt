@@ -14,6 +14,9 @@ interface TrainingHistoryRepository {
     fun getSetsByExerciseId(exerciseId: Long): Flow<List<WorkoutSet>>
     fun getAllCompletedSets(): Flow<List<WorkoutSet>>
 
+    /** One exercise's sets in finished workouts that started before [beforeStartTime]: what a workout's records beat. */
+    fun getCompletedSetsByExerciseIdBefore(exerciseId: Long, beforeStartTime: Long): Flow<List<WorkoutSet>>
+
     /** Working and warm-up sets of finished workouts that started in the range (like [getSessionsByDateRange]). */
     fun getCompletedSetsByDateRange(startTime: Long, endTime: Long): Flow<List<WorkoutSet>>
 }

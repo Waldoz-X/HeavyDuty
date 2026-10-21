@@ -15,6 +15,9 @@ import com.example.heavyduty.core.domain.model.WorkoutSession
 import com.example.heavyduty.core.domain.model.WorkoutSet
 import com.example.heavyduty.core.domain.model.WorkoutStatus
 import com.example.heavyduty.core.ui.theme.HeavyDutyTheme
+import com.example.heavyduty.feature.history.domain.model.ShareExerciseLine
+import com.example.heavyduty.feature.history.domain.model.ShareRecord
+import com.example.heavyduty.feature.history.domain.model.WorkoutShareSummary
 import com.example.heavyduty.feature.history.presentation.detail.WorkoutDetailScaffold
 import com.example.heavyduty.feature.history.presentation.detail.WorkoutDetailUiEvent
 import com.example.heavyduty.feature.history.presentation.detail.WorkoutDetailUiState
@@ -46,15 +49,26 @@ class WorkoutDetailScaffoldTest {
         sets = listOf(set)
     )
 
-    private fun show(): Pair<MutableList<WorkoutDetailUiEvent>, MutableList<Unit>> {
+    private val summary = WorkoutShareSummary(
+        startTime = session.startTime,
+        durationSecs = session.totalDurationSecs,
+        workingSets = 1,
+        volumeKg = 640f,
+        exercises = listOf(ShareExerciseLine("Press de banca", workingSets = 1, bestSet = set)),
+        records = listOf(ShareRecord("Press de banca", set)),
+        setsByMuscle = mapOf(MuscleGroup.CHEST to 1f)
+    )
+
+    private fun show(justFinished: Boolean = false): Pair<MutableList<WorkoutDetailUiEvent>, MutableList<Unit>> {
         val events = mutableListOf<WorkoutDetailUiEvent>()
         val backs = mutableListOf<Unit>()
         compose.setContent {
             HeavyDutyTheme {
                 WorkoutDetailScaffold(
-                    uiState = WorkoutDetailUiState(session = session, isLoading = false),
+                    uiState = WorkoutDetailUiState(session = session, isLoading = false, shareSummary = summary),
                     onEvent = { events += it },
-                    onNavigateBack = { backs += Unit }
+                    onNavigateBack = { backs += Unit },
+                    justFinished = justFinished
                 )
             }
         }
@@ -93,8 +107,23 @@ class WorkoutDetailScaffoldTest {
         compose.onNodeWithContentDescription("Compartir").performClick()
 
         compose.onNodeWithText("Compartir entrenamiento").assertIsDisplayed()
-        compose.onNodeWithText("Compartir imagen").assertIsDisplayed()
+        compose.onNodeWithText("Historia").assertIsDisplayed()
+        compose.onNodeWithText("Guardar").assertIsDisplayed()
         compose.onNodeWithText("1 serie · 80 kg × 8").assertExists()
+        compose.onNodeWithText("1 récord nuevo").assertExists()
+
+        // The post format has no room for the body map; the story does.
+        compose.onNodeWithText("Publicación").performClick()
+        compose.onNodeWithText("1 serie · 80 kg × 8").assertExists()
+    }
+
+    @Test
+    fun aJustFinishedWorkoutOffersSharingRightAway() {
+        show(justFinished = true)
+
+        compose.onNodeWithText("Compartir entrenamiento").performClick()
+
+        compose.onNodeWithText("Historia").assertIsDisplayed()
     }
 
     @Test
