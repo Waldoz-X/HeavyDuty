@@ -175,66 +175,71 @@ private fun WeekDaySelector(selectedDay: Int?, weekSchedule: Map<Int, List<Calen
     }
 }
 
-/** One day: its routines, and the way to assign another. */
+/**
+ * One day: its routines, and the way to assign another. A single scrolling list, so neither a long
+ * routine picker nor a busy day can push anything past the bottom of the screen.
+ */
 @Composable
 private fun DaySchedule(day: Int, uiState: CalendarUiState, onEvent: (CalendarUiEvent) -> Unit) {
-    Column {
-        val entries = uiState.weekSchedule[day] ?: emptyList()
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = stringResource(
-                    R.string.calendar_schedule_for,
-                    // As the language writes it mid-sentence: "miércoles" / "Wednesday".
-                    DayOfWeek.of(day).getDisplayName(TextStyle.FULL, LocalConfiguration.current.locales[0])
-                ),
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            HdTonalButton(
-                text = stringResource(R.string.calendar_assign_routine),
-                onClick = { onEvent(CalendarUiEvent.OnToggleRoutinePicker) },
-                icon = Icons.Default.Add
-            )
-        }
-        Spacer(modifier = Modifier.height(12.dp))
+    val entries = uiState.weekSchedule[day] ?: emptyList()
+    LazyColumn(
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        contentPadding = PaddingValues(bottom = 16.dp)
+    ) {
+        item(key = "header") { DayScheduleHeader(day = day, onEvent = onEvent) }
 
         if (uiState.isPickingRoutine) {
-            RoutinePicker(
-                routines = uiState.routines,
-                onRoutinePick = {
-                    onEvent(CalendarUiEvent.OnAssignRoutine(it.id, day))
-                }
-            )
-            Spacer(modifier = Modifier.height(12.dp))
+            item(key = "picker") {
+                RoutinePicker(
+                    routines = uiState.routines,
+                    onRoutinePick = { onEvent(CalendarUiEvent.OnAssignRoutine(it.id, day)) }
+                )
+            }
         }
 
         if (entries.isEmpty()) {
-            HdEmptyState(
-                icon = Icons.Default.CalendarMonth,
-                title = stringResource(R.string.calendar_rest_day),
-                description = stringResource(R.string.calendar_rest_day_hint)
-            )
+            item(key = "rest") {
+                HdEmptyState(
+                    icon = Icons.Default.CalendarMonth,
+                    title = stringResource(R.string.calendar_rest_day),
+                    description = stringResource(R.string.calendar_rest_day_hint)
+                )
+            }
         } else {
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = PaddingValues(bottom = 16.dp)
-            ) {
-                items(entries, key = { it.id }) { entry ->
-                    CalendarEntryItem(
-                        routineName =
-                            uiState.routines.find { it.id == entry.routineId }?.name
-                                ?: stringResource(R.string.calendar_routine_fallback, entry.routineId.toInt()),
-                        onClick = { onEvent(CalendarUiEvent.OnRoutineClick(entry.routineId)) },
-                        onRemove = { onEvent(CalendarUiEvent.OnRemoveEntry(entry)) }
-                    )
-                }
+            items(entries, key = { it.id }) { entry ->
+                CalendarEntryItem(
+                    routineName =
+                        uiState.routines.find { it.id == entry.routineId }?.name
+                            ?: stringResource(R.string.calendar_routine_fallback, entry.routineId.toInt()),
+                    onClick = { onEvent(CalendarUiEvent.OnRoutineClick(entry.routineId)) },
+                    onRemove = { onEvent(CalendarUiEvent.OnRemoveEntry(entry)) }
+                )
             }
         }
+    }
+}
+
+@Composable
+private fun DayScheduleHeader(day: Int, onEvent: (CalendarUiEvent) -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = stringResource(
+                R.string.calendar_schedule_for,
+                // As the language writes it mid-sentence: "miércoles" / "Wednesday".
+                DayOfWeek.of(day).getDisplayName(TextStyle.FULL, LocalConfiguration.current.locales[0])
+            ),
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        HdTonalButton(
+            text = stringResource(R.string.calendar_assign_routine),
+            onClick = { onEvent(CalendarUiEvent.OnToggleRoutinePicker) },
+            icon = Icons.Default.Add
+        )
     }
 }
 
