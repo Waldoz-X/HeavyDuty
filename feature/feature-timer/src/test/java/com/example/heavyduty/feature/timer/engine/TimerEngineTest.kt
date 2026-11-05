@@ -4,7 +4,6 @@ import com.example.heavyduty.feature.timer.domain.model.TimerMode
 import com.example.heavyduty.feature.timer.presentation.TimerUiEffect
 import com.example.heavyduty.feature.timer.presentation.TimerUiEvent
 import com.example.heavyduty.feature.timer.service.TimerNotifications
-import com.example.heavyduty.feature.timer.service.TimerService
 import io.mockk.mockk
 import io.mockk.verify
 import kotlin.time.Duration.Companion.seconds
@@ -12,6 +11,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
@@ -22,7 +22,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * [device] is a relaxed mock: starting/stopping [TimerService] and vibrating on completion
+ * [device] is a relaxed mock: starting the service and vibrating on completion
  * aren't what this test is about — it verifies the countdown state machine itself, driven
  * purely by virtual time via [StandardTestDispatcher].
  */
@@ -32,9 +32,19 @@ class TimerEngineTest {
     private val device: TimerDevice = mockk(relaxed = true)
     private val notifications: TimerNotifications = mockk(relaxed = true)
 
+    /** Time the phone spent asleep: it counts on the clock, but no delay wakes up for it. */
+    private var sleptMillis = 0L
+
+    private fun TestScope.engine() = TimerEngine(
+        StandardTestDispatcher(testScheduler),
+        device,
+        notifications,
+        TimerClock { testScheduler.currentTime + sleptMillis }
+    )
+
     @Test
     fun `counts down every second while running`() = runTest {
-        val engine = TimerEngine(StandardTestDispatcher(testScheduler), device, notifications)
+        val engine = engine()
         engine.onEvent(TimerUiEvent.OnModeSelect(TimerMode.REST))
         engine.onEvent(TimerUiEvent.OnDurationChange(10))
 
@@ -48,7 +58,7 @@ class TimerEngineTest {
 
     @Test
     fun `pausing stops the countdown without resetting remaining time`() = runTest {
-        val engine = TimerEngine(StandardTestDispatcher(testScheduler), device, notifications)
+        val engine = engine()
         engine.onEvent(TimerUiEvent.OnModeSelect(TimerMode.REST))
         engine.onEvent(TimerUiEvent.OnDurationChange(10))
         engine.onEvent(TimerUiEvent.OnStartPause)
@@ -67,7 +77,7 @@ class TimerEngineTest {
 
     @Test
     fun `reset returns to the configured duration`() = runTest {
-        val engine = TimerEngine(StandardTestDispatcher(testScheduler), device, notifications)
+        val engine = engine()
         engine.onEvent(TimerUiEvent.OnModeSelect(TimerMode.REST))
         engine.onEvent(TimerUiEvent.OnDurationChange(30))
         engine.onEvent(TimerUiEvent.OnStartPause)
@@ -84,7 +94,7 @@ class TimerEngineTest {
 
     @Test
     fun `finishing the only round emits TimerFinished and stops running`() = runTest {
-        val engine = TimerEngine(StandardTestDispatcher(testScheduler), device, notifications)
+        val engine = engine()
         val effects = mutableListOf<TimerUiEffect>()
         backgroundScope.launch(kotlinx.coroutines.test.UnconfinedTestDispatcher(testScheduler)) {
             engine.effects.toList(effects)
@@ -97,12 +107,119 @@ class TimerEngineTest {
 
         assertEquals(listOf(TimerUiEffect.TimerFinished), effects)
         assertFalse(engine.state.value.isRunning)
-        assertEquals(0, engine.state.value.remainingSeconds)
+        verify(exactly = 1) { device.vibrateFinished() }
+    }
+
+    @Test
+    fun `a finished timer is back at its start and runs again`() = runTest {
+        val engine = engine()
+        engine.onEvent(TimerUiEvent.OnModeSelect(TimerMode.TABATA))
+        engine.onEvent(TimerUiEvent.OnDurationChange(2))
+        engine.onEvent(TimerUiEvent.OnRoundsChange(2))
+        engine.onEvent(TimerUiEvent.OnStartPause)
+        advanceUntilIdle()
+
+        assertEquals(2, engine.state.value.remainingSeconds)
+        assertEquals(1, engine.state.value.currentRound)
+        assertFalse(engine.state.value.isPaused)
+
+        engine.onEvent(TimerUiEvent.OnStartPause)
+        advanceTimeBy(1.seconds)
+        runCurrent()
+
+        assertTrue(engine.state.value.isRunning)
+        assertEquals(1, engine.state.value.remainingSeconds)
+    }
+
+    @Test
+    fun `time the phone slept counts towards the rest`() = runTest {
+        val engine = engine()
+        engine.startRest(60)
+        advanceTimeBy(5.seconds)
+        runCurrent()
+
+        sleptMillis = 30_000
+        advanceTimeBy(1.seconds)
+        runCurrent()
+
+        assertEquals(24, engine.state.value.remainingSeconds)
+    }
+
+    @Test
+    fun `a rest that ended during sleep alerts on the first wake up, once`() = runTest {
+        val engine = engine()
+        engine.startRest(60)
+        runCurrent()
+
+        sleptMillis = 120_000
+        advanceUntilIdle()
+
+        verify(exactly = 1) { notifications.notifyRestFinished() }
+        verify(exactly = 1) { device.vibrateFinished() }
+        assertFalse(engine.state.value.isRunning)
+    }
+
+    @Test
+    fun `adding time to a rest moves its end`() = runTest {
+        val engine = engine()
+        engine.startRest(10)
+        advanceTimeBy(4.seconds)
+        runCurrent()
+
+        engine.adjustRest(15)
+        assertEquals(21, engine.state.value.remainingSeconds)
+        advanceTimeBy(1.seconds)
+        runCurrent()
+
+        assertEquals(20, engine.state.value.remainingSeconds)
+        advanceTimeBy(20.seconds)
+        runCurrent()
+        assertFalse(engine.state.value.isRunning)
+    }
+
+    @Test
+    fun `a paused rest keeps its time however long the phone sleeps`() = runTest {
+        val engine = engine()
+        engine.startRest(30)
+        advanceTimeBy(10.seconds)
+        runCurrent()
+        engine.onEvent(TimerUiEvent.OnStartPause)
+
+        sleptMillis = 600_000
+        advanceTimeBy(5.seconds)
+        engine.onEvent(TimerUiEvent.OnStartPause)
+        advanceTimeBy(1.seconds)
+        runCurrent()
+
+        assertEquals(19, engine.state.value.remainingSeconds)
+    }
+
+    @Test
+    fun `the stopwatch counts time slept and resumes where it paused`() = runTest {
+        val engine = engine()
+        engine.onEvent(TimerUiEvent.OnModeSelect(TimerMode.STOPWATCH))
+        engine.onEvent(TimerUiEvent.OnStartPause)
+        advanceTimeBy(5.seconds)
+        runCurrent()
+        assertEquals(5, engine.state.value.elapsedSeconds)
+
+        sleptMillis = 60_000
+        advanceTimeBy(1.seconds)
+        runCurrent()
+        assertEquals(66, engine.state.value.elapsedSeconds)
+
+        engine.onEvent(TimerUiEvent.OnStartPause)
+        advanceTimeBy(30.seconds)
+        engine.onEvent(TimerUiEvent.OnStartPause)
+        advanceTimeBy(2.seconds)
+        runCurrent()
+        assertEquals(68, engine.state.value.elapsedSeconds)
+        engine.onEvent(TimerUiEvent.OnReset)
     }
 
     @Test
     fun `advances to the next round instead of finishing when more rounds remain`() = runTest {
-        val engine = TimerEngine(StandardTestDispatcher(testScheduler), device, notifications)
+        val engine = engine()
         val effects = mutableListOf<TimerUiEffect>()
         backgroundScope.launch { engine.effects.toList(effects) }
 
@@ -120,7 +237,7 @@ class TimerEngineTest {
 
     @Test
     fun `a rest that runs out alerts the lifter, a skipped one doesn't`() = runTest {
-        val engine = TimerEngine(StandardTestDispatcher(testScheduler), device, notifications)
+        val engine = engine()
 
         engine.startRest(2)
         advanceUntilIdle()
@@ -136,7 +253,7 @@ class TimerEngineTest {
 
     @Test
     fun `a skipped workout rest gives the timer tab its own setup back`() = runTest {
-        val engine = TimerEngine(StandardTestDispatcher(testScheduler), device, notifications)
+        val engine = engine()
         engine.onEvent(TimerUiEvent.OnModeSelect(TimerMode.TABATA))
 
         engine.startRest(60)
@@ -154,7 +271,7 @@ class TimerEngineTest {
 
     @Test
     fun `a workout rest that runs out also gives the setup back`() = runTest {
-        val engine = TimerEngine(StandardTestDispatcher(testScheduler), device, notifications)
+        val engine = engine()
         engine.onEvent(TimerUiEvent.OnModeSelect(TimerMode.AMRAP))
 
         engine.startRest(2)
@@ -168,7 +285,7 @@ class TimerEngineTest {
 
     @Test
     fun `picking a mode during a workout rest keeps that choice`() = runTest {
-        val engine = TimerEngine(StandardTestDispatcher(testScheduler), device, notifications)
+        val engine = engine()
         engine.onEvent(TimerUiEvent.OnModeSelect(TimerMode.TABATA))
         engine.startRest(60)
 

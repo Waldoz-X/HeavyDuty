@@ -11,7 +11,6 @@ import com.example.heavyduty.feature.timer.service.TimerNotifications
 import com.example.heavyduty.feature.timer.service.TimerService
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -32,14 +31,16 @@ import kotlinx.coroutines.launch
 /**
  * Owns the timer's countdown loop and lifecycle as a process-scoped singleton so it keeps
  * ticking independent of any ViewModel/Activity — those come and go with the screen, this
- * doesn't. [TimerService] observes [state] purely to keep the process alive in the background
- * and reflect progress in a notification; it holds no timing logic of its own.
+ * doesn't. [TimerService] observes [state] to keep the process and the phone awake and reflect
+ * progress in a notification, and stops itself once the timer is idle; it holds no timing logic
+ * of its own.
  */
 @Singleton
 class TimerEngine @Inject constructor(
     @param:DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher,
     private val device: TimerDevice,
-    private val notifications: TimerNotifications
+    private val notifications: TimerNotifications,
+    private val clock: TimerClock
 ) : RestTimerController {
     private val engineScope = CoroutineScope(SupervisorJob() + defaultDispatcher)
 
@@ -59,6 +60,8 @@ class TimerEngine @Inject constructor(
         .stateIn(engineScope, SharingStarted.Eagerly, null)
 
     private var tickJob: Job? = null
+
+    private val countdown = Countdown(clock)
 
     /**
      * The timer tab's own setup, put aside while a workout rest borrows the engine: when that
@@ -112,6 +115,7 @@ class TimerEngine @Inject constructor(
 
     override fun adjustRest(deltaSeconds: Int) {
         if (restState.value == null) return
+        countdown.extendBy(deltaSeconds)
         _state.update {
             it.copy(
                 remainingSeconds = (it.remainingSeconds + deltaSeconds).coerceAtLeast(0),
@@ -156,7 +160,6 @@ class TimerEngine @Inject constructor(
                 rounds = defaultRounds
             )
         }
-        device.stopService()
     }
 
     private fun toggleStartPause() {
@@ -176,46 +179,40 @@ class TimerEngine @Inject constructor(
 
     private fun startCountDown() {
         tickJob?.cancel()
+        countdown.startFrom(_state.value.remainingSeconds)
+        val show = { seconds: Int -> _state.update { it.showingRemaining(seconds) } }
         tickJob = engineScope.launch {
-            while (_state.value.remainingSeconds > 0 && _state.value.isRunning) {
-                delay(1.seconds)
-                _state.update {
-                    it.copy(
-                        remainingSeconds = it.remainingSeconds - 1,
-                        elapsedSeconds = it.elapsedSeconds + 1
-                    )
-                }
+            countdown.runToZero(show)
+            while (_state.value.currentRound < _state.value.rounds) {
+                countdown.nextRound(_state.value.totalSeconds)
+                _state.update { it.copy(currentRound = it.currentRound + 1, remainingSeconds = it.totalSeconds) }
+                device.vibrate()
+                countdown.runToZero(show)
             }
-            if (_state.value.remainingSeconds <= 0) {
-                val current = _state.value
-                if (current.currentRound < current.rounds) {
-                    _state.update {
-                        it.copy(
-                            currentRound = it.currentRound + 1,
-                            remainingSeconds = it.totalSeconds
-                        )
-                    }
-                    device.vibrate()
-                    startCountDown()
-                } else {
-                    _state.update { it.copy(isRunning = false) }
-                    device.vibrate()
-                    _effects.emit(TimerUiEffect.TimerFinished)
-                    // Only a rest that ran out — skipping one means the lifter is already on it.
-                    if (current.mode == TimerMode.REST) notifications.notifyRestFinished()
-                    restoreSetupAfterWorkoutRest()
-                    device.stopService()
-                }
-            }
+            finishCountDown()
         }
+    }
+
+    /** Alerts while the state still says running, so [TimerService] keeps the phone awake for it. */
+    private suspend fun finishCountDown() {
+        val finished = _state.value
+        device.vibrateFinished()
+        _effects.emit(TimerUiEffect.TimerFinished)
+        // Only a rest that ran out — skipping one means the lifter is already on it.
+        if (finished.mode == TimerMode.REST) notifications.notifyRestFinished()
+        // Back at its start, ready to run again: a timer doesn't sit at 0:00.
+        _state.update { it.asIdleSetup() }
+        restoreSetupAfterWorkoutRest()
     }
 
     private fun startCountUp() {
         tickJob?.cancel()
+        val startedAt = clock.elapsedMillis() - _state.value.elapsedSeconds * MILLIS_PER_SECOND
         tickJob = engineScope.launch {
-            while (_state.value.isRunning) {
-                delay(1.seconds)
-                _state.update { it.copy(elapsedSeconds = it.elapsedSeconds + 1) }
+            while (true) {
+                val runningMillis = clock.elapsedMillis() - startedAt
+                _state.update { it.copy(elapsedSeconds = (runningMillis / MILLIS_PER_SECOND).toInt()) }
+                delay(MILLIS_PER_SECOND - runningMillis % MILLIS_PER_SECOND)
             }
         }
     }
@@ -224,9 +221,13 @@ class TimerEngine @Inject constructor(
         tickJob?.cancel()
         _state.update { it.asIdleSetup() }
         restoreSetupAfterWorkoutRest()
-        device.stopService()
     }
 }
+
+private fun TimerUiState.showingRemaining(seconds: Int): TimerUiState = copy(
+    remainingSeconds = seconds,
+    elapsedSeconds = elapsedSeconds + (remainingSeconds - seconds).coerceAtLeast(0)
+)
 
 /** The same timer, stopped and back at its start (full duration, round 1). */
 private fun TimerUiState.asIdleSetup(): TimerUiState = copy(

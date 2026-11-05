@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
+import android.os.PowerManager
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.ServiceCompat
 import com.example.heavyduty.feature.timer.engine.TimerEngine
@@ -20,9 +21,11 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 /**
- * Keeps the process alive with foreground priority while a timer is running/paused and mirrors
- * [TimerEngine]'s state into an ongoing notification (see [TimerNotifications]). Holds no
- * timing logic itself — see [TimerEngine] for why.
+ * Keeps the process alive with foreground priority while a timer is running/paused, the CPU
+ * awake while it runs (with the screen off the phone would otherwise sleep through the end of a
+ * rest, and only buzz whenever something next woke it), and mirrors [TimerEngine]'s state into
+ * an ongoing notification (see [TimerNotifications]). Stops itself once the timer is idle. Holds
+ * no timing logic itself — see [TimerEngine] for why.
  */
 @AndroidEntryPoint
 class TimerService : Service() {
@@ -35,12 +38,21 @@ class TimerService : Service() {
 
     private var serviceScope: CoroutineScope? = null
 
+    private var lastStartId = 0
+
+    private val wakeLock: PowerManager.WakeLock by lazy {
+        getSystemService(PowerManager::class.java)
+            .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "HeavyDuty:timer")
+            .apply { setReferenceCounted(false) }
+    }
+
     override fun onCreate() {
         super.onCreate()
         notifications.createChannels()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        lastStartId = startId
         when (intent?.action) {
             ACTION_TOGGLE -> timerEngine.onEvent(TimerUiEvent.OnStartPause)
             ACTION_STOP -> timerEngine.onEvent(TimerUiEvent.OnReset)
@@ -78,16 +90,29 @@ class TimerService : Service() {
                 .collect { content ->
                     if (content == null) {
                         stopForeground(STOP_FOREGROUND_REMOVE)
-                        stopSelf()
+                        // Only if no newer start is on its way: stopping over one kills the app.
+                        stopSelfResult(lastStartId)
                     } else {
                         NotificationManagerCompat.from(this@TimerService)
                             .notify(TimerNotifications.ONGOING_NOTIFICATION_ID, notifications.ongoing(content))
                     }
                 }
         }
+        scope.launch {
+            timerEngine.state.map { it.isRunning }.distinctUntilChanged().collect { running -> keepCpuAwake(running) }
+        }
+    }
+
+    private fun keepCpuAwake(awake: Boolean) {
+        if (awake) {
+            wakeLock.acquire(MAX_WAKE_LOCK_MS)
+        } else if (wakeLock.isHeld) {
+            wakeLock.release()
+        }
     }
 
     override fun onDestroy() {
+        keepCpuAwake(false)
         serviceScope?.cancel()
         serviceScope = null
         super.onDestroy()
@@ -101,5 +126,8 @@ class TimerService : Service() {
         const val ACTION_ADD_REST = "com.example.heavyduty.feature.timer.ADD_REST"
         const val ACTION_SKIP_REST = "com.example.heavyduty.feature.timer.SKIP_REST"
         const val REST_STEP_SECONDS = 15
+
+        /** A stopwatch left running doesn't drain the battery forever; its time stays right regardless. */
+        const val MAX_WAKE_LOCK_MS = 2 * 60 * 60 * 1_000L
     }
 }
